@@ -10146,7 +10146,7 @@ setTimeout(()=>{try{if(applyStops())render()}catch(e){}try{runBday()}catch(e){}t
 {const mb=$('menuBtn'),mn=$('appMenu'),bk=$('amBack');const close=()=>{mn.hidden=true;bk.hidden=true;mb.setAttribute('aria-expanded','false')};
  mb.onclick=()=>{const o=mn.hidden;mn.hidden=!o;bk.hidden=!o;mb.setAttribute('aria-expanded',String(o));if(o)mn.querySelector('button').focus()};bk.onclick=close;
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!mn.hidden){close();mb.focus()}});
- mn.onclick=e=>{const b=e.target.closest('button');if(!b)return;close();({home:()=>setTab('home'),an:()=>openAn(),prod:()=>setTab('prod'),mkt:()=>setTab('mkt'),set:()=>{openSettings();paintBro()},info:()=>openInfo(),legal:()=>{location.href='privacy.html'},wel:()=>openWel()})[b.dataset.m]()}}
+ mn.onclick=e=>{const b=e.target.closest('button');if(!b)return;close();({home:()=>setTab('home'),an:()=>openAn(),prod:()=>setTab('prod'),mkt:()=>setTab('mkt'),set:()=>{openSettings();paintBro()},info:()=>openInfo(),legal:()=>{location.href='privacy.html'},wel:()=>{S.welcomeOff=false;saveS();openWel()}})[b.dataset.m]()}}
 
 
 /* ===== password dei backup (cifratura dei file esportati) ===== */
