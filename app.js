@@ -10349,4 +10349,96 @@ const SB=(()=>{
   try{const r=await fetch(location.href.split('#')[0].split('?')[0]+'?c='+Date.now(),{cache:'no-store'});const n=rd(await r.text());
    if(!n)st.textContent='Non riesco a leggere la versione online.';else if(n.v!==cur.v||n.d!==cur.d){st.textContent='Disponibile la versione '+n.v+' del '+dl(n.d)+'. Tocca Aggiorna per installarla.';u.hidden=false}else st.textContent='Hai l’ultima versione.'}
   catch(e){st.textContent='Controllo non riuscito: sei offline?'}}}
+/* ===== scansione del biglietto da visita (lettura del testo sul telefono, gratuita) ===== */
+const CARD=(()=>{
+ const TITLES=/^(dott\.?ssa|dott\.?|dr\.?|ing\.?|avv\.?|arch\.?|geom\.?|rag\.?|prof\.?ssa|prof\.?|sig\.?ra|sig\.?|mr\.?|mrs\.?|ms\.?)\s+/i;
+ const ROLE=/\b(ceo|cfo|coo|cto|titolare|direttore|direttrice|responsabile|amministratore|presidente|socio|manager|sales|commerciale|agente|consulente|export|marketing|buyer|owner|founder|director|head of|account|enologo|sommelier|project|general manager|partner|legale rappresentante|ufficio)\b/i;
+ const COMP=/(\bs\.?r\.?l\.?s?\b|\bs\.?p\.?a\.?\b|\bs\.?n\.?c\.?\b|\bs\.?a\.?s\.?\b|\bs\.?s\.?\b|societ[àa]|cantina|azienda|ditta|studio|& ?c\.?\b|\bgroup\b|\bltd\b|\bgmbh\b|\binc\b|\bllc\b|\bsrl\b|vini|tenuta|fattoria|consorzio|cooperativa)/i;
+ const STREET=/\b(via|viale|v\.le|piazza|p\.zza|corso|c\.so|strada|largo|vicolo|localit[àa]|loc\.|contrada|c\.da|piazzale|lungomare|borgo|vico|salita|str\.)\s/i;
+ const PART=['de','di','del','della','dello','dei','degli','dal','dalla','da','la','lo','le','van','von','mc','mac','d\'','dell\''];
+ const cap=w=>w.length?w[0].toUpperCase()+w.slice(1).toLowerCase():w;
+ const fixCase=s=>s.split(/\s+/).map(w=>/^[A-ZÀ-Ý'’.-]{2,}$/.test(w)?w.split(/(['’-])/).map(cap).join(''):w).join(' ');
+ const dialIso=n=>{const m=n.replace(/[^\d+]/g,'');if(!m.startsWith('+'))return null;let best=null;COUNTRIES.forEach(c=>{const d=String(c[2]);if(m.startsWith(d)&&(!best||d.length>String(best[2]).length))best=c});return best};
+ function parse(raw){
+  const lines=String(raw||'').split(/\r?\n/).map(l=>l.replace(/[|¦_•·►▶■□]/g,' ').replace(/\s+/g,' ').trim()).filter(l=>l.length>1);
+  const used=new Set(),out={},extra=[];
+  const text=lines.join('\n');
+  // email
+  const mails=[...new Set((text.match(/[A-Za-z0-9._%+-]+\s?@\s?[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g)||[]).map(m=>m.replace(/\s+/g,'').toLowerCase()))];
+  const pec=mails.find(m=>/pec|legalmail/.test(m)),normal=mails.filter(m=>m!==pec);
+  if(normal[0])out.email=normal[0];if(pec)out.pec=pec;extra.push(...normal.slice(1));
+  lines.forEach((l,i)=>{if(/@/.test(l))used.add(i)});
+  // partita iva
+  let pi=/(?:p\.?\s?iva|partita\s+iva|vat|p\.?\s?i\.?)\s*[:.]?\s*(?:IT)?\s*(\d[\d\s]{9,13}\d)/i.exec(text);
+  if(pi){const d=pi[1].replace(/\s/g,'');if(d.length===11){out.piva=d;lines.forEach((l,i)=>{if(/p\.?\s?iva|partita\s+iva|\bvat\b/i.test(l)&&l.replace(/\D/g,'').includes(d))used.add(i)})}}
+  // sito web
+  const mailHosts=mails.map(m=>m.split('@')[1]);
+  const web=(text.match(/\b(?:https?:\/\/)?(?:www\.)[A-Za-z0-9.-]+\.[A-Za-z]{2,}[^\s,;]*|\b[A-Za-z0-9-]+\.(?:it|com|net|org|eu|info|biz|wine|vin)\b(?![A-Za-z0-9@])/gi)||[]).map(w=>w.replace(/[.,;)]+$/,'')).filter(w=>/^(https?:\/\/|www\.)/i.test(w)||!mails.some(m=>m.includes('@'+w.toLowerCase())));
+  if(web[0])out.sito=web[0].replace(/^https?:\/\//i,'').toLowerCase();
+  lines.forEach((l,i)=>{if(/(?:https?:\/\/|www\.)/i.test(l)||(out.sito&&l.toLowerCase().includes(out.sito.replace(/^www\./,''))))used.add(i)});
+  // telefoni
+  const phones=[];
+  lines.forEach((l,i)=>{if(used.has(i)&&/@/.test(l))return;const lab=/\bfax\b/i.test(l)&&!/\b(tel|t\.|mob|cell|m\.)\b/i.test(l);
+   const re=/(?:\+|00)?\s?\(?\d{1,4}\)?[\d\s().\/-]{6,}\d/g;let m;
+   while((m=re.exec(l))){let n=m[0].trim();const dg=n.replace(/\D/g,'');if(dg.length<8||dg.length>15)continue;if(out.piva&&dg.includes(out.piva))continue;if(/\b\d{5}\b/.test(n)&&dg.length===5)continue;
+    if(out.piva&&dg===out.piva)continue;phones.push({n:n.replace(/^00/,'+').replace(/\s+/g,' '),dg,fax:lab,line:i})}});
+  const good=phones.filter(p=>!p.fax);
+  const isMob=p=>/^(\+?39)?\s?3\d{8,9}$/.test(p.dg.replace(/^0039/,'39'))||/^\+?39?3\d/.test(p.dg)&&p.dg.replace(/^39/,'').length>=9&&p.dg.replace(/^39/,'')[0]==='3';
+  const main=good.find(isMob)||good[0]||phones[0];
+  if(main){let n=main.n,iso=null;const c=dialIso(n);if(c){iso=c[0];const d=String(c[2]);n=n.replace(/[^\d+]/g,'').slice(d.length).replace(/^0+(?=\d{6})/,'');if(iso!=='IT')n=n}
+   out.telefono=n.replace(/^(\d{3})(\d{3,4})(\d{3,4})$/,'$1 $2 $3');if(iso)out.paese=iso;used.add(main.line)}
+  phones.filter(p=>p!==main).forEach(p=>extra.push((p.fax?'Fax ':'Tel ')+p.n));
+  phones.forEach(p=>used.add(p.line));
+  // indirizzo
+  const ai=lines.findIndex((l,i)=>STREET.test(l)&&!used.has(i));let addr=[];
+  if(ai>=0){addr.push(lines[ai]);used.add(ai);const nx=lines[ai+1];if(nx&&/\b\d{5}\b/.test(nx)&&!used.has(ai+1)){addr.push(nx);used.add(ai+1)}}
+  else{const ci=lines.findIndex((l,i)=>/\b\d{5}\b/.test(l)&&!/\b\d{11}\b/.test(l)&&!used.has(i)&&!/\d{3}[\s.-]\d{3}/.test(l));if(ci>=0){if(ci>0&&!used.has(ci-1)&&/\d/.test(lines[ci-1])&&!ROLE.test(lines[ci-1])){addr.push(lines[ci-1]);used.add(ci-1)}addr.push(lines[ci]);used.add(ci)}}
+  if(addr.length)out.indirizzo=addr.join(', ').replace(/\s+,/g,',');
+  // ruolo
+  const ri=lines.findIndex((l,i)=>!used.has(i)&&ROLE.test(l)&&!/\d{4}/.test(l)&&l.length<60);if(ri>=0){out.ruolo=lines[ri];used.add(ri)}
+  // azienda
+  let ci=lines.findIndex((l,i)=>!used.has(i)&&COMP.test(l)&&l.length<70);
+  // nome persona
+  const local=(out.email||'').split('@')[0].replace(/[^a-z.\-_]/g,' ').split(/[.\-_ ]+/).filter(x=>x.length>1);
+  const cand=lines.map((l,i)=>({l,i})).filter(({l,i})=>{if(used.has(i)||i===ci)return false;const t=l.replace(TITLES,'');if(/\d|@|www/i.test(t))return false;if(COMP.test(t)||STREET.test(t)||ROLE.test(t))return false;const w=t.split(/\s+/);return w.length>=2&&w.length<=4&&w.every(x=>/^[A-Za-zÀ-ÿ'’.-]+$/.test(x))});
+  const score=({l,i})=>{const t=l.replace(TITLES,'').toLowerCase();let s=0;local.forEach(x=>{if(t.includes(x))s+=3});if(ri>=0&&Math.abs(i-ri)<=1)s+=2;if(/^[A-ZÀ-Ý][a-zà-ÿ]+(\s+[A-ZÀ-Ý][a-zà-ÿ]+)+$/.test(l.replace(TITLES,''))||/^[A-ZÀ-Ý' .-]+$/.test(l.replace(TITLES,'')))s+=1;s-=i*.05;return s};
+  cand.sort((a,b)=>score(b)-score(a));
+  if(cand[0]){let t=fixCase(cand[0].l.replace(TITLES,'')).replace(/[.]+$/,'');used.add(cand[0].i);let w=t.split(/\s+/);
+   const lowered=w.map(x=>x.toLowerCase());let k=w.length-1;while(k>1&&PART.includes(lowered[k-1]))k--;
+   let nome=w.slice(0,k).join(' '),cogn=w.slice(k).join(' ');
+   if(local.length>=2){const a=local[0],b=local[local.length-1],ln=nome.toLowerCase(),lc=cogn.toLowerCase();if(ln.includes(b)&&lc.includes(a)){const x=nome;nome=cogn;cogn=x}}
+   out.nome=nome;out.cognome=cogn}
+  if(ci<0){ci=lines.findIndex((l,i)=>!used.has(i)&&!/\d{5}/.test(l)&&l.length>=3&&l.length<60&&!(out.nome&&l.toLowerCase().includes(out.nome.toLowerCase())))}
+  if(ci>=0){out.azienda=fixCase(lines[ci]);used.add(ci)}
+  if(!out.nome&&!out.cognome&&out.azienda)out.tipo='azienda';
+  const rest=lines.filter((l,i)=>!used.has(i)&&!/^[\W\d]*$/.test(l)&&l.length>3);
+  const note=['Letto da biglietto da visita il '+new Date().toLocaleDateString('it-IT')+'.'];
+  if(extra.length)note.push('Altri recapiti: '+extra.join(' · '));
+  if(rest.length)note.push('Testo non assegnato: '+rest.slice(0,6).join(' / '));
+  out.note=note.join('\n');return out}
+ /* immagine: ridimensiona, scala di grigi e contrasto */
+ function prep(file){return new Promise((ok,ko)=>{const img=new Image(),u=URL.createObjectURL(file);
+  img.onload=()=>{try{const mx=Math.max(img.naturalWidth,img.naturalHeight),s=Math.min(2,Math.max(.5,2000/mx)),c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*s);c.height=Math.round(img.naturalHeight*s);
+   const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(img,0,0,c.width,c.height);const d=x.getImageData(0,0,c.width,c.height),p=d.data,hist=new Uint32Array(256);
+   for(let i=0;i<p.length;i+=4){const g=(p[i]*.299+p[i+1]*.587+p[i+2]*.114)|0;p[i]=p[i+1]=p[i+2]=g;hist[g]++}
+   const tot=c.width*c.height;let a=0,lo=0,hi=255;for(let g=0;g<256;g++){a+=hist[g];if(a>tot*.01){lo=g;break}}a=0;for(let g=255;g>=0;g--){a+=hist[g];if(a>tot*.01){hi=g;break}}
+   const k=hi>lo+20?255/(hi-lo):1;for(let i=0;i<p.length;i+=4){const v=Math.max(0,Math.min(255,((p[i]-lo)*k)|0));p[i]=p[i+1]=p[i+2]=v}
+   x.putImageData(d,0,0);URL.revokeObjectURL(u);ok(c)}catch(e){URL.revokeObjectURL(u);ko(e)}};
+  img.onerror=()=>{URL.revokeObjectURL(u);ko(new Error('img'))};img.src=u})}
+ const load=()=>window.Tesseract?Promise.resolve():new Promise((ok,ko)=>{const s=document.createElement('script');s.src='ocr/tesseract.min.js?v=5.1.1';s.onload=ok;s.onerror=()=>ko(new Error('motore'));document.head.append(s)});
+ let busy=false,stop=null;
+ async function run(file){if(busy)return;busy=true;const M=$('mScan'),T=$('scT'),B=$('scB'),H=$('scH');let worker=null,cancelled=false;
+  stop=()=>{cancelled=true;try{worker&&worker.terminate()}catch(e){}};B.style.width='4%';T.textContent='Preparo l’immagine…';H.textContent='';M.hidden=false;
+  try{const cv=await prep(file);if(cancelled)return;T.textContent='Carico il lettore di testo…';H.textContent='Solo la prima volta può richiedere qualche istante.';await load();if(cancelled)return;
+   const base=new URL('ocr/',location.href).href;
+   worker=await Tesseract.createWorker('ita+eng',1,{workerPath:base+'worker.min.js',corePath:base,langPath:base,gzip:false,cacheMethod:'none',logger:m=>{if(cancelled)return;if(m.status==='recognizing text'){T.textContent='Leggo il biglietto…';B.style.width=(15+Math.round(m.progress*80))+'%'}else if(/loading|initializ/.test(m.status||'')){B.style.width=Math.max(6,Math.round(5+(m.progress||0)*10))+'%'}}});
+   if(cancelled)return;const r=await worker.recognize(cv);await worker.terminate();worker=null;if(cancelled)return;
+   const txt=(r&&r.data&&r.data.text)||'';M.hidden=true;
+   if(txt.replace(/\W/g,'').length<8){toast('Non riesco a leggere il biglietto: riprova con più luce e il biglietto dritto.');return}
+   const d=parse(txt);openSheet(null,d);showMsg('Dati letti dal biglietto: controllali e correggi se serve prima di salvare.')}
+  catch(e){M.hidden=true;if(!cancelled)toast('Lettura non riuscita'+(navigator.onLine===false?': sei offline e il lettore non è ancora scaricato.':'. Riprova.'))}
+  finally{try{worker&&worker.terminate()}catch(e){}busy=false;stop=null;M.hidden=true}}
+ return{parse,run,cancel:()=>stop&&stop()}})();
+{const f=$('cardFile');$('cScan').onclick=()=>f.click();f.onchange=()=>{const x=f.files&&f.files[0];f.value='';if(x)CARD.run(x)};$('scX').onclick=()=>CARD.cancel()}
+
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
