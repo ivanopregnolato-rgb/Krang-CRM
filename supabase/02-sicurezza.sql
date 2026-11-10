@@ -26,11 +26,11 @@ create trigger records_quota before insert on public.records
   for each row execute function public.records_quota();
 revoke all on function public.records_quota() from public, anon, authenticated;
 
--- 4) Archivio file: solo immagini, massimo 2 MB per file.
+-- 4) Archivio file: foto cifrate (file binari) o immagini, massimo 3 MB per file.
 update storage.buckets
    set public = false,
-       file_size_limit = 2097152,
-       allowed_mime_types = array['image/jpeg','image/png','image/webp']
+       file_size_limit = 3145728,
+       allowed_mime_types = array['application/octet-stream','image/jpeg','image/png','image/webp']
  where id = 'media';
 
 -- 5) Eliminazione account: tollerante se l'archivio rifiuta la cancellazione diretta
