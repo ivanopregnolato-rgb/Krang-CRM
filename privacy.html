@@ -30,21 +30,23 @@
 <h2>5. Chi ci aiuta (fornitori)</h2>
 <table>
 <tr><th>Fornitore</th><th>Cosa fa</th></tr>
-<tr><td>Supabase</td><td>Accesso, database e archivio file. Regione dei dati: <span data-l="regione"></span></td></tr>
+<tr><td>Supabase</td><td>Accesso, database e archivio file (i contenuti arrivano già cifrati). Regione dei dati: <span data-l="regione"></span></td></tr>
 <tr><td>GitHub Pages (GitHub/Microsoft)</td><td>Pubblica l’app (file statici); può registrare l’indirizzo IP dei visitatori</td></tr>
 <tr><td>Google Fonts</td><td>Fornisce il carattere tipografico: il tuo indirizzo IP è visibile a Google quando l’app lo carica</td></tr>
 <tr><td>Google Maps</td><td>Solo se apri la mappa di un indirizzo</td></tr>
 </table>
 <p>Alcuni fornitori possono trattare dati anche fuori dallo Spazio Economico Europeo (ad es. negli USA) con le garanzie previste dal GDPR (clausole contrattuali standard o Data Privacy Framework).</p>
 
-<h2>6. Sicurezza: cosa devi sapere</h2>
-<p>I dati viaggiano cifrati (HTTPS) e ogni account vede solo i propri dati (regole di isolamento a livello di database). I dati <b>non sono cifrati end-to-end</b>: chi amministra il servizio ha tecnicamente la possibilità di accedere al database. Il gestore si impegna a non consultare i tuoi dati se non per assistenza che chiedi tu, per sicurezza o per obbligo di legge. Scegli una password lunga e unica e non condividerla.</p>
+<h2>6. Sicurezza e cifratura</h2>
+<p>I dati viaggiano cifrati (HTTPS) e ogni account vede solo i propri dati (regole di isolamento a livello di database). In più, <b>i contenuti che salvi nel cloud sono cifrati sul tuo dispositivo prima dell’invio</b> (cifratura end-to-end, AES-256-GCM). La chiave dei dati nasce sul tuo dispositivo e arriva al cloud solo protetta dalla tua passphrase e dalla tua chiave di recupero: <b>chi gestisce il servizio non può leggere i tuoi clienti, lead, opportunity, prodotti, note, foto e impostazioni</b>.</p>
+<p><b>Cosa resta leggibile</b> al gestore e ai fornitori: l’email dell’account, le date di registrazione e di accesso, il tipo e l’identificativo tecnico di ogni elemento, la data dell’ultima modifica, le dimensioni e il numero degli elementi.</p>
+<p><b>Cosa comporta per te:</b> se perdi sia la passphrase sia la chiave di recupero, <b>nessuno, nemmeno il gestore, può recuperare i dati nel cloud</b>. Conserva la chiave di recupero in un posto sicuro, scegli una passphrase lunga e non condividerla. Sul tuo dispositivo i dati restano in chiaro per poter funzionare: usa anche il blocco dell’app.</p>
 
 <h2>7. Per quanto tempo</h2>
 <p>Finché mantieni l’account. Da Impostazioni puoi <b>eliminare l’account</b>: vengono cancellati i tuoi dati, le foto e l’account. Copie tecniche di backup dei fornitori possono restare per un breve periodo prima di essere sovrascritte. Puoi anche esportare i tuoi dati dalla sezione Impostazioni.</p>
 
 <h2>8. I tuoi diritti</h2>
-<p>Puoi chiedere accesso, rettifica, cancellazione, limitazione, portabilità e opporti al trattamento, scrivendo a <a data-mail href="#"><span data-l="email"></span></a>. Per molte operazioni basta usare l’app (modifica, esporta, elimina account). Hai diritto di proporre reclamo al <a href="https://www.garanteprivacy.it" rel="noopener">Garante per la protezione dei dati personali</a>. Per i dati dei tuoi clienti rivolgiti al loro titolare, cioè a chi usa l’app per gestirli.</p>
+<p>Puoi chiedere accesso, rettifica, cancellazione, limitazione, portabilità e opporti al trattamento, scrivendo a <a data-mail href="#"><span data-l="email"></span></a>. Per molte operazioni basta usare l’app (modifica, esporta, elimina account). Poiché i contenuti sono cifrati con una chiave che solo tu possiedi, il gestore non può estrarli per conto tuo: l’esportazione dei dati si fa dall’app. Hai diritto di proporre reclamo al <a href="https://www.garanteprivacy.it" rel="noopener">Garante per la protezione dei dati personali</a>. Per i dati dei tuoi clienti rivolgiti al loro titolare, cioè a chi usa l’app per gestirli.</p>
 
 <h2>9. Minori</h2>
 <p>Il servizio è pensato per uso professionale e per persone maggiorenni.</p>

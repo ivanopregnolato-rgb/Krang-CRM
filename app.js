@@ -9492,14 +9492,15 @@ function cloudPull(key,snap){const sp=CSPEC[key],sy=CLOUD.sync[key]||(CLOUD.sync
   finally{CLOUD.applying=false}
   if(ch){sp.set(arr);sp.save();sp.after()}
   CLOUD.n[key]=arr.length;CLOUD.last=Date.now();CLOUD.err='';
-  if(!CLOUD.first[key]){CLOUD.first[key]=1;cloudFlush(key)}
+  if(!CLOUD.first[key]){CLOUD.first[key]=1;const mg=SB.e2e.needMig();if(mg)CLOUD.sync[key]={};Promise.resolve(cloudFlush(key)).then(()=>{if(mg)E2EUI.done(key)})}
   try{paintCloud()}catch(e){}}
 function cloudSettings(snap){CLOUD.applying=true;try{if(snap.exists){const d=Object.assign({},snap.data());delete d._u;delete d._by;const hh=hs(JSON.stringify(canon(d)));if(CLOUD.sh===hh)return;CLOUD.sh=hh;const br=S.brochure;Object.assign(S,d);if(br)S.brochure=br;
       S.ret=Object.assign({contratto:120,contatti:24,marketing:24,profilazione:12,comunicazioni:24},S.ret||{});S.lead=Object.assign({scartati:30,nuovi:12,giorni:30,inf:true},S.lead||{});S.wa=Object.assign({paese:'IT',inf:'full',tpl:[['Ciao','Ciao {nome}, ']]},S.wa||{});
       try{localStorage.setItem('crm-settings-v1',JSON.stringify(S))}catch(e){}try{paintReq()}catch(e){}}}
   finally{CLOUD.applying=false}
-  CLOUD.sf=1;if(!snap.exists&&CLOUD.canA)cloudPushS()}
-function cloudPushS(){if(!CLOUD.on||!CLOUD.db||!CLOUD.canA||CLOUD.applying||!CLOUD.sf)return;clearTimeout(CLOUD.t.s);CLOUD.t.s=setTimeout(async()=>{try{const d=Object.assign({},S);delete d.brochure;const hh=hs(JSON.stringify(canon(d)));if(CLOUD.sh===hh)return;await CLOUD.db.doc('config/settings').set(Object.assign({},d,{_u:Date.now(),_by:CLOUD.uid||''}));CLOUD.sh=hh;CLOUD.last=Date.now();CLOUD.err=''}catch(e){CLOUD.err=(e&&e.code)||'errore'}try{paintCloud()}catch(e){}},1200)}
+  CLOUD.sf=1;if(!snap.exists&&CLOUD.canA)cloudPushS();else if(SB.e2e.needMig()&&!CLOUD.mgS){CLOUD.mgS=1;CLOUD.sh='';cloudPushS()}}
+function cloudPushS(){if(!CLOUD.on||!CLOUD.db||!CLOUD.canA||CLOUD.applying||!CLOUD.sf)return;clearTimeout(CLOUD.t.s);CLOUD.t.s=setTimeout(async()=>{try{const d=Object.assign({},S);delete d.brochure;const hh=hs(JSON.stringify(canon(d)));if(CLOUD.sh===hh)return;await CLOUD.db.doc('config/settings').set(Object.assign({},d,{_u:Date.now(),_by:CLOUD.uid||''}));CLOUD.sh=hh;CLOUD.last=Date.now();CLOUD.err='';if(SB.e2e.needMig())E2EUI.done('s')}catch(e){CLOUD.err=(e&&e.code)||'errore'}try{paintCloud()}catch(e){}},1200)}
+async function cloudGate(){if(CLOUD.started||!CLOUD.on||!SB.has())return;const st=await SB.e2e.init();if(st==='ready'){E2EUI.close();return cloudStart()}if(st==='offline'||st==='error'){CLOUD.err=st==='offline'?'offline':'errore';paintCloud();return}CLOUD.err='locked';paintCloud();E2EUI.open(st)}
 async function cloudStart(){if(CLOUD.started||!CLOUD.on)return;CLOUD.started=true;CLOUD.err='';
   try{const db=SB.db();if(!db){CLOUD.started=false;CLOUD.err='nodb';paintCloud();return}
     CLOUD.uid=SB.uid();CLOUD.canW=true;CLOUD.canA=true;CLOUD.db=db;
@@ -9507,9 +9508,9 @@ async function cloudStart(){if(CLOUD.started||!CLOUD.on)return;CLOUD.started=tru
     CLOUD.subs.push(db.doc('config/settings').onSnapshot(cloudSettings,e=>{CLOUD.err=(e&&e.code)||'errore';paintCloud()}));
     clearTimeout(CLOUD.timer);CLOUD.timer=setTimeout(()=>{if(!CLOUD.last){CLOUD.err='timeout';paintCloud()}},10000);paintCloud()
   }catch(e){CLOUD.started=false;CLOUD.err=(e&&e.code)||'errore';paintCloud()}}
-function cloudStop(){CLOUD.subs.forEach(f=>{try{f()}catch(e){}});CLOUD.subs=[];CLOUD.db=null;CLOUD.started=false;CLOUD.first={};CLOUD.sync={};CLOUD.sf=0;CLOUD.sh='';paintCloud()}
+function cloudStop(){CLOUD.subs.forEach(f=>{try{f()}catch(e){}});CLOUD.subs=[];CLOUD.db=null;CLOUD.started=false;CLOUD.mgS=0;try{E2EUI.reset()}catch(e){}CLOUD.first={};CLOUD.sync={};CLOUD.sf=0;CLOUD.sh='';paintCloud()}
 function paintCloud(){const e=$('st_cstat');if(!e)return;
-  const E={nodb:'Il cloud non è disponibile in questa visualizzazione: serve aprire l’app con il tuo account Claude.',timeout:'Il database non risponde ancora: i dati restano su questo dispositivo e si sincronizzeranno appena possibile.',offline:'Sei offline: i dati restano su questo dispositivo e si sincronizzeranno appena torna la rete.',quota_exceeded:'Limite di spazio del database raggiunto: elimina dati o allegati pesanti.',revoked:'Accesso al cloud revocato per questa sessione.',resource_exhausted:'Troppe operazioni ravvicinate: riprovo da solo.',invalid_argument:'Un record non è stato accettato dal database (troppo grande o non valido).'};
+  const E={nodb:'Il cloud non è disponibile in questa visualizzazione: serve aprire l’app con il tuo account Claude.',timeout:'Il database non risponde ancora: i dati restano su questo dispositivo e si sincronizzeranno appena possibile.',offline:'Sei offline: i dati restano su questo dispositivo e si sincronizzeranno appena torna la rete.',locked:'Sincronizzazione in pausa: i dati sono cifrati e serve la passphrase. Apri Impostazioni → Account.',quota_exceeded:'Limite di spazio del database raggiunto: elimina dati o allegati pesanti.',revoked:'Accesso al cloud revocato per questa sessione.',resource_exhausted:'Troppe operazioni ravvicinate: riprovo da solo.',invalid_argument:'Un record non è stato accettato dal database (troppo grande o non valido).'};
   let t;if(!CLOUD.on)t='Sincronizzazione disattivata: i dati sono solo in questo browser.';
   else if(CLOUD.err&&!CLOUD.last)t=E[CLOUD.err]||('Errore: '+CLOUD.err);
   else if(!CLOUD.db)t='Collegamento al cloud in corso…';
@@ -10219,7 +10220,7 @@ $('st_store').onchange=()=>{const v=$('st_store').value;
   const apply=()=>{
     if(v!=='cloud'&&CLOUD.on){CLOUD.on=false;try{localStorage.setItem(CKEY,JSON.stringify({on:false}))}catch(e){}cloudStop()}
     if(v!=='drive'&&DRV.on){DRV.on=false;dSave()}
-    if(v==='cloud'){CLOUD.on=true;try{localStorage.setItem(CKEY,JSON.stringify({on:true}))}catch(e){}cloudStart()}
+    if(v==='cloud'){CLOUD.on=true;try{localStorage.setItem(CKEY,JSON.stringify({on:true}))}catch(e){}cloudGate()}
     if(v==='drive'){DRV.on=true;dSave();dSync(true)}
     paintDrive()};
   if(v==='none'){apply();return}
@@ -10272,16 +10273,57 @@ const SB=(()=>{
  /* foto: file nell'archivio, riferimento nel record */
  const PH={};const b2d=b=>new Promise((ok,ko)=>{const f=new FileReader();f.onload=()=>ok(f.result);f.onerror=ko;f.readAsDataURL(b)});
  const safe=x=>String(x).replace(/[^\w-]/g,'_');
- async function upFoto(col,id,du){const hh=hs(du),p=uid()+'/'+col+'/'+safe(id)+'-'+safe(hh)+'.jpg';
-  if(!PH[p]){const bl=await (await fetch(du)).blob();const r=await raw('/storage/v1/object/media/'+p,{method:'POST',auth:1,headers:{'Content-Type':bl.type||'image/jpeg','x-upsert':'true'},body:bl});if(!r.ok){let j=null;try{j=await r.json()}catch(e){}throw mkErr(r,j)}PH[p]=du}
+ /* cifratura end-to-end: la chiave dei dati (DK) nasce sul dispositivo e al cloud arriva solo avvolta da passphrase e chiave di recupero */
+ const te=new TextEncoder(),td=new TextDecoder(),LK='crm-dk-v1',MG='crm-e2e-mig',IT=600000,RIT=100000,B32='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+ const E={dk:null,raw:null,bundle:null,prep:null};
+ const b64=u=>{let t='';for(let i=0;i<u.length;i+=8192)t+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(t)};
+ const unb64=t=>Uint8Array.from(atob(t),c=>c.charCodeAt(0));
+ const rnd=n=>crypto.getRandomValues(new Uint8Array(n));
+ const lockErr=()=>Object.assign(new Error('dati cifrati: serve la passphrase'),{code:'locked'});
+ async function kek(secret,salt,it){const m=await crypto.subtle.importKey('raw',te.encode(secret),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:it,hash:'SHA-256'},m,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+ async function wrap(raw,key){const iv=rnd(12),ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,raw)),o=new Uint8Array(12+ct.length);o.set(iv);o.set(ct,12);return b64(o)}
+ async function unwrap(t,key){const u=unb64(t);return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:u.subarray(0,12)},key,u.subarray(12)))}
+ const aad=(col,id)=>te.encode(uid()+'|'+col+'|'+id);
+ async function encJ(col,id,obj){if(!E.dk)throw lockErr();const iv=rnd(12),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:aad(col,String(id))},E.dk,te.encode(JSON.stringify(obj)));return{_e:1,i:b64(iv),c:b64(new Uint8Array(ct))}}
+ async function decJ(col,id,d){if(!E.dk)throw lockErr();return JSON.parse(td.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(d.i),additionalData:aad(col,String(id))},E.dk,unb64(d.c))))}
+ const rkNew=()=>{const u=rnd(20);let bits=0,v=0,t='';for(const x of u){v=((v<<8)|x)&0xfffff;bits+=8;while(bits>=5){t+=B32[(v>>>(bits-5))&31];bits-=5}v&=(1<<bits)-1}return t.match(/.{4}/g).join('-')};
+ const rkNorm=t=>String(t||'').toUpperCase().replace(/[^A-Z2-7]/g,'');
+ async function setDK(raw,keep){E.raw=raw;E.dk=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt','decrypt']);if(keep)try{localStorage.setItem(LK,JSON.stringify({u:uid(),k:b64(raw)}))}catch(e){}}
+ async function fetchBundle(){const r=await js('/auth/v1/user',{auth:1}),m=r&&r.user_metadata,b=m&&m.kcrm_e2e;E.bundle=b&&b.v===1?b:null;return E.bundle}
+ const putBundle=b=>js('/auth/v1/user',{method:'PUT',auth:1,json:{data:{kcrm_e2e:b}}}).then(()=>{E.bundle=b});
+ async function mkBundle(pass,rk,raw){const s=rnd(16),rs=rnd(16);return{v:1,it:IT,s:b64(s),w:await wrap(raw,await kek(pass,s,IT)),ri:RIT,rs:b64(rs),rw:await wrap(raw,await kek(rkNorm(rk),rs,RIT))}}
+ async function rawByPass(pass){const b=E.bundle||await fetchBundle();if(!b)throw Object.assign(new Error('nessuna chiave'),{code:'nokey'});try{return await unwrap(b.w,await kek(pass,unb64(b.s),b.it))}catch(e){throw Object.assign(new Error('passphrase errata'),{code:'badpass'})}}
+ async function listDel(match){for(const c of ['clienti','prodotti','opportunita','lead','movimenti','config']){const all=[];for(let off=0;off<20000;off+=100){const L=await js('/storage/v1/object/list/media',{method:'POST',auth:1,json:{prefix:uid()+'/'+c,limit:100,offset:off}});if(!L||!L.length)break;L.forEach(x=>{if(x&&x.name&&match(x.name))all.push(uid()+'/'+c+'/'+x.name)});if(L.length<100)break}
+   for(let i=0;i<all.length;i+=100)await js('/storage/v1/object/media',{method:'DELETE',auth:1,json:{prefixes:all.slice(i,i+100)}})}}
+ const e2e={
+  state:()=>E.dk?'ready':'locked',
+  async init(){if(E.dk)return 'ready';try{const o=JSON.parse(localStorage.getItem(LK)||'null');if(o&&o.u===uid()&&o.k){await setDK(unb64(o.k),false);return 'ready'}}catch(e){}
+   try{return await fetchBundle()?'locked':'none'}catch(e){return e.code==='offline'?'offline':'error'}},
+  async setupPrepare(pass){const raw=rnd(32),rk=rkNew();E.prep={raw,rk,b:await mkBundle(pass,rk,raw)};return rk},
+  async setupCommit(){if(!E.prep)throw new Error('prep');if(await fetchBundle())throw Object.assign(new Error('esiste'),{code:'exists'});await putBundle(E.prep.b);await setDK(E.prep.raw,true);E.prep=null},
+  async unlock(pass){await setDK(await rawByPass(pass),true)},
+  async unlockRecovery(rk){const b=E.bundle||await fetchBundle();if(!b)throw Object.assign(new Error('nessuna chiave'),{code:'nokey'});let raw;try{raw=await unwrap(b.rw,await kek(rkNorm(rk),unb64(b.rs),b.ri))}catch(e){throw Object.assign(new Error('chiave errata'),{code:'badkey'})}await setDK(raw,true)},
+  async setPass(pass){if(!E.raw)throw lockErr();const b=E.bundle||await fetchBundle(),s=rnd(16);await putBundle(Object.assign({},b,{it:IT,s:b64(s),w:await wrap(E.raw,await kek(pass,s,IT))}))},
+  async changePass(cur,nw){await rawByPass(cur);await e2e.setPass(nw)},
+  async newRecovery(cur){await rawByPass(cur);const rk=rkNew(),rs=rnd(16),b=E.bundle;await putBundle(Object.assign({},b,{ri:RIT,rs:b64(rs),rw:await wrap(E.raw,await kek(rkNorm(rk),rs,RIT))}));return rk},
+  async reset(){await js('/rest/v1/records?user_id=eq.'+uid(),{method:'DELETE',auth:1,headers:{Prefer:'return=minimal'}});try{await listDel(()=>true)}catch(e){}await putBundle(null);E.dk=null;E.raw=null;E.bundle=null;try{localStorage.removeItem(LK)}catch(e){}},
+  needMig:()=>{try{return localStorage.getItem(MG)!=='1'}catch(e){return false}},
+  setMig:()=>{try{localStorage.setItem(MG,'1')}catch(e){}},
+  async cleanup(){/* elimina le vecchie foto in chiaro solo se esiste la copia cifrata della stessa scheda */
+   for(const c of ['clienti','prodotti','opportunita','lead','movimenti','config']){const names=[];for(let off=0;off<20000;off+=100){const L=await js('/storage/v1/object/list/media',{method:'POST',auth:1,json:{prefix:uid()+'/'+c,limit:100,offset:off}});if(!L||!L.length)break;L.forEach(x=>{if(x&&x.name)names.push(x.name)});if(L.length<100)break}
+    const stem=n=>n.replace(/-[^-]*\.(enc|jpg)$/,''),enc=new Set(names.filter(n=>/\.enc$/.test(n)).map(stem)),old=names.filter(n=>/\.jpg$/.test(n)&&enc.has(stem(n))).map(n=>uid()+'/'+c+'/'+n);
+    for(let i=0;i<old.length;i+=100)await js('/storage/v1/object/media',{method:'DELETE',auth:1,json:{prefixes:old.slice(i,i+100)}})}}};
+ async function upBlob(p,body){const T=['application/octet-stream','image/jpeg'];for(let i=0;i<T.length;i++){const r=await raw('/storage/v1/object/media/'+p,{method:'POST',auth:1,headers:{'Content-Type':T[i],'x-upsert':'true'},body});if(r.ok)return;let j=null;try{j=await r.json()}catch(e){}const er=mkErr(r,j);if(i===T.length-1||!/mime|type/i.test(er.message||''))throw er}}
+ async function upFoto(col,id,du){const hh=hs(du),p=uid()+'/'+col+'/'+safe(id)+'-'+safe(hh)+'.enc';
+  if(!PH[p]){if(!E.dk)throw lockErr();const bl=await (await fetch(du)).blob(),iv=rnd(12),ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:te.encode(p)},E.dk,await bl.arrayBuffer()));await upBlob(p,new Blob([iv,ct]));PH[p]=du}
   return [p,hh]}
  const okPath=p=>typeof p==='string'&&p.indexOf(uid()+'/')===0&&/^[\w-]+\/[\w-]+\/[\w.-]+$/.test(p)&&p.indexOf('..')<0;
- async function dlFoto(p){if(!okPath(p))return '';if(PH[p])return PH[p];try{const r=await raw('/storage/v1/object/authenticated/media/'+p,{auth:1});if(!r.ok)return '';const u=okImg(await b2d(await r.blob()));if(u)PH[p]=u;return u}catch(e){return ''}}
+ async function dlFoto(p){if(!okPath(p))return '';if(PH[p])return PH[p];try{const r=await raw('/storage/v1/object/authenticated/media/'+p,{auth:1});if(!r.ok)return '';let bl=await r.blob();if(/\.enc$/.test(p)){if(!E.dk)return '';const u8=new Uint8Array(await bl.arrayBuffer());bl=new Blob([await crypto.subtle.decrypt({name:'AES-GCM',iv:u8.subarray(0,12),additionalData:te.encode(p)},E.dk,u8.subarray(12))],{type:'image/jpeg'})}const u=okImg(await b2d(bl));if(u)PH[p]=u;return u}catch(e){return ''}}
  async function put(col,id,data){const d=Object.assign({},data);delete d._u;delete d._by;
   if(okImg(d.foto)){const [p,hh]=await upFoto(col,id,d.foto);d.fotoPath=p;d.fotoH=hh;delete d.foto}else{delete d.foto;delete d.fotoPath;delete d.fotoH}
-  await js('/rest/v1/records?on_conflict=user_id,col,id',{method:'POST',auth:1,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},json:[{user_id:uid(),col,id:String(id),data:d,deleted:false}]})}
+  await js('/rest/v1/records?on_conflict=user_id,col,id',{method:'POST',auth:1,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},json:[{user_id:uid(),col,id:String(id),data:await encJ(col,id,d),deleted:false}]})}
  const del=(col,id)=>js('/rest/v1/records?on_conflict=user_id,col,id',{method:'POST',auth:1,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},json:[{user_id:uid(),col,id:String(id),data:{},deleted:true}]});
- async function inflate(row){const d=Object.assign({},row.data||{});if(d.fotoPath){const u=await dlFoto(d.fotoPath);delete d.fotoPath;delete d.fotoH;if(u)d.foto=u}return d}
+ async function inflate(row,col){const rd=row.data||{};const d=rd._e===1?await decJ(col,String(row.id),rd):Object.assign({},rd);if(d.fotoPath){const u=await dlFoto(d.fotoPath);delete d.fotoPath;delete d.fotoH;if(u)d.foto=u}return d}
  /* lettura periodica (ogni 15 s e al ritorno sull'app) */
  function watch(col,onRows,onErr){let stop=false,last='1970-01-01T00:00:00+00:00',first=true,busy=false;
   async function pull(){if(stop||busy)return;busy=true;try{let all=[];for(;;){const q='/rest/v1/records?col=eq.'+col+'&updated_at=gt.'+encodeURIComponent(last)+'&order=updated_at.asc&limit=500&select=id,data,deleted,updated_at';const rows=await js(q,{auth:1});all=all.concat(rows);if(rows.length)last=rows[rows.length-1].updated_at;if(rows.length<500)break}
@@ -10291,17 +10333,17 @@ const SB=(()=>{
  const db=()=>ses?{
   collection:col=>({
    doc:id=>({set:d=>put(col,id,d),delete:()=>del(col,id)}),
-   onSnapshot:(cb,eb)=>watch(col,async(rows,first)=>{const ch=[];for(const r of rows){if(r.deleted)ch.push({type:'removed',doc:{id:String(r.id)}});else{const d=await inflate(r);ch.push({type:first?'added':'modified',doc:{id:String(r.id),data:()=>Object.assign({},d)}})}}cb({docChanges:()=>ch})},eb)}),
-  doc:path=>{const [col,id]=path.split('/');return{set:d=>put(col,id,d),onSnapshot:(cb,eb)=>watch(col,async(rows,first)=>{const r=rows.filter(x=>String(x.id)===id&&!x.deleted).pop();if(r){const d=await inflate(r);cb({exists:true,data:()=>Object.assign({},d)})}else if(first)cb({exists:false,data:()=>null})},eb)}}}:null;
+   onSnapshot:(cb,eb)=>watch(col,async(rows,first)=>{const ch=[];for(const r of rows){if(r.deleted)ch.push({type:'removed',doc:{id:String(r.id)}});else{let d;try{d=await inflate(r,col)}catch(e){if(e&&e.code==='locked')throw e;continue}ch.push({type:first?'added':'modified',doc:{id:String(r.id),data:()=>Object.assign({},d)}})}}cb({docChanges:()=>ch})},eb)}),
+  doc:path=>{const [col,id]=path.split('/');return{set:d=>put(col,id,d),onSnapshot:(cb,eb)=>watch(col,async(rows,first)=>{const r=rows.filter(x=>String(x.id)===id&&!x.deleted).pop();if(r){let d=null;try{d=await inflate(r,col)}catch(e){if(e&&e.code==='locked')throw e}if(d)cb({exists:true,data:()=>Object.assign({},d)});else if(first)cb({exists:false,data:()=>null})}else if(first)cb({exists:false,data:()=>null})},eb)}}}:null;
  const DK=['crm-clienti-v1','crm-opps-v1','crm-prod-v1','crm-mov-v1','crm-lead-v1'];
  function wipe(){try{Object.keys(localStorage).filter(k=>/^crm-/.test(k)&&!/^crm-(lock|sb)-v1$/.test(k)&&k!=='crm-sb-uid').forEach(k=>localStorage.removeItem(k));DK.forEach(k=>{localStorage.setItem(k,'[]');localStorage.setItem(k+'-seeded','1')});localStorage.setItem('crm-lead-seeded','1')}catch(e){}}
- const msg=e=>({invalid_credentials:'Email o password non corretti.',email_not_confirmed:'Conferma prima l’indirizzo email dal link che ti abbiamo inviato.',user_already_exists:'Esiste già un account con questa email: accedi.',weak_password:'Password troppo debole: usa almeno 8 caratteri.',over_request_rate_limit:'Troppi tentativi: riprova tra qualche minuto.',over_email_send_rate_limit:'Troppe email inviate: riprova tra qualche minuto.',email_address_invalid:'Indirizzo email non valido.',validation_failed:'Controlla email e password.',offline:'Sei offline: serve la connessione per accedere.',signup_disabled:'Le registrazioni sono disattivate.',otp_expired:'Il link è scaduto o è già stato usato: richiedi una nuova email.',same_password:'La nuova password deve essere diversa dalla precedente.',access_denied:'Il link non è valido: richiedi una nuova email.'})[e&&e.code]||'Operazione non riuscita ('+(e&&(e.code||e.message)||'errore')+').';
- return{db,uid,email:()=>ses&&ses.user?ses.user.email:'',has:()=>!!ses,msg,wipe,
+ const msg=e=>({badpass:'Passphrase errata.',badkey:'Chiave di recupero non valida.',locked:'Dati cifrati: serve la passphrase.',invalid_credentials:'Email o password non corretti.',email_not_confirmed:'Conferma prima l’indirizzo email dal link che ti abbiamo inviato.',user_already_exists:'Esiste già un account con questa email: accedi.',weak_password:'Password troppo debole: usa almeno 8 caratteri.',over_request_rate_limit:'Troppi tentativi: riprova tra qualche minuto.',over_email_send_rate_limit:'Troppe email inviate: riprova tra qualche minuto.',email_address_invalid:'Indirizzo email non valido.',validation_failed:'Controlla email e password.',offline:'Sei offline: serve la connessione per accedere.',signup_disabled:'Le registrazioni sono disattivate.',otp_expired:'Il link è scaduto o è già stato usato: richiedi una nuova email.',same_password:'La nuova password deve essere diversa dalla precedente.',access_denied:'Il link non è valido: richiedi una nuova email.'})[e&&e.code]||'Operazione non riuscita ('+(e&&(e.code||e.message)||'errore')+').';
+ return{db,uid,e2e,email:()=>ses&&ses.user?ses.user.email:'',has:()=>!!ses,msg,wipe,
   async signIn(email,password){setSes(await js('/auth/v1/token?grant_type=password',{method:'POST',json:{email,password}}))},
   async signUp(email,password){const j=await js('/auth/v1/signup',{method:'POST',json:{email,password}});if(j&&j.access_token){setSes(j);return true}return false},
   recover:email=>js('/auth/v1/recover',{method:'POST',json:{email}}),
   async logout(){try{if(ses)await raw('/auth/v1/logout?scope=local',{method:'POST',auth:1})}catch(e){}ses=null;save()},
-  async removeAccount(){try{for(const c of ['clienti','prodotti','opportunita','lead','movimenti']){for(let g=0;g<50;g++){const L=await js('/storage/v1/object/list/media',{method:'POST',auth:1,json:{prefix:uid()+'/'+c,limit:100,offset:0}});if(!L||!L.length)break;await js('/storage/v1/object/media',{method:'DELETE',auth:1,json:{prefixes:L.map(x=>uid()+'/'+c+'/'+x.name)}})}}}catch(e){}
+  async removeAccount(){try{for(const c of ['clienti','prodotti','opportunita','lead','movimenti','config']){for(let g=0;g<50;g++){const L=await js('/storage/v1/object/list/media',{method:'POST',auth:1,json:{prefix:uid()+'/'+c,limit:100,offset:0}});if(!L||!L.length)break;await js('/storage/v1/object/media',{method:'DELETE',auth:1,json:{prefixes:L.map(x=>uid()+'/'+c+'/'+x.name)}})}}}catch(e){}
    await js('/rest/v1/rpc/delete_my_account',{method:'POST',auth:1,json:{}});ses=null;save()},
   /* link ricevuti per email (conferma, recupero): il token non resta nell'indirizzo e non apre da solo una sessione */
   link:(()=>{const l=window.__authLink||null;try{delete window.__authLink}catch(e){}return l})(),
@@ -10309,7 +10351,7 @@ const SB=(()=>{
   async linkPassword(tok,password){const hd={apikey:K,Authorization:'Bearer '+tok,'Content-Type':'application/json'};const r=await fetch(U+'/auth/v1/user',{method:'PUT',headers:hd,body:JSON.stringify({password})});let j=null;try{j=await r.json()}catch(e){}if(!r.ok)throw mkErr(r,j);try{await fetch(U+'/auth/v1/logout?scope=global',{method:'POST',headers:hd})}catch(e){}ses=null;save()},
   /* dopo l'accesso: se cambia utente (o primo accesso) il dispositivo riparte vuoto, poi arriva tutto dal cloud */
   enter(){const id=uid();let prev='';try{prev=localStorage.getItem(UK)||''}catch(e){}if(prev!==id){wipe();try{localStorage.setItem(UK,id)}catch(e){}location.reload();return}
-   document.documentElement.classList.remove('noauth');CLOUD.on=true;cloudStart()},
+   document.documentElement.classList.remove('noauth');CLOUD.on=true;cloudGate()},
   forget(){try{localStorage.removeItem(UK)}catch(e){}}}})();
 { let mode='in',ltok='',lmail='';const $a=id=>document.getElementById(id);
   const paintAu=()=>{if(mode==='new'){$a('au_t').textContent='Nuova password';$a('au_h').textContent='Scegli una nuova password per '+lmail+'.';$a('au_gl').textContent='Salva password';$a('au_sw').textContent='Annulla';$a('au_e').hidden=true;$a('au_ck').hidden=true;$a('au_p').autocomplete='new-password';$a('au_fg').hidden=true;return}$a('au_e').hidden=false;$a('au_ck').hidden=mode!=='up';$a('au_t').textContent=mode==='in'?'Accedi':'Crea il tuo account';$a('au_h').textContent=mode==='in'?'Accedi per ritrovare i tuoi dati su ogni dispositivo.':'Con un account i tuoi dati restano al sicuro e sincronizzati tra i tuoi dispositivi.';$a('au_gl').textContent=mode==='in'?'Accedi':'Crea account';$a('au_sw').textContent=mode==='in'?'Crea un account':'Ho già un account';$a('au_p').autocomplete=mode==='in'?'current-password':'new-password';$a('au_fg').hidden=mode!=='in'};
@@ -10333,15 +10375,62 @@ const SB=(()=>{
   const bo=h('button','btn lbl');bo.type='button';bo.innerHTML=ICONS.user+' Esci da questo dispositivo';bo.style.marginTop='10px';
   const bd=h('button','btn lbl');bd.type='button';bd.innerHTML=ICONS.trash+' Elimina il mio account';bd.style.cssText='margin-top:10px;color:var(--danger)';
   const nt=h('div','hint','I dati sono salvati nel tuo account e restano sui tuoi dispositivi. Uscendo, i dati vengono rimossi da questo dispositivo ma restano nel tuo account. Eliminando l’account vengono cancellati per sempre, sul cloud e qui.');nt.style.marginTop='10px';
-  f1.append(h('label','','Account'),em,st,bo,bd,nt);pg.append(f1);
+  const ce=h('div','hint');ce.id='ac_ce';ce.style.marginTop='12px';const b1=h('button','btn lbl');b1.type='button';b1.innerHTML=ICONS.lock+' Cambia passphrase';b1.style.marginTop='8px';b1.onclick=()=>E2EUI.show('c1');const b2=h('button','btn lbl');b2.type='button';b2.innerHTML=ICONS.lock+' Nuova chiave di recupero';b2.style.marginTop='8px';b2.onclick=()=>E2EUI.show('c2');const b3=h('button','btn lbl p');b3.type='button';b3.innerHTML=ICONS.lock+' Attiva la cifratura';b3.style.marginTop='8px';b3.onclick=()=>{CLOUD.started=false;cloudGate()};
+  window.paintE2=()=>{const r=SB.e2e.state()==='ready';ce.textContent=r?'Cifratura end-to-end attiva: i dati vengono cifrati su questo dispositivo prima di andare nel cloud.':'Cifratura non attiva su questo dispositivo: la sincronizzazione col cloud è in pausa finché non inserisci la passphrase.';b1.hidden=b2.hidden=!r;b3.hidden=r};
+  f1.append(h('label','','Account'),em,st,ce,b3,b1,b2,bo,bd,nt);pg.append(f1);
   document.querySelector('#mSet .sp[data-sp=cl]').after(pg);
   SPG[0][1].push(['ac','user','Account',()=>SB.email()||'Non connesso']);SPN.ac='Account';
   {const s=$('st_store');if(s){s.hidden=true;const l=document.querySelector('label[for=st_store]');if(l)l.hidden=true;const t=$('st_sthint');if(t)t.hidden=true}}
-  const em0=setSp;setSp=function(k){if(k==='ac')em.textContent='Connesso come '+(SB.email()||'—');return em0.apply(this,arguments)};
+  const em0=setSp;setSp=function(k){if(k==='ac'){em.textContent='Connesso come '+(SB.email()||'—');try{paintE2()}catch(e){}}return em0.apply(this,arguments)};
   bo.onclick=()=>askConfirm('Uscire da questo dispositivo? I dati vengono rimossi da qui ma restano nel tuo account.','user','Esci',async()=>{try{await Promise.all(Object.keys(CSPEC).map(k=>cloudFlush(k)))}catch(e){}cloudStop();await SB.logout();SB.wipe();SB.forget();location.reload()});
   bd.onclick=()=>askConfirm('Eliminare definitivamente il tuo account? Clienti, opportunità, prodotti, foto e tutto il resto vengono cancellati dal cloud e da questo dispositivo. Non si può annullare.','trash','Elimina tutto',async()=>{try{cloudStop();await SB.removeAccount();SB.wipe();SB.forget();location.reload()}catch(e){toast('Eliminazione non riuscita: '+SB.msg(e))}});
-  if(SB.has())setTimeout(()=>{CLOUD.on=true;cloudStart()},600);else CLOUD.on=false}
+  if(SB.has())setTimeout(()=>{CLOUD.on=true;cloudGate()},600);else CLOUD.on=false}
 
+/* ===== cifratura dei dati: schermate di attivazione e sblocco ===== */
+const E2EUI=(()=>{
+ const M=$('mE2E'),B=$('e2Box');let keys=new Set(),view='',rk='';
+ const MIN=10;
+ const fld=(id,lab,type,ac)=>{const f=h('div','f'),l=h('label','',lab);l.setAttribute('for',id);const i=h('input');i.id=id;i.type=type||'password';i.autocomplete=ac||'off';i.autocapitalize='off';i.spellcheck=false;f.append(l,i);return f};
+ const msg=()=>{const m=h('div','hint');m.id='e2m';m.style.cssText='min-height:20px;color:var(--danger);margin:6px 0';return m};
+ const say=t=>{const m=$('e2m');if(m)m.textContent=t||''};
+ const btn=(txt,ic,cls,fn)=>{const b=h('button','btn lbl'+(cls?' '+cls:''));b.type='button';b.innerHTML=(ic?ICONS[ic]+' ':'')+txt;b.onclick=fn;b.style.marginTop='8px';b.style.width='100%';return b};
+ const lnk=(txt,fn)=>{const b=h('button','','');b.type='button';b.textContent=txt;b.style.cssText='background:none;border:0;color:inherit;text-decoration:underline;padding:10px 0 0;font-size:14px;display:block;margin:0 auto';b.onclick=fn;return b};
+ const busy=async(b,fn)=>{b.disabled=true;try{await fn()}catch(e){say(SB.msg(e)||'Operazione non riuscita.')}finally{b.disabled=false}};
+ const okPass=(p,q)=>{if(p.length<MIN){say('La passphrase deve avere almeno '+MIN+' caratteri.');return false}if(p!==q){say('Le due passphrase non coincidono.');return false}return true};
+ function frame(title,txt){B.textContent='';const t=h('h3','',title);t.style.margin='0 0 8px';B.append(t);if(txt){const p=h('p','hint',txt);p.style.margin='0 0 10px';B.append(p)}}
+ function show(v){view=v;M.hidden=false;
+  if(v==='s1'){frame('Proteggi i tuoi dati','I tuoi dati vengono cifrati sul tuo dispositivo prima di andare nel cloud: nessuno, nemmeno chi gestisce l’app, può leggerli. Scegli una passphrase: ti servirà per aprire i dati su un nuovo dispositivo. Se la perdi e non hai la chiave di recupero, i dati nel cloud non si possono recuperare.');
+   B.append(fld('e2p','Passphrase (almeno '+MIN+' caratteri)','password','new-password'),fld('e2q','Ripeti la passphrase','password','new-password'),msg());
+   const go=btn('Continua','check','p',()=>busy(go,async()=>{const p=$('e2p').value;if(!okPass(p,$('e2q').value))return;say('');rk=await SB.e2e.setupPrepare(p);show('s2')}));B.append(go,lnk('Non ora',()=>{M.hidden=true;toast('Il cloud resta in pausa finché non attivi la cifratura (Impostazioni → Account).')}))}
+  else if(v==='s2'||v==='r2'){frame('Chiave di recupero','Salvala in un posto sicuro (gestore password, foglio stampato). È l’unico modo per riavere i dati se dimentichi la passphrase. Non verrà mostrata di nuovo.');
+   const k=h('div','');k.id='e2k';k.textContent=rk.slice(0,19)+'\n'+rk.slice(20);k.style.cssText='white-space:pre;font:600 17px/1.6 ui-monospace,Menlo,monospace;letter-spacing:.04em;text-align:center;padding:14px 8px;border:1px dashed var(--out);border-radius:12px;word-break:break-all;user-select:all;-webkit-user-select:all';B.append(k);
+   const row=h('div','two');row.style.marginTop='6px';
+   const cp=btn('Copia','clip','',async()=>{try{await navigator.clipboard.writeText(rk);toast('Chiave copiata.')}catch(e){toast('Copia non riuscita: seleziona e copia a mano.')}}),dl=btn('Scarica','download','',()=>{try{const a=h('a');a.href=URL.createObjectURL(new Blob(['KRANG CRM - chiave di recupero\n'+SB.email()+'\n\n'+rk+'\n\nConservala in un posto sicuro: senza passphrase e senza questa chiave i dati cifrati non si recuperano.\n'],{type:'text/plain'}));a.download='krang-crm-chiave-recupero.txt';document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}catch(e){toast('Download non riuscito.')}});
+   row.append(cp,dl);B.append(row);
+   const lb=h('label','chk');const ck=h('input');ck.type='checkbox';ck.id='e2ck';lb.append(ck,h('span','','Ho salvato la chiave di recupero in un posto sicuro'));lb.style.cssText='display:flex;gap:10px;align-items:flex-start;margin:12px 0 4px;font-size:14px';B.append(lb,msg());
+   const go=btn(v==='s2'?'Attiva la cifratura':'Fatto','check','p',()=>busy(go,async()=>{if(!ck.checked){say('Conferma di aver salvato la chiave.');return}
+    if(v==='s2'){try{await SB.e2e.setupCommit()}catch(e){if(e.code==='exists'){rk='';M.hidden=true;CLOUD.started=false;cloudGate();return}throw e}rk='';M.hidden=true;toast('Cifratura attivata: sto cifrando i tuoi dati…');CLOUD.started=false;cloudGate()}else{rk='';M.hidden=true;toast('Nuova chiave di recupero salvata.')}}));B.append(go)}
+  else if(v==='u1'){frame('Sblocca i tuoi dati','I dati di questo account sono cifrati. Inserisci la passphrase per aprirli su questo dispositivo.');
+   B.append(fld('e2p','Passphrase','password','current-password'),msg());
+   const go=btn('Sblocca','check','p',()=>busy(go,async()=>{await SB.e2e.unlock($('e2p').value);M.hidden=true;CLOUD.started=false;cloudGate()}));B.append(go,lnk('Ho la chiave di recupero',()=>show('u2')),lnk('Non ricordo né passphrase né chiave',()=>show('u3')));$('e2p').onkeydown=e=>{if(e.key==='Enter')go.click()}}
+  else if(v==='u2'){frame('Chiave di recupero','Inserisci la chiave di recupero (32 caratteri a gruppi di 4). Dopo ti farò scegliere una nuova passphrase.');
+   B.append(fld('e2p','Chiave di recupero','text','off'),msg());
+   const go=btn('Continua','check','p',()=>busy(go,async()=>{await SB.e2e.unlockRecovery($('e2p').value);show('u4')}));B.append(go,lnk('Indietro',()=>show('u1')))}
+  else if(v==='u4'){frame('Nuova passphrase','Scegli una nuova passphrase per questo account.');
+   B.append(fld('e2p','Nuova passphrase (almeno '+MIN+' caratteri)','password','new-password'),fld('e2q','Ripeti la passphrase','password','new-password'),msg());
+   const go=btn('Salva','check','p',()=>busy(go,async()=>{const p=$('e2p').value;if(!okPass(p,$('e2q').value))return;await SB.e2e.setPass(p);M.hidden=true;toast('Passphrase aggiornata.');CLOUD.started=false;cloudGate()}));B.append(go)}
+  else if(v==='u3'){frame('Ricominciare da zero','Senza passphrase e senza chiave di recupero i dati nel cloud non si possono leggere. Puoi eliminarli e ricominciare con la cifratura: perdi tutti i dati cloud di questo account (quelli ancora presenti su un dispositivo già sbloccato restano lì). Scrivi ELIMINA per confermare.');
+   B.append(fld('e2p','Conferma','text','off'),msg());
+   const go=btn('Elimina i dati cloud','trash','',()=>busy(go,async()=>{if($('e2p').value.trim()!=='ELIMINA'){say('Scrivi ELIMINA per confermare.');return}await SB.e2e.reset();show('s1')}));go.style.color='var(--danger)';B.append(go,lnk('Indietro',()=>show('u1')))}
+  else if(v==='c1'){frame('Cambia passphrase');
+   B.append(fld('e2c','Passphrase attuale','password','current-password'),fld('e2p','Nuova passphrase (almeno '+MIN+' caratteri)','password','new-password'),fld('e2q','Ripeti la nuova passphrase','password','new-password'),msg());
+   const go=btn('Salva','check','p',()=>busy(go,async()=>{const p=$('e2p').value;if(!okPass(p,$('e2q').value))return;await SB.e2e.changePass($('e2c').value,p);M.hidden=true;toast('Passphrase aggiornata.')}));B.append(go,lnk('Annulla',()=>{M.hidden=true}))}
+  else if(v==='c2'){frame('Nuova chiave di recupero','La chiave attuale smette di funzionare. Inserisci la passphrase per generarne una nuova.');
+   B.append(fld('e2c','Passphrase','password','current-password'),msg());
+   const go=btn('Genera','check','p',()=>busy(go,async()=>{rk=await SB.e2e.newRecovery($('e2c').value);show('r2')}));B.append(go,lnk('Annulla',()=>{M.hidden=true}))}
+  setTimeout(()=>{const f=$('e2p')||$('e2c');if(f&&view!=='s2'&&view!=='r2')try{f.focus()}catch(e){}},50)}
+ return{open:st=>show(st==='none'?'s1':'u1'),close:()=>{if(view==='s1'||view==='u1'||view==='u2'||view==='u3'||view==='u4')M.hidden=true},show,reset:()=>{keys=new Set()},
+  done:k=>{keys.add(k);if(['cl','op','pr','mv','ld','s'].every(x=>keys.has(x))){if(CLOUD.err)return;SB.e2e.setMig();SB.e2e.cleanup().catch(()=>{});toast('I tuoi dati sono cifrati.')}}}})();
 /* ===== info e versione ===== */
 {const rd=t=>{const m=/name="app-version" content="([^"|]+)\|([^"]+)"/.exec(t);return m?{v:m[1],d:m[2]}:null},cur=rd('<meta name="app-version" content="'+(document.querySelector('meta[name=app-version]')||{content:''}).content+'">')||{v:'?',d:''};
  const dl=d=>{const p=String(d).split('-');return p.length===3?(+p[2])+' '+['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'][+p[1]-1]+' '+p[0]:d};
