@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.4.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.4.0|2026-11-10"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.5.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.5.0|2026-11-10"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -172,6 +172,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 .crPool{display:flex;flex-wrap:wrap;margin:4px -4px;padding:2px 0 8px}.crChip{display:inline-flex;align-items:center;gap:6px;margin:4px;padding:9px 12px;border:1px solid var(--out);border-radius:12px;background:var(--surface);font-size:14px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:pan-y;cursor:grab}.crChip.used{opacity:.5}.crChip.sel{outline:2px solid var(--accent);opacity:1}.crChip.drg{opacity:.35}
 .crCut{border:0;background:none;color:var(--muted);padding:0;display:grid;place-items:center;width:22px;height:22px;cursor:pointer}.crCut svg{width:16px;height:16px}
 .crGhost{position:fixed;z-index:60;pointer-events:none;transform:translate(-50%,-130%);padding:9px 13px;border-radius:12px;background:var(--accent);box-shadow:0 6px 18px rgba(0,0,0,.25);font-size:14px;max-width:80vw}.crChk{margin:8px 0 14px}
+#authScr .chk{width:100%;justify-self:stretch;display:flex;gap:10px;align-items:flex-start;text-align:left;font-size:14px;margin:10px 0}#authScr .lkb .chk input{width:22px;height:22px;min-width:22px;padding:0;margin:0;flex:none;accent-color:#4fc3ff;box-shadow:none;border-radius:6px}#authScr .lkb .chk span{flex:1;min-width:0}#authScr .legal{margin-top:12px;font-size:13px;text-align:center}#authScr a{color:inherit;text-decoration:underline}
 #confirm{z-index:25}#mInfo,#mScan,#mDup{z-index:25}.scanIc{background:var(--surface);color:var(--ink);border:1.5px solid var(--out);box-shadow:none}.scanIc svg{width:24px;height:24px}.sbar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:0 0 8px}.sbar i{display:block;height:100%;width:4%;border-radius:99px;background:linear-gradient(90deg,#46c6ff,#6f8cff);transition:width .25s}#mInfo h3{margin:0 0 4px;font-size:20px}#mInfo p{margin:6px 0}#mInfo .two:has(#inU[hidden]){grid-template-columns:1fr}#mInfo .vv{font-size:26px;font-weight:800;margin:10px 0 2px}
 .box{background:var(--surface);border-radius:18px;padding:20px;max-width:360px;width:100%;box-shadow:var(--sh)}
 .box p{margin:0 0 16px;font-weight:600}
@@ -395,6 +396,8 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <button class="btn p lbl" id="au_go" type="button"><span data-i="check"></span><span id="au_gl">Accedi</span></button>
   <button class="btn lbl" id="au_sw" type="button">Crea un account</button>
   <button class="btn lbl" id="au_fg" type="button">Password dimenticata</button>
+  <label class="chk" id="au_ck" hidden><input type="checkbox" id="au_ok"> <span>Accetto i <a href="termini.html">Termini d’uso</a> e ho letto l’<a href="privacy.html">Informativa privacy</a></span></label>
+  <div class="legal"><a href="privacy.html">Privacy</a> · <a href="termini.html">Termini</a></div>
   <div class="ver" id="au_v"></div>
 </div></div>
 <div id="lockScr" role="dialog" aria-modal="true" aria-label="App bloccata"><div class="lkb">
@@ -410,7 +413,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <header>
     <div class="stk">
     <div class="hrow"><button class="btn ico" id="menuBtn" type="button" aria-label="Menu" aria-haspopup="true" aria-expanded="false" title="Menu"><span data-i="menu"></span></button><h1 id="title">Clienti</h1></div>
-    <div id="amBack" hidden></div><div class="amenu" id="appMenu" role="menu" hidden><button type="button" role="menuitem" data-m="home"><span data-i="home"></span>Home</button><button type="button" role="menuitem" data-m="an"><span data-i="analytics"></span>Analytics</button><button type="button" role="menuitem" data-m="prod"><span data-i="box"></span>Prodotti</button><button type="button" role="menuitem" data-m="mkt"><span data-i="mega"></span>Marketing</button><hr class="amsep"><button type="button" role="menuitem" data-m="set"><span data-i="gear"></span>Impostazioni</button><button type="button" role="menuitem" data-m="info"><span data-i="info"></span>Info</button></div>
+    <div id="amBack" hidden></div><div class="amenu" id="appMenu" role="menu" hidden><button type="button" role="menuitem" data-m="home"><span data-i="home"></span>Home</button><button type="button" role="menuitem" data-m="an"><span data-i="analytics"></span>Analytics</button><button type="button" role="menuitem" data-m="prod"><span data-i="box"></span>Prodotti</button><button type="button" role="menuitem" data-m="mkt"><span data-i="mega"></span>Marketing</button><hr class="amsep"><button type="button" role="menuitem" data-m="set"><span data-i="gear"></span>Impostazioni</button><button type="button" role="menuitem" data-m="legal"><span data-i="shield"></span>Privacy e termini</button><button type="button" role="menuitem" data-m="info"><span data-i="info"></span>Info</button></div>
     <div class="tabs" id="tabs"><button type="button" class="on" data-v="home"><span data-i="home"></span>Home</button><button type="button" data-v="clienti"><span data-i="users"></span>Clienti</button><button type="button" data-v="lead"><span data-i="inbox"></span>Lead</button><button type="button" data-v="opp"><span data-i="target"></span>Opportunity</button></div>
     </div>
     <div class="sub" id="count"></div>
@@ -822,6 +825,6 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunity" title="Elimina opportunity"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunity" title="Salva opportunity"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.4.0"></script>
+<script src="app.js?v=1.5.0"></script>
 </body>
 </html>

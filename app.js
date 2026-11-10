@@ -10065,7 +10065,7 @@ setTimeout(()=>{try{if(applyStops())render()}catch(e){}try{runBday()}catch(e){}t
 {const mb=$('menuBtn'),mn=$('appMenu'),bk=$('amBack');const close=()=>{mn.hidden=true;bk.hidden=true;mb.setAttribute('aria-expanded','false')};
  mb.onclick=()=>{const o=mn.hidden;mn.hidden=!o;bk.hidden=!o;mb.setAttribute('aria-expanded',String(o));if(o)mn.querySelector('button').focus()};bk.onclick=close;
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!mn.hidden){close();mb.focus()}});
- mn.onclick=e=>{const b=e.target.closest('button');if(!b)return;close();({home:()=>setTab('home'),an:()=>openAn(),prod:()=>setTab('prod'),mkt:()=>setTab('mkt'),set:()=>{openSettings();paintBro()},info:()=>openInfo()})[b.dataset.m]()}}
+ mn.onclick=e=>{const b=e.target.closest('button');if(!b)return;close();({home:()=>setTab('home'),an:()=>openAn(),prod:()=>setTab('prod'),mkt:()=>setTab('mkt'),set:()=>{openSettings();paintBro()},info:()=>openInfo(),legal:()=>{location.href='privacy.html'}})[b.dataset.m]()}}
 
 
 /* ===== Google Drive come archivio dei dati ===== */
@@ -10312,7 +10312,7 @@ const SB=(()=>{
    document.documentElement.classList.remove('noauth');CLOUD.on=true;cloudStart()},
   forget(){try{localStorage.removeItem(UK)}catch(e){}}}})();
 { let mode='in',ltok='',lmail='';const $a=id=>document.getElementById(id);
-  const paintAu=()=>{if(mode==='new'){$a('au_t').textContent='Nuova password';$a('au_h').textContent='Scegli una nuova password per '+lmail+'.';$a('au_gl').textContent='Salva password';$a('au_sw').textContent='Annulla';$a('au_e').hidden=true;$a('au_p').autocomplete='new-password';$a('au_fg').hidden=true;return}$a('au_e').hidden=false;$a('au_t').textContent=mode==='in'?'Accedi':'Crea il tuo account';$a('au_h').textContent=mode==='in'?'Accedi per ritrovare i tuoi dati su ogni dispositivo.':'Con un account i tuoi dati restano al sicuro e sincronizzati tra i tuoi dispositivi.';$a('au_gl').textContent=mode==='in'?'Accedi':'Crea account';$a('au_sw').textContent=mode==='in'?'Crea un account':'Ho già un account';$a('au_p').autocomplete=mode==='in'?'current-password':'new-password';$a('au_fg').hidden=mode!=='in'};
+  const paintAu=()=>{if(mode==='new'){$a('au_t').textContent='Nuova password';$a('au_h').textContent='Scegli una nuova password per '+lmail+'.';$a('au_gl').textContent='Salva password';$a('au_sw').textContent='Annulla';$a('au_e').hidden=true;$a('au_ck').hidden=true;$a('au_p').autocomplete='new-password';$a('au_fg').hidden=true;return}$a('au_e').hidden=false;$a('au_ck').hidden=mode!=='up';$a('au_t').textContent=mode==='in'?'Accedi':'Crea il tuo account';$a('au_h').textContent=mode==='in'?'Accedi per ritrovare i tuoi dati su ogni dispositivo.':'Con un account i tuoi dati restano al sicuro e sincronizzati tra i tuoi dispositivi.';$a('au_gl').textContent=mode==='in'?'Accedi':'Crea account';$a('au_sw').textContent=mode==='in'?'Crea un account':'Ho già un account';$a('au_p').autocomplete=mode==='in'?'current-password':'new-password';$a('au_fg').hidden=mode!=='in'};
   const say=(t,ok)=>{const m=$a('au_m');m.textContent=t||'';m.hidden=!t;m.style.color=ok?'#8ff0c4':''};
   $a('au_sw').onclick=()=>{if(mode==='new'){ltok='';mode='in';say('');paintAu();if(SB.has())document.documentElement.classList.remove('noauth');return}mode=mode==='in'?'up':'in';say('');paintAu()};
   const go=async()=>{const e=$a('au_e').value.trim().toLowerCase(),p=$a('au_p').value;say('');
@@ -10320,7 +10320,7 @@ const SB=(()=>{
    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)){say('Inserisci un’email valida.');return}
    if(p.length<8){say('La password deve avere almeno 8 caratteri.');return}
    const b=$a('au_go');b.disabled=true;try{
-    if(mode==='up'){const ok=await SB.signUp(e,p);if(!ok){say('Ti abbiamo inviato una email: conferma l’indirizzo dal link, poi accedi.',true);mode='in';paintAu();return}}
+    if(mode==='up'){if(!$a('au_ok').checked){say('Per creare l’account accetta i Termini d’uso e l’Informativa privacy.');return}const ok=await SB.signUp(e,p);if(!ok){say('Ti abbiamo inviato una email: conferma l’indirizzo dal link, poi accedi.',true);mode='in';paintAu();return}}
     else await SB.signIn(e,p);
     $a('au_p').value='';SB.enter()}catch(x){say(SB.msg(x))}finally{b.disabled=false}};
   $a('au_go').onclick=go;$a('au_p').onkeydown=ev=>{if(ev.key==='Enter')go()};
