@@ -69,7 +69,7 @@ const inits=nm=>{const w=String(nm||'').trim().split(/\s+/).filter(Boolean);retu
 function fullName(c){const p=[c.nome,c.cognome].filter(Boolean).join(' ');return c.tipo==='azienda'?(c.azienda||p||'Senza nome'):(p||c.azienda||'Senza nome')}
 let OBC=null;const oppsOf=id=>{if(!OBC){OBC=new Map;for(const o of opps){let a=OBC.get(o.clienteId);if(!a)OBC.set(o.clienteId,a=[]);a.push(o)}setTimeout(()=>{OBC=null},0)}return OBC.get(id)||[]};
 let WONS=null;const wonSet=()=>{if(!WONS){WONS=new Set;for(const o of opps)if(o.fase==='vinta')WONS.add(o.clienteId);setTimeout(()=>{WONS=null},0)}return WONS};
-const cstat=c=>wonSet().has(c.id)?['cliente','Cliente','#b9e6d3','Cliente: ha almeno un’opportunity vinta.']:['prospect','Prospect','#ffd9b0','Prospect: nessuna opportunity vinta finora.'];
+const cstat=c=>wonSet().has(c.id)?['cliente','Cliente','#b9e6d3','Cliente: ha almeno un’opportunità vinta.']:['prospect','Prospect','#ffd9b0','Prospect: nessuna opportunità vinta finora.'];
 let cFilter='';
 function stChip(c){const st=cstat(c),i=document.createElement('i');i.className='cst';i.textContent=st[1];i.style.background=st[2];i.title=st[3];return i}
 function paintFilt(){const w=$('cFilt');w.textContent='';const n={prospect:0,cliente:0};clients.forEach(c=>n[cstat(c)[0]]++);const nf=clients.filter(c=>c.fav).length;
@@ -152,7 +152,7 @@ function viaNew(kind){
 $('del').onclick=()=>{
   if(!editing)return;
   const cl=editing,nl=opps.filter(o=>o.clienteId===cl.id).length;
-  askConfirm('Eliminare '+fullName(cl)+'? '+(nl?'Verranno eliminate anche '+nl+' opportunity collegate. ':'')+'L’operazione non si può annullare.','trash','Elimina',()=>{opps=opps.filter(o=>o.clienteId!==cl.id);persistO();clients=clients.filter(c=>c!==cl);persist();purgeLog('eliminazione','manuale',cl.id);$('sheet').hidden=true;render();renderO();toast('Cliente eliminato.')});
+  askConfirm('Eliminare '+fullName(cl)+'? '+(nl?'Verranno eliminate anche '+nl+' opportunità collegate. ':'')+'L’operazione non si può annullare.','trash','Elimina',()=>{opps=opps.filter(o=>o.clienteId!==cl.id);persistO();clients=clients.filter(c=>c!==cl);persist();purgeLog('eliminazione','manuale',cl.id);$('sheet').hidden=true;render();renderO();toast('Cliente eliminato.')});
 };
 $('favBtn').onclick=()=>{curFav=!curFav;paintFav();if(editing){editing.fav=curFav;editing.agg=new Date().toISOString();persist();render()}};
 let qt;$('q').oninput=()=>{clearTimeout(qt);qt=setTimeout(()=>{cLim=60;render()},150)};
@@ -265,7 +265,7 @@ function avgSale(){if(_avgS!==undefined)return _avgS;const a=opps.filter(o=>o.fa
 function trackF(){_avgS=undefined;const td=ymd();opps.forEach(o=>{const l=o.fh&&o.fh[o.fh.length-1];if(!l)o.fh=[{f:o.fase,d:(o.fase==='vinta'||o.fase==='persa'?o.chiusa:o.creata)||o.creata||td}];else if(l.f!==o.fase)o.fh.push({f:o.fase,d:td})})}
 function faseInfo(o){const open=o.fase!=='vinta'&&o.fase!=='persa',td=ymd(),fh=o.fh||[],since=(fh.length?fh[fh.length-1].d:o.creata)||td,cr=o.creata||since;return{open,since,inF:dayN(since,open?td:(o.chiusa||td)),tot:dayN(cr,open?td:(o.chiusa||td)),stale:open&&avgSale()!=null&&dayN(cr,td)>avgSale()}}
 function ageLine(o){const i=faseInfo(o);if(!o.creata&&!(o.fh&&o.fh.length))return null;const d=h('span','prs'+(i.stale?' warn':''));d.textContent=i.open?i.inF+' gg in questa fase'+(i.tot!==i.inF?' · '+i.tot+' gg dall’apertura':''):(o.fase==='vinta'?'Vinta':'Persa')+' in '+i.tot+' gg';return d}
-function persistO(){trackF();OBC=null;WONS=null;try{localStorage.setItem(OKEY,JSON.stringify(opps))}catch(e){toast('Spazio pieno: impossibile salvare le opportunity.')}}
+function persistO(){trackF();OBC=null;WONS=null;try{localStorage.setItem(OKEY,JSON.stringify(opps))}catch(e){toast('Spazio pieno: impossibile salvare le opportunità.')}}
 let _cmA=null,_cmL=-1,_cm=null;const cById=id=>{if(_cmA!==clients||_cmL!==clients.length){_cmA=clients;_cmL=clients.length;_cm=new Map();clients.forEach(c=>_cm.set(c.id,c))}let c=_cm.get(id);if(c&&c.id!==id)c=null;return c};
 const cname=id=>{const c=cById(id);return c?fullName(c):'Cliente rimosso'};
 const fase=k=>FASI.find(f=>f[0]===k)||FASI[0];
@@ -290,25 +290,25 @@ function renderO(){
   const open=opps.filter(o=>o.fase!=='vinta'&&o.fase!=='persa');
   const sum=(a,f=o=>o.valore)=>a.reduce((s,o)=>s+(+f(o)||0),0);
   $('sum').textContent='';
-  {const W=opps.filter(o=>o.fase==='vinta');[['Aperte',open.length,eur(sum(open)),'Opportunity non ancora vinte né perse: tra parentesi quante sono, sotto il loro valore totale.'],['Ponderato',null,eur(sum(open,o=>o.valore*o.prob/100)),'Ogni opportunity aperta conta per la sua probabilità di chiusura (es. 1.000 € al 50% = 500 €): è una stima di quanto ti aspetti di incassare.'],['Vinte',W.length,eur(sum(W)),'Valore delle opportunity vinte, tra parentesi quante sono.'],['Margine vinte',null,eur(sum(W,o=>mg(o).mar)),'Margine complessivo delle opportunity vinte (prezzo meno costo dei prodotti).']].forEach(([k,n,v,i])=>{const d=h('div','stat'),l=h('span','',k+(n!=null?' ':''));if(n!=null)l.append(h('small','','('+n+')'));d.append(l,h('b','',v));$('sum').append(d);infoBtn(d,i)})}
+  {const W=opps.filter(o=>o.fase==='vinta');[['Aperte',open.length,eur(sum(open)),'Opportunità non ancora vinte né perse: tra parentesi quante sono, sotto il loro valore totale.'],['Ponderato',null,eur(sum(open,o=>o.valore*o.prob/100)),'Ogni opportunità aperta conta per la sua probabilità di chiusura (es. 1.000 € al 50% = 500 €): è una stima di quanto ti aspetti di incassare.'],['Vinte',W.length,eur(sum(W)),'Valore delle opportunità vinte, tra parentesi quante sono.'],['Margine vinte',null,eur(sum(W,o=>mg(o).mar)),'Margine complessivo delle opportunità vinte (prezzo meno costo dei prodotti).']].forEach(([k,n,v,i])=>{const d=h('div','stat'),l=h('span','',k+(n!=null?' ':''));if(n!=null)l.append(h('small','','('+n+')'));d.append(l,h('b','',v));$('sum').append(d);infoBtn(d,i)})}
   {const f=$('oFilt'),vt=window._vt||(window._vt=document.querySelector('#oppView .vt'));f.textContent='';[['','Tutte'],...FASI.map(x=>[x[0],x[1]])].forEach(([k,l])=>{const b=h('button','',l);b.type='button';const fs=FASI.find(x=>x[0]===k);b.style.background=fs?fs[3]:'var(--lilac)';b.classList.toggle('on',oFilt===k);b.onclick=()=>{oFilt=k;renderO()};f.append(b)});f.append(vt)}
   {let s2=$('sum2');if(!s2){s2=h('div','sum');s2.id='sum2';$('sum').after(s2)}s2.textContent='';
    const W=opps.filter(o=>o.fase==='vinta'),P=opps.filter(o=>o.fase==='persa'),T=W.length+P.length,cw=W.filter(o=>o.creata&&o.chiusa).map(o=>faseInfo(o).tot),ci=cw.length?Math.round(cw.reduce((t,x)=>t+x,0)/cw.length):null;
-   [['Tasso di vittoria',T?W.length+' su '+T:null,T?Math.round(W.length/T*100)+'%':'—','Opportunity vinte sul totale di quelle chiuse (vinte più perse).'],['Media vendita',ci==null?null:cw.length,ci==null?'—':ci+' gg','Giorni medi tra la creazione e la vittoria, calcolati sulle opportunity vinte (tra parentesi quante).']].forEach(([k,n,v,i])=>{const d=h('div','stat'),l=h('span','',k+(n!=null?' ':''));if(n!=null)l.append(h('small','','('+n+')'));d.append(l,h('b','',v));s2.append(d);infoBtn(d,i)})}
+   [['Tasso di vittoria',T?W.length+' su '+T:null,T?Math.round(W.length/T*100)+'%':'—','Opportunità vinte sul totale di quelle chiuse (vinte più perse).'],['Media vendita',ci==null?null:cw.length,ci==null?'—':ci+' gg','Giorni medi tra la creazione e la vittoria, calcolati sulle opportunità vinte (tra parentesi quante).']].forEach(([k,n,v,i])=>{const d=h('div','stat'),l=h('span','',k+(n!=null?' ':''));if(n!=null)l.append(h('small','','('+n+')'));d.append(l,h('b','',v));s2.append(d);infoBtn(d,i)})}
   $('vList').classList.toggle('on',oView==='list');$('vKan').classList.toggle('on',oView==='kan');
   $('oList').hidden=oView!=='list';$('kan').hidden=oView!=='kan';
   const oq=nrm(($('oq').value||'').trim()),om=o=>!oq||nrm([o.titolo,cname(o.clienteId),o.fonte,o.note].filter(Boolean).join(' ')).includes(oq);
   const L=$('oList'),K=$('kan');L.textContent='';K.textContent='';
-  if(!opps.length){L.append(h('div','empty','Nessuna opportunity. Tocca + per crearne una.'));return}
-  if(oFilt&&!opps.some(o=>o.fase===oFilt)&&oView==='list'){L.append(h('div','empty','Nessuna opportunity in questa fase.'));return}
-  if(oq&&oView==='list'&&!opps.some(o=>(!oFilt||o.fase===oFilt)&&om(o))){L.append(h('div','hint','Nessuna opportunity trovata.'));return}
+  if(!opps.length){L.append(h('div','empty','Nessuna opportunità. Tocca + per crearne una.'));return}
+  if(oFilt&&!opps.some(o=>o.fase===oFilt)&&oView==='list'){L.append(h('div','empty','Nessuna opportunità in questa fase.'));return}
+  if(oq&&oView==='list'&&!opps.some(o=>(!oFilt||o.fase===oFilt)&&om(o))){L.append(h('div','hint','Nessuna opportunità trovata.'));return}
   if(oView==='list')opps.filter(o=>(!oFilt||o.fase===oFilt)&&om(o)).sort((a,b)=>rsScore(oReasons(b))-rsScore(oReasons(a))||fIdx(a.fase)-fIdx(b.fase)||(a.data||'9').localeCompare(b.data||'9')).forEach(o=>L.append(oCard(o,false)));
   else FASI.filter(f=>!oFilt||f[0]===oFilt).forEach(f=>{const col=h('div','col'),items=opps.filter(o=>o.fase===f[0]&&om(o)).sort((a,b)=>rsScore(oReasons(b))-rsScore(oReasons(a)));const hd=h('h3');hd.style.background=f[3];hd.append(h('span','',f[1]),h('span','',items.length+' · '+eur(sum(items))));col.append(hd);items.forEach(o=>col.append(oCard(o,true)));K.append(col)})}
 try{trackF()}catch(e){}
 function setTab(v){tab=v;document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
   const c=v==='clienti';$('homeView').hidden=v!=='home';$('oppView').hidden=v!=='opp';$('prodView').hidden=v!=='prod';$('leadView').hidden=v!=='lead';$('list').hidden=!c;$('q').hidden=!c;$('qRow').hidden=!c;$('cFilt').hidden=!c;$('count').hidden=!c;$('cfRow').hidden=!c;document.querySelector('.bar').hidden=true;
-  $('title').textContent={home:'Home',clienti:'Clienti',lead:'Lead',opp:'Opportunity',prod:'Prodotti'}[v];
-  const l={home:'',clienti:'Nuovo cliente',lead:'Nuovo lead',opp:'Nuova opportunity',prod:'Nuovo prodotto'}[v];$('addBtn').setAttribute('aria-label',l);$('addBtn').title=l;$('addLbl').textContent=l;if(v==='prod')renderP();if(v==='home')renderH();if(c)render();if(v==='lead')renderL()}
+  $('title').textContent={home:'Home',clienti:'Clienti',lead:'Lead',opp:'Opportunità',prod:'Prodotti'}[v];
+  const l={home:'',clienti:'Nuovo cliente',lead:'Nuovo lead',opp:'Nuova opportunità',prod:'Nuovo prodotto'}[v];$('addBtn').setAttribute('aria-label',l);$('addBtn').title=l;$('addLbl').textContent=l;if(v==='prod')renderP();if(v==='home')renderH();if(c)render();if(v==='lead')renderL()}
 $('tabs').onclick=e=>{const b=e.target.closest('button');if(b){if(b.dataset.v==='opp'){oFilt='';setTab('opp');renderO();return}setTab(b.dataset.v)}};
 $('vList').onclick=()=>{oView='list';renderO()};$('vKan').onclick=()=>{oView='kan';renderO()};
 FONTI.forEach(f=>{const o=h('option','',f);o.value=f;$('o_fonte').append(o)});
@@ -341,7 +341,7 @@ function openOpp(o){
   clients.slice().sort((a,b)=>fullName(a).localeCompare(fullName(b),'it')).forEach(c=>{const op=h('option','',fullName(c));op.value=c.id;s.append(op)});s.value=o?o.clienteId:'';s.disabled=!!o;$('sheet').style.zIndex='';oTouched=false;paintCl();
   $('o_valore').value=o?o.valore:'';$('o_prob').value=o?o.prob:10;$('o_data').value=o?o.data:'';$('o_fonte').value=o?o.fonte:FONTI[0];$('o_note').value=o?o.note:'';
   ['titolo','cliente','valore','prob','att'].forEach(k=>setErr('o_'+k,''));
-  $('oTitle').textContent=o?o.titolo:'Nuova opportunity';$('oDel').hidden=!o;
+  $('oTitle').textContent=o?o.titolo:'Nuova opportunità';$('oDel').hidden=!o;
   paintOKpi(o);paintFasi();paintProd();paintAtt();paintQ();$('oSheet').hidden=false;$('oSheet').scrollTop=0}
 $('oClose').onclick=()=>{$('oSheet').hidden=true};
 ['o_titolo','o_cliente','o_valore','o_prob'].forEach(id=>['input','change'].forEach(ev=>$(id).addEventListener(ev,()=>setErr(id,''))));
@@ -363,7 +363,7 @@ function saveOpp(keep){
   if(rec.prodotti.length)rec.valore=total(rec);
   if(oEd){if(oEd.fase!==rec.fase&&(rec.fase==='vinta'||rec.fase==='persa'))rec.chiusa=ymd();Object.assign(oEd,rec)}else{oEd={id:'o'+Date.now().toString(36),creata:ymd(),...rec};opps.push(oEd)}
   const o=oEd;paintCl();persistO();renderO();renderP();if(!keep){$('oSheet').hidden=true;afterOppSave(o)}return o}
-$('oDel').onclick=()=>{if(!oEd)return;askConfirm('Eliminare l’opportunity “'+oEd.titolo+'”? L’operazione non si può annullare.','trash','Elimina',()=>{opps=opps.filter(x=>x!==oEd);persistO();$('oSheet').hidden=true;renderO();toast('Opportunity eliminata.')})};
+$('oDel').onclick=()=>{if(!oEd)return;askConfirm('Eliminare l’opportunità “'+oEd.titolo+'”? L’operazione non si può annullare.','trash','Elimina',()=>{opps=opps.filter(x=>x!==oEd);persistO();$('oSheet').hidden=true;renderO();toast('Opportunità eliminata.')})};
 function setPane(p){if(p==='comm'&&editing&&editing.id&&waUnread(editing)){const a=waLast(editing);editing.waSeen=a.data;try{persist()}catch(e){}setTimeout(()=>{try{paintBadges()}catch(e){}},0)}
 document.querySelectorAll('#cTabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
   [...$('sheet').firstElementChild.children].forEach(el=>{if(el.classList.contains('top')||el.id==='cTabs')return;const k=el.id==='linkedF'?'opp':el.id==='privF'?'priv':el.id==='commF'?'comm':el.id==='tpF'?'tp':el.id==='trF'?'tr':el.id==='msg'?'*':el.classList.contains('btns')?'dati,priv':'dati';el.classList.toggle('pane-hide',k!=='*'&&!k.split(',').includes(p))})}
@@ -389,7 +389,7 @@ function collectPriv(prev,isNew){
   CONS.forEach(k=>{const old=prev.cons[k]||{v:false,d:''},is=$('c_'+k).checked;p.cons[k]=is===!!old.v?{...old}:{v:is,d:today};if(is!==!!old.v)log.push({d:now,t:CLABEL[k]+': '+(is?'prestato':'revocato')})});
   return p}
 $('p_show').onclick=()=>{const w=$('infoBody');w.textContent='';const t=h('p');t.append(h('b','','Informativa sul trattamento dei dati personali (artt. 13 e 14 GDPR)'));w.append(t);infoSections().forEach(([k,v])=>{const p=h('p');p.append(h('b','',k+': '),document.createTextNode(v));w.append(p)});const n=h('p');n.append(h('i','','Modello indicativo da adattare: fallo verificare da un consulente legale o dal DPO.'));w.append(n);$('info').hidden=false};$('infoClose').onclick=()=>{$('info').hidden=true};
-$('p_copy').onclick=async()=>{if(!editing)return;const data={cliente:{...editing,foto:editing.foto?'[presente]':''},opportunity:opps.filter(o=>o.clienteId===editing.id).map(o=>({...o,allegati:o.allegati.map(a=>({nome:a.nome,tipo:a.tipo,size:a.size}))})),esportato:new Date().toISOString()};toast(await copyText(JSON.stringify(data,null,2))?'Dati copiati negli appunti.':'Copia non riuscita.')};
+$('p_copy').onclick=async()=>{if(!editing)return;const data={cliente:{...editing,foto:editing.foto?'[presente]':''},opportunità:opps.filter(o=>o.clienteId===editing.id).map(o=>({...o,allegati:o.allegati.map(a=>({nome:a.nome,tipo:a.tipo,size:a.size}))})),esportato:new Date().toISOString()};toast(await copyText(JSON.stringify(data,null,2))?'Dati copiati negli appunti.':'Copia non riuscita.')};
 const mesi=n=>n%12===0?(n/12===1?'1 anno':n/12+' anni'):n+' mesi';
 function infoSections(){const R=S.ret||{};return [
 ['Titolare',(S.azienda?S.azienda+(S.piva?', P. IVA '+S.piva:'')+(S.indirizzo?', sede in '+S.indirizzo:'')+(S.replyTo?' ('+S.replyTo+')':''):'[denominazione e contatti del titolare]')+'.'],
@@ -730,7 +730,7 @@ function renderLinked(){
   if(!editing){f.hidden=true;return}
   f.hidden=false;
   const l=opps.filter(o=>o.clienteId===editing.id).sort((a,b)=>fIdx(a.fase)-fIdx(b.fase)||(a.data||'9').localeCompare(b.data||'9'));
-  $('cCnt').textContent=l.filter(o=>o.fase!=='vinta'&&o.fase!=='persa').length||'';if(!l.length)w.append(h('div','hint','Nessuna opportunity collegata.'));
+  $('cCnt').textContent=l.filter(o=>o.fase!=='vinta'&&o.fase!=='persa').length||'';if(!l.length)w.append(h('div','hint','Nessuna opportunità collegata.'));
   l.forEach(o=>w.append(oCard(o,false)))}
 $('addOppFor').onclick=()=>{const id=editing&&editing.id;openOpp(null);if(id){$('o_cliente').value=id;$('o_cliente').disabled=true;$('o_clh').textContent='Cliente impostato dall’anagrafica: non modificabile.';autoTitle()}};
 const nrm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
@@ -8680,7 +8680,7 @@ const DEMO_MOVS=[
 {id:'m7',prodId:'w7',data:'2026-09-01T09:00:00.000Z',tipo:'carico',qta:350,nota:'Giacenza iniziale'},
 {id:'m8',prodId:'w8',data:'2026-09-01T09:00:00.000Z',tipo:'carico',qta:300,nota:'Giacenza iniziale'},
 {id:'m9',prodId:'w9',data:'2026-09-01T09:00:00.000Z',tipo:'carico',qta:280,nota:'Giacenza iniziale'},
-{id:'m10',prodId:'w3',data:'2026-10-20T10:00:00.000Z',tipo:'scarico',qta:-120,nota:'Opportunity Riordino Idealis',oppId:'o5'}];
+{id:'m10',prodId:'w3',data:'2026-10-20T10:00:00.000Z',tipo:'scarico',qta:-120,nota:'Opportunità Riordino Idealis',oppId:'o5'}];
 let movs=[];
 try{movs=JSON.parse(localStorage.getItem(MKEY)||'[]')}catch(e){}
 function persistM(){try{localStorage.setItem(MKEY,JSON.stringify(movs))}catch(e){toast('Spazio pieno: impossibile salvare i movimenti di magazzino.')}}
@@ -8736,9 +8736,9 @@ $('pSave').onclick=()=>{const d={categoria:$('p_categoria').value.trim(),caratt:
   let pr=pEd;if(pr)Object.assign(pr,d);else{pr={id:'p'+Date.now().toString(36),...d};prods.push(pr)}
   if(d.mag&&g0>0&&!movs.some(m=>m.prodId===pr.id)){movs.push({id:'m'+Date.now().toString(36),prodId:pr.id,data:new Date().toISOString(),tipo:'carico',qta:g0,nota:'Giacenza iniziale'});persistM()}
   persistP();$('pSheet').hidden=true;renderP()};
-$('pDel').onclick=()=>{if(!pEd)return;const p=pEd;askConfirm('Eliminare il prodotto “'+p.nome+'”? Le opportunity e i preventivi già creati non cambiano.','trash','Elimina',()=>{prods=prods.filter(x=>x!==p);persistP();movs=movs.filter(m=>m.prodId!==p.id);persistM();$('pSheet').hidden=true;renderP();toast('Prodotto eliminato.')})};
+$('pDel').onclick=()=>{if(!pEd)return;const p=pEd;askConfirm('Eliminare il prodotto “'+p.nome+'”? Le opportunità e i preventivi già creati non cambiano.','trash','Elimina',()=>{prods=prods.filter(x=>x!==p);persistP();movs=movs.filter(m=>m.prodId!==p.id);persistM();$('pSheet').hidden=true;renderP();toast('Prodotto eliminato.')})};
 
-/* selezione dal catalogo (dentro l'opportunity) */
+/* selezione dal catalogo (dentro l'opportunità) */
 function paintPick(){const L=$('pk_list');L.textContent='';const q=nrm($('pk_q').value.trim());
   const a=prods.filter(p=>p.attivo&&(!q||nrm([p.codice,p.nome,p.categoria,p.caratt,p.descr].join(' ')).includes(q))).sort((x,y)=>x.nome.localeCompare(y.nome,'it'));
   if(!a.length){L.append(h('div','empty',prods.some(p=>p.attivo)?'Nessun risultato.':'Il catalogo è vuoto: crea i prodotti dalla scheda Prodotti.'));return}
@@ -8762,12 +8762,12 @@ const qEff=q=>{if((q.stato==='bozza'||q.stato==='inviato')&&q.validita){const e=
 const statoE=k=>k==='scaduto'?['scaduto','Scaduto','#f5cad6']:stato(k);
 function qStale(q,o){if(!q||q.stato!=='inviato')return 0;const cli=clients.find(x=>x.id===o.clienteId)||null;let n=0;(q.righe||[]).forEach(l=>{const pp=l.prodId&&prods.find(z=>z.id===l.prodId);if(!pp||l.auto!==true)return;const r=prezzoCPQ(pp,cli,+l.qta||1);if(r.prezzo!==+l.prezzo||r.sconto!==(+l.sconto||0))n++});return n}
 function paintQ(){const L=$('o_quotes');L.textContent='';const qs=oEd&&oEd.preventivi||[];$('o_addQ').disabled=false;
-  $('o_qhint').textContent=oEd?'Usa i prodotti attuali e salva l’opportunity.':'Aggiungi i prodotti: l’opportunity viene salvata da sola.';
+  $('o_qhint').textContent=oEd?'Usa i prodotti attuali e salva l’opportunità.':'Aggiungi i prodotti: l’opportunità viene salvata da sola.';
   {const ns=qs.filter(q=>qStale(q,oEd)).length,ne=qs.filter(q=>qEff(q)==='scaduto').length,m=[];if(ns)m.push(ns===1?'1 preventivo inviato ha prezzi o sconti non aggiornati':ns+' preventivi inviati hanno prezzi o sconti non aggiornati');if(ne)m.push(ne===1?'1 preventivo è scaduto':ne+' preventivi sono scaduti');
    if(m.length){const a=h('div','hint',m.join(' · ')+'.');a.style.cssText='margin:0 0 8px;padding:10px 12px;border-radius:12px;background:#fdecec;color:#8a1f2f';L.append(a)}}
   qs.forEach(q=>{const b=h('div','qrow'),t=h('div','tx');goOn(b,()=>openQuote(oEd,q));
     const se=statoE(qEff(q)),sp=h('span'),ch=h('i','st',se[1]);ch.style.background=se[2];sp.append(ch,'del '+fmtD(q.data));const sp2=h('span','',qInfo(q));t.append(h('b','','Preventivo '+q.num),sp,sp2);if(qStale(q,oEd)){const w=h('span','warn','Prezzi non aggiornati');t.append(w)}b.append(t,h('strong','',eur2(qTot(q.righe).lordo)));L.append(b)})}
-$('o_addQ').onclick=()=>{if(!saveOpp(true))return;if(!(oEd.prodotti||[]).length){toast('Aggiungi almeno un prodotto all’opportunity per creare il preventivo.');paintQ();return}
+$('o_addQ').onclick=()=>{if(!saveOpp(true))return;if(!(oEd.prodotti||[]).length){toast('Aggiungi almeno un prodotto all’opportunità per creare il preventivo.');paintQ();return}
   const yr=String(new Date().getFullYear());let mx=0;opps.forEach(x=>(x.preventivi||[]).forEach(q=>{if(q.num.startsWith(yr+'-'))mx=Math.max(mx,parseInt(q.num.slice(5),10)||0)}));
   const q={id:'q'+Date.now().toString(36),num:yr+'-'+String(mx+1).padStart(3,'0'),data:ymd(),validita:S.qValid||30,stato:'bozza',righe:oEd.prodotti.map(p=>({...p})),cond:S.qCond||COND,note:''};
   openQuote(oEd,q,true)};
@@ -8797,12 +8797,12 @@ function quoteText(){const t=qTot(qW.righe),c=clients.find(x=>x.id===qO.clienteI
   if((qW.cond||'').trim())L.push('',qW.cond.trim());if((qW.note||'').trim())L.push('',qW.note.trim());return L.join('\n')}
 function saveQuote(){const v=$('q_val').value;if(v!==''&&!(parseInt(v,10)>=0&&parseInt(v,10)<=365)){setErr('q_val','Inserisci un numero di giorni da 0 a 365.');return false}const wasSent=qC.stato==='inviato'||!!qC.inviato&&!qNew&&false;const prevSt=qNew?'bozza':qC.stato;if(qNew){(qO.preventivi=qO.preventivi||[]).push(qC);qNew=false;advOpp(qO,'qualificata')}Object.assign(qC,JSON.parse(JSON.stringify(qW)));if(qW.stato==='inviato'&&prevSt!=='inviato')advOpp(qO);if(qW.stato==='accettato'&&prevSt!=='accettato')accOpp(qO);persistO();paintQ();renderO();return true}
 function accOpp(o){if(!o||['vinta','persa'].includes(o.fase))return;if(['nuova','qualificata'].includes(o.fase))advOpp(o);if((+o.prob||0)<75){o.prob=75;if(oEd===o&&oD&&!$('oSheet').hidden)$('o_prob').value=75;toast('Preventivo accettato: probabilità di vittoria al 75%.')}}
-function advOpp(o,to){to=to||'proposta';const from=to==='qualificata'?['nuova']:['nuova','qualificata'];if(!o||!from.includes(o.fase))return;const f=FASI.find(x=>x[0]===to);o.fase=to;if(f)o.prob=f[2];if(oEd===o&&oD&&!$('oSheet').hidden){oD.fase=to;if(f)$('o_prob').value=f[2];paintFasi()}toast('Opportunity spostata in “'+(f?f[1]:to)+'”.')}
+function advOpp(o,to){to=to||'proposta';const from=to==='qualificata'?['nuova']:['nuova','qualificata'];if(!o||!from.includes(o.fase))return;const f=FASI.find(x=>x[0]===to);o.fase=to;if(f)o.prob=f[2];if(oEd===o&&oD&&!$('oSheet').hidden){oD.fase=to;if(f)$('o_prob').value=f[2];paintFasi()}toast('Opportunità spostata in “'+(f?f[1]:to)+'”.')}
 $('qSave').onclick=()=>{if(saveQuote()){$('qSheet').hidden=true;toast('Preventivo salvato.')}};
 $('qClose').onclick=()=>{$('qSheet').hidden=true};
 window.qNewClose=()=>{const c=$('qClose').onclick;$('qClose').onclick=()=>{if(!qNew){c();return}$('mDirty').hidden=false;$('dC').onclick=()=>{$('mDirty').hidden=true};$('dN').onclick=()=>{$('mDirty').hidden=true;qNew=false;$('qSheet').hidden=true};$('dY').onclick=()=>{$('mDirty').hidden=true;if(saveQuote()){$('qSheet').hidden=true;toast('Preventivo salvato.')}}}};
 $('qCopy').onclick=async()=>{toast(await copyText(quoteText())?'Testo del preventivo copiato.':'Copia non riuscita.')};
-$('qRefresh').onclick=()=>askConfirm('Sostituire le righe del preventivo con i prodotti attuali dell’opportunity?','reset','Aggiorna',()=>{if(!(qO.prodotti||[]).length){toast('L’opportunity non ha prodotti.');return}qW.righe=qO.prodotti.map(p=>({...p}));paintDoc()});
+$('qRefresh').onclick=()=>askConfirm('Sostituire le righe del preventivo con i prodotti attuali dell’opportunità?','reset','Aggiorna',()=>{if(!(qO.prodotti||[]).length){toast('L’opportunità non ha prodotti.');return}qW.righe=qO.prodotti.map(p=>({...p}));paintDoc()});
 $('qSend').onclick=()=>{if(!saveQuote())return;const c=clients.find(x=>x.id===qO.clienteId);if(!c){toast('Cliente non trovato.');return}
   openCompose(c);if($('mCompose').hidden)return;$('mc_sub').value='Preventivo n. '+qW.num+(S.azienda?' – '+S.azienda:'');
   cmpQ=qC;cmpAtt=[{name:qName(),u8:quotePdf()}];$('mc_att').hidden=false;$('mc_att').textContent='Allegato: '+cmpAtt[0].name+' ('+Math.max(1,Math.round(cmpAtt[0].u8.length/1024))+' KB). '+attNote();mcActs();
@@ -8909,11 +8909,11 @@ $('mv_ok').onclick=()=>{const v=num($('mv_qta').value),g=giac(pEd.id);let q;
   if(mvT==='rettifica'){if(v===null||!(v>=0)){setErr('mv_qta','Inserisci la giacenza contata (0 o più).');return}q=v-g;if(q===0){setErr('mv_qta','La giacenza è già questa.');return}}
   else{if(!(v>0)){setErr('mv_qta','Inserisci una quantità maggiore di zero.');return}q=mvT==='carico'?v:-v;if(q<0&&-q>g){setErr('mv_qta','Giacenza insufficiente: ce ne sono '+g+'.');return}}
   movs.push({id:'m'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),prodId:pEd.id,data:new Date().toISOString(),tipo:mvT,qta:Math.round(q*1000)/1000,nota:$('mv_nota').value.trim()});persistM();$('mMov').hidden=true;pStock();renderP();toast('Movimento registrato.')};
-/* collegamento opportunity - magazzino */
+/* collegamento opportunità - magazzino */
 const mprod=id=>{const p=prods.find(x=>x.id===id);return p&&p.mag?p:null};
 function afterOppSave(o){const short=[];(o.prodotti||[]).forEach(r=>{const pr=mprod(r.prodId);if(!pr||o.scaricato)return;const need=o.prodotti.filter(x=>x.prodId===r.prodId).reduce((t,x)=>t+(+x.qta||0),0);if(need>disp(r.prodId,o)&&!short.includes(pr.nome))short.push(pr.nome)});
   const rows=(o.prodotti||[]).filter(r=>mprod(r.prodId));
-  if(o.fase==='vinta'&&!o.scaricato&&rows.length){askConfirm('Scaricare dal magazzino i prodotti di “'+o.titolo+'”?'+(short.length?' Attenzione: la disponibilità non basta per '+short.join(', ')+'.':''),'scarico','Scarica',()=>{rows.forEach(r=>movs.push({id:'m'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),prodId:r.prodId,data:new Date().toISOString(),tipo:'scarico',qta:-(+r.qta||0),nota:'Opportunity '+o.titolo,oppId:o.id}));o.scaricato=true;persistM();persistO();renderO();renderP();toast('Magazzino aggiornato.')});return}
+  if(o.fase==='vinta'&&!o.scaricato&&rows.length){askConfirm('Scaricare dal magazzino i prodotti di “'+o.titolo+'”?'+(short.length?' Attenzione: la disponibilità non basta per '+short.join(', ')+'.':''),'scarico','Scarica',()=>{rows.forEach(r=>movs.push({id:'m'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),prodId:r.prodId,data:new Date().toISOString(),tipo:'scarico',qta:-(+r.qta||0),nota:'Opportunità '+o.titolo,oppId:o.id}));o.scaricato=true;persistM();persistO();renderO();renderP();toast('Magazzino aggiornato.')});return}
   if(short.length)toast('Attenzione: disponibilità insufficiente per '+short.join(', ')+'.')}
 
 /* ===== Home ===== */
@@ -8954,24 +8954,24 @@ function renderH(){
   {const S0=$('hSum');S0.textContent='';
    const t1=h('div','stat');{const l1=h('span','','Aperte ');l1.append(h('small','','('+open.length+')'));t1.append(l1,h('b','',eur(sm(open,o=>o.valore))))}
    const t2=h('div','stat');t2.append(h('span','','Ponderato'),h('b','',eur(sm(open,o=>o.valore*o.prob/100))));
-   S0.append(t1,t2);infoBtn(t1,'Opportunity non ancora vinte né perse: tra parentesi quante sono, sotto il loro valore totale.');infoBtn(t2,'Ogni opportunity aperta conta per la sua probabilità di chiusura (es. 1.000 € al 50% = 500 €): è una stima di quanto ti aspetti di incassare.');
+   S0.append(t1,t2);infoBtn(t1,'Opportunità non ancora vinte né perse: tra parentesi quante sono, sotto il loro valore totale.');infoBtn(t2,'Ogni opportunità aperta conta per la sua probabilità di chiusura (es. 1.000 € al 50% = 500 €): è una stima di quanto ti aspetti di incassare.');
    const PER=[[30,'30 giorni'],[90,'90 giorni'],[365,'12 mesi'],[0,'Sempre']];let hp=30;try{const v=localStorage.getItem('crm-hper');if(v!==null&&PER.some(x=>x[0]===+v))hp=+v}catch(e){}
    const from=hp?ymd(new Date(Date.now()-hp*864e5)):'',wp=won.filter(o=>!hp||(o.chiusa&&o.chiusa>=from)),tot=sm(wp,o=>o.valore),mar=sm(wp,o=>mg(o).mar),pc=tot>0?Math.round(mar/tot*100):0;
    const box=h('div','wonbox'),hd=h('div','wb-h');hd.append(h('b','','Vinte'));
    const chips=h('div','tp-chips');PER.forEach(([d,l])=>{const b=h('button');b.type='button';b.classList.toggle('on',hp===d);b.textContent=l;b.onclick=()=>{try{localStorage.setItem('crm-hper',String(d))}catch(e){}renderH()};chips.append(b)});
-   const vals=h('div','wb-v');vals.append(h('span','',eur(tot)));vals.append(h('small','',wp.length+(wp.length===1?' opportunity vinta':' opportunity vinte')));
+   const vals=h('div','wb-v');vals.append(h('span','',eur(tot)));vals.append(h('small','',wp.length+(wp.length===1?' opportunità vinta':' opportunità vinte')));
    const tr=h('div','wb-tr'),fill=h('i');fill.style.width=(tot>0?Math.max(2,Math.min(100,pc)):0)+'%';tr.append(fill);
    const lg=h('div','wb-l');lg.append(h('span','','Margine '+eur(mar)),h('span','',tot>0?pc+'% del totale':'—'));
    const first=opps.reduce((m,o)=>{const d=[o.creata,o.chiusa].filter(Boolean).sort()[0];return d&&(!m||d<m)?d:m},''),cmp=(cur,prev,lab)=>{if(!hp||(!cur&&!prev)||!first||first>pf)return null;const d=h('span','cmp');const up=cur>=prev;d.style.cssText='font-size:12px;padding:2px 8px;border-radius:10px;background:'+(up?'#b5ebc0':'#f5cad6')+';color:#2d2b55';d.textContent=prev>0?(up?'+':'−')+Math.abs(Math.round((cur-prev)/prev*100))+'% '+lab:'';return d.textContent?d:null};
    const pf=hp?ymd(new Date(Date.now()-2*hp*864e5)):'',pw=hp?won.filter(o=>o.chiusa&&o.chiusa>=pf&&o.chiusa<from):[],ptot=sm(pw,o=>o.valore),pmar=sm(pw,o=>mg(o).mar);const cv=cmp(tot,ptot,'vs '+hp+' gg prima'),cm=cmp(mar,pmar,'vs prima');if(cv)vals.append(cv);
-   if(cm)lg.firstChild.after(cm);box.append(hd,chips,vals,tr,lg);infoBtn(box,'Valore delle opportunity vinte nel periodo scelto (il periodo vale solo per le vinte). La parte colorata della barra è il margine. Le etichette confrontano con lo stesso numero di giorni precedenti, solo se i tuoi dati partono prima di quel periodo.');if(!wp.length)box.append(h('div','hint','Nessuna opportunity vinta in questo periodo.'));$('hWon').textContent='';$('hWon').append(box)}
+   if(cm)lg.firstChild.after(cm);box.append(hd,chips,vals,tr,lg);infoBtn(box,'Valore delle opportunità vinte nel periodo scelto (il periodo vale solo per le vinte). La parte colorata della barra è il margine. Le etichette confrontano con lo stesso numero di giorni precedenti, solo se i tuoi dati partono prima di quel periodo.');if(!wp.length)box.append(h('div','hint','Nessuna opportunità vinta in questo periodo.'));$('hWon').textContent='';$('hWon').append(box)}
   const A=actions(),T=$('hTodo');T.textContent='';const show=hAll?A:A.slice(0,5);
   if(!A.length)T.append(h('div','empty','Tutto in ordine: nessuna azione consigliata.'));
   show.forEach(a=>{const r=h('div','qrow todo'),t=h('div','tx'),ic=pthumb(null,true);ic.innerHTML=ICONS[a.ic]||ICONS.alert;ic.style.background=a.pri>=80?'var(--pink)':a.pri>=60?'var(--warm)':'var(--lilac)';goOn(r,a.go);t.append(h('b','',a.title),h('span','',a.sub));const cv=h('span','chv');cv.innerHTML=ICONS.chevR;r.append(ic,t,cv);T.append(r)});
   const mo=$('hMore');mo.hidden=A.length<=5;mo.textContent=hAll?'Mostra meno':'Mostra tutte ('+A.length+')';mo.onclick=()=>{hAll=!hAll;renderH()};
   const P=$('hPipe');P.textContent='';const FA=FASI.filter(f=>f[0]!=='vinta'&&f[0]!=='persa'),mx=Math.max(1,...FA.map(f=>sm(opps.filter(o=>o.fase===f[0]),o=>o.valore)));
-  FA.forEach(f=>{const it=opps.filter(o=>o.fase===f[0]),v=sm(it,o=>o.valore),b=h('button','pbar');b.type='button';b.onclick=()=>{oFilt=f[0];setTab('opp');renderO();window.scrollTo(0,0)};const tr=h('div','tr'),bar=h('i');bar.style.width=(it.length?Math.max(4,v/mx*100):0)+'%';bar.style.background=f[3];tr.append(bar);const lb=h('span','',f[1]+' ');lb.append(h('small','','('+it.length+')'));const mr=sm(it,o=>mg(o).mar),em=h('em','',eur(v));em.append(h('small','','margine '+eur(mr)));b.setAttribute('aria-label',f[1]+': '+it.length+' opportunity, valore '+eur(v)+', margine '+eur(mr));b.append(lb,tr,em);P.append(b)});
-  $('hPipeBox').hidden=!opps.length;if(!$('hPipeBox').querySelector('.ib'))infoBtn($('hPipeBox'),'Opportunity aperte per fase: tra parentesi quante sono, a destra il valore totale e sotto il margine stimato. La barra mette a confronto i valori delle fasi.')}
+  FA.forEach(f=>{const it=opps.filter(o=>o.fase===f[0]),v=sm(it,o=>o.valore),b=h('button','pbar');b.type='button';b.onclick=()=>{oFilt=f[0];setTab('opp');renderO();window.scrollTo(0,0)};const tr=h('div','tr'),bar=h('i');bar.style.width=(it.length?Math.max(4,v/mx*100):0)+'%';bar.style.background=f[3];tr.append(bar);const lb=h('span','',f[1]+' ');lb.append(h('small','','('+it.length+')'));const mr=sm(it,o=>mg(o).mar),em=h('em','',eur(v));em.append(h('small','','margine '+eur(mr)));b.setAttribute('aria-label',f[1]+': '+it.length+' opportunità, valore '+eur(v)+', margine '+eur(mr));b.append(lb,tr,em);P.append(b)});
+  $('hPipeBox').hidden=!opps.length;if(!$('hPipeBox').querySelector('.ib'))infoBtn($('hPipeBox'),'Opportunità aperte per fase: tra parentesi quante sono, a destra il valore totale e sotto il margine stimato. La barra mette a confronto i valori delle fasi.')}
 
 
 /* ===== registro chiamate ===== */
@@ -9111,7 +9111,7 @@ function retention(c){const R=S.ret,pv=c.privacy||{},re=rapportoEnd(c),lt=lastTo
 function staleConsents(c){const pv=c.privacy;if(!pv||c.anon)return[];const lt=lastTouch(c);if(!lt)return[];return CONS.filter(k=>pv.cons&&pv.cons[k]&&pv.cons[k].v&&addM(lt,k==='profilazione'?S.ret.profilazione:S.ret.marketing)<Date.now())}
 const oldMsgs=()=>{const cut=addM(Date.now(),-S.ret.comunicazioni);let n=0,cl=0;clients.forEach(c=>{const k=(c.wa||[]).filter(m=>new Date(m.data).getTime()<cut).length;if(k){n+=k;cl++}});return{n,cl,cut}};
 function reviewItems(){return{exp:clients.filter(c=>retention(c).expired),cons:clients.map(c=>[c,staleConsents(c)]).filter(x=>x[1].length),msg:oldMsgs()}}
-function retHint(){const e=$('p_consH');if(!e)return;if(!editing){e.textContent='';return}const r=retention(editing);e.textContent=r.until?'Secondo le regole impostate: '+fmtD(ymd(new Date(r.until)))+' ('+r.why+').'+(r.open?' Ci sono opportunity aperte: i dati restano in uso.':''):'Scadenza non determinabile: mancano date di riferimento.'}
+function retHint(){const e=$('p_consH');if(!e)return;if(!editing){e.textContent='';return}const r=retention(editing);e.textContent=r.until?'Secondo le regole impostate: '+fmtD(ymd(new Date(r.until)))+' ('+r.why+').'+(r.open?' Ci sono opportunità aperte: i dati restano in uso.':''):'Scadenza non determinabile: mancano date di riferimento.'}
 function anonymize(c,motivo){const id=c.id,tipo=c.tipo||'persona',pv=c.privacy||mkPriv(),log=(pv.log||[]).concat({d:new Date().toISOString().slice(0,16),t:'Dati personali anonimizzati ('+motivo+')'});
   Object.keys(c).forEach(k=>delete c[k]);Object.assign(c,{id,tipo,anon:true,nome:'Anonimo',cognome:'#'+id.slice(-4),azienda:'',paese:'IT',agg:new Date().toISOString(),privacy:mkPriv({base:'legittimo',fonteDati:'altro',log,richieste:[]})});purgeLog('anonimizzazione',motivo,id)}
 function paintReview(){const I=reviewItems(),B=$('rvBody'),R=S.ret;B.textContent='';
@@ -9121,8 +9121,8 @@ function paintReview(){const I=reviewItems(),B=$('rvBody'),R=S.ret;B.textContent
   if(!I.exp.length&&!I.cons.length&&!I.msg.n)B.append(h('div','empty','Tutto in regola: nessun dato da rivedere.'));
   if(I.exp.length){sec('Clienti con conservazione scaduta');I.exp.forEach(c=>{const r=retention(c),d=h('div','req');d.append(h('b','',fullName(c)),h('div','','Scaduta il '+fmtD(ymd(new Date(r.until)))+' · '+r.why));
     const bt=h('div','mact');bt.style.marginTop='8px';
-    [['Anonimizza','edit',()=>askConfirm('Anonimizzare '+fullName(c)+'? Nome, contatti, foto, note e messaggi vengono cancellati; le opportunity restano senza riferimenti al cliente. Non si può annullare.','edit','Anonimizza',()=>{anonymize(c,'conservazione scaduta');persist();render();renderO();paintReview();toast('Cliente anonimizzato.')})],
-     ['Elimina','trash',()=>askConfirm('Eliminare '+fullName(c)+' e le sue opportunity? Non si può annullare.','trash','Elimina',()=>{opps=opps.filter(o=>o.clienteId!==c.id);persistO();clients=clients.filter(x=>x!==c);persist();purgeLog('eliminazione','conservazione scaduta',c.id);render();renderO();paintReview();toast('Cliente eliminato.')})],
+    [['Anonimizza','edit',()=>askConfirm('Anonimizzare '+fullName(c)+'? Nome, contatti, foto, note e messaggi vengono cancellati; le opportunità restano senza riferimenti al cliente. Non si può annullare.','edit','Anonimizza',()=>{anonymize(c,'conservazione scaduta');persist();render();renderO();paintReview();toast('Cliente anonimizzato.')})],
+     ['Elimina','trash',()=>askConfirm('Eliminare '+fullName(c)+' e le sue opportunità? Non si può annullare.','trash','Elimina',()=>{opps=opps.filter(o=>o.clienteId!==c.id);persistO();clients=clients.filter(x=>x!==c);persist();purgeLog('eliminazione','conservazione scaduta',c.id);render();renderO();paintReview();toast('Cliente eliminato.')})],
      ['Prolunga','clock',()=>{const pv=c.privacy=c.privacy||mkPriv();pv.conserva=ymd(new Date(addM(Date.now(),12)));pv.log=(pv.log||[]).concat({d:new Date().toISOString().slice(0,16),t:'Conservazione prolungata fino al '+fmtD(pv.conserva)});persist();paintReview();toast('Conservazione prolungata di 12 mesi.')}]].forEach(([l,i,f])=>{const b=h('button','btn lbl');b.type='button';b.innerHTML=ICONS[i]+l;b.onclick=f;bt.append(b)});d.append(bt);B.append(d)})}
   if(I.cons.length){sec('Consensi da riconfermare per inattività');I.cons.forEach(([c,ks])=>{const d=h('div','req');d.append(h('b','',fullName(c)),h('div','','Nessuna interazione dal '+fmtD(ymd(new Date(lastTouch(c))))+' · '+ks.map(k=>CLABEL[k]).join(', ')));
     const bt=h('div','dual');bt.style.marginTop='8px';
@@ -9134,7 +9134,7 @@ function paintReview(){const I=reviewItems(),B=$('rvBody'),R=S.ret;B.textContent
 function openReview(){paintReview();$('rvSheet').hidden=false;$('rvSheet').scrollTop=0}
 $('rvClose').onclick=()=>{$('rvSheet').hidden=true;if(tab==='home')renderH()};$('st_rev').onclick=()=>{$('mSet').hidden=true;openReview()};
 
-const TP_LANES=[['anag','Anagrafica','user','#cdbff5'],['priv','Privacy','shield','#b9e6d3'],['mail','Email','Scrivi','#bfe0f8'],['wa','WhatsApp','WhatsApp','#b5ebc0'],['opp','Commerciale','target','#ffd9b0']];
+const TP_LANES=[['anag','Anagrafica','user','#cdbff5'],['priv','Privacy','shield','#b9e6d3'],['mail','Email','Scrivi','#bfe0f8'],['wa','WhatsApp','WhatsApp','#b5ebc0'],['call','Chiamate','Chiama','#f7c6d9'],['opp','Commerciale','target','#ffd9b0']];
 const TM={};let tpOff=new Set(),tpSel=null;
 const tsOf=x=>{if(!x)return NaN;x=String(x);return new Date(x.length<=10?x+'T12:00':/Z|[+-]\d\d:?\d\d$/.test(x)?x:x+'Z').getTime()};
 function oppCreated(o){if(o.creata)return tsOf(o.creata);const m=/^o([0-9a-z]{7,9})$/.exec(o.id||'');if(m){const t=parseInt(m[1],36);if(t>1e12&&t<4e12)return t}return NaN}
@@ -9145,6 +9145,7 @@ function leadEvents(l){const E=[],add=(t,lane,title,sub,go)=>{if(!isNaN(t))E.pus
   (l.msgs||[]).forEach(m=>{const t=+m.data||tsOf(m.data);add(isNaN(t)?new Date(m.data).getTime():t,'mail',m.dir==='in'?'Email ricevuta':'Email inviata',m.oggetto||'(senza oggetto)',gM)});
   const g={};(l.wa||[]).forEach(m=>{const d=String(m.data||'').slice(0,10),k=d+m.dir;(g[k]=g[k]||{d,dir:m.dir,n:0,t:tsOf(m.data)}).n++});
   Object.values(g).forEach(x=>add(x.t,'wa',x.dir==='in'?'WhatsApp ricevuto':'WhatsApp inviato',x.n>1?x.n+' messaggi':'1 messaggio',gW));
+  (l.calls||[]).forEach(k=>add(new Date(k.data).getTime(),'call','Chiamata · '+esLabel(k.esito),(k.esito==='ok'&&k.dur?k.dur+' min':'')+(k.nota?(k.esito==='ok'&&k.dur?' · ':'')+k.nota.slice(0,60):''),()=>{setLTab('msg');setLCm('call')}));
   if(l.stato==='scartato'&&l.scartato)add(+l.scartato,'anag','Lead scartato','',null);
   return E.sort((a,b)=>a.t-b.t)}
 function touchEvents(c){
@@ -9163,11 +9164,12 @@ function touchEvents(c){
   (pv.richieste||[]).forEach(r=>{add(tsOf(r.creata),'priv','Informativa inviata','a '+(r.email||''),goP);if(r.ricevuta)add(tsOf(r.ricevuta),'priv','Privacy ricevuta','risposta del cliente',goP)});
   const g={};(c.wa||[]).forEach(m=>{const d=String(m.data||'').slice(0,10),k=d+m.dir;(g[k]=g[k]||{d,dir:m.dir,n:0,t:tsOf(m.data)}).n++});
   Object.values(g).forEach(x=>add(x.t,'wa',x.dir==='in'?'WhatsApp ricevuto':'WhatsApp inviato',x.n>1?x.n+' messaggi':'1 messaggio',()=>{setPane('comm');setCm('wa');loadComm()}));
+  (c.calls||[]).forEach(k=>add(new Date(k.data).getTime(),'call','Chiamata · '+esLabel(k.esito),(k.esito==='ok'&&k.dur?k.dur+' min':'')+(k.nota?(k.esito==='ok'&&k.dur?' · ':'')+k.nota.slice(0,60):''),()=>{setPane('comm');setCm('call')}));
   (TM[c.id]||[]).forEach(m=>{const inb=String(m.sender||'').toLowerCase().includes((c.email||'').toLowerCase());add(+m.internalDate,'mail',inb?'Email ricevuta':'Email inviata',dec(m.subject)||'(senza oggetto)',()=>openThread(m.threadId))});
   if(c.lead)add(+c.lead.data||tsOf(c.agg),'anag','Lead acquisito',({web:'da form web',email:'da email',manuale:'inserito a mano'}[c.lead.fonte]||'')+(c.lead.richiesta?' · '+c.lead.richiesta.slice(0,80):''),()=>setPane('dati'));
-  const won=opps.filter(o=>o.clienteId===c.id&&o.fase==='vinta'&&o.chiusa).sort((a,b)=>a.chiusa<b.chiusa?-1:1)[0];if(won)add(tsOf(won.chiusa),'opp','Diventato cliente','prima opportunity vinta: '+won.titolo,()=>openOpp(won));
-  oppsOf(c.id).forEach(o=>{const go=()=>openOpp(o);add(oppCreated(o),'opp','Opportunity creata',o.titolo,go);
-    if(o.chiusa&&(o.fase==='vinta'||o.fase==='persa'))add(tsOf(o.chiusa),'opp',o.fase==='vinta'?'Opportunity vinta':'Opportunity persa',o.titolo+' · '+eur(o.valore),go);
+  const won=opps.filter(o=>o.clienteId===c.id&&o.fase==='vinta'&&o.chiusa).sort((a,b)=>a.chiusa<b.chiusa?-1:1)[0];if(won)add(tsOf(won.chiusa),'opp','Diventato cliente','prima opportunità vinta: '+won.titolo,()=>openOpp(won));
+  oppsOf(c.id).forEach(o=>{const go=()=>openOpp(o);add(oppCreated(o),'opp','Opportunità creata',o.titolo,go);
+    if(o.chiusa&&(o.fase==='vinta'||o.fase==='persa'))add(tsOf(o.chiusa),'opp',o.fase==='vinta'?'Opportunità vinta':'Opportunità persa',o.titolo+' · '+eur(o.valore),go);
     (o.preventivi||[]).forEach(q=>{add(tsOf(q.data),'opp','Preventivo '+q.num+' creato',o.titolo+' · '+eur2(qTot(q.righe).lordo),()=>openQuote(o,q));if(q.inviato)add(tsOf(q.inviato),'opp','Preventivo '+q.num+' inviato',(q.via?'via '+q.via+' · ':'')+qInfo(q).split(' · ').slice(-1)[0],()=>openQuote(o,q))})});
   return E.sort((a,b)=>a.t-b.t)}
 async function touchMail(cl){
@@ -9470,7 +9472,7 @@ function cReasons(c){const r=[];try{const pv=c.privacy,R=(pv&&pv.richieste)||[];
   R.forEach(x=>{if(effSt(x)==='scaduta')r.push(['Consensi scaduti',2]);if(AUTOREP[x.token]&&effSt(x)==='inviata')r.push(['Risposta consensi',2])});
   if(waUnread(c))r.push(['WhatsApp da leggere',2]);
   try{if(retention(c).expired)r.push(['Dati scaduti',2]);else if(staleConsents(c).length)r.push(['Consensi da rivedere',1])}catch(e){}
-  if(opps.some(o=>o.clienteId===c.id&&oReasons(o).length))r.push(['Opportunity da seguire',1])}catch(e){}
+  if(opps.some(o=>o.clienteId===c.id&&oReasons(o).length))r.push(['Opportunità da seguire',1])}catch(e){}
   return r}
 function lReasons(l){const r=[];try{if(l.stato!=='nuovo')return r;const m=lMsgs(l)[0];if(m&&lUnread(l,14))r.push(['Ha risposto',2]);if(!l.inf)r.push(['Informativa da inviare',1]);if(!m)r.push(['Da valutare',1])}catch(e){}return r}
 function oReasons(o){const r=[],td=ymd();try{const open=o.fase!=='vinta'&&o.fase!=='persa';
@@ -9574,7 +9576,7 @@ $('st_bkx').onclick=async()=>{const o={v:1,exp:new Date().toISOString(),clienti:
 $('st_bki').onclick=()=>$('st_bkf').click();
 $('st_bkf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;setErr('st_bk','');
   let o;try{o=JSON.parse(await f.text());if(o&&o.enc===1){if(!DRV.pw){setErr('st_bk','Backup cifrato: imposta prima la password dei backup (Impostazioni → Backup, accessi ed esempi).');return}try{o=JSON.parse(new TextDecoder().decode(await decEnv(o)))}catch(x){setErr('st_bk','Password errata o file danneggiato.');return}}if(!o||o.v!==1||!Array.isArray(o.clienti))throw 0;
-    askConfirm('Importare il backup? Clienti ('+o.clienti.length+'), opportunity ('+(o.opportunita||[]).length+'), prodotti ('+(o.prodotti||[]).length+') e lead ('+(o.lead||[]).length+') vengono uniti ai dati attuali; i record con lo stesso identificativo vengono sostituiti.','clip','Importa',()=>{
+    askConfirm('Importare il backup? Clienti ('+o.clienti.length+'), opportunità ('+(o.opportunita||[]).length+'), prodotti ('+(o.prodotti||[]).length+') e lead ('+(o.lead||[]).length+') vengono uniti ai dati attuali; i record con lo stesso identificativo vengono sostituiti.','clip','Importa',()=>{
       const mg=(cur,inc)=>{const m=new Map(cur.map(r=>[String(r.id),r]));(inc||[]).forEach(r=>{if(r&&r.id)m.set(String(r.id),r)});return [...m.values()]};
       clients=mg(clients,o.clienti);opps=mg(opps,o.opportunita);prods=mg(prods,o.prodotti);movs=mg(movs,o.movimenti);leads=mg(leads,o.lead);
       persist();persistO();persistP();persistM();persistL();render();renderO();renderP();try{renderL()}catch(x){}try{renderH()}catch(x){}toast('Backup importato.')})
@@ -9620,13 +9622,13 @@ $('st_bkf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f
  $('st_exAdd').onclick=()=>{if(opps.some(o=>o.demo)){toast('Gli esempi sono già presenti: rimuovili prima di aggiungerli di nuovo.');return}
   const dAgo=n=>ymd(new Date(Date.now()-n*864e5)),fut=n=>ymd(new Date(Date.now()+n*864e5));
   XC.forEach(([id,n,c,az],i)=>{if(!clients.some(x=>x.id===id))clients.push({id,tipo:'azienda',nome:n,cognome:c,azienda:az,ruolo:'Titolare',paese:'IT',telefono:'333'+String(1000100+i*37),email:yp(n,c),wa:[],agg:ymd(),demo:true,privacy:mkPriv({fonteDati:'interessato',base:'contratto'})})});
-  const mk=(i,fase,pr,tit,chiusa,creata,data)=>{const [pi,q]=pr,P=PR[pi];const o={id:'ox'+i,demo:true,creata,titolo:tit,clienteId:XC[i%XC.length][0],fase,prob:(FASI.find(f=>f[0]===fase)||[])[2],fonte:FONTI[i%FONTI.length],data:data||chiusa||'',prodotti:[{prodId:'x'+pi,nome:P[0],unita:'bt',qta:q,prezzo:P[1],costo:P[2],iva:22,sconto:i%4===0?5:0}],allegati:[],note:'Opportunity di esempio.'};if(chiusa)o.chiusa=chiusa;o.valore=total(o);return o};
+  const mk=(i,fase,pr,tit,chiusa,creata,data)=>{const [pi,q]=pr,P=PR[pi];const o={id:'ox'+i,demo:true,creata,titolo:tit,clienteId:XC[i%XC.length][0],fase,prob:(FASI.find(f=>f[0]===fase)||[])[2],fonte:FONTI[i%FONTI.length],data:data||chiusa||'',prodotti:[{prodId:'x'+pi,nome:P[0],unita:'bt',qta:q,prezzo:P[1],costo:P[2],iva:22,sconto:i%4===0?5:0}],allegati:[],note:'Opportunità di esempio.'};if(chiusa)o.chiusa=chiusa;o.valore=total(o);return o};
   DEF.forEach((d,i)=>opps.push(mk(i,d[1],d[2],d[3],dAgo(d[0]),dAgo(d[0]+25+(i%5)*6))));
   OPEN.forEach((d,j)=>opps.push(mk(100+j,d[0],d[1],d[2],'',dAgo(5+j*4),fut(10+j*6))));
   const now=Date.now();let nl=0;for(let i=0;i<10;i++){const id='lx'+(i+1);if(leads.some(l=>l.id===id))continue;const n=NM[(i*3+5)%NM.length],c=CG[(i*5+2)%CG.length],r=LR[i%LR.length],t=now-(i*7+2)*36e5;leads.push({id,demo:true,nome:n,cognome:c,email:yp(n,c),telefono:'320'+String(5550200+i*41),azienda:i%3?'':AZ[(i+7)%AZ.length]+' '+c,richiesta:r[1],oggetto:r[0],fonte:LS[i%LS.length],data:t,creato:t,stato:'nuovo'});nl++}
-  persist();persistO();persistL();render();renderO();try{renderL()}catch(e){}try{renderH()}catch(e){}toast('Esempi aggiunti: '+XC.length+' clienti, '+(DEF.length+OPEN.length)+' opportunity, '+nl+' lead.')};
+  persist();persistO();persistL();render();renderO();try{renderL()}catch(e){}try{renderH()}catch(e){}toast('Esempi aggiunti: '+XC.length+' clienti, '+(DEF.length+OPEN.length)+' opportunità, '+nl+' lead.')};
 $('st_exDel').onclick=()=>{const n=opps.filter(o=>o.demo).length;if(!n&&!clients.some(c=>c.demo)&&!leads.some(l=>l.demo)){toast('Non ci sono esempi da rimuovere.');return}
-  askConfirm('Rimuovere clienti, lead e opportunity di esempio aggiunti da qui? I tuoi dati non vengono toccati.','trash','Rimuovi',()=>{opps=opps.filter(o=>!o.demo);clients=clients.filter(c=>!c.demo);leads=leads.filter(l=>!l.demo);persist();persistO();persistL();render();renderO();try{renderL()}catch(e){}try{renderH()}catch(e){}toast('Esempi rimossi.')})}}
+  askConfirm('Rimuovere clienti, lead e opportunità di esempio aggiunti da qui? I tuoi dati non vengono toccati.','trash','Rimuovi',()=>{opps=opps.filter(o=>!o.demo);clients=clients.filter(c=>!c.demo);leads=leads.filter(l=>!l.demo);persist();persistO();persistL();render();renderO();try{renderL()}catch(e){}try{renderH()}catch(e){}toast('Esempi rimossi.')})}}
 /* ===== Marketing: segmenti, funnel, engagement ===== */
 {const sm=(a,f)=>a.reduce((x,o)=>x+(+f(o)||0),0),DAY=864e5,PERM=[[30,'30 giorni'],[90,'90 giorni'],[365,'12 mesi'],[0,'Sempre']];
  let sub='seg',mp=90;try{const v=localStorage.getItem('crm-mper');if(v!==null&&PERM.some(x=>x[0]===+v))mp=+v;const u=localStorage.getItem('crm-msub');if(['seg','cam'].includes(u))sub=u}catch(e){}
@@ -9635,8 +9637,8 @@ $('st_exDel').onclick=()=>{const n=opps.filter(o=>o.demo).length;if(!n&&!clients
  const PRE=[
   {id:'p_fav',nome:'Preferiti',q:{op:'AND',conds:[C_('fav','eq','si')]},pre:1},
   {id:'p_mk',nome:'Consenso marketing email',q:{op:'AND',conds:[C_('mkEmail','eq','si')]},pre:1},
-  {id:'p_op',nome:'Con opportunity aperta',q:{op:'AND',conds:[C_('oppAperte','ge','1')]},pre:1},
-  {id:'p_no',nome:'Senza opportunity',q:{op:'AND',conds:[C_('oppTot','eq','0')]},pre:1},
+  {id:'p_op',nome:'Con opportunità aperta',q:{op:'AND',conds:[C_('oppAperte','ge','1')]},pre:1},
+  {id:'p_no',nome:'Senza opportunità',q:{op:'AND',conds:[C_('oppTot','eq','0')]},pre:1},
   {id:'p_pi',nome:'Prospect fermi da 30 giorni',q:{op:'AND',conds:[C_('stato','eq','prospect'),C_('giorni','ge','30')]},pre:1},
   {id:'p_ci',nome:'Clienti fermi da 90 giorni',q:{op:'AND',conds:[C_('stato','eq','cliente'),C_('giorni','ge','90')]},pre:1}];
  const fromR=r=>{const k=[];if(r.tipo)k.push(C_('stato','eq',r.tipo));if(r.fav)k.push(C_('fav','eq','si'));if(r.paese)k.push(C_('paese','eq',r.paese));if(r.opp==='aperta')k.push(C_('oppAperte','ge','1'));if(r.opp==='nessuna')k.push(C_('oppTot','eq','0'));if(r.fonte)k.push(C_('fonte','eq',r.fonte));if(r.cons)k.push(C_(r.cons,'eq','si'));if(r.inatt)k.push(C_('giorni','ge',String(r.inatt)));return{op:'AND',conds:k}};
@@ -9660,12 +9662,12 @@ $('st_exDel').onclick=()=>{const n=opps.filter(o=>o.demo).length;if(!n&&!clients
   {id:'mkTel',ent:'Consensi',label:'Marketing telefono e WhatsApp',type:'bool',get:c=>hasC(c,'mkTel')},
   {id:'profilazione',ent:'Consensi',label:'Profilazione',type:'bool',get:c=>hasC(c,'profilazione')},
   {id:'info',ent:'Consensi',label:'Informativa data',type:'bool',get:c=>!!(c.privacy&&c.privacy.informativa)},
-  {id:'oppAperte',ent:'Opportunity',label:'Opportunity aperte (n)',type:'num',get:c=>oppsOf(c.id).filter(o=>o.fase!=='vinta'&&o.fase!=='persa').length},
-  {id:'oppTot',ent:'Opportunity',label:'Opportunity totali (n)',type:'num',get:c=>oppsOf(c.id).length},
-  {id:'valVinto',ent:'Opportunity',label:'Valore vinto (€)',type:'num',get:c=>sm(oppsOf(c.id).filter(o=>o.fase==='vinta'),o=>o.valore)},
-  {id:'fonte',ent:'Opportunity',label:'Fonte di una opportunity',type:'enum',opts:()=>FONTI.map(f=>[f,f]),get:c=>oppsOf(c.id).map(o=>o.fonte)},
-  {id:'fase',ent:'Opportunity',label:'Stato di una opportunity',type:'enum',opts:()=>[['aperta','Aperta (qualsiasi fase)'],...FASI.map(f=>[f[0],f[1]])],get:c=>oppsOf(c.id).flatMap(o=>o.fase==='vinta'||o.fase==='persa'?[o.fase]:[o.fase,'aperta'])},
-  {id:'prev',ent:'Opportunity',label:'Stato di un preventivo',type:'enum',opts:()=>[['bozza','Bozza'],['inviato','Inviato'],['accettato','Accettato'],['rifiutato','Rifiutato']],get:c=>oppsOf(c.id).flatMap(o=>(o.preventivi||[]).map(q=>q.stato))},
+  {id:'oppAperte',ent:'Opportunità',label:'Opportunità aperte (n)',type:'num',get:c=>oppsOf(c.id).filter(o=>o.fase!=='vinta'&&o.fase!=='persa').length},
+  {id:'oppTot',ent:'Opportunità',label:'Opportunità totali (n)',type:'num',get:c=>oppsOf(c.id).length},
+  {id:'valVinto',ent:'Opportunità',label:'Valore vinto (€)',type:'num',get:c=>sm(oppsOf(c.id).filter(o=>o.fase==='vinta'),o=>o.valore)},
+  {id:'fonte',ent:'Opportunità',label:'Fonte di un’opportunità',type:'enum',opts:()=>FONTI.map(f=>[f,f]),get:c=>oppsOf(c.id).map(o=>o.fonte)},
+  {id:'fase',ent:'Opportunità',label:'Stato di un’opportunità',type:'enum',opts:()=>[['aperta','Aperta (qualsiasi fase)'],...FASI.map(f=>[f[0],f[1]])],get:c=>oppsOf(c.id).flatMap(o=>o.fase==='vinta'||o.fase==='persa'?[o.fase]:[o.fase,'aperta'])},
+  {id:'prev',ent:'Opportunità',label:'Stato di un preventivo',type:'enum',opts:()=>[['bozza','Bozza'],['inviato','Inviato'],['accettato','Accettato'],['rifiutato','Rifiutato']],get:c=>oppsOf(c.id).flatMap(o=>(o.preventivi||[]).map(q=>q.stato))},
   {id:'giorni',ent:'Contatti',label:'Giorni dall’ultimo contatto',type:'num',get:c=>{const g=gg(c);return g===null?Infinity:g}},
   {id:'camp',ent:'Campagne',label:'Ha ricevuto la campagna',type:'enum',opts:()=>S.jr.map(j=>[j.id,j.nome]),get:c=>S.jr.filter(j=>recv(c,j.id)).map(j=>j.id)}];
  const FDM={};FD.forEach(d=>FDM[d.id]=d);
@@ -9714,7 +9716,7 @@ $('st_exDel').onclick=()=>{const n=opps.filter(o=>o.demo).length;if(!n&&!clients
    if(!q.conds.length)L.append(h('div','hint','Nessuna condizione: il segmento comprende tutti i clienti. Aggiungine una per restringerlo.'));
    q.conds.forEach((k,i)=>{if(i){const j=h('div','cjoin',q.op==='OR'?'oppure':'e');L.append(j)}
     const d=FDM[k.f],r=h('div','crow'),l1=h('div','cr1');
-    const fs=h('select');['Cliente','Consensi','Opportunity','Contatti','Campagne'].forEach(en=>{const g=h('optgroup');g.label=en;FD.filter(z=>z.ent===en).forEach(z=>{const o=h('option','',z.label);o.value=z.id;g.append(o)});fs.append(g)});fs.value=k.f;fs.onchange=()=>{q.conds[i]=dflt(fs.value);paint()};
+    const fs=h('select');['Cliente','Consensi','Opportunità','Contatti','Campagne'].forEach(en=>{const g=h('optgroup');g.label=en;FD.filter(z=>z.ent===en).forEach(z=>{const o=h('option','',z.label);o.value=z.id;g.append(o)});fs.append(g)});fs.value=k.f;fs.onchange=()=>{q.conds[i]=dflt(fs.value);paint()};
     const dl=h('button','btn ico');dl.type='button';dl.title=dl.ariaLabel='Rimuovi condizione';dl.innerHTML=ICONS.trash;dl.onclick=()=>{q.conds.splice(i,1);paint()};l1.append(fs,dl);r.append(l1);
     const l2=h('div','cr2');
     const chips=(opts,cur,set)=>{const w2=h('div','cchips');opts.forEach(([v,l])=>{const c=h('button','',l);c.type='button';c.classList.toggle('on',cur()===v);c.onclick=()=>{set(v);[...w2.children].forEach((x,ix)=>x.classList.toggle('on',opts[ix][0]===v));upd()};w2.append(c)});return w2};
@@ -9739,13 +9741,13 @@ $('st_exDel').onclick=()=>{const n=opps.filter(o=>o.demo).length;if(!n&&!clients
   const bf={};L.forEach(l=>{const k={web:'Form web',email:'Email',manuale:'Manuale'}[l.fonte]||l.fonte||'Altro';(bf[k]=bf[k]||[0,0])[0]++;if(l.stato==='convertito')bf[k][1]++});
   Object.entries(bf).forEach(([k,[a,c]])=>{const r=h('div','pbar');r.append(h('span','',k+' '),bar(a?c/a*100:0,'#b5ebc0'),h('em','',c+'/'+a+' · '+pct(c,a)));b.append(r)});if(!L.length)b.append(h('div','hint','Nessun lead nel periodo.'));H.append(b);
   const O=opps.filter(o=>!f||tsOf(o.creata)>=f),W=O.filter(o=>o.fase==='vinta'),P=O.filter(o=>o.fase==='persa'),A=O.filter(o=>o.fase!=='vinta'&&o.fase!=='persa');
-  b=box('Opportunity','Opportunity create nel periodo. Tasso di vittoria = vinte su chiuse (vinte + perse). Ciclo medio = giorni tra creazione e chiusura delle vinte.');
+  b=box('Opportunità','Opportunità create nel periodo. Tasso di vittoria = vinte su chiuse (vinte + perse). Ciclo medio = giorni tra creazione e chiusura delle vinte.');
   const v2=h('div','wb-v');v2.append(h('span','',pct(W.length,W.length+P.length)),h('small','vittoria · '+O.length+' create'));b.append(v2,bar(W.length+P.length?W.length/(W.length+P.length)*100:0,'#b5ebc0'));
   const cy=W.filter(o=>o.chiusa).map(o=>(tsOf(o.chiusa)-tsOf(o.creata))/DAY).filter(x=>x>=0);b.append(rowKV('Vinte '+W.length+' · '+eur(sm(W,o=>o.valore)),'Perse '+P.length,cy.length?'Ciclo medio '+Math.round(cy.reduce((a,x)=>a+x,0)/cy.length)+' gg':''));
   const mx=Math.max(1,O.length);[['Create',O.length,'#bfe0f8'],['Aperte',A.length,'#f6edb8'],['Vinte',W.length,'#b5ebc0'],['Perse',P.length,'#f5cad6']].forEach(([l,n,c])=>{const r=h('div','pbar'),lb=h('span','',l+' ');lb.append(h('small','','('+n+')'));r.append(lb,bar(n/mx*100,c),h('em','',pct(n,O.length)));b.append(r)});
   FASI.slice(0,4).forEach(fs=>{const it=A.filter(o=>o.fase===fs[0]);const r=h('div','pbar'),lb=h('span','','· '+fs[1]+' ');lb.append(h('small','','('+it.length+')'));r.append(lb,bar(A.length?it.length/A.length*100:0,fs[3]),h('em','',eur(sm(it,o=>o.valore))));b.append(r)});H.append(b);
   const bo={};O.forEach(o=>{const k=o.fonte||'Altro';(bo[k]=bo[k]||{n:0,w:0,c:0,v:0});bo[k].n++;if(o.fase==='vinta'){bo[k].w++;bo[k].v+=o.valore||0}if(o.fase==='vinta'||o.fase==='persa')bo[k].c++});
-  b=box('Per fonte','Per ogni fonte: opportunity create, tasso di vittoria sulle chiuse e valore vinto.');Object.entries(bo).sort((a,c)=>c[1].v-a[1].v).forEach(([k,x])=>{const r=h('div','pbar');r.append(h('span','',k+' '),bar(x.c?x.w/x.c*100:0,'#b5ebc0'),h('em','',x.n+' · '+pct(x.w,x.c)+' · '+eur(x.v)));b.append(r)});if(!O.length)b.append(h('div','hint','Nessuna opportunity nel periodo.'));H.append(b)}
+  b=box('Per fonte','Per ogni fonte: opportunità create, tasso di vittoria sulle chiuse e valore vinto.');Object.entries(bo).sort((a,c)=>c[1].v-a[1].v).forEach(([k,x])=>{const r=h('div','pbar');r.append(h('span','',k+' '),bar(x.c?x.w/x.c*100:0,'#b5ebc0'),h('em','',x.n+' · '+pct(x.w,x.c)+' · '+eur(x.v)));b.append(r)});if(!O.length)b.append(h('div','hint','Nessuna opportunità nel periodo.'));H.append(b)}
  function paneEng(H){H.append(per());const f=from();
   const bk=[['Attivi (≤30 gg)',0,30,'#b5ebc0'],['31–90 gg',31,90,'#f6edb8'],['Oltre 90 gg',91,1e9,'#f7d9bb'],['Mai contattati',-1,-1,'#f5cad6']],cnt=bk.map(()=>0);clients.forEach(c=>{const g=gg(c);bk.forEach((x,i)=>{if(g===null?x[1]===-1:(x[1]!==-1&&g>=x[1]&&g<=x[2]))cnt[i]++})});
   const rf=h('button','btn lbl');rf.type='button';rf.innerHTML='<span>'+ICONS.reset+'</span> Aggiorna email dei clienti';rf.title='Legge da Gmail le email scambiate con i clienti e ne registra data e direzione';
@@ -9950,10 +9952,10 @@ let asub='fun';try{const u=localStorage.getItem('crm-asub');if(u==='fun'||u==='e
   const rip=prodotti.filter(p=>p.ord.size>1).length;
   return{T,prodotti,tot,n,avgGap,last,first,mar,rip,pezzi:sum(prodotti,p=>p.qta)}};
  window.paintTr=function(){const c=editing,w=$('trBody');if(!c||!w)return;w.textContent='';const D=trData(c);
-  if(!D.n){w.append(h('div','empty','Nessun acquisto ancora. Qui compaiono le opportunity vinte con i prodotti acquistati.'));return}
+  if(!D.n){w.append(h('div','empty','Nessun acquisto ancora. Qui compaiono le opportunità vinte con i prodotti acquistati.'));return}
   const now=Date.now(),dsince=D.last?Math.floor((now-D.last)/DAY):null,K=h('div','sum');
-  K.append(kpi('Totale acquistato',eur(D.tot),D.pezzi+' pezzi · IVA esclusa','Somma dei prodotti delle opportunity vinte, al netto degli sconti e senza IVA.'));
-  K.append(kpi('Ordini',String(D.n),'media '+eur(D.tot/D.n)+' ciascuno','Numero di opportunity vinte e valore medio per ordine.'));
+  K.append(kpi('Totale acquistato',eur(D.tot),D.pezzi+' pezzi · IVA esclusa','Somma dei prodotti delle opportunità vinte, al netto degli sconti e senza IVA.'));
+  K.append(kpi('Ordini',String(D.n),'media '+eur(D.tot/D.n)+' ciascuno','Numero di opportunità vinte e valore medio per ordine.'));
   K.append(kpi('Riacquisto medio',D.avgGap===null?'—':Math.round(D.avgGap)+' gg',D.avgGap===null?'serve almeno un secondo ordine':'tra un ordine e il successivo','Giorni medi che passano tra un acquisto e il successivo.'));
   if(D.avgGap!==null&&D.last){const nx=D.last+D.avgGap*DAY,dd=Math.round((nx-now)/DAY);K.append(kpi('Prossimo acquisto',dd>=0?'tra '+dd+' gg':'in ritardo di '+(-dd)+' gg',fmtD(ymd(new Date(nx))),'Stima: ultimo acquisto più l’intervallo medio di riacquisto.'))}
   else K.append(kpi('Ultimo acquisto',dsince===null?'—':dsince===0?'oggi':dsince+' gg fa',D.last?fmtD(ymd(new Date(D.last))):''));
@@ -9966,7 +9968,7 @@ let asub='fun';try{const u=localStorage.getItem('crm-asub');if(u==='fun'||u==='e
    if(ord.length>1){const g=(ord[ord.length-1]-ord[0])/DAY/(ord.length-1);sub+=' · riacquisto ogni '+Math.round(g)+' gg'}
    t.append(h('b','',p.nome),h('span','',sub),h('span','','Ultimo: '+fmtD(ymd(new Date(ord[ord.length-1])))));const v=h('div','');v.style.cssText='font-weight:700;white-space:nowrap;text-align:right';v.textContent=eur(p.val);r.append(pthumb(pp||{nome:p.nome},true),t,v);w.append(r)});
   const h2=h('div','hh');h2.append(h('span','','Transazioni'));w.append(h2);
-  D.T.slice().reverse().forEach(o=>{const r=h('button','qrow');r.type='button';const t=h('div','tx'),v=sum(o.prodotti||[],riga);t.append(h('b','',o.titolo||'Opportunity'),h('span','',fmtD(dOf(o))+' · '+(o.prodotti||[]).length+((o.prodotti||[]).length===1?' prodotto':' prodotti')));const e=h('div','');e.style.cssText='font-weight:700;white-space:nowrap';e.textContent=eur(v);r.append(t,e);r.onclick=()=>openOpp(o);w.append(r)})};
+  D.T.slice().reverse().forEach(o=>{const r=h('button','qrow');r.type='button';const t=h('div','tx'),v=sum(o.prodotti||[],riga);t.append(h('b','',o.titolo||'Opportunità'),h('span','',fmtD(dOf(o))+' · '+(o.prodotti||[]).length+((o.prodotti||[]).length===1?' prodotto':' prodotti')));const e=h('div','');e.style.cssText='font-weight:700;white-space:nowrap';e.textContent=eur(v);r.append(t,e);r.onclick=()=>openOpp(o);w.append(r)})};
 }
 /* ===== sblocco dello scorrimento: dopo aver chiuso schermate/finestre il browser (iOS) può lasciare ferma la schermata sotto ===== */
 {let t=0;const unstick=()=>{try{document.documentElement.style.overflow='';document.body.style.overflow='';document.querySelectorAll('.sheet:not([hidden])').forEach(el=>{const y=el.scrollTop;el.style.overflowY='hidden';void el.offsetHeight;el.style.overflowY='';el.scrollTop=y});const se=document.scrollingElement;if(se){const y=se.scrollTop;se.scrollTop=y+1;se.scrollTop=y}}catch(e){}};
@@ -9984,7 +9986,7 @@ let asub='fun';try{const u=localStorage.getItem('crm-asub');if(u==='fun'||u==='e
 {S.cpq=S.cpq||{listini:[],maxSconto:0};
  const C=()=>(S.cpq=S.cpq&&Array.isArray(S.cpq.listini)?S.cpq:{listini:[],maxSconto:0}),num=v=>{const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?0:n};
  window.cCountry=c=>{if(!c)return'IT';const last=nrm((c.indirizzo||'').split(',').pop().replace(/\(.*?\)/g,'')).trim(),m=COUNTRIES.find(x=>nrm(x[1])===last);return m?m[0]:(c.paese||'IT')};
- /* aggiornamento prezzi sulle opportunity aperte quando cambiano catalogo o listini */
+ /* aggiornamento prezzi sulle opportunità aperte quando cambiano catalogo o listini */
  let PSNAP=null,LSNAP='';const lsig=()=>JSON.stringify(((S.cpq&&S.cpq.listini)||[]).map(l=>[l.id,l.attivo!==false,l.mod,l.paesi,l.scaglioni,l.prezzi,l.nome]));
  const snapP=()=>{PSNAP={};prods.forEach(p=>PSNAP[p.id]={prezzo:+p.prezzo||0,costo:p.costo});LSNAP=lsig()};
  function repriceList(list,cli,ch,all,old){let n=0;(list||[]).forEach(l=>{const pp=l.prodId&&prods.find(z=>z.id===l.prodId);if(!pp)return;
@@ -9999,7 +10001,7 @@ let asub='fun';try{const u=localStorage.getItem('crm-asub');if(u==='fun'||u==='e
    const all=lsig()!==LSNAP,old=PSNAP;snapP();if(!ch.size&&!all)return;
    let lines=0,nop=0,qn=0;opps.forEach(o=>{if(o.fase==='vinta'||o.fase==='persa')return;const cli=clients.find(x=>x.id===o.clienteId)||null,k=repriceList(o.prodotti,cli,ch,all,old);(o.preventivi||[]).forEach(q=>{if(q.stato==='bozza'&&repriceList(q.righe,cli,ch,all,old))qn++});if(k){lines+=k;nop++}});
    if(typeof oEd!=='undefined'&&oD&&!$('oSheet').hidden&&oEd&&oEd.fase!=='vinta'&&oEd.fase!=='persa'){const k=repriceList(oD.prodotti,cOf(),ch,all,old);if(k){try{paintProd()}catch(e){}}}
-   if(lines||qn){try{persistO()}catch(e){}try{renderO();renderH()}catch(e){}if(lines)toast(lines+(lines===1?' prezzo aggiornato':' prezzi aggiornati')+' in '+nop+(nop===1?' opportunity aperta.':' opportunity aperte.'))}}
+   if(lines||qn){try{persistO()}catch(e){}try{renderO();renderH()}catch(e){}if(lines)toast(lines+(lines===1?' prezzo aggiornato':' prezzi aggiornati')+' in '+nop+(nop===1?' opportunità aperta.':' opportunità aperte.'))}}
  {const _pp=persistP;persistP=function(){const r=_pp.apply(this,arguments);try{afterPriceChange()}catch(e){}return r}
   const _ss=saveS;saveS=function(){const r=_ss.apply(this,arguments);try{afterPriceChange()}catch(e){}return r}
   snapP()}
@@ -10011,7 +10013,7 @@ let asub='fun';try{const u=localStorage.getItem('crm-asub');if(u==='fun'||u==='e
  window.paintAppr=()=>{let a=$('o_appr');if(!a){a=h('div');a.id='o_appr';$('o_tot').after(a)}a.textContent='';const L=listinoFor(cOf()),ov=oppOver(oD);
   if(L&&oD.prodotti.length)a.append(h('div','hint','Listino applicato: '+L.nome));
   if(ov){const ok=(oD.apprMax||0)>=ov;a.append(h('div','hint'+(ok?'':' warn'),ok?'Sconto fino al '+ov+'% approvato.':'Sconto del '+ov+'% oltre la soglia ('+sconMax()+'%): serve l’approvazione.'));
-   if(!ok){const b=h('button','btn lbl');b.type='button';b.innerHTML=ICONS.check+'Approva sconto';b.onclick=()=>askConfirm('Approvare uno sconto fino al '+ov+'% su questa opportunity?','check','Approva',()=>{oD.apprMax=ov;recalc()});a.append(b)}}};
+   if(!ok){const b=h('button','btn lbl');b.type='button';b.innerHTML=ICONS.check+'Approva sconto';b.onclick=()=>askConfirm('Approvare uno sconto fino al '+ov+'% su questa opportunità?','check','Approva',()=>{oD.apprMax=ov;recalc()});a.append(b)}}};
  $('o_cliente').addEventListener('change',()=>{let ch=0;oD.prodotti.forEach(p=>{const pp=prods.find(z=>z.id===p.prodId);if(pp&&p.auto){const r=prezzoCPQ(pp,cOf(),+p.qta||1);p.prezzo=r.prezzo;p.sconto=r.sconto;ch=1}});if(ch)paintProd()});
  const sh=(id,title,z)=>{let s=$(id);if(!s){s=h('div','sheet');s.id=id;document.body.append(s)}s.style.zIndex=z;s.hidden=false;s.textContent='';const w=h('div'),top=h('div','top'),x=h('button','btn ico pk');x.type='button';x.title=x.ariaLabel='Chiudi';x.innerHTML=ICONS.back;x.onclick=()=>{s.hidden=true};top.append(x,h('h2','',title));w.append(top);s.append(w);s.scrollTop=0;return w};
  const fld=(lb,el,hint)=>{const f=h('div','f'),l=h('label','',lb);f.append(l,el);if(hint)f.append(h('div','hint',hint));return f};
@@ -10097,7 +10099,7 @@ window.openLst=l=>{const L=l?JSON.parse(JSON.stringify(l)):{id:'l'+Date.now().to
   const cnt=()=>Object.keys(L.prezzi).length;const lbl=()=>{tg.innerHTML=ICONS.tag+(pl.hidden?'Personalizza i prezzi'+(cnt()?' ('+cnt()+')':''):'Nascondi elenco')};lbl();
   act.forEach(p=>{const r=h('div','qrow');r.style.cssText+='cursor:default;box-shadow:none;margin:0 0 8px';const t=h('div','tx');t.append(h('b','',p.nome),h('span','','Catalogo '+eur2(p.prezzo)));const i=inp(L.prezzi[p.id]!==undefined?L.prezzi[p.id]:'');i.placeholder='€';i.style.cssText='width:92px;flex:none;height:44px';i.setAttribute('aria-label','Prezzo dedicato '+p.nome);i.oninput=()=>{const v=i.value.trim();if(v==='')delete L.prezzi[p.id];else L.prezzi[p.id]=num(v)};pi[p.id]=i;r.append(pthumb(p,true),t,i);pl.append(r)});
   tg.onclick=()=>{pl.hidden=!pl.hidden;lbl()};c4.append(h('div','hint','Opzionale: un prezzo fisso per alcuni prodotti, al posto di quello di catalogo.'),tg,pl);
-  if(l){const d=h('button','btn lbl d');d.type='button';d.style.cssText='width:100%;height:40px;margin:4px 0 0';d.innerHTML=ICONS.trash+'Elimina listino';d.onclick=()=>askConfirm('Eliminare il listino “'+l.nome+'”? Le opportunity esistenti non cambiano.','trash','Elimina',()=>{C().listini=C().listini.filter(x=>x.id!==l.id);saveS();$('cpqEd').hidden=true;openCpq()});const dw=h('div','delw');dw.style.margin='0 0 8px';dw.append(d);w.append(dw)}
+  if(l){const d=h('button','btn lbl d');d.type='button';d.style.cssText='width:100%;height:40px;margin:4px 0 0';d.innerHTML=ICONS.trash+'Elimina listino';d.onclick=()=>askConfirm('Eliminare il listino “'+l.nome+'”? Le opportunità esistenti non cambiano.','trash','Elimina',()=>{C().listini=C().listini.filter(x=>x.id!==l.id);saveS();$('cpqEd').hidden=true;openCpq()});const dw=h('div','delw');dw.style.margin='0 0 8px';dw.append(d);w.append(dw)}
   const sig=()=>JSON.stringify([nome.value,mod.value,L.paesi,L.scaglioni,L.prezzi,L.attivo!==false]);
   const doSave=()=>{const n=nome.value.trim();if(!n){toast('Dai un nome al listino.');nome.focus();return false}L.nome=n;L.mod=num(mod.value);L.scaglioni=L.scaglioni.filter(t=>+t.da>0&&+t.pct>0).sort((a,b)=>a.da-b.da);
    const ix=C().listini.findIndex(x=>x.id===L.id);if(ix>=0)C().listini[ix]=L;else C().listini.push(L);saveS();$('cpqEd').hidden=true;openCpq();toast('Listino salvato.');return true};

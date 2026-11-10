@@ -142,7 +142,7 @@ h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em}
 .seg,.tabs{display:flex;gap:6px;padding:4px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
 .seg{margin:8px 0 14px}
 .tabs{margin:4px 0 2px}
-.seg button,.tabs button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:10px;background:none;color:var(--muted);font-weight:600;cursor:pointer}
+.seg button,.tabs button{flex:1 1 auto;min-width:0;padding:0 7px;display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:10px;background:none;color:var(--muted);font-weight:600;cursor:pointer}
 .seg button{height:44px;min-width:0;padding:0 8px;gap:6px;white-space:nowrap;flex:1 1 0;position:relative}
 .seg button:not(.on) .lb{display:none}
 .seg button.on{flex:2.4 1 0}
@@ -192,7 +192,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 .itx{font-size:14px;line-height:1.5;font-weight:400;margin-bottom:14px}
 .itx p{margin:0 0 8px;font-weight:400}
 
-/* opportunity */
+/* opportunità */
 .sum{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:var(--sh)}
 .stat span{display:block;font-size:12px;color:var(--muted)}
@@ -422,7 +422,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
     <div class="stk">
     <div class="hrow"><button class="btn ico" id="menuBtn" type="button" aria-label="Menu" aria-haspopup="true" aria-expanded="false" title="Menu"><span data-i="menu"></span></button><h1 id="title">Clienti</h1></div>
     <div id="amBack" hidden></div><div class="amenu" id="appMenu" role="menu" hidden><button type="button" role="menuitem" data-m="home"><span data-i="home"></span>Home</button><button type="button" role="menuitem" data-m="an"><span data-i="analytics"></span>Analytics</button><button type="button" role="menuitem" data-m="prod"><span data-i="box"></span>Prodotti</button><button type="button" role="menuitem" data-m="mkt"><span data-i="mega"></span>Marketing</button><hr class="amsep"><button type="button" role="menuitem" data-m="set"><span data-i="gear"></span>Impostazioni</button><button type="button" role="menuitem" data-m="wel"><span data-i="star"></span>Primi passi</button><button type="button" role="menuitem" data-m="legal"><span data-i="shield"></span>Privacy e termini</button><button type="button" role="menuitem" data-m="info"><span data-i="info"></span>Info</button></div>
-    <div class="tabs" id="tabs"><button type="button" class="on" data-v="home"><span data-i="home"></span>Home</button><button type="button" data-v="clienti"><span data-i="users"></span>Clienti</button><button type="button" data-v="lead"><span data-i="inbox"></span>Lead</button><button type="button" data-v="opp"><span data-i="target"></span>Opportunity</button></div>
+    <div class="tabs" id="tabs"><button type="button" class="on" data-v="home"><span data-i="home"></span>Home</button><button type="button" data-v="clienti"><span data-i="users"></span>Clienti</button><button type="button" data-v="lead"><span data-i="inbox"></span>Lead</button><button type="button" data-v="opp"><span data-i="target"></span>Opportunità</button></div>
     </div>
     <div class="sub" id="count"></div>
     <div class="cfrow" id="cfRow"><div class="cfl" id="cFilt" role="group" aria-label="Filtra per stato"></div></div>
@@ -463,7 +463,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div id="oppView" hidden>
     <div class="sum" id="sum"></div>
     <div class="chips" id="oFilt" style="margin-bottom:12px"></div>
-    <div class="srow"><input class="search" id="oq" type="search" placeholder="Cerca titolo o cliente…" aria-label="Cerca opportunity"><button class="btn p addIc" id="oAdd" type="button" aria-label="Nuova opportunity" title="Nuova opportunity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
+    <div class="srow"><input class="search" id="oq" type="search" placeholder="Cerca titolo o cliente…" aria-label="Cerca opportunità"><button class="btn p addIc" id="oAdd" type="button" aria-label="Nuova opportunità" title="Nuova opportunità"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
     <div class="vt"><button id="vList" type="button" aria-label="Vista elenco" title="Vista elenco"><span data-i="list"></span></button><button id="vKan" type="button" aria-label="Vista a colonne" title="Vista a colonne"><span data-i="columns"></span></button></div>
     <div id="oList"></div><div class="kan" id="kan" hidden></div>
   </div>
@@ -505,9 +505,9 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
     <div class="sum s3" id="p_stock"></div>
     <div class="mact" id="p_acts"><button class="btn lbl" id="mv_c" type="button"><span data-i="carico"></span>Carico</button><button class="btn lbl" id="mv_s" type="button"><span data-i="scarico"></span>Scarico</button><button class="btn lbl" id="mv_r" type="button"><span data-i="edit"></span>Inventario</button></div>
     <div id="p_hist"></div>
-    <div class="hint">Disponibili = giacenza meno le quantità impegnate nelle opportunity in fase Negoziazione e in quelle vinte non ancora scaricate.</div>
+    <div class="hint">Disponibili = giacenza meno le quantità impegnate nelle opportunità in fase Negoziazione e in quelle vinte non ancora scaricate.</div>
   </div></div>
-  <div class="cd"><div class="f" style="margin:0"><label class="chk"><input type="checkbox" id="p_attivo"><span>Prodotto attivo<em>I prodotti non attivi non compaiono nel catalogo delle opportunity.</em></span></label></div></div>
+  <div class="cd"><div class="f" style="margin:0"><label class="chk"><input type="checkbox" id="p_attivo"><span>Prodotto attivo<em>I prodotti non attivi non compaiono nel catalogo delle opportunità.</em></span></label></div></div>
   <div class="btns"><button class="btn d" id="pDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina prodotto" title="Elimina prodotto"><span data-i="trash"></span></button><button class="btn p" id="pSave" type="button" style="flex:9 1 0" aria-label="Salva prodotto" title="Salva prodotto"><span data-i="check"></span></button></div>
 </div></div>
 
@@ -522,7 +522,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="q_note">Note per il cliente</label><textarea id="q_note" rows="2"></textarea></div>
   <div class="f" style="margin-top:14px"><label>Invia al cliente</label><div class="tri"><button class="btn lbl" id="qPdf" type="button"><span data-i="doc"></span>PDF</button><button class="btn lbl" id="qSend" type="button"><span data-i="Scrivi"></span>Email</button><button class="btn lbl" id="qWa" type="button"><span data-i="WhatsApp"></span>WhatsApp</button></div><div class="hint">PDF: salva il file. Email e WhatsApp lo inviano in allegato; l’invio salva il preventivo e lo passa a “Inviato”.</div></div>
   <div class="dual"><button class="btn lbl" id="qRefresh" type="button"><span data-i="reset"></span>Aggiorna righe</button><button class="btn lbl" id="qCopy" type="button"><span data-i="copy"></span>Copia testo</button></div>
-  <div class="hint">Le righe sono una copia dei prodotti al momento della creazione: “Aggiorna righe” le riallinea all’opportunity.</div>
+  <div class="hint">Le righe sono una copia dei prodotti al momento della creazione: “Aggiorna righe” le riallinea all’opportunità.</div>
   <div class="btns"><button class="btn d" id="qDel" type="button" style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina preventivo" title="Elimina preventivo"><span data-i="trash"></span></button><button class="btn p" id="qSave" type="button" style="flex:9 1 0" aria-label="Salva preventivo" title="Salva preventivo"><span data-i="check"></span></button></div>
 </div></div>
 
@@ -656,7 +656,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
     <div class="hint">Il file è cifrato con la password dei backup (serve anche quando lo reimporti). L’importazione unisce i record per identificativo e, se uno esiste già, vince quello del file.</div></div>
   <div class="f"><label>Dati di esempio</label>
     <div class="dual"><button class="btn lbl" id="st_exAdd" type="button"><span data-i="add"></span> Aggiungi esempi</button><button class="btn lbl" id="st_exDel" type="button"><span data-i="trash"></span> Rimuovi esempi</button></div>
-    <div class="hint" id="st_exH">Aggiunge 16 clienti fittizi, 10 lead e 56 opportunity vinte, perse e aperte distribuite negli ultimi 14 mesi (email su yopmail.com), per provare i periodi della home. “Rimuovi esempi” toglie solo quelli aggiunti da qui.</div></div>
+    <div class="hint" id="st_exH">Aggiunge 16 clienti fittizi, 10 lead e 56 opportunità vinte, perse e aperte distribuite negli ultimi 14 mesi (email su yopmail.com), per provare i periodi della home. “Rimuovi esempi” toglie solo quelli aggiunti da qui.</div></div>
 </div>
 <div class="sp" data-sp="sc" hidden>
   <div class="hint" id="sc_st" style="margin:0 0 10px"></div>
@@ -712,7 +712,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 <div class="sheet" id="sheet" hidden>
 <div>
   <div class="top"><h2 id="sheetTitle">Nuovo cliente</h2><button class="btn ico pk" id="close" aria-label="Chiudi" title="Chiudi"><span data-i="back"></span></button></div>
-  <div class="tabs" id="cTabs"><button type="button" class="on" data-p="dati" title="Dati" aria-label="Dati"><span data-i="user"></span>Dati</button><button type="button" data-p="opp" title="Opportunity" aria-label="Opportunity"><span data-i="target"></span>Opportunity<span class="cnt" id="cCnt"></span></button><button type="button" data-p="priv" title="Privacy" aria-label="Privacy"><span data-i="shield"></span>Privacy</button><button type="button" data-p="comm" title="Contatti" aria-label="Contatti"><span data-i="Scrivi"></span>Contatti</button><button type="button" data-p="tr" title="Transazioni" aria-label="Transazioni"><span data-i="bag"></span>Acquisti</button><button type="button" data-p="tp" title="Storia" aria-label="Storia"><span data-i="route"></span>Storia</button></div>
+  <div class="tabs" id="cTabs"><button type="button" class="on" data-p="dati" title="Dati" aria-label="Dati"><span data-i="user"></span>Dati</button><button type="button" data-p="opp" title="Opportunità" aria-label="Opportunità"><span data-i="target"></span>Opportunità<span class="cnt" id="cCnt"></span></button><button type="button" data-p="priv" title="Privacy" aria-label="Privacy"><span data-i="shield"></span>Privacy</button><button type="button" data-p="comm" title="Contatti" aria-label="Contatti"><span data-i="Scrivi"></span>Contatti</button><button type="button" data-p="tr" title="Transazioni" aria-label="Transazioni"><span data-i="bag"></span>Acquisti</button><button type="button" data-p="tp" title="Storia" aria-label="Storia"><span data-i="route"></span>Storia</button></div>
   <div class="msg" id="msg" hidden></div>
   <div class="seg" id="seg" role="group" aria-label="Tipo di anagrafica"><button type="button" class="on" data-t="persona"><span data-i="user"></span>Persona</button><button type="button" data-t="azienda"><span data-i="building"></span>Azienda</button></div>
   <div id="favHold" hidden><button class="ico" id="favBtn" type="button" aria-label="Preferito" title="Preferito"><span data-i="star"></span></button></div>
@@ -766,7 +766,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
     <div id="waList" style="margin-top:10px"></div>
   </div>
   <div id="cmCall" hidden><div class="mact"><button class="btn lbl" id="cl_call" type="button"><span data-i="Chiama"></span>Chiama</button><button class="btn lbl" id="cl_reg" type="button"><span data-i="edit"></span>Registra</button></div><div id="callBox" style="margin-top:10px"></div><div id="callList" style="margin-top:10px"></div></div></div>
-  <div class="f" id="linkedF" hidden><div id="linked"></div><button class="btn add" id="addOppFor" type="button" aria-label="Nuova opportunity per questo cliente" title="Nuova opportunity per questo cliente"><span data-i="add"></span></button></div>
+  <div class="f" id="linkedF" hidden><div id="linked"></div><button class="btn add" id="addOppFor" type="button" aria-label="Nuova opportunità per questo cliente" title="Nuova opportunità per questo cliente"><span data-i="add"></span></button></div>
   <div class="btns"><button class="btn d" id="del" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina cliente" title="Elimina cliente"><span data-i="trash"></span></button><button class="btn p" id="save" aria-label="Salva cliente" title="Salva cliente" style="flex:9 1 0"><span data-i="check"></span></button></div>
 </div>
 </div>
@@ -806,7 +806,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="btns"><button class="btn d" id="l_del" type="button" style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina lead" title="Elimina lead"><span data-i="trash"></span></button><button class="btn" id="l_ripr" type="button" hidden aria-label="Rimetti tra i nuovi" title="Rimetti tra i nuovi"><span data-i="reset"></span></button><button class="btn" id="l_scarta" type="button" style="flex:3 1 0" aria-label="Scarta lead" title="Scarta lead"><span data-i="x"></span></button><button class="btn p" id="l_save" type="button" style="flex:6 1 0" aria-label="Salva lead" title="Salva lead"><span data-i="check"></span></button></div>
 </div></div>
 <div class="sheet" id="oSheet" hidden><div>
-  <div class="top"><h2 id="oTitle">Nuova opportunity</h2><button class="btn ico pk" id="oClose" type="button" aria-label="Chiudi" title="Chiudi"><span data-i="back"></span></button></div>
+  <div class="top"><h2 id="oTitle">Nuova opportunità</h2><button class="btn ico pk" id="oClose" type="button" aria-label="Chiudi" title="Chiudi"><span data-i="back"></span></button></div>
   <div class="f"><label for="o_titolo">Titolo</label><input id="o_titolo" autocomplete="off"><div class="err" id="err-o_titolo" hidden></div></div>
   <div class="f"><label for="o_cliente">Cliente</label><select id="o_cliente"></select><button type="button" class="qrow" id="o_cl" hidden></button><div class="hint" id="o_clh"></div><div class="err" id="err-o_cliente" hidden></div></div>
   <div class="f"><label>Fase</label><div class="chips" id="o_fasi"></div></div>
@@ -817,7 +817,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label>Preventivi</label><div id="o_quotes"></div><button class="btn lbl" id="o_addQ" type="button" aria-label="Nuovo preventivo" title="Nuovo preventivo" style="margin-top:8px"><span data-i="doc"></span> Nuovo preventivo</button><div class="hint" id="o_qhint"></div></div>
   <div class="f"><label>Allegati</label><div id="o_att"></div><button class="btn add" id="o_addAtt" type="button" aria-label="Aggiungi allegato" title="Aggiungi allegato"><span data-i="clip"></span></button><input type="file" id="o_file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" hidden><div class="hint">Massimo 500 KB per file. Le foto vengono ridimensionate.</div><div class="err" id="err-o_att" hidden></div></div>
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
-  <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunity" title="Elimina opportunity"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunity" title="Salva opportunity"><span data-i="check"></span></button></div>
+  <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
 <script src="gmail.js?v=1.8.1"></script>
 <script src="app.js?v=1.8.1"></script>
