@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.9.1"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.9.1|2026-11-11"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.10.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.10.0|2026-11-11"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -201,6 +201,9 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 .stat>small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
 .wonbox{grid-column:1/-1;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:var(--sh)}
 .wonbox .tp-chips{margin:8px 0}
+.gi{display:inline-grid;place-items:center;width:26px;height:26px;margin:-4px 0 -4px 4px;padding:0;vertical-align:middle;border:0;border-radius:50%;background:none;color:var(--muted);cursor:pointer}.gi.on{color:var(--ink);background:var(--lilac)}.gi svg{width:16px;height:16px}
+.gtip{font-size:12px;line-height:1.45;color:var(--muted);margin:6px 0 8px;padding:8px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
+.gline{display:flex;align-items:center;margin:2px 0}
 .ib{position:absolute;top:6px;right:6px;width:26px;height:26px;padding:0;display:grid;place-items:center;border:0;border-radius:50%;background:none;color:var(--muted);cursor:pointer}.ib.on{color:var(--ink);background:var(--lilac)}
 #hSum .stat{align-self:start}
 .itip{margin-top:6px;font-size:12px;line-height:1.4;color:var(--muted);font-weight:400}
@@ -675,13 +678,18 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 </div>
 <div class="sp" data-sp="al" hidden>
   <div class="f"><label>Allegati per le risposte ai lead</label>
-    <label class="chk"><input type="checkbox" id="st_listino"><span>Allega il listino prezzi<em>Generato dal catalogo: prodotti attivi con prezzo di vendita, mai i costi.</em></span></label>
-    <div id="st_bro" class="hint" style="margin:8px 0"></div>
-    <div class="dual"><button class="btn lbl" id="st_broAdd" type="button"><span data-i="clip"></span> Brochure PDF</button><button class="btn lbl" id="st_broDel" type="button"><span data-i="trash"></span> Rimuovi</button></div>
-    <input type="file" id="st_broFile" accept="application/pdf" hidden><div class="err" id="err-st_bro" hidden></div>
-    <div class="hint">La brochure resta sul dispositivo e viene allegata alle email. Massimo 700 KB: se è più pesante la comprimo in zip. Oltre, il connettore non riesce a trasferirla.</div>
-    <label for="st_brolink" style="margin-top:10px">Link alla brochure (per file grandi)</label><input id="st_brolink" type="url" placeholder="https://drive.google.com/…" autocomplete="off"><div class="err" id="err-st_brolink" hidden></div>
-    <div class="hint">Carica il PDF su Google Drive dal tuo account, scegli Condividi → “Chiunque abbia il link” e incolla qui il link. Nelle risposte ai lead, se la brochure non è allegata, il testo contiene il link.</div></div>
+    <label class="chk"><input type="checkbox" id="st_listino"><span>Allega il listino prezzi<em>Usa i prezzi del listino attivo del destinatario (per nazione o generale). Se non ce n’è, usa il catalogo. Mai i costi.</em></span></label></div>
+  <div class="f"><label>Brochure</label>
+    <div id="st_bro" class="hint" style="margin:0 0 8px"></div>
+    <div class="seg" id="st_broSeg" style="margin:4px 0 10px"><button type="button" class="on" data-b="file" aria-label="File" title="File"><span data-i="clip"></span><span class="lb">File</span></button><button type="button" data-b="url" aria-label="Link pubblico" title="Link pubblico"><span data-i="link"></span><span class="lb">Link</span></button><button type="button" data-b="cloud" aria-label="Cloud" title="Cloud"><span data-i="cloud"></span><span class="lb">Cloud</span></button></div>
+    <div id="st_bFile"><div class="dual"><button class="btn lbl" id="st_broAdd" type="button"><span data-i="clip"></span> Carica PDF</button><button class="btn lbl" id="st_broDel" type="button"><span data-i="trash"></span> Rimuovi</button></div>
+      <input type="file" id="st_broFile" accept="application/pdf" hidden><div class="err" id="err-st_bro" hidden></div>
+      <div class="hint">La brochure resta sul dispositivo e viene allegata alle email. Massimo 700 KB: se è più pesante la comprimo in zip. Oltre, il connettore non riesce a trasferirla.</div></div>
+    <div id="st_bUrl" hidden><label for="st_brolink">Link pubblico</label><input id="st_brolink" type="url" placeholder="https://www.tuosito.it/brochure.pdf" autocomplete="off"><div class="err" id="err-st_brolink" hidden></div>
+      <div class="hint">Indirizzo web del PDF, raggiungibile da chiunque senza accesso. Nelle email e nei messaggi WhatsApp il testo contiene questo link.</div></div>
+    <div id="st_bCloud" hidden><label for="st_brolink2">Link dal tuo cloud</label><input id="st_brolink2" type="url" placeholder="https://drive.google.com/…" autocomplete="off"><div class="err" id="err-st_brolink2" hidden></div>
+      <div class="hint">Per file grandi. Carica il PDF su Google Drive (o Dropbox, OneDrive, Google Cloud Storage) dal tuo account, scegli Condividi → “Chiunque abbia il link” e incolla qui il link. Nelle risposte ai lead, se la brochure non è allegata, il testo contiene il link.</div></div>
+  </div>
 </div>
   <div hidden><button id="st_ok" type="button"></button><button id="st_x" type="button"></button></div></div></div>
 <div class="modal" id="mConv" hidden><div class="box info" role="dialog"><p>Converti in prospect</p><div class="hint" style="margin:0 0 10px">Scegli come registrare l’anagrafica. Potrai cambiarlo dopo dalla scheda.</div>
@@ -820,7 +828,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="gmail.js?v=1.9.1"></script>
-<script src="app.js?v=1.9.1"></script>
+<script src="gmail.js?v=1.10.0"></script>
+<script src="app.js?v=1.10.0"></script>
 </body>
 </html>
