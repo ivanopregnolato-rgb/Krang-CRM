@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.6.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.6.0|2026-11-10"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.6.1"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.6.1|2026-11-10"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -650,31 +650,20 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="st_store">Dove salvare i dati</label>
     <select id="st_store"><option value="none">Solo in questo browser</option><option value="drive">Google Drive (consigliato)</option><option value="cloud">Cloud dell’app (tempo reale)</option></select>
     <div class="hint" id="st_sthint"></div>
-    <div class="hint" id="st_cstat" style="margin-top:6px"></div>
-    <div id="st_dopt" style="margin-top:8px"><div id="st_dmw" hidden><label for="st_dmode">Collegamento a Google Drive</label>
-    <select id="st_dmode"><option value="claude">Tramite connettore Claude</option><option value="direct">Diretto, senza account Claude</option></select></div>
-    <label class="chk" style="margin-top:10px"><input type="checkbox" id="st_enc"> <span>Cifra i dati con una password (consigliato)</span></label>
-    <div id="st_encw"><input id="st_pw" type="password" placeholder="Password di cifratura" autocomplete="new-password">
+    <div class="hint" id="st_cstat" style="margin-top:6px"></div></div>
+  <div class="f"><label for="st_pw">Password dei backup</label>
+    <input id="st_pw" type="password" placeholder="Password per cifrare i backup" autocomplete="new-password">
     <label class="chk"><input type="checkbox" id="st_pwrem"> <span>Ricorda la password su questo dispositivo</span></label>
-    <div class="hint">I dati vengono cifrati su questo dispositivo (AES-256) prima di uscire: su Drive finisce solo testo illeggibile. Senza la password i dati non sono recuperabili, nemmeno da me: conservala in un gestore di password. Usa la stessa password su ogni dispositivo. Se la ricordi, resta in chiaro nella memoria del browser. Protegge anche i backup che esporti.</div>
-    <div class="dual" style="margin-top:8px"><button class="btn lbl" id="st_reck" type="button"><span data-i="shield"></span> Chiave di recupero</button><button class="btn lbl" id="st_pkb" type="button"><span data-i="shield"></span> Aggiungi passkey</button></div>
-    <div id="st_recshow" class="hint" hidden style="user-select:all;font-weight:700;letter-spacing:.5px"></div>
-    <div class="hint" id="st_recst"></div>
-    <div id="st_recw" hidden style="margin-top:8px"><div class="hint"><b>Dati cifrati su Drive:</b> recupera la password con la chiave di recupero o con la passkey.</div>
-    <input id="st_reci" placeholder="Chiave di recupero (XXXX-XXXX-…)" autocomplete="off"><div class="dual"><button class="btn lbl" id="st_recgo" type="button">Recupera con chiave</button><button class="btn lbl" id="st_pkgo" type="button">Recupera con passkey</button></div></div></div>
-    <div id="st_dcw" hidden><label for="st_gcid" style="margin-top:8px">ID client OAuth Google</label><input id="st_gcid" placeholder="xxxx.apps.googleusercontent.com" autocomplete="off">
-    <div class="hint">Crealo in Google Cloud Console: API Drive attiva, credenziale “ID client OAuth”, tipo Applicazione web, con l’indirizzo dell’app tra le origini JavaScript autorizzate. L’app chiede solo l’accesso ai file che crea lei (scope drive.file). In questo modo non serve alcun account Claude, ma la pagina deve girare su un indirizzo tuo e non dentro Claude.</div></div></div>
-    <button class="btn lbl" id="st_dsync" type="button" hidden><span data-i="cloud"></span> Sincronizza ora</button></div>
+    <div class="hint">Cifra (AES-256) i file di backup che esporti: senza la password non si possono riaprire, nemmeno da me. Conservala in un gestore di password. Se la ricordi, resta in chiaro nella memoria del browser. Non riguarda i dati nel cloud, che hanno la loro passphrase in Impostazioni → Account.</div></div>
   <div class="f"><label>Accesso e persone</label>
     <div class="hint">L’accesso è quello del tuo account Claude: dal menu Condividi dell’app inviti le persone per email. <b>Collaboratore</b>: legge e modifica i dati. <b>Editor</b>: anche le impostazioni. Chi ha solo il ruolo di lettore non vede i dati dei clienti. Username, password e passkey sono quelli dell’account Claude: un login creato dentro il CRM sarebbe aggirabile da chiunque apra la pagina, quindi non lo creo.</div></div>
-  <div class="f"><label>Backup</label>
+  <div class="f" id="st_bk"><label>Backup</label>
     <div class="dual"><button class="btn lbl" id="st_bkx" type="button"><span data-i="download"></span> Esporta</button><button class="btn lbl" id="st_bki" type="button"><span data-i="clip"></span> Importa</button></div>
     <input type="file" id="st_bkf" accept="application/json,.json" hidden><div class="err" id="err-st_bk" hidden></div>
-    <div class="hint">Il file è cifrato con la password di cifratura (se serve anche quando lo reimporti). L’importazione unisce i record per identificativo e, se uno esiste già, vince quello del file.</div></div>
+    <div class="hint">Il file è cifrato con la password dei backup (serve anche quando lo reimporti). L’importazione unisce i record per identificativo e, se uno esiste già, vince quello del file.</div></div>
   <div class="f"><label>Dati di esempio</label>
     <div class="dual"><button class="btn lbl" id="st_exAdd" type="button"><span data-i="add"></span> Aggiungi esempi</button><button class="btn lbl" id="st_exDel" type="button"><span data-i="trash"></span> Rimuovi esempi</button></div>
     <div class="hint" id="st_exH">Aggiunge 16 clienti fittizi, 10 lead e 56 opportunity vinte, perse e aperte distribuite negli ultimi 14 mesi (email su yopmail.com), per provare i periodi della home. “Rimuovi esempi” toglie solo quelli aggiunti da qui.</div></div>
-  <div class="f"><label>Archivi esterni</label><div class="hint">Con Google Drive i dati stanno nella cartella “CRM Clienti” del tuo Drive, in file di istantanea (le ultime 5 versioni). Per condividerli con altre persone condividi la cartella da Drive: ognuno deve avere Google Drive collegato in claude.ai, Impostazioni, Connettori. Con due persone che salvano nello stesso istante può restare solo l’ultima modifica.</div></div>
 </div>
 <div class="sp" data-sp="sc" hidden>
   <div class="hint" id="sc_st" style="margin:0 0 10px"></div>
@@ -826,6 +815,6 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunity" title="Elimina opportunity"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunity" title="Salva opportunity"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.6.0"></script>
+<script src="app.js?v=1.6.1"></script>
 </body>
 </html>
