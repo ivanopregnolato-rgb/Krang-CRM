@@ -63,7 +63,6 @@ DEMO[1].privacy=mkPriv({informativa:true,infData:'2026-02-02',infModo:'Email',lo
 DEMO[0].wa=[{id:'wa1',dir:'out',data:'2026-11-03T09:12:00.000Z',testo:'Buongiorno Giulia, le confermo l’appuntamento di giovedì alle 15 per la degustazione.',fonte:'manuale'},{id:'wa2',dir:'in',data:'2026-11-03T09:40:00.000Z',testo:'Perfetto, grazie! Porto anche il mio socio.',fonte:'manuale'},{id:'wa3',dir:'out',data:'2026-11-06T16:05:00.000Z',testo:'Ciao Giulia, le ho mandato il preventivo per i regali di Natale. Mi dica se va bene.',fonte:'manuale'},{id:'wa4',dir:'in',data:'2026-11-07T18:20:00.000Z',testo:'Grazie, lo guardo domani. Possiamo fare 30 confezioni invece di 24?',fonte:'manuale'}];
 DEMO[2].privacy=mkPriv({fonteDati:'fiera',base:'legittimo',richieste:[{id:'rdemo',token:'K7M2QX',creata:'2026-11-05T09:00',scade:'2026-11-19T09:00',email:'sophie.martin@atelier-lumiere.fr',stato:'inviata'}],log:[{d:'2026-09-18T15:00',t:'Anagrafica creata (fonte: Fiera o evento)'},{d:'2026-11-05T09:00',t:'Informativa inviata via email a sophie.martin@atelier-lumiere.fr (codice K7M2QX, valido fino al 19 nov 2026)',op:'Demo',ev:'invio'}]});
 DEMO[3].privacy=mkPriv({base:'consenso',informativa:true,infData:'2026-05-18',infModo:'Email',cons:{mkEmail:{v:true,d:'2026-05-18'},mkTel:{v:true,d:'2026-05-18'},profilazione:{v:false,d:''},terzi:{v:false,d:''}}});
-try{if(!localStorage.getItem(KEY)&&!localStorage.getItem(KEY+'-seeded')){clients=JSON.parse(JSON.stringify(DEMO));persist();localStorage.setItem(KEY+'-seeded','1')}}catch(e){clients=JSON.parse(JSON.stringify(DEMO))}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(clients))}catch(e){toast('Spazio pieno: impossibile salvare sul dispositivo.')}}
 const contactName=c=>c.tipo==='azienda'?([c.nome,c.cognome].filter(Boolean).join(' ')||c.azienda):fullName(c);
 const inits=nm=>{const w=String(nm||'').trim().split(/\s+/).filter(Boolean);return ((w[0]||'?')[0]+(w.length>1?w[w.length-1][0]:'')).toUpperCase()};
@@ -261,7 +260,6 @@ const DEMO_OPPS=[
 let opps=[],tab='clienti',oView='list',oEd=null,oD=null,oFilt='';
 try{opps=JSON.parse(localStorage.getItem(OKEY)||'[]')}catch(e){}
 {let mg_=false;opps.forEach(o=>{if(o&&o.fase==='negoziazione'){o.fase='proposta';if(+o.prob===75)o.prob=50;mg_=true}});if(mg_){try{localStorage.setItem(OKEY,JSON.stringify(opps))}catch(e){}}}
-try{if(!localStorage.getItem(OKEY)&&!localStorage.getItem(OKEY+'-seeded')){opps=DEMO_OPPS.map(o=>JSON.parse(JSON.stringify(o)));persistO();localStorage.setItem(OKEY+'-seeded','1')}}catch(e){opps=DEMO_OPPS.map(o=>JSON.parse(JSON.stringify(o)))}
 let _avgS;const dayN=(a,b)=>Math.max(0,Math.round((new Date(b+'T12:00')-new Date(a+'T12:00'))/864e5));
 function avgSale(){if(_avgS!==undefined)return _avgS;const a=opps.filter(o=>o.fase==='vinta'&&o.creata&&o.chiusa).map(o=>dayN(o.creata,o.chiusa));return _avgS=a.length?Math.round(a.reduce((t,x)=>t+x,0)/a.length):null}
 function trackF(){_avgS=undefined;const td=ymd();opps.forEach(o=>{const l=o.fh&&o.fh[o.fh.length-1];if(!l)o.fh=[{f:o.fase,d:(o.fase==='vinta'||o.fase==='persa'?o.chiusa:o.creata)||o.creata||td}];else if(l.f!==o.fase)o.fh.push({f:o.fase,d:td})})}
@@ -8680,9 +8678,6 @@ const DEMO_PRODS=[
 {id:'w9',codice:'DB-RIA',nome:'Riamò',categoria:'Bianco',caratt:'Trebbiano d’Abruzzo DOP · Trebbiano abruzzese 100% · 12,5% vol · 9–11 °C',descr:'Floreale con sentori di nocciola, sapido e minerale. Antipasti di pesce e carni bianche.',unita:'bt',prezzo:5.5,costo:2.3,mag:true,scorta:80,iva:22,attivo:true}];
 let prods=[];
 try{prods=JSON.parse(localStorage.getItem(PKEY)||'[]')}catch(e){}
-try{if(!localStorage.getItem(PKEY)&&!localStorage.getItem(PKEY+'-seeded')){prods=DEMO_PRODS.map(p=>({...p}));persistP();localStorage.setItem(PKEY+'-seeded','1')}}catch(e){prods=DEMO_PRODS.map(p=>({...p}))}
-if(prods.length&&(prods.every(p=>/^p[1-7]$/.test(p.id))||prods.every(p=>/^w[1-9]$/.test(p.id)&&!('mag' in p)))){prods=DEMO_PRODS.map(p=>({...p}));persistP()}
-if(opps.length&&opps.every(o=>/^o[1-5]$/.test(o.id)&&!(o.preventivi||[]).length)&&opps.some(o=>o.titolo==='Consulenza contrattuale annuale'||o.titolo==='Ristrutturazione uffici'||(o.id==='o5'&&!('scaricato' in o)))){opps=DEMO_OPPS.map(o=>JSON.parse(JSON.stringify(o)));persistO();renderO()}
 function persistP(){try{localStorage.setItem(PKEY,JSON.stringify(prods))}catch(e){toast('Spazio pieno: impossibile salvare i prodotti.')}}
 const MKEY='crm-mov-v1';
 const DEMO_MOVS=[
@@ -8698,7 +8693,6 @@ const DEMO_MOVS=[
 {id:'m10',prodId:'w3',data:'2026-10-20T10:00:00.000Z',tipo:'scarico',qta:-120,nota:'Opportunity Riordino Idealis',oppId:'o5'}];
 let movs=[];
 try{movs=JSON.parse(localStorage.getItem(MKEY)||'[]')}catch(e){}
-try{if(!localStorage.getItem(MKEY)&&!localStorage.getItem(MKEY+'-seeded')){movs=DEMO_MOVS.filter(m=>prods.some(p=>p.id===m.prodId)).map(m=>({...m}));persistM();localStorage.setItem(MKEY+'-seeded','1')}}catch(e){}
 function persistM(){try{localStorage.setItem(MKEY,JSON.stringify(movs))}catch(e){toast('Spazio pieno: impossibile salvare i movimenti di magazzino.')}}
 const RES_FASI=['proposta'];
 const giac=id=>movs.reduce((t,m)=>m.prodId===id?t+m.qta:t,0);
@@ -9184,7 +9178,6 @@ let leads=[],lSeen=[],lFilter='nuovo',lCur=null,lBusy=false;
 try{leads=JSON.parse(localStorage.getItem(LKEY)||'[]')}catch(e){}
 try{lSeen=JSON.parse(localStorage.getItem(LSEEN)||'[]')}catch(e){}
 const persistL=()=>{try{localStorage.setItem(LKEY,JSON.stringify(leads));localStorage.setItem(LSEEN,JSON.stringify(lSeen.slice(-600)))}catch(e){toast('Spazio pieno: impossibile salvare i lead.')}try{cloudPush('ld')}catch(e){}try{dPush()}catch(e){}};
-(function(){try{if(!localStorage.getItem('crm-lead-seeded')){const n=Date.now();leads.push({id:'l1',nome:'Anna',cognome:'Ferri',email:'anna.ferri@example.com',telefono:'3205550101',azienda:'Enoteca Ferri',richiesta:'Buongiorno, vorremmo ricevere un preventivo per 24 bottiglie di Primatus per un evento aziendale a dicembre.',oggetto:'Richiesta preventivo',fonte:'web',data:n-2*864e5,creato:n-2*864e5,stato:'nuovo'},{id:'l2',nome:'Paolo',cognome:'Neri',email:'p.neri@example.org',telefono:'',azienda:'',richiesta:'Salve, ho visto i vostri vini a una fiera. È possibile avere il listino per la ristorazione?',oggetto:'Listino ristorazione',fonte:'email',data:n-864e5,creato:n-864e5,stato:'nuovo'});localStorage.setItem('crm-lead-seeded','1');persistL()}}catch(e){}})();
 (function purgeLeads(){const n=Date.now(),b=leads.length;leads=leads.filter(l=>!(l.stato==='scartato'&&n-(l.scartato||l.creato)>S.lead.scartati*864e5)&&!(l.stato==='nuovo'&&n-l.creato>S.lead.nuovi*30.5*864e5));if(leads.length!==b)persistL()})();
 const AUTO_RE=/no-?reply|donotreply|do-not-reply|mailer-daemon|postmaster|notification|newsletter|bounce|alert|noreply|automated|updates?@|billing|invoice|fattura/i;
 const lName=l=>[l.nome,l.cognome].filter(Boolean).join(' ')||l.email||'Lead senza nome';
