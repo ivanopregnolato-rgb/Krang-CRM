@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.8.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.8.0|2026-11-10"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.8.1"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.8.1|2026-11-10"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -143,7 +143,12 @@ h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em}
 .seg{margin:8px 0 14px}
 .tabs{margin:4px 0 2px}
 .seg button,.tabs button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:10px;background:none;color:var(--muted);font-weight:600;cursor:pointer}
-.seg button{height:44px}
+.seg button{height:44px;min-width:0;padding:0 8px;gap:6px;white-space:nowrap;flex:1 1 0;position:relative}
+.seg button:not(.on) .lb{display:none}
+.seg button.on{flex:2.4 1 0}
+.seg button .cnt{margin:0;min-width:18px;height:18px;line-height:18px;padding:0 5px;font-size:11px}
+.seg button:not(.on) .cnt{position:absolute;top:3px;right:6px}
+.two .btn.lbl,.two .btn{white-space:nowrap;font-size:14px;padding:0 6px}
 .tabs button{height:38px}
 .seg button.on,.tabs button.on,.vt button.on{background:var(--lilac);color:#2d2b55}
 .seg svg,.tabs svg{width:20px;height:20px}
@@ -575,7 +580,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="mr_op">Operatore (chi registra)</label><input id="mr_op" autocomplete="off"><div class="err" id="err-mr_op" hidden></div></div>
   <button class="btn p lbl" id="mr_ok" type="button"><span data-i="check"></span>Registra e aggiorna anagrafica</button>
   <button class="btn lbl" id="mr_x" type="button"><span data-i="x"></span>Annulla</button></div></div>
-<div class="modal" id="mCompose" hidden><div class="box info" role="dialog"><p>Nuova email</p>
+<div class="modal" id="mCompose" hidden><div class="box info" role="dialog"><p>Email</p>
   <div class="f"><label for="mc_to">Destinatario</label><input id="mc_to" readonly></div>
   <div class="hint warn" id="mc_hint"></div>
   <div class="chips" id="mc_tpl"></div>
@@ -707,7 +712,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 <div class="sheet" id="sheet" hidden>
 <div>
   <div class="top"><h2 id="sheetTitle">Nuovo cliente</h2><button class="btn ico pk" id="close" aria-label="Chiudi" title="Chiudi"><span data-i="back"></span></button></div>
-  <div class="tabs" id="cTabs"><button type="button" class="on" data-p="dati" title="Dati" aria-label="Dati"><span data-i="user"></span>Dati</button><button type="button" data-p="opp" title="Opportunity" aria-label="Opportunity"><span data-i="target"></span>Opportunity<span class="cnt" id="cCnt"></span></button><button type="button" data-p="priv" title="Privacy" aria-label="Privacy"><span data-i="shield"></span>Privacy</button><button type="button" data-p="comm" title="Messaggi" aria-label="Messaggi"><span data-i="Scrivi"></span>Messaggi</button><button type="button" data-p="tr" title="Transazioni" aria-label="Transazioni"><span data-i="bag"></span>Acquisti</button><button type="button" data-p="tp" title="Storia" aria-label="Storia"><span data-i="route"></span>Storia</button></div>
+  <div class="tabs" id="cTabs"><button type="button" class="on" data-p="dati" title="Dati" aria-label="Dati"><span data-i="user"></span>Dati</button><button type="button" data-p="opp" title="Opportunity" aria-label="Opportunity"><span data-i="target"></span>Opportunity<span class="cnt" id="cCnt"></span></button><button type="button" data-p="priv" title="Privacy" aria-label="Privacy"><span data-i="shield"></span>Privacy</button><button type="button" data-p="comm" title="Contatti" aria-label="Contatti"><span data-i="Scrivi"></span>Contatti</button><button type="button" data-p="tr" title="Transazioni" aria-label="Transazioni"><span data-i="bag"></span>Acquisti</button><button type="button" data-p="tp" title="Storia" aria-label="Storia"><span data-i="route"></span>Storia</button></div>
   <div class="msg" id="msg" hidden></div>
   <div class="seg" id="seg" role="group" aria-label="Tipo di anagrafica"><button type="button" class="on" data-t="persona"><span data-i="user"></span>Persona</button><button type="button" data-t="azienda"><span data-i="building"></span>Azienda</button></div>
   <div id="favHold" hidden><button class="ico" id="favBtn" type="button" aria-label="Preferito" title="Preferito"><span data-i="star"></span></button></div>
@@ -752,9 +757,9 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 </div>
   <div id="tpF" class="pane-hide"><div id="tpBody"></div></div>
   <div id="trF" class="pane-hide"><div id="trBody"></div></div>
-  <div id="commF" class="pane-hide"><div class="seg" id="cmSeg"><button type="button" class="on" data-c="all"><span data-i="list"></span>Tutti</button><button type="button" data-c="mail"><span data-i="Scrivi"></span>Email</button><button type="button" data-c="wa"><span data-i="WhatsApp"></span>WhatsApp<span class="cnt" id="waCnt"></span></button><button type="button" data-c="call"><span data-i="Chiama"></span>Chiamate<span class="cnt" id="callCnt"></span></button></div>
-  <div id="cmAll"><div class="two"><button class="btn lbl" id="cm_aMail" type="button"><span data-i="Scrivi"></span>Nuova email</button><button class="btn lbl" id="cm_aWa" type="button"><span data-i="WhatsApp"></span>Scrivi WhatsApp</button></div><div id="allSt" class="hint" hidden style="margin-top:8px"></div><div id="allList" style="margin-top:10px"></div></div>
-  <div id="cmMail" hidden><div class="two"><button class="btn lbl" id="cm_new" type="button"><span data-i="Scrivi"></span>Nuova email</button><button class="btn lbl" id="cm_ref" type="button"><span data-i="reset"></span>Aggiorna</button></div><div id="comm" style="margin-top:10px"></div></div>
+  <div id="commF" class="pane-hide"><div class="seg" id="cmSeg"><button type="button" aria-label="Tutti" title="Tutti" class="on" data-c="all"><span data-i="list"></span><span class="lb">Tutti</span></button><button type="button" aria-label="Email" title="Email" data-c="mail"><span data-i="Scrivi"></span><span class="lb">Email</span></button><button type="button" aria-label="WhatsApp" title="WhatsApp" data-c="wa"><span data-i="WhatsApp"></span><span class="lb">WhatsApp</span><span class="cnt" id="waCnt"></span></button><button type="button" aria-label="Chiamate" title="Chiamate" data-c="call"><span data-i="Chiama"></span><span class="lb">Chiamate</span><span class="cnt" id="callCnt"></span></button></div>
+  <div id="cmAll"><div class="two"><button class="btn lbl" id="cm_aMail" type="button"><span data-i="Scrivi"></span>Email</button><button class="btn lbl" id="cm_aWa" type="button"><span data-i="WhatsApp"></span>WhatsApp</button></div><div id="allSt" class="hint" hidden style="margin-top:8px"></div><div id="allList" style="margin-top:10px"></div></div>
+  <div id="cmMail" hidden><div class="two"><button class="btn lbl" id="cm_new" type="button"><span data-i="Scrivi"></span>Email</button><button class="btn lbl" id="cm_ref" type="button"><span data-i="reset"></span>Aggiorna</button></div><div id="comm" style="margin-top:10px"></div></div>
   <div id="cmWa" hidden>
     <div class="mact"><button class="btn lbl" id="wa_new" type="button"><span data-i="WhatsApp"></span>Scrivi</button><button class="btn lbl" id="wa_reg" type="button"><span data-i="edit"></span>Registra</button><button class="btn lbl" id="wa_imp" type="button"><span data-i="carico"></span>Importa</button></div>
     <input type="file" id="wa_file" accept=".txt,.zip,text/plain,application/zip" hidden>
@@ -770,7 +775,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="top"><h2 id="lTitle">Nuovo lead</h2><button class="btn ico pk" id="lClose" type="button" aria-label="Chiudi" title="Chiudi"><span data-i="back"></span></button></div>
   <div class="qbn" id="l_src" hidden></div>
   <div class="acts" id="l_acts" hidden></div>
-  <div class="tabs" id="lTabs" role="tablist"><button type="button" class="on" data-lp="dati"><span data-i="user"></span>Dati</button><button type="button" data-lp="priv"><span data-i="shield"></span>Privacy</button><button type="button" data-lp="msg"><span data-i="Scrivi"></span>Messaggi<i class="bdg" id="l_bdg" hidden></i></button><button type="button" data-lp="tp"><span data-i="route"></span>Storia</button></div>
+  <div class="tabs" id="lTabs" role="tablist"><button type="button" class="on" data-lp="dati"><span data-i="user"></span>Dati</button><button type="button" data-lp="priv"><span data-i="shield"></span>Privacy</button><button type="button" data-lp="msg"><span data-i="Scrivi"></span>Contatti<i class="bdg" id="l_bdg" hidden></i></button><button type="button" data-lp="tp"><span data-i="route"></span>Storia</button></div>
 <div class="lp" data-lp="dati">
   <div class="f" id="l_pasteBox"><label for="l_paste">Incolla l’email o il messaggio del form</label><textarea id="l_paste" rows="4" placeholder="Incolla qui il testo: nome, email e richiesta vengono ricavati da soli"></textarea><button class="btn lbl" id="l_ext" type="button" style="margin-top:8px"><span data-i="search"></span> Ricava i dati</button><div class="hint" id="l_exth"></div></div>
   <div class="seg" id="l_seg" role="group" aria-label="Tipo di contatto"><button type="button" class="on" data-t="persona"><span data-i="user"></span>Persona</button><button type="button" data-t="azienda"><span data-i="building"></span>Azienda</button></div>
@@ -788,9 +793,9 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 </div>
 <div class="lp" data-lp="tp" hidden><div id="l_tpBody"></div></div>
 <div class="lp" data-lp="msg" hidden>
-  <div class="seg" id="l_cmSeg"><button type="button" class="on" data-c="all"><span data-i="list"></span>Tutti</button><button type="button" data-c="mail"><span data-i="Scrivi"></span>Email<span class="cnt" id="l_mailCnt"></span></button><button type="button" data-c="wa"><span data-i="WhatsApp"></span>WhatsApp<span class="cnt" id="l_waCnt"></span></button><button type="button" data-c="call"><span data-i="Chiama"></span>Chiamate<span class="cnt" id="l_callCnt"></span></button></div>
-  <div id="l_cmAll"><div class="two"><button class="btn lbl" id="l_aMail" type="button"><span data-i="Scrivi"></span>Nuova email</button><button class="btn lbl" id="l_aWa" type="button"><span data-i="WhatsApp"></span>Scrivi WhatsApp</button></div><div id="l_allList" style="margin-top:10px"></div></div>
-  <div id="l_cmMail" hidden><div class="lact" id="l_act"><button class="btn lbl" id="l_reply" type="button"><span data-i="Scrivi"></span>Nuova email</button><button class="btn lbl" id="l_sync" type="button"><span data-i="reset"></span>Aggiorna</button><button class="btn lbl" id="l_open" type="button"><span data-i="list"></span>Thread</button></div>
+  <div class="seg" id="l_cmSeg"><button type="button" aria-label="Tutti" title="Tutti" class="on" data-c="all"><span data-i="list"></span><span class="lb">Tutti</span></button><button type="button" aria-label="Email" title="Email" data-c="mail"><span data-i="Scrivi"></span><span class="lb">Email</span><span class="cnt" id="l_mailCnt"></span></button><button type="button" aria-label="WhatsApp" title="WhatsApp" data-c="wa"><span data-i="WhatsApp"></span><span class="lb">WhatsApp</span><span class="cnt" id="l_waCnt"></span></button><button type="button" aria-label="Chiamate" title="Chiamate" data-c="call"><span data-i="Chiama"></span><span class="lb">Chiamate</span><span class="cnt" id="l_callCnt"></span></button></div>
+  <div id="l_cmAll"><div class="two"><button class="btn lbl" id="l_aMail" type="button"><span data-i="Scrivi"></span>Email</button><button class="btn lbl" id="l_aWa" type="button"><span data-i="WhatsApp"></span>WhatsApp</button></div><div id="l_allList" style="margin-top:10px"></div></div>
+  <div id="l_cmMail" hidden><div class="lact" id="l_act"><button class="btn lbl" id="l_reply" type="button"><span data-i="Scrivi"></span>Email</button><button class="btn lbl" id="l_sync" type="button"><span data-i="reset"></span>Aggiorna</button><button class="btn lbl" id="l_open" type="button"><span data-i="list"></span>Thread</button></div>
     <div id="l_msgs" style="margin-top:10px"></div></div>
   <div id="l_cmWa" hidden><div class="mact"><button class="btn lbl" id="l_wa" type="button"><span data-i="WhatsApp"></span>Scrivi</button><button class="btn lbl" id="l_regwa" type="button"><span data-i="edit"></span>Registra</button><button class="btn lbl" id="l_wimp" type="button"><span data-i="carico"></span>Importa</button></div>
     <div id="l_waList" style="margin-top:10px"></div></div>
@@ -814,7 +819,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunity" title="Elimina opportunity"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunity" title="Salva opportunity"><span data-i="check"></span></button></div>
 </div></div>
-<script src="gmail.js?v=1.8.0"></script>
-<script src="app.js?v=1.8.0"></script>
+<script src="gmail.js?v=1.8.1"></script>
+<script src="app.js?v=1.8.1"></script>
 </body>
 </html>
