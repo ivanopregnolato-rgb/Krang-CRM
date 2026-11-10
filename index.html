@@ -637,18 +637,6 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="st_wpaese">Paese predefinito dei numeri</label><select id="st_wpaese"></select><div class="hint">Serve per i numeri scritti senza prefisso internazionale (lead compresi).</div></div>
   <div class="f"><label>Informativa nei messaggi ai lead</label><select id="st_winf"><option value="full">Testo completo</option><option value="short">Versione breve</option><option value="none">Nessuna (decido caso per caso)</option></select></div>
   <div class="f"><label>Messaggi rapidi</label><div id="st_wtpl"></div><div class="hint">Usa {nome} per il nome del cliente. Compaiono come pulsanti quando scrivi su WhatsApp.</div></div>
-  <div class="f"><label for="st_rmode">WhatsApp: ricezione</label>
-    <select id="st_rmode"><option value="manual">Manuale: registro o importo la chat</option><option value="bus">Servizio collegato (Meta o fornitore)</option></select>
-    <div id="st_rbox" hidden><input id="st_burl" type="url" placeholder="https://il-tuo-servizio.example/messaggi" autocomplete="off" style="margin-top:6px">
-    <input id="st_btok" type="password" placeholder="Chiave di accesso (opzionale)" autocomplete="off" style="margin-top:6px">
-    <div class="dual" style="margin-top:6px"><button class="btn lbl" id="st_btest" type="button"><span data-i="reset"></span>Prova</button></div>
-    <div class="hint" id="st_bst"></div>
-    <div class="hint">WhatsApp non permette di leggere la cronologia direttamente: serve un servizio che raccolga i messaggi da Meta o da un fornitore di API WhatsApp Business. Il CRM lo interroga con <b>GET indirizzo?phone=39333…&amp;since=data</b> e la chiave come <b>Authorization: Bearer</b>, e si aspetta <b>{"messages":[{"id":"…","dir":"in","data":"2026-11-08T10:00:00Z","testo":"…"}]}</b> (in = ricevuto, out = inviato). I messaggi letti compaiono in Messaggi di clienti e lead, senza doppioni. In modalità manuale puoi sempre registrare o importare i messaggi a mano.</div></div></div>
-  <div class="f"><label for="st_smode">WhatsApp: invio</label>
-    <select id="st_smode"><option value="device">App WhatsApp del dispositivo (l’invio lo confermi tu)</option><option value="api">Servizio collegato (invio automatico)</option></select>
-    <div id="st_sbox" hidden><input id="st_surl" type="url" placeholder="https://il-tuo-servizio.example/invia" autocomplete="off" style="margin-top:6px">
-    <input id="st_stok" type="password" placeholder="Chiave di accesso (opzionale)" autocomplete="off" style="margin-top:6px">
-    <div class="hint">Il CRM invia con <b>POST indirizzo</b> e corpo <b>{"to":"39333…","text":"…"}</b> (chiave come Bearer) e considera inviato ogni esito 2xx; in caso di errore mostra il messaggio del servizio e non registra nulla. Con le API ufficiali fuori dalle 24 ore dall’ultimo messaggio del cliente si possono inviare solo modelli approvati. Se il servizio non risponde l’invio non parte: puoi tornare all’app del dispositivo.</div></div></div>
 </div>
 <div class="sp" data-sp="cl" hidden>
   <div class="f"><div class="hint" id="st_cstat" style="margin-top:6px"></div></div>

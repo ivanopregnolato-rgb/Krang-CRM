@@ -574,26 +574,9 @@ function paintComm(ths){
   ms.forEach(m=>{const inb=String(m.sender||'').toLowerCase().includes(mail),d=h('div','req'),ch=h('i','chip',inb?'Ricevuta':'Inviata');ch.style.background=inb?'#b5ebc0':'#d9d1f3';
     d.tabIndex=0;d.style.cursor='pointer';d.append(ch,h('b','',dec(m.subject)||'(senza oggetto)'),h('div','',fmtDT(+m.internalDate)),h('div','',dec(m.snippet)));
     d.onclick=()=>openThread(m.threadId);d.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();openThread(m.threadId)}};w.append(d)})}
-$('st_rmode').onchange=()=>{$('st_rbox').hidden=$('st_rmode').value!=='bus'};$('st_smode').onchange=()=>{$('st_sbox').hidden=$('st_smode').value!=='api'};
-async function waSendApi(rec,text){const X=S.wa.send,ph=telHref(rec).replace(/\D/g,'');let r;
-  try{r=await fetch(X.url,{method:'POST',headers:Object.assign({'Content-Type':'application/json'},X.token?{Authorization:'Bearer '+X.token}:{}),body:JSON.stringify({to:ph,text})})}catch(e){throw {code:'net'}}
-  if(!r.ok){let m='';try{const j=await r.json();m=String(j.error&&j.error.message||j.error||j.message||'')}catch(e){}throw {code:'http',info:r.status,msg:m}}}
-/* ===== WhatsApp Business: lettura da servizio collegato ===== */
-async function waBusGet(url,tok,phone,since){const u=url+(url.includes('?')?'&':'?')+'phone='+encodeURIComponent(phone)+(since?'&since='+encodeURIComponent(since):'');
-  const r=await fetch(u,{headers:Object.assign({Accept:'application/json'},tok?{Authorization:'Bearer '+tok}:{})});if(!r.ok)throw {code:'http',info:r.status};
-  const j=await r.json();if(!j||!Array.isArray(j.messages))throw {code:'shape'};return j.messages}
-async function waBus(rec,isLead,force){const B=S.wa&&S.wa.bus;if(!B||!B.on||!B.url||!rec||!rec.telefono)return;const key='wb'+rec.id;if(!force&&Date.now()-(LAST[key]||0)<6e4)return;LAST[key]=Date.now();
-  const st=t=>{if(isLead){if(lCur===rec)$('l_chkh').textContent=t}else if(editing===rec)cmStat(t)};
-  try{st('Lettura dei messaggi WhatsApp Business…');const ph=telHref(rec).replace(/\D/g,'');const ms=await waBusGet(B.url,B.token,ph,'');
-    const have=new Set((rec.wa||[]).map(m=>m.bid||(String(m.data).slice(0,16)+'|'+m.dir+'|'+String(m.testo).slice(0,80))));let n=0;
-    ms.forEach(m=>{if(!m||!m.testo||!m.data)return;const dir=m.dir==='out'?'out':'in',d=new Date(m.data);if(isNaN(d))return;const k=m.id?String(m.id):'',kk=d.toISOString().slice(0,16)+'|'+dir+'|'+String(m.testo).slice(0,80);if((k&&have.has(k))||have.has(kk))return;if(k)have.add(k);have.add(kk);(rec.wa=rec.wa||[]).push({id:waId(),bid:k||undefined,dir,data:d.toISOString(),testo:String(m.testo).slice(0,1500),fonte:'business'});n++});
-    if(n){if(isLead){persistL();if(lCur===rec)paintLM()}else{persist();if(editing===rec)paintWa()}}
-    st('');return n}catch(e){st('WhatsApp Business: '+(e&&e.code==='http'?'il servizio ha risposto con errore '+e.info+'.':e&&e.code==='shape'?'risposta non nel formato atteso (manca “messages”).':'servizio non raggiungibile (indirizzo errato, blocco del browser o della pagina).'));return 0}}
-$('st_btest').onclick=async()=>{const u=$('st_burl').value.trim(),e=$('st_bst');if(!/^https:\/\//i.test(u)){e.textContent='Inserisci un indirizzo che inizia con https://';return}e.textContent='Prova in corso…';
-  try{const m=await waBusGet(u,$('st_btok').value.trim(),'390000000000','');e.textContent='Collegamento riuscito: il servizio ha risposto con '+m.length+' messaggi.'}catch(x){e.textContent=x&&x.code==='http'?'Il servizio ha risposto con errore '+x.info+'.':x&&x.code==='shape'?'Risposta non nel formato atteso (manca “messages”).':'Servizio non raggiungibile (indirizzo errato, blocco del browser o della pagina).'}};
 const cmStat=(t,err)=>{const e=$('allSt');if(!e)return;e.textContent=t||'';e.className=err?'err':'hint';e.hidden=!t};
 async function loadComm(){
-  paintWa();const w=$('comm'),cl=editing;w.textContent='';cmStat('');waBus(cl,false);
+  paintWa();const w=$('comm'),cl=editing;w.textContent='';cmStat('');
   if(!cl||!cl.email){w.append(h('div','hint','Aggiungi e salva un’email del cliente nella scheda Dati.'));cmStat('Senza email del cliente le email non si leggono: aggiungila nella scheda Dati.');return}
   w.append(h('div','hint',pn('Lettura da Gmail in corso…')));cmStat('Lettura delle email da Gmail in corso…');
   try{
@@ -661,6 +644,7 @@ $('mc_gmail').onclick=()=>{
 let cmpInfC=null,cmpLeadRef=null,cmpName='',cmpLog='',cmpAtt=[],cmpQ=null,cmpOpts=null;
 let S={azienda:'',replyTo:'',alias:'',firma:'Cordiali saluti\n{azienda}',provider:'mailto'};try{S=Object.assign(S,JSON.parse(localStorage.getItem('crm-settings-v1')||'{}'))}catch(e){}
 S.ret=Object.assign({contratto:120,contatti:24,marketing:24,profilazione:12,comunicazioni:24},S.ret||{});
+if(S.wa){delete S.wa.bus;delete S.wa.send}
 S.qValid=S.qValid>0?S.qValid:30;S.qCond=S.qCond||'Prezzi in euro, IVA esclusa salvo diversa indicazione. Pagamento e tempi di consegna da concordare.';
 S.lead=Object.assign({scartati:30,nuovi:12,giorni:30,inf:true},S.lead||{});
 S.wa=Object.assign({paese:'IT',inf:'full',tpl:[['Ciao','Ciao {nome}, '],['Ordine','Ciao {nome}, ti scrivo per il tuo ordine: '],['Preventivo','Ciao {nome}, ti ho inviato il preventivo. Dimmi se va bene o se vuoi modificare qualcosa.'],['Grazie','Ciao {nome}, grazie per il tempo dedicatoci! ']]},S.wa||{});
@@ -739,8 +723,8 @@ $('st_prov').addEventListener('change',()=>{detName='';aliasHint();provHint()});
 $('st_x').onclick=()=>{$('mSet').hidden=true};
 $('stBack').onclick=()=>{if(spCur){setSp(null);return}if(stSig()===stBase){$('mSet').hidden=true;return}$('mDirty').hidden=false;$('dC').onclick=()=>{$('mDirty').hidden=true};$('dN').onclick=()=>{$('mDirty').hidden=true;$('mSet').hidden=true};$('dY').onclick=()=>{$('mDirty').hidden=true;$('st_ok').onclick()}};
 $('st_det').onclick=async()=>{const b=$('st_det');b.disabled=true;setErr('st_rt','');try{const w=await detectMe(selProv());if(w.email){$('st_rt').value=w.email;detName=w.name;aliasHint()}else setErr('st_rt','Non sono riuscito a rilevarlo: scrivilo a mano.')}catch(e){setErr('st_rt',gmReadErr(e))}finally{b.disabled=false}};
-$('st_ok').onclick=()=>{const RK=['contratto','contatti','marketing','profilazione','comunicazioni'],nr={};let rok=true;RK.forEach(k=>{const v=parseInt($('st_r_'+k).value,10);if(!(v>=1&&v<=240)){setErr('st_r_'+k,'Inserisci i mesi (da 1 a 240).');rok=false;setSp('pv')}else{setErr('st_r_'+k,'');nr[k]=v}});if(!rok)return;const NV=[['st_qv',1,365,'pr'],['st_ls',1,365,'ld'],['st_ln',1,60,'ld'],['st_lg',1,365,'ld']],nvv={};for(const [k,a,b,pn] of NV){const v=parseInt($(k).value,10);if(!(v>=a&&v<=b)){setSp(pn);setErr(k,'Inserisci un numero da '+a+' a '+b+'.');return}setErr(k,'');nvv[k]=v}{const su=$('st_surl').value.trim();if($('st_smode').value==='api'&&!/^https:\/\//i.test(su)){setSp('wa');toast('Per l’invio automatico inserisci un indirizzo che inizia con https://');return}}
-  S.gcid=($('st_gcid').value||'').trim();S.wa={send:{mode:$('st_smode').value,url:$('st_surl').value.trim(),token:$('st_stok').value.trim()},bus:{on:$('st_rmode').value==='bus',url:$('st_burl').value.trim(),token:$('st_btok').value.trim()},paese:$('st_wpaese').value||'IT',inf:$('st_winf').value,tpl:[...document.querySelectorAll('#st_wtpl .wt')].map(r=>[r.querySelector('input').value.trim(),r.querySelector('textarea').value]).filter(x=>x[0]&&x[1].trim())};if(!S.wa.tpl.length)S.wa.tpl=[['Ciao','Ciao {nome}, ']];S.qValid=nvv.st_qv;S.qCond=$('st_qc').value.trim()||S.qCond;S.lead={scartati:nvv.st_ls,nuovi:nvv.st_ln,giorni:nvv.st_lg,inf:$('st_linf').checked};S.ret=nr;const rt=$('st_rt').value.trim().toLowerCase();if(rt&&!mailRe.test(rt)){setSp('em');setErr('st_rt','Indirizzo email non valido.');return}S.azienda=$('st_az').value.trim();S.piva=$('st_piva').value.trim();S.indirizzo=$('st_ind').value.trim();S.telefono=$('st_tel').value.trim();S.sito=$('st_sito').value.trim();S.alias=$('st_alias').value.trim();S.firma=$('st_firma').value.trim()||'Cordiali saluti\n{azienda}';S.autoCons=$('st_acons').checked;S.provider=$('st_prov').value;S.replyTo=rt;saveS();$('mSet').hidden=true;try{paintReq()}catch(e){}toast('Impostazioni salvate.')};
+$('st_ok').onclick=()=>{const RK=['contratto','contatti','marketing','profilazione','comunicazioni'],nr={};let rok=true;RK.forEach(k=>{const v=parseInt($('st_r_'+k).value,10);if(!(v>=1&&v<=240)){setErr('st_r_'+k,'Inserisci i mesi (da 1 a 240).');rok=false;setSp('pv')}else{setErr('st_r_'+k,'');nr[k]=v}});if(!rok)return;const NV=[['st_qv',1,365,'pr'],['st_ls',1,365,'ld'],['st_ln',1,60,'ld'],['st_lg',1,365,'ld']],nvv={};for(const [k,a,b,pn] of NV){const v=parseInt($(k).value,10);if(!(v>=a&&v<=b)){setSp(pn);setErr(k,'Inserisci un numero da '+a+' a '+b+'.');return}setErr(k,'');nvv[k]=v}
+  S.gcid=($('st_gcid').value||'').trim();S.wa={paese:$('st_wpaese').value||'IT',inf:$('st_winf').value,tpl:[...document.querySelectorAll('#st_wtpl .wt')].map(r=>[r.querySelector('input').value.trim(),r.querySelector('textarea').value]).filter(x=>x[0]&&x[1].trim())};if(!S.wa.tpl.length)S.wa.tpl=[['Ciao','Ciao {nome}, ']];S.qValid=nvv.st_qv;S.qCond=$('st_qc').value.trim()||S.qCond;S.lead={scartati:nvv.st_ls,nuovi:nvv.st_ln,giorni:nvv.st_lg,inf:$('st_linf').checked};S.ret=nr;const rt=$('st_rt').value.trim().toLowerCase();if(rt&&!mailRe.test(rt)){setSp('em');setErr('st_rt','Indirizzo email non valido.');return}S.azienda=$('st_az').value.trim();S.piva=$('st_piva').value.trim();S.indirizzo=$('st_ind').value.trim();S.telefono=$('st_tel').value.trim();S.sito=$('st_sito').value.trim();S.alias=$('st_alias').value.trim();S.firma=$('st_firma').value.trim()||'Cordiali saluti\n{azienda}';S.autoCons=$('st_acons').checked;S.provider=$('st_prov').value;S.replyTo=rt;saveS();$('mSet').hidden=true;try{paintReq()}catch(e){}toast('Impostazioni salvate.')};
 function renderLinked(){
   const f=$('linkedF'),w=$('linked');w.textContent='';
   if(!editing){f.hidden=true;return}
@@ -9228,7 +9212,7 @@ function openLead(l){
   setErr('l_email','');setLTipo(d.tipo||(d.azienda?'azienda':'persona'));setLTab('dati');$('lTabs').hidden=!l;paintLP();
   $('l_nome').value=d.nome||'';$('l_cognome').value=d.cognome||'';$('l_email').value=d.email||'';$('l_tel').value=d.telefono||'';$('l_paese').value=d.paese||(S.wa&&S.wa.paese)||'IT';if(window.paintLPaese)paintLPaese();$('l_az').value=d.azienda||'';$('l_rich').value=d.richiesta||'';$('l_paste').value='';$('l_exth').textContent='';
   $('lTitle').textContent=l?lName(l):'Nuovo lead';
-  $('l_pasteBox').hidden=!!l;$('l_open').hidden=!(l&&l.threadId);$('l_act').style.gridTemplateColumns=l&&l.threadId?'':'repeat(2,minmax(0,1fr))';$('l_sync').hidden=!(l&&l.email);setLCm('all');$('l_chkh').textContent='';paintLM();paintLActs(l);if(l)waBus(l,true);if(l&&l.email&&Date.now()-(LAST['l'+l.id]||0)>18e4)leadSync(l);
+  $('l_pasteBox').hidden=!!l;$('l_open').hidden=!(l&&l.threadId);$('l_act').style.gridTemplateColumns=l&&l.threadId?'':'repeat(2,minmax(0,1fr))';$('l_sync').hidden=!(l&&l.email);setLCm('all');$('l_chkh').textContent='';paintLM();paintLActs(l);if(l&&l.email&&Date.now()-(LAST['l'+l.id]||0)>18e4)leadSync(l);
   const done=l&&l.stato!=='nuovo',src=$('l_src');src.hidden=!l;
   if(l){const st=l.stato==='convertito'?'Convertito in prospect':l.stato==='scartato'?'Scartato':'Nuovo';src.textContent=st+' · '+({web:'form web',email:'email',manuale:'inserito a mano'}[l.fonte]||'')+' · '+fmtD(ymd(new Date(l.data)));src.style.background=l.stato==='convertito'?'#b9e6d3':l.stato==='scartato'?'var(--line)':'#ffd9b0'}
   $('l_ripr').hidden=!(l&&l.stato==='scartato');$('l_conv').hidden=!!(l&&l.stato==='convertito');$('l_scarta').hidden=!l||l.stato!=='nuovo';$('l_del').hidden=!l;$('l_reply').hidden=!l;
@@ -9237,7 +9221,7 @@ function openLead(l){
 $('lClose').onclick=()=>{$('lSheet').hidden=true};
 let lTipo='persona';
 function setLTab(k){if(k==='tp'&&lCur)setTimeout(()=>paintTouch(true,lCur),0);document.querySelectorAll('#lTabs button').forEach(b=>b.classList.toggle('on',b.dataset.lp===k));document.querySelectorAll('#lSheet .lp').forEach(e=>e.hidden=e.dataset.lp!==k)}
-$('lTabs').onclick=e=>{const b=e.target.closest('button');if(b){setLTab(b.dataset.lp);if(b.dataset.lp==='msg'&&lCur){waBus(lCur,true);const mm=lMsgs(lCur)[0];if(mm&&mm.dir==='in'&&lUnread(lCur)){lCur.msgSeen=+mm.data||tsOf(mm.data);try{persistL()}catch(e){}setTimeout(()=>{try{paintBadges()}catch(e){}},0)}}if(b.dataset.lp==='msg'&&lCur&&lCur.email&&Date.now()-(LAST['l'+lCur.id]||0)>18e4)leadSync(lCur)}};
+$('lTabs').onclick=e=>{const b=e.target.closest('button');if(b){setLTab(b.dataset.lp);if(b.dataset.lp==='msg'&&lCur){const mm=lMsgs(lCur)[0];if(mm&&mm.dir==='in'&&lUnread(lCur)){lCur.msgSeen=+mm.data||tsOf(mm.data);try{persistL()}catch(e){}setTimeout(()=>{try{paintBadges()}catch(e){}},0)}}if(b.dataset.lp==='msg'&&lCur&&lCur.email&&Date.now()-(LAST['l'+lCur.id]||0)>18e4)leadSync(lCur)}};
 function paintLP(){const w=$('l_pst');w.textContent='';const l=lCur;if(!l)return;const ok=!!l.inf,c=h('i','chip',ok?'Informativa fornita il '+fmtD(l.inf.d)+' · '+l.inf.via:'Informativa da inviare');c.style.background=ok?'#b5ebc0':'#f5cad6';w.append(c);
   $('l_pinfE').lastChild.textContent=ok?'Reinvia via email':'Via email';$('l_pinfW').lastChild.textContent=ok?'Reinvia via WhatsApp':'Via WhatsApp'}
 $('l_pinfE').onclick=()=>{setLTab('msg');$('l_reply').onclick()};$('l_pinfW').onclick=()=>{setLTab('msg');$('l_wa').onclick()};
@@ -9320,7 +9304,7 @@ function waBroSet(on){const t=$('wa_txt');if(!S.broLink||!S.broLink.url)return;t
 function infSet(on){const t=$('mc_body'),i=t.value.indexOf(INF_MARK);if(i>=0)t.value=t.value.slice(0,i);if(on)t.value=t.value.replace(/\s+$/,'')+infBlock()}
 function offerInf(c){if($('mCompose').hidden||!c||!c.id||(c.privacy&&c.privacy.informativa))return;cmpOpts=[{label:'Informativa privacy',on:true,inf:true}];cmpInfC=c;infSet(true);leadAttApply();leadAttPaint()}
 function paintWaSet(){const sel=$('st_wpaese');if(!sel.children.length)[...COUNTRIES].sort((a,b)=>a[1].localeCompare(b[1],'it')).forEach(c=>{const o=document.createElement('option');o.value=c[0];o.textContent=flag(c[0])+' '+c[1]+' '+c[2];sel.append(o)});
-  sel.value=S.wa.paese;$('st_winf').value=S.wa.inf;{const B=S.wa.bus||{},X=S.wa.send||{};$('st_rmode').value=B.on?'bus':'manual';$('st_burl').value=B.url||'';$('st_btok').value=B.token||'';$('st_bst').textContent='';$('st_smode').value=X.mode==='api'?'api':'device';$('st_surl').value=X.url||'';$('st_stok').value=X.token||'';$('st_rbox').hidden=!B.on;$('st_sbox').hidden=X.mode!=='api'}const w=$('st_wtpl');w.textContent='';
+  sel.value=S.wa.paese;$('st_winf').value=S.wa.inf;const w=$('st_wtpl');w.textContent='';
   const add=(l,t)=>{const r=h('div','wt');r.style.cssText='border:1px solid var(--line);border-radius:12px;padding:8px;margin-bottom:8px';const i=h('input');i.value=l;i.placeholder='Nome pulsante';i.setAttribute('aria-label','Nome pulsante');const a=h('textarea');a.rows=2;a.value=t;a.style.marginTop='6px';a.setAttribute('aria-label','Testo');const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.trash+' Rimuovi';x.style.marginTop='6px';x.onclick=()=>r.remove();r.append(i,a,x);w.append(r)};
   S.wa.tpl.forEach(([l,t])=>add(l,t));const ad=h('button','btn lbl');ad.type='button';ad.innerHTML=ICONS.add+' Aggiungi messaggio';ad.onclick=()=>{add('','');w.lastChild.querySelector('input').focus();w.append(ad)};w.append(ad);
   const o=ad.onclick;ad.onclick=()=>{ad.remove();add('','');w.append(ad)}}
@@ -9409,7 +9393,7 @@ $('st_broFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';i
 $('st_broDel').onclick=()=>{S.brochure=null;saveS();paintBro()};
 
 const SPG=[['La tua azienda',[['az','building','Profilo azienda',()=>S.azienda||'Nome, partita IVA, sede e contatti']]],
- ['Comunicazione',[['em','Scrivi','Posta',()=>provName(S.provider)+(S.replyTo?' · '+S.replyTo:'')],['wa','WhatsApp','WhatsApp',()=>'Messaggi rapidi, ricezione e invio'],['al','clip','Allegati e brochure',()=>'Listino e brochure per le risposte ai lead']]],
+ ['Comunicazione',[['em','Scrivi','Posta',()=>provName(S.provider)+(S.replyTo?' · '+S.replyTo:'')],['wa','WhatsApp','WhatsApp',()=>'Messaggi rapidi e paese dei numeri'],['al','clip','Allegati e brochure',()=>'Listino e brochure per le risposte ai lead']]],
  ['Vendite',[['pr','doc','Preventivi',()=>'Validità '+S.qValid+' giorni e condizioni'],['ld','target','Lead',()=>'Pulizia automatica e analisi delle email']]],
  ['Dati e privacy',[['sc','user','Accesso e sicurezza',()=>LOCK.on?'Biometria attiva':'Blocco non attivo'],['pv','shield','Privacy e conservazione',()=>'Durate di conservazione e revisione'],['bk','download','Backup, accessi ed esempi',()=>'Esporta, importa, persone e dati di prova']]]];
 const SPN={};SPG.forEach(g=>g[1].forEach(r=>SPN[r[0]]=r[2]));
@@ -9557,15 +9541,9 @@ $('st_bkf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f
  const _sc=saveClient;saveClient=function(){const r=_sc.apply(this,arguments);if(r)snap('sheet');return r};
  const _so=saveOpp;saveOpp=function(){const r=_so.apply(this,arguments);if(r)snap('oSheet');return r};
  const _sq=saveQuote;saveQuote=function(){const r=_sq.apply(this,arguments);if(r)snap('qSheet');return r}}
-/* invio WhatsApp via servizio */
-{const _ow=openWa;openWa=function(){const r=_ow.apply(this,arguments);const x=S.wa.send||{};const g=$('wa_go');if(g&&g.lastChild)g.lastChild.textContent=x.mode==='api'&&x.url?'Invia e registra':'Apri WhatsApp e registra';{const c=arguments[0];if(c&&c.id&&!$('mWa').hidden)waExtra(c)}return r};
- {const _oi=offerInf;offerInf=function(c){const r=_oi.apply(this,arguments);if(!$('mCompose').hidden&&c&&c.id&&!cmpQ&&!cmpLeadRef)cmpExtras(c);return r}};
- const _wago=$('wa_go').onclick;
- $('wa_go').onclick=async()=>{const X=S.wa.send||{};if(!(X.mode==='api'&&X.url))return _wago();const t=$('wa_txt').value.trim();if(!t){setErr('wa_txt','Scrivi il messaggio.');return}setErr('wa_txt','');
-  const rec=waC;try{await waSendApi(rec,t)}catch(e){setErr('wa_txt',e&&e.code==='http'?'Il servizio ha rifiutato l’invio ('+e.info+')'+(e.msg?': '+e.msg:'.'):'Servizio non raggiungibile: il messaggio non è stato inviato.');return}
-  const _l=launch;launch=()=>{};try{_wago()}finally{launch=_l}
-  const last=(rec.wa||[])[rec.wa.length-1];if(last&&last.fonte==='app'){last.fonte='api';try{persist()}catch(e){}try{persistL()}catch(e){}try{paintLM()}catch(e){}}
-  toast('Messaggio WhatsApp inviato.')}}
+/* estensioni alla scheda WhatsApp ed email */
+{const _ow=openWa;openWa=function(){const r=_ow.apply(this,arguments);{const c=arguments[0];if(c&&c.id&&!$('mWa').hidden)waExtra(c)}return r};
+ {const _oi=offerInf;offerInf=function(c){const r=_oi.apply(this,arguments);if(!$('mCompose').hidden&&c&&c.id&&!cmpQ&&!cmpLeadRef)cmpExtras(c);return r}}}
 /* ===== dati di esempio per provare i periodi ===== */
 {const NM=['Laura','Marco','Elena','Paolo','Chiara','Andrea','Sara','Davide','Marta','Luca','Francesca','Matteo','Giulia','Stefano','Valentina','Alberto','Silvia','Federico','Elisa','Roberto','Anna','Simone','Claudia','Fabio'];
  const CG=['Conti','Ferri','Riva','Serra','Moretti','Gallo','Costa','Fontana','Greco','Bruno','Marino','Rinaldi','Caruso','Ferrara','Bianco','Villa','Lombardi','Barbieri','Testa','Longo','Pace','Monti','Orlando','Sala'];
@@ -9732,12 +9710,12 @@ $('st_exDel').onclick=()=>{const n=opps.filter(o=>o.demo).length;if(!n&&!clients
  const fillT=(t,c)=>tpl(t,{nome:first(c)});
  const cdesc=cp=>{const d=cp.dest||[],ok=d.filter(x=>x.st==='ok').length;let rs=0,op=0;d.forEach(x=>{const t=tsOf(x.d||cp.data),c=clients.find(z=>z.id===x.id);if(!c)return;if([...(c.em||[]),...(c.wa||[])].some(m=>m.dir==='in'&&tsOf(m.data)>t))rs++;if(opps.some(o=>o.clienteId===c.id&&tsOf(o.creata)>=t-864e5))op++});return{ok,tot:d.length,rs,op}};
  const shell=(id,title)=>{let sh=$(id);if(!sh){sh=h('div','sheet');sh.id=id;sh.style.zIndex=4;document.body.append(sh)}sh.hidden=false;sh.textContent='';const w=h('div'),top=h('div','top'),x=h('button','btn ico pk');x.type='button';x.title=x.ariaLabel='Chiudi';x.innerHTML=ICONS.back;x.onclick=()=>{sh.hidden=true;renderM()};top.append(h('h2','',title),x);w.append(top);sh.append(w);sh.scrollTop=0;return w};
- function openQueue(cp){const w=shell('campQ',cp.nome),X=S.wa.send||{},api=X.mode==='api'&&X.url;
+ function openQueue(cp){const w=shell('campQ',cp.nome);
   const info=h('div','hint');w.append(info);const L=h('div');w.append(L);
-  const paintQ=()=>{const d=cp.dest,ok=d.filter(x=>x.st==='ok').length;info.textContent=ok+' di '+d.length+' inviati. '+(api?'Invio tramite il servizio WhatsApp collegato.':'Tocca “Apri” per ogni contatto: il messaggio è già pronto, devi solo premere invio.');L.textContent='';
+  const paintQ=()=>{const d=cp.dest,ok=d.filter(x=>x.st==='ok').length;info.textContent=ok+' di '+d.length+' inviati. '+'Tocca “Apri” per ogni contatto: il messaggio è già pronto, devi solo premere invio.';L.textContent='';
    d.forEach(x=>{const c=clients.find(z=>z.id===x.id);if(!c)return;const r=h('div','row'),t=h('div','tx');r.style.cursor='default';t.style.cssText='flex:1;min-width:0';t.append(h('b','',fullName(c)),h('em','',x.st==='ok'?'Inviato':x.st==='err'?'Errore':'Da inviare'));r.append(t);
-    if(x.st!=='ok'){const b=h('button','btn lbl');b.type='button';b.style.cssText='flex:none;white-space:nowrap;width:auto';b.innerHTML='<span>'+ICONS.WhatsApp+'</span> '+(api?'Invia':'Apri');b.onclick=async()=>{const txt=fillT(cp.txt,c);const log=()=>{(c.wa=c.wa||[]).push({id:waId(),dir:'out',data:new Date().toISOString(),testo:txt,fonte:'campagna'});x.st='ok';c.agg=new Date().toISOString();persist();saveS();paintQ()};
-     if(api){b.disabled=true;try{await waSendApi(c,txt);log()}catch(e){x.st='err';saveS();toast('Invio non riuscito.');paintQ()}}else{log();launch('https://wa.me/'+waNum(c)+'?text='+encodeURIComponent(txt),txt)}};r.append(b)}L.append(r)})};paintQ()}
+    if(x.st!=='ok'){const b=h('button','btn lbl');b.type='button';b.style.cssText='flex:none;white-space:nowrap;width:auto';b.innerHTML='<span>'+ICONS.WhatsApp+'</span> Apri';b.onclick=async()=>{const txt=fillT(cp.txt,c);const log=()=>{(c.wa=c.wa||[]).push({id:waId(),dir:'out',data:new Date().toISOString(),testo:txt,fonte:'campagna'});x.st='ok';c.agg=new Date().toISOString();persist();saveS();paintQ()};
+     log();launch('https://wa.me/'+waNum(c)+'?text='+encodeURIComponent(txt),txt)};r.append(b)}L.append(r)})};paintQ()}
  function openCampInfo(cp){if(cp.canale==='wa'&&cp.dest.some(x=>x.st!=='ok'))return openQueue(cp);const w=shell('campD',cp.nome),d=cdesc(cp);w.append(h('div','hint',(cp.canale==='wa'?'WhatsApp':'Email')+' · '+fmtD(cp.data.slice(0,10))+' · segmento “'+cp.segNome+'”'));
   const t=new Set;cp.dest.forEach(x=>{const c=clients.find(z=>z.id===x.id);if(!c)return;const r=h('div','row'),tx=h('div','tx'),rp=[...(c.em||[]),...(c.wa||[])].some(m=>m.dir==='in'&&tsOf(m.data)>tsOf(x.d||cp.data));tx.append(h('b','',fullName(c)),h('em','',({ok:'Inviato',err:'Errore di invio',att:'Da inviare',skip:'Saltato'})[x.st]+(rp?' · ha risposto':'')));r.append(tx);r.onclick=()=>openSheet(c);w.append(r)});
   const dl=h('button','btn lbl');dl.type='button';dl.innerHTML='<span>'+ICONS.trash+'</span> Elimina campagna';dl.onclick=()=>askConfirm('Eliminare la campagna dallo storico? I messaggi già inviati restano.','trash','Elimina',()=>{S.camps=S.camps.filter(z=>z!==cp);saveS();$('campD').hidden=true;renderM()});w.append(dl)}
@@ -9820,12 +9798,12 @@ function stops(){const out=[];clients.forEach(c=>{const p=c.privacy&&c.privacy.c
      break}}}
   return n}finally{jBusy=false;if(dirty)saveS();try{if(tab==='mkt')renderM();const d=$('jrD');if(d&&!d.hidden)jrDraw()}catch(e){}}};
  /* coda WhatsApp di un percorso */
- function openJrQ(j){const w=shell('jrQ',j.nome),X=S.wa.send||{},api=X.mode==='api'&&X.url,CM=new Map(clients.map(c=>[c.id,c]));const info=h('div','hint'),L=h('div');w.append(info,L);
-  const paintQ=()=>{const P=[];Object.entries(j.dest).forEach(([id,e])=>j.steps.forEach(s=>{if(e.s[s.id]&&e.s[s.id].st==='att')P.push([CM.get(id),e,s])}));info.textContent=P.length?P.length+' messaggi da inviare. '+(api?'Invio tramite il servizio WhatsApp collegato.':'Tocca “Apri” per ogni contatto: il messaggio è già pronto, devi solo premere invio.'):'Nessun messaggio WhatsApp in attesa.';L.textContent='';
+ function openJrQ(j){const w=shell('jrQ',j.nome),CM=new Map(clients.map(c=>[c.id,c]));const info=h('div','hint'),L=h('div');w.append(info,L);
+  const paintQ=()=>{const P=[];Object.entries(j.dest).forEach(([id,e])=>j.steps.forEach(s=>{if(e.s[s.id]&&e.s[s.id].st==='att')P.push([CM.get(id),e,s])}));info.textContent=P.length?P.length+' messaggi da inviare. '+'Tocca “Apri” per ogni contatto: il messaggio è già pronto, devi solo premere invio.':'Nessun messaggio WhatsApp in attesa.';L.textContent='';
    P.forEach(([c,e,s])=>{if(!c)return;const r=h('div','row'),t=h('div','tx');r.style.cursor='default';t.style.cssText='flex:1;min-width:0';t.append(h('b','',fullName(c)),h('em','','Da inviare'));r.append(t);
-    const b=h('button','btn lbl');b.type='button';b.style.cssText='flex:none;white-space:nowrap;width:auto';b.innerHTML='<span>'+ICONS.WhatsApp+'</span> '+(api?'Invia':'Apri');
+    const b=h('button','btn lbl');b.type='button';b.style.cssText='flex:none;white-space:nowrap;width:auto';b.innerHTML='<span>'+ICONS.WhatsApp+'</span> Apri';
     b.onclick=async()=>{const txt=fillT(s.txt,c),log=()=>{(c.wa=c.wa||[]).push({id:waId(),dir:'out',data:new Date().toISOString(),testo:txt,fonte:'campagna'});e.s[s.id]={st:'ok',d:new Date().toISOString()};c.agg=new Date().toISOString();persist();saveS();paintQ()};
-     if(api){b.disabled=true;try{await waSendApi(c,txt);log()}catch(x){toast('Invio non riuscito.');b.disabled=false}}else{log();launch('https://wa.me/'+waNum(c)+'?text='+encodeURIComponent(txt),txt)}};r.append(b);L.append(r)})};paintQ()}
+     log();launch('https://wa.me/'+waNum(c)+'?text='+encodeURIComponent(txt),txt)};r.append(b);L.append(r)})};paintQ()}
  /* editor del percorso */
  function openJrEd(j,segId){const w=shell('jrEd',j?'Modifica campagna':'Nuova campagna');
   const d=j?JSON.parse(JSON.stringify({id:j.id,nome:j.nome,segId:j.segId,mode:j.mode,rep:j.rep||0,steps:j.steps})):{id:'j'+Date.now().toString(36),nome:'',segId:segId||'p_mk',mode:'once',rep:0,steps:[newStep(true)]};
