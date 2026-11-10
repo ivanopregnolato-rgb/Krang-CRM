@@ -10134,7 +10134,8 @@ const wState=()=>{let enc=false;try{enc=SB.e2e.state()==='ready'}catch(e){}retur
  {k:'az',ic:'building',t:'Il profilo della tua azienda',d:'Nome, partita IVA e firma delle email',done:!!(S.azienda&&S.azienda.trim())},
  {k:'cl',ic:'users',t:'Il tuo primo cliente',d:'Scrivi i dati o fotografa un biglietto da visita',done:clients.length>0},
  {k:'em',ic:'Scrivi',t:'La posta',d:'Come invii le email ai clienti',done:!!S.mailOk},
- {k:'cr',ic:'shield',t:'La cifratura dei dati',d:'Come proteggiamo ciò che salvi',done:!!S.cryptoOk||enc}]};
+ {k:'cr',ic:'shield',t:'La cifratura dei dati',d:'Come proteggiamo ciò che salvi',done:!!S.cryptoOk||enc},
+ {k:'sc',ic:'user',t:'L’accesso con biometria',d:'Face ID o impronta per aprire l’app',done:!!(typeof LOCK!=='undefined'&&LOCK.on)}]};
 function paintWel(){const w=$('hWel');if(!w)return;w.textContent='';if(S.welcomeOff)return;const st=wState(),n=st.filter(x=>x.done).length;if(n===st.length)return;
   const b=h('button','wcard');b.type='button';const i=h('span','ic');i.innerHTML=ICONS.star;const tx=h('div','tx');const bar=h('div','wbar'),f=h('i');f.style.width=Math.round(n/st.length*100)+'%';bar.append(f);
   tx.append(h('b','','Primi passi'),h('span','',n+' di '+st.length+' completati'),bar);
@@ -10161,10 +10162,10 @@ function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=
     if(!ready&&can){const g=h('button','btn lbl');g.type='button';g.innerHTML=ICONS.shield+'<span>Attiva ora</span>';g.onclick=()=>{S.cryptoOk=true;saveS();closeWel();CLOUD.started=false;cloudGate()};B.append(g)}
     B.append(back());return}
   const st=wState(),n=st.filter(x=>x.done).length;
-  B.append(h('h3','','Benvenuto in KRANG CRM'),h('p','wsub',n===st.length?'Hai completato i primi passi.':'Quattro passi per iniziare. Puoi saltarli e tornare qui dal menu, voce Primi passi.'));
+  B.append(h('h3','','Benvenuto in KRANG CRM'),h('p','wsub',n===st.length?'Hai completato i primi passi.':['','','','Tre','Quattro','Cinque','Sei'][st.length]+' passi per iniziare. Puoi saltarli e tornare qui dal menu, voce Primi passi.'));
   const g=h('div','shg'),l=h('div','sl');
   st.forEach(x=>{const b=h('button','shr wlr');b.type='button';const i=h('span','ic');i.innerHTML=x.done?ICONS.check:ICONS[x.ic];if(x.done)i.classList.add('ok');const tx=h('div','tx');tx.append(h('b','',x.t),h('span','',x.d));const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(i,tx,c);
-    b.onclick=()=>{if(x.k==='az'){closeWel();openSettings();setSp('az')}else if(x.k==='em'){S.mailOk=true;saveS();closeWel();openSettings();setSp('em')}else openWel(x.k)};l.append(b)});
+    b.onclick=()=>{if(x.k==='az'){closeWel();openSettings();setSp('az')}else if(x.k==='em'){S.mailOk=true;saveS();closeWel();openSettings();setSp('em')}else if(x.k==='sc'){closeWel();openSettings();setSp('sc')}else openWel(x.k)};l.append(b)});
   g.append(l);B.append(g);
   const go=h('button','btn p lbl');go.type='button';go.innerHTML=ICONS.check+'<span>'+(n===st.length?'Inizia':'Più tardi')+'</span>';go.onclick=closeWel;B.append(go)}
 (()=>{let k=0;const t=setInterval(()=>{k++;if(k>40||S.welcomeSeen||S.welcomeOff){clearInterval(t);return}
