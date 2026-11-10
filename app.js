@@ -10342,7 +10342,7 @@ const SB=(()=>{
 /* ===== info e versione ===== */
 {const rd=t=>{const m=/name="app-version" content="([^"|]+)\|([^"]+)"/.exec(t);return m?{v:m[1],d:m[2]}:null},cur=rd('<meta name="app-version" content="'+(document.querySelector('meta[name=app-version]')||{content:''}).content+'">')||{v:'?',d:''};
  const dl=d=>{const p=String(d).split('-');return p.length===3?(+p[2])+' '+['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'][+p[1]-1]+' '+p[0]:d};
- const M=$('mInfo');let newer=false;try{$('au_v').textContent='K-CRM · versione '+cur.v}catch(e){}
+ const M=$('mInfo');let newer=false;try{$('au_v').textContent='KRANG CRM · versione '+cur.v}catch(e){}
  $('inX').onclick=()=>{M.hidden=true};M.onclick=e=>{if(e.target===M)M.hidden=true};
  $('inU').onclick=async()=>{const b=$('inU');b.disabled=true;try{if(navigator.serviceWorker)for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister();if(window.caches)for(const k of await caches.keys())await caches.delete(k)}catch(e){}location.reload()};
  window.openInfo=async()=>{$('inV').textContent='Versione '+cur.v;$('inD').textContent='Aggiornata il '+dl(cur.d);const st=$('inS'),u=$('inU');st.textContent='Controllo aggiornamenti…';u.hidden=true;M.hidden=false;
