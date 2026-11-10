@@ -63,7 +63,7 @@ DEMO[1].privacy=mkPriv({informativa:true,infData:'2026-02-02',infModo:'Email',lo
 DEMO[0].wa=[{id:'wa1',dir:'out',data:'2026-11-03T09:12:00.000Z',testo:'Buongiorno Giulia, le confermo l’appuntamento di giovedì alle 15 per la degustazione.',fonte:'manuale'},{id:'wa2',dir:'in',data:'2026-11-03T09:40:00.000Z',testo:'Perfetto, grazie! Porto anche il mio socio.',fonte:'manuale'},{id:'wa3',dir:'out',data:'2026-11-06T16:05:00.000Z',testo:'Ciao Giulia, le ho mandato il preventivo per i regali di Natale. Mi dica se va bene.',fonte:'manuale'},{id:'wa4',dir:'in',data:'2026-11-07T18:20:00.000Z',testo:'Grazie, lo guardo domani. Possiamo fare 30 confezioni invece di 24?',fonte:'manuale'}];
 DEMO[2].privacy=mkPriv({fonteDati:'fiera',base:'legittimo',richieste:[{id:'rdemo',token:'K7M2QX',creata:'2026-11-05T09:00',scade:'2026-11-19T09:00',email:'sophie.martin@atelier-lumiere.fr',stato:'inviata'}],log:[{d:'2026-09-18T15:00',t:'Anagrafica creata (fonte: Fiera o evento)'},{d:'2026-11-05T09:00',t:'Informativa inviata via email a sophie.martin@atelier-lumiere.fr (codice K7M2QX, valido fino al 19 nov 2026)',op:'Demo',ev:'invio'}]});
 DEMO[3].privacy=mkPriv({base:'consenso',informativa:true,infData:'2026-05-18',infModo:'Email',cons:{mkEmail:{v:true,d:'2026-05-18'},mkTel:{v:true,d:'2026-05-18'},profilazione:{v:false,d:''},terzi:{v:false,d:''}}});
-function persist(){try{localStorage.setItem(KEY,JSON.stringify(clients))}catch(e){toast('Spazio pieno: impossibile salvare sul dispositivo.')}}
+function persist(){try{stampMods(clients,'c')}catch(e){}try{localStorage.setItem(KEY,JSON.stringify(clients))}catch(e){toast('Spazio pieno: impossibile salvare sul dispositivo.')}}
 const contactName=c=>c.tipo==='azienda'?([c.nome,c.cognome].filter(Boolean).join(' ')||c.azienda):fullName(c);
 const inits=nm=>{const w=String(nm||'').trim().split(/\s+/).filter(Boolean);return ((w[0]||'?')[0]+(w.length>1?w[w.length-1][0]:'')).toUpperCase()};
 function fullName(c){const p=[c.nome,c.cognome].filter(Boolean).join(' ');return c.tipo==='azienda'?(c.azienda||p||'Senza nome'):(p||c.azienda||'Senza nome')}
@@ -265,7 +265,7 @@ function avgSale(){if(_avgS!==undefined)return _avgS;const a=opps.filter(o=>o.fa
 function trackF(){_avgS=undefined;const td=ymd();opps.forEach(o=>{const l=o.fh&&o.fh[o.fh.length-1];if(!l)o.fh=[{f:o.fase,d:(o.fase==='vinta'||o.fase==='persa'?o.chiusa:o.creata)||o.creata||td}];else if(l.f!==o.fase)o.fh.push({f:o.fase,d:td})})}
 function faseInfo(o){const open=o.fase!=='vinta'&&o.fase!=='persa',td=ymd(),fh=o.fh||[],since=(fh.length?fh[fh.length-1].d:o.creata)||td,cr=o.creata||since;return{open,since,inF:dayN(since,open?td:(o.chiusa||td)),tot:dayN(cr,open?td:(o.chiusa||td)),stale:open&&avgSale()!=null&&dayN(cr,td)>avgSale()}}
 function ageLine(o){const i=faseInfo(o);if(!o.creata&&!(o.fh&&o.fh.length))return null;const d=h('span','prs'+(i.stale?' warn':''));d.textContent=i.open?i.inF+' gg in questa fase'+(i.tot!==i.inF?' · '+i.tot+' gg dall’apertura':''):(o.fase==='vinta'?'Vinta':'Persa')+' in '+i.tot+' gg';return d}
-function persistO(){trackF();OBC=null;WONS=null;try{localStorage.setItem(OKEY,JSON.stringify(opps))}catch(e){toast('Spazio pieno: impossibile salvare le opportunità.')}}
+function persistO(){trackF();try{stampMods(opps,'o')}catch(e){}OBC=null;WONS=null;try{localStorage.setItem(OKEY,JSON.stringify(opps))}catch(e){toast('Spazio pieno: impossibile salvare le opportunità.')}}
 let _cmA=null,_cmL=-1,_cm=null;const cById=id=>{if(_cmA!==clients||_cmL!==clients.length){_cmA=clients;_cmL=clients.length;_cm=new Map();clients.forEach(c=>_cm.set(c.id,c))}let c=_cm.get(id);if(c&&c.id!==id)c=null;return c};
 const cname=id=>{const c=cById(id);return c?fullName(c):'Cliente rimosso'};
 const fase=k=>FASI.find(f=>f[0]===k)||FASI[0];
@@ -405,15 +405,24 @@ let opName='';try{opName=localStorage.getItem('crm-op')||''}catch(e){}
 const tok=()=>{const a='ABCDEFGHJKMNPQRSTUVWXYZ23456789',r=new Uint32Array(6);crypto.getRandomValues(r);return [...r].map(x=>a[x%a.length]).join('')};
 const fmtDT=s=>{const d=new Date(s);return isNaN(d)?'':DTF.format(d)};
 /* data e utente di creazione: cre (ISO) e creU (email o "Questo dispositivo"), salvati nel record e quindi nel backup */
-function stampNew(r){if(r&&!r.cre){r.cre=new Date().toISOString();let u='';try{u=SB.email()||''}catch(e){}r.creU=u||'Questo dispositivo'}return r}
+const whoU=()=>{let u='';try{u=SB.email()||''}catch(e){}return u||'Questo dispositivo'};
+function stampNew(r){if(r&&!r.cre){r.cre=new Date().toISOString();r.creU=whoU()}return r}
+/* ultimo aggiornamento: mod (ISO) e modU; si aggiorna al salvataggio se il contenuto del record è cambiato */
+const MODS={},MODX=new Set(['cre','creU','mod','modU','waSeen']);
+const modSig=r=>JSON.stringify(r,(k,v)=>MODX.has(k)?undefined:v);
+function stampMods(a,k){let ap=false;try{ap=CLOUD.applying}catch(e){}let now='',u='';
+  a.forEach(r=>{if(!r||r.id==null)return;const key=k+r.id,sg=modSig(r);
+    if(MODS[key]===undefined||ap){MODS[key]=sg;return}
+    if(MODS[key]!==sg){MODS[key]=sg;if(!now){now=new Date().toISOString();u=whoU()}r.mod=now;r.modU=u}})}
+function baselineMods(){[[clients,'c'],[opps,'o'],[prods,'p'],[leads,'l'],[movs,'m']].forEach(([a,k])=>a.forEach(r=>{if(r&&r.id!=null)MODS[k+r.id]=modSig(r)}))}
 function creOf(r,kind){if(!r)return 0;if(r.cre){const t=new Date(r.cre).getTime();if(!isNaN(t))return t}
   let t=NaN;if(kind==='lead')t=+r.creato||+r.data;else if(kind==='opp')t=r.creata?new Date(r.creata+'T12:00:00').getTime():NaN;
   if(isNaN(t)||!t){const m=/^[a-z]?([0-9a-z]{7,9})[a-z]?$/.exec(String(r.id||''));if(m){const x=parseInt(m[1],36);if(x>1e12&&x<4e12)t=x}}
   return isNaN(t)?0:t}
 function backfillCre(){[[clients,'cl'],[opps,'opp'],[prods,'pr'],[leads,'lead']].forEach(([a,k])=>a.forEach(r=>{if(!r.cre){const t=creOf(r,k);if(t)r.cre=new Date(t).toISOString()}}))}
-function creLine(r,kind){const t=creOf(r,kind);if(!t)return '';return 'Creato il '+fmtDT(t)+(r.creU?' da '+r.creU:'')}
+function creLine(r,kind){const t=creOf(r,kind),m=r.mod?new Date(r.mod).getTime():0;const a=t?'Creato il '+fmtDT(t)+(r.creU?' da '+r.creU:''):'';const b=m&&!isNaN(m)?'Aggiornato il '+fmtDT(m)+(r.modU?' da '+r.modU:''):'';return [a,b].filter(Boolean).join('\n')}
 function paintCre(sheetId,r,kind){const box=$(sheetId).firstElementChild;if(!box)return;let e=box.querySelector(':scope > .creL');
-  if(!e){e=document.createElement('div');e.className='hint creL';const b=box.querySelector(':scope > .btns');b?box.insertBefore(e,b):box.append(e)}
+  if(!e){e=document.createElement('div');e.className='hint creL';e.style.whiteSpace='pre-line';const b=box.querySelector(':scope > .btns');b?box.insertBefore(e,b):box.append(e)}
   const t=r?creLine(r,kind):'';e.textContent=t;e.hidden=!t}
 const effSt=r=>r.stato==='inviata'&&Date.now()>new Date(r.scade+'Z').getTime()?'scaduta':r.stato;
 function logP(c,t,ev){const p=c.privacy=c.privacy||mkPriv();p.log=p.log||[];p.log.push({d:new Date().toISOString().slice(0,16),t,op:opName,ev})}
@@ -8679,7 +8688,7 @@ const DEMO_PRODS=[
 {id:'w9',codice:'DB-RIA',nome:'Riamò',categoria:'Bianco',caratt:'Trebbiano d’Abruzzo DOP · Trebbiano abruzzese 100% · 12,5% vol · 9–11 °C',descr:'Floreale con sentori di nocciola, sapido e minerale. Antipasti di pesce e carni bianche.',unita:'bt',prezzo:5.5,costo:2.3,mag:true,scorta:80,iva:22,attivo:true}];
 let prods=[];
 try{prods=JSON.parse(localStorage.getItem(PKEY)||'[]')}catch(e){}
-function persistP(){try{localStorage.setItem(PKEY,JSON.stringify(prods))}catch(e){toast('Spazio pieno: impossibile salvare i prodotti.')}}
+function persistP(){try{stampMods(prods,'p')}catch(e){}try{localStorage.setItem(PKEY,JSON.stringify(prods))}catch(e){toast('Spazio pieno: impossibile salvare i prodotti.')}}
 const MKEY='crm-mov-v1';
 const DEMO_MOVS=[
 {id:'m1',prodId:'w1',data:'2026-09-01T09:00:00.000Z',tipo:'carico',qta:240,nota:'Giacenza iniziale'},
@@ -8694,7 +8703,7 @@ const DEMO_MOVS=[
 {id:'m10',prodId:'w3',data:'2026-10-20T10:00:00.000Z',tipo:'scarico',qta:-120,nota:'Opportunità Riordino Idealis',oppId:'o5'}];
 let movs=[];
 try{movs=JSON.parse(localStorage.getItem(MKEY)||'[]')}catch(e){}
-function persistM(){try{localStorage.setItem(MKEY,JSON.stringify(movs))}catch(e){toast('Spazio pieno: impossibile salvare i movimenti di magazzino.')}}
+function persistM(){try{stampMods(movs,'m')}catch(e){}try{localStorage.setItem(MKEY,JSON.stringify(movs))}catch(e){toast('Spazio pieno: impossibile salvare i movimenti di magazzino.')}}
 const RES_FASI=['proposta'];
 const giac=id=>movs.reduce((t,m)=>m.prodId===id?t+m.qta:t,0);
 const impeg=(id,skip)=>{let t=0;opps.forEach(o=>{if(o===skip||o.scaricato)return;if(RES_FASI.includes(o.fase)||o.fase==='vinta')(o.prodotti||[]).forEach(p=>{if(p.prodId===id)t+=+p.qta||0})});return t};
@@ -9239,7 +9248,7 @@ const LKEY='crm-lead-v1',LSEEN='crm-lead-seen-v1';
 let leads=[],lSeen=[],lFilter='nuovo',lCur=null,lBusy=false;
 try{leads=JSON.parse(localStorage.getItem(LKEY)||'[]')}catch(e){}
 try{lSeen=JSON.parse(localStorage.getItem(LSEEN)||'[]')}catch(e){}
-const persistL=()=>{try{localStorage.setItem(LKEY,JSON.stringify(leads));localStorage.setItem(LSEEN,JSON.stringify(lSeen.slice(-600)))}catch(e){toast('Spazio pieno: impossibile salvare i lead.')}try{cloudPush('ld')}catch(e){}try{dPush()}catch(e){}};
+const persistL=()=>{try{stampMods(leads,'l')}catch(e){}try{localStorage.setItem(LKEY,JSON.stringify(leads));localStorage.setItem(LSEEN,JSON.stringify(lSeen.slice(-600)))}catch(e){toast('Spazio pieno: impossibile salvare i lead.')}try{cloudPush('ld')}catch(e){}try{dPush()}catch(e){}};
 (function purgeLeads(){const n=Date.now(),b=leads.length;leads=leads.filter(l=>!(l.stato==='scartato'&&n-(l.scartato||l.creato)>S.lead.scartati*864e5)&&!(l.stato==='nuovo'&&n-l.creato>S.lead.nuovi*30.5*864e5));if(leads.length!==b)persistL()})();
 const AUTO_RE=/no-?reply|donotreply|do-not-reply|mailer-daemon|postmaster|notification|newsletter|bounce|alert|noreply|automated|updates?@|billing|invoice|fattura/i;
 const lName=l=>[l.nome,l.cognome].filter(Boolean).join(' ')||l.email||'Lead senza nome';
@@ -9590,7 +9599,7 @@ $('st_bkf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f
   let o;try{o=JSON.parse(await f.text());if(o&&o.enc===1){if(!DRV.pw){setErr('st_bk','Backup cifrato: imposta prima la password dei backup (Impostazioni → Backup, accessi ed esempi).');return}try{o=JSON.parse(new TextDecoder().decode(await decEnv(o)))}catch(x){setErr('st_bk','Password errata o file danneggiato.');return}}if(!o||o.v!==1||!Array.isArray(o.clienti))throw 0;
     askConfirm('Importare il backup? Clienti ('+o.clienti.length+'), opportunità ('+(o.opportunita||[]).length+'), prodotti ('+(o.prodotti||[]).length+') e lead ('+(o.lead||[]).length+') vengono uniti ai dati attuali; i record con lo stesso identificativo vengono sostituiti.','clip','Importa',()=>{
       const mg=(cur,inc)=>{const m=new Map(cur.map(r=>[String(r.id),r]));(inc||[]).forEach(r=>{if(r&&r.id)m.set(String(r.id),r)});return [...m.values()]};
-      clients=mg(clients,o.clienti);opps=mg(opps,o.opportunita);prods=mg(prods,o.prodotti);movs=mg(movs,o.movimenti);leads=mg(leads,o.lead);
+      clients=mg(clients,o.clienti);opps=mg(opps,o.opportunita);prods=mg(prods,o.prodotti);movs=mg(movs,o.movimenti);leads=mg(leads,o.lead);baselineMods();
       persist();persistO();persistP();persistM();persistL();render();renderO();renderP();try{renderL()}catch(x){}try{renderH()}catch(x){}toast('Backup importato.')})
   }catch(x){setErr('st_bk','File non valido: scegli un backup esportato da questo CRM.')}};
 
@@ -10610,3 +10619,4 @@ const CARD=(()=>{
 {const f=$('cardFile');$('cScan').onclick=()=>{CARD.add(false);f.click()};f.onchange=()=>{const x=f.files&&f.files[0],a=CARD.add();f.value='';if(x)CARD.run(x,a)};$('scX').onclick=()=>CARD.cancel()}
 
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
+try{baselineMods()}catch(e){}
