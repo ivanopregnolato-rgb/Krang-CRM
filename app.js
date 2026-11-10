@@ -9540,7 +9540,7 @@ $('st_bkf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f
 
 /* ===== form senza tasti in fondo: salvataggio all'uscita ===== */
 {const DG={sheet:{c:'close',sv:'save',del:['del'],x:()=>curFoto+'|'+curTipo},pSheet:{c:'pClose',sv:'pSave',del:['pDel'],x:()=>pFoto},qSheet:{c:'qClose',sv:'qSave',del:['qDel'],x:()=>JSON.stringify(qW)},oSheet:{c:'oClose',sv:'oSave',del:['oDel'],x:()=>JSON.stringify(oD)},lSheet:{c:'lClose',sv:'l_save',del:['l_ripr','l_scarta','l_del'],x:()=>lTipo}};
- const SNAP={};
+ const SNAP={},HOLD={};window.holdDirty=id=>{HOLD[id]=1};
  const sig=id=>{const v=[];$(id).querySelectorAll('input,select,textarea').forEach(i=>{if(i.type==='file')return;v.push(i.type==='checkbox'||i.type==='radio'?(i.checked?1:0):i.value)});let x='';try{x=DG[id].x()}catch(e){}return v.join('\u0001')+'\u0002'+x};
  const snap=id=>{SNAP[id]=sig(id)};
  window.resnap=snap;
@@ -9554,7 +9554,7 @@ $('st_bkf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f
      $('dC').onclick=()=>{$('mDirty').hidden=true};
      $('dN').onclick=()=>{$('mDirty').hidden=true;orig()};
      $('dY').onclick=()=>{$('mDirty').hidden=true;$(g.sv).onclick()}};
-   new MutationObserver(()=>{if(!sh.hidden){snap(id);setTimeout(()=>snap(id),150);setTimeout(()=>snap(id),600)}}).observe(sh,{attributes:true,attributeFilter:['hidden']})});
+   new MutationObserver(()=>{if(!sh.hidden){if(HOLD[id]){HOLD[id]=0;SNAP[id]='\u0003sporco';return}snap(id);setTimeout(()=>snap(id),150);setTimeout(()=>snap(id),600)}}).observe(sh,{attributes:true,attributeFilter:['hidden']})});
  const _sc=saveClient;saveClient=function(){const r=_sc.apply(this,arguments);if(r)snap('sheet');return r};
  const _so=saveOpp;saveOpp=function(){const r=_so.apply(this,arguments);if(r)snap('oSheet');return r};
  const _sq=saveQuote;saveQuote=function(){const r=_sq.apply(this,arguments);if(r)snap('qSheet');return r}}
@@ -10426,6 +10426,29 @@ const CARD=(()=>{
    x.putImageData(d,0,0);URL.revokeObjectURL(u);ok(c)}catch(e){URL.revokeObjectURL(u);ko(e)}};
   img.onerror=()=>{URL.revokeObjectURL(u);ko(new Error('img'))};img.src=u})}
  const load=()=>window.Tesseract?Promise.resolve():new Promise((ok,ko)=>{const s=document.createElement('script');s.src='ocr/tesseract.min.js?v=5.1.1';s.onload=ok;s.onerror=()=>ko(new Error('motore'));document.head.append(s)});
+ const dg=x=>String(x||'').replace(/\D/g,'');
+ const FL2=[['nome','Nome'],['cognome','Cognome'],['azienda','Azienda'],['ruolo','Ruolo'],['telefono','Telefono'],['email','Email'],['pec','PEC'],['sito','Sito web'],['piva','Partita IVA'],['indirizzo','Indirizzo']];
+ const same=(k,a,b)=>k==='telefono'?(dg(a).slice(-9)===dg(b).slice(-9)&&dg(a).length>0):k==='email'||k==='pec'?String(a).toLowerCase()===String(b).toLowerCase():k==='piva'?dg(a)===dg(b):nrm(String(a).replace(/[.,\s]+/g,' ').trim())===nrm(String(b).replace(/[.,\s]+/g,' ').trim());
+ function findDup(d){let best=null;const W={email:5,piva:5,telefono:4,nome:3,azienda:2};
+  clients.forEach(c=>{let why=null,w=0;const tryR=(r)=>{if(W[r]>w){w=W[r];why=r}};
+   if(d.email&&c.email&&same('email',d.email,c.email))tryR('email');
+   if(d.piva&&c.piva&&same('piva',d.piva,c.piva))tryR('piva');
+   if(d.telefono&&c.telefono&&same('telefono',d.telefono,c.telefono))tryR('telefono');
+   if(d.nome&&d.cognome&&c.nome&&c.cognome&&nrm(d.nome)===nrm(c.nome)&&nrm(d.cognome)===nrm(c.cognome))tryR('nome');
+   if(!d.nome&&!d.cognome&&d.azienda&&c.azienda&&same('azienda',d.azienda,c.azienda))tryR('azienda');
+   if(why&&(!best||w>best.w))best={c,why,w}});return best}
+ const WHY={email:'lo stesso indirizzo email',piva:'la stessa partita IVA',telefono:'lo stesso numero di telefono',nome:'lo stesso nome e cognome',azienda:'lo stesso nome di azienda'};
+ function diff(c,d){const ch=[];FL2.forEach(([k,l])=>{const v=d[k];if(!v)return;const o=c[k]||'';if(!o)ch.push({k,l,o:'',v,add:true});else if(!same(k,o,v))ch.push({k,l,o,v})});return ch}
+ function fillSheet(d,only){Object.keys(d).forEach(k=>{if(!FIELDS.includes(k)||!d[k]||(only&&!only.includes(k)))return;const e=$(k);if(!e)return;e.value=d[k];e.dispatchEvent(new Event('input',{bubbles:true}));if(k==='paese')e.dispatchEvent(new Event('change',{bubbles:true}))});if(d.tipo&&!only)applyTipo(d.tipo)}
+ function startNew(d){openSheet(null);fillSheet(d);showMsg('Dati letti dal biglietto: controllali e correggi se serve prima di salvare.')}
+ function askDup(m,d){const M=$('mDup'),L=$('dpL'),c=m.c,ch=diff(c,d);L.textContent='';
+  $('dpT').textContent='Cliente già presente';
+  $('dpS').textContent='«'+fullName(c)+'» ha '+WHY[m.why]+' di questo biglietto.';
+  ch.slice(0,8).forEach(x=>{const li=h('li');li.append(h('b','',x.l+': '),document.createTextNode(x.add?'aggiungo '+x.v:x.o+' → '+x.v));L.append(li)});
+  $('dpH').textContent=ch.length?(ch.some(x=>!x.add)?'I valori diversi vengono sostituiti con quelli del biglietto. Potrai controllare e salvare.':'Verranno aggiunti solo dati mancanti. Potrai controllare e salvare.'):'Il biglietto non porta dati nuovi rispetto alla scheda.';
+  $('dpU').lastChild.textContent=ch.length?' Aggiorna la scheda':' Apri la scheda';
+  $('dpU').onclick=()=>{M.hidden=true;if(ch.length&&window.holdDirty)window.holdDirty('sheet');openSheet(c);if(ch.length){const v={};ch.forEach(x=>{v[x.k]=x.v});if(v.telefono&&d.paese)v.paese=d.paese;const nt=d.note?((c.note?c.note+'\n\n':'')+d.note):'';if(nt)v.note=nt;fillSheet(v);showMsg('Dati del biglietto applicati: controllali e torna indietro per salvare.')}};
+  $('dpN').onclick=()=>{M.hidden=true;startNew(d)};$('dpX').onclick=()=>{M.hidden=true};M.hidden=false}
  let busy=false,stop=null;
  async function run(file){if(busy)return;busy=true;const M=$('mScan'),T=$('scT'),B=$('scB'),H=$('scH');let worker=null,cancelled=false;
   stop=()=>{cancelled=true;try{worker&&worker.terminate()}catch(e){}};B.style.width='4%';T.textContent='Preparo l’immagine…';H.textContent='';M.hidden=false;
@@ -10435,7 +10458,7 @@ const CARD=(()=>{
    if(cancelled)return;const r=await worker.recognize(cv);await worker.terminate();worker=null;if(cancelled)return;
    const txt=(r&&r.data&&r.data.text)||'';M.hidden=true;
    if(txt.replace(/\W/g,'').length<8){toast('Non riesco a leggere il biglietto: riprova con più luce e il biglietto dritto.');return}
-   const d=parse(txt);openSheet(null,d);showMsg('Dati letti dal biglietto: controllali e correggi se serve prima di salvare.')}
+   const d=parse(txt),m=findDup(d);if(m)askDup(m,d);else startNew(d)}
   catch(e){M.hidden=true;if(!cancelled)toast('Lettura non riuscita'+(navigator.onLine===false?': sei offline e il lettore non è ancora scaricato.':'. Riprova.'))}
   finally{try{worker&&worker.terminate()}catch(e){}busy=false;stop=null;M.hidden=true}}
  return{parse,run,cancel:()=>stop&&stop()}})();

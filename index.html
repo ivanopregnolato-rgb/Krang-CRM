@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.2.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.2.0|2026-11-10"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.2.1"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.2.1|2026-11-10"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -166,7 +166,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 #mDirty .btn{margin-top:8px;width:100%}
 .top h2{margin:0;font-size:22px;font-weight:800}
 .modal{position:fixed;inset:0;background:rgba(15,20,35,.5);display:grid;place-items:center;padding:20px;z-index:20}
-#confirm{z-index:25}#mInfo,#mScan{z-index:25}.scanIc{background:var(--surface);color:var(--ink);border:1.5px solid var(--out);box-shadow:none}.scanIc svg{width:24px;height:24px}.pbar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:0 0 8px}.pbar i{display:block;height:100%;width:4%;border-radius:99px;background:linear-gradient(90deg,#46c6ff,#6f8cff);transition:width .25s}#mInfo h3{margin:0 0 4px;font-size:20px}#mInfo p{margin:6px 0}#mInfo .two:has(#inU[hidden]){grid-template-columns:1fr}#mInfo .vv{font-size:26px;font-weight:800;margin:10px 0 2px}
+#confirm{z-index:25}#mInfo,#mScan,#mDup{z-index:25}.scanIc{background:var(--surface);color:var(--ink);border:1.5px solid var(--out);box-shadow:none}.scanIc svg{width:24px;height:24px}.pbar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:0 0 8px}.pbar i{display:block;height:100%;width:4%;border-radius:99px;background:linear-gradient(90deg,#46c6ff,#6f8cff);transition:width .25s}#mInfo h3{margin:0 0 4px;font-size:20px}#mInfo p{margin:6px 0}#mInfo .two:has(#inU[hidden]){grid-template-columns:1fr}#mInfo .vv{font-size:26px;font-weight:800;margin:10px 0 2px}
 .box{background:var(--surface);border-radius:18px;padding:20px;max-width:360px;width:100%;box-shadow:var(--sh)}
 .box p{margin:0 0 16px;font-weight:600}
 .box.info{max-height:80vh;overflow:auto}
@@ -453,6 +453,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 <div class="modal" id="mDirty" hidden><div class="box" role="alertdialog" aria-labelledby="dirtyT"><p id="dirtyT">Ci sono modifiche non salvate.</p><button class="btn p lbl" id="dY" type="button"><span data-i="check"></span>Salva</button><button class="btn d lbl" id="dN" type="button"><span data-i="x"></span>Non salvare</button><button class="btn lbl" id="dC" type="button"><span data-i="edit"></span>Continua a modificare</button></div></div>
 <input type="file" id="cardFile" accept="image/*" hidden>
 <div class="modal" id="mScan" hidden><div class="box" role="dialog" aria-live="polite" aria-labelledby="scT"><p id="scT" style="font-weight:700;margin:0 0 10px">Leggo il biglietto…</p><div class="pbar"><i id="scB"></i></div><p class="hint" id="scH"></p><div class="two" style="grid-template-columns:1fr"><button class="btn" id="scX" type="button"><span data-i="x"></span>Annulla</button></div></div></div>
+<div class="modal" id="mDup" hidden><div class="box" role="dialog" aria-labelledby="dpT"><h3 id="dpT" style="margin:0 0 6px">Cliente già presente</h3><p id="dpS" style="margin:0 0 8px"></p><ul id="dpL" style="margin:0 0 8px;padding-left:18px;font-size:14px"></ul><p class="hint" id="dpH" style="margin:0 0 12px"></p><div class="two" style="grid-template-columns:1fr"><button class="btn p lbl" id="dpU" type="button"><span data-i="check"></span> Aggiorna la scheda</button><button class="btn lbl" id="dpN" type="button"><span data-i="plus2"></span> Crea un nuovo cliente</button><button class="btn lbl" id="dpX" type="button"><span data-i="x"></span> Annulla</button></div></div></div>
 <div class="modal" id="mInfo" hidden><div class="box" role="dialog" aria-labelledby="inT"><h3 id="inT">Rubrica clienti</h3><div class="vv" id="inV"></div><p class="hint" id="inD"></p><p id="inS" class="hint"></p><div class="two"><button class="btn" id="inX" type="button"><span data-i="x"></span>Chiudi</button><button class="btn p" id="inU" type="button"><span data-i="reset"></span>Aggiorna</button></div></div></div>
 <div class="modal" id="confirm" hidden><div class="box" role="alertdialog" aria-labelledby="confirmText"><p id="confirmText"></p><div class="two"><button class="btn" id="cNo" type="button"><span data-i="x"></span>Annulla</button><button class="btn d" id="cYes" type="button"><span data-i="trash"></span>Elimina</button></div></div></div>
 <div class="sheet" id="pSheet" hidden><div>
@@ -805,6 +806,6 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunity" title="Elimina opportunity"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunity" title="Salva opportunity"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.2.0"></script>
+<script src="app.js?v=1.2.1"></script>
 </body>
 </html>
