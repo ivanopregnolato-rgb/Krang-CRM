@@ -687,6 +687,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <button class="btn lbl" id="pa_x" type="button" style="margin-top:8px"><span data-i="x"></span>Chiudi</button></div></div>
 <div class="modal" id="mWel" hidden><div class="box info" role="dialog" aria-labelledby="wTitle"><div id="wBody"></div></div></div>
 <div class="modal" id="mCall" hidden><div class="box info" role="dialog" aria-labelledby="cl_t"><p id="cl_t">Com’è andata la chiamata?</p><div class="hint" id="cl_who"></div>
+  <div class="f" id="cl_dtw" hidden><label for="cl_dt">Data e ora della chiamata</label><input id="cl_dt" type="datetime-local"><div class="err" id="err-cl_dt" hidden></div></div>
   <div class="clEs" id="cl_es"></div>
   <div class="f" id="cl_dw"><label for="cl_dur">Durata (minuti, stimata)</label><input id="cl_dur" inputmode="numeric" autocomplete="off"><div class="err" id="err-cl_dur" hidden></div><div class="hint">Stimata dal tempo passato fuori dall’app: correggila se serve.</div></div>
   <div class="f"><label for="cl_nota">Nota</label><textarea id="cl_nota" rows="3" placeholder="Puoi dettarla con il microfono della tastiera"></textarea></div>
@@ -751,14 +752,15 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 </div>
   <div id="tpF" class="pane-hide"><div id="tpBody"></div></div>
   <div id="trF" class="pane-hide"><div id="trBody"></div></div>
-  <div id="commF" class="pane-hide"><div class="seg" id="cmSeg"><button type="button" class="on" data-c="all"><span data-i="list"></span>Tutti</button><button type="button" data-c="mail"><span data-i="Scrivi"></span>Email</button><button type="button" data-c="wa"><span data-i="WhatsApp"></span>WhatsApp<span class="cnt" id="waCnt"></span></button></div>
+  <div id="commF" class="pane-hide"><div class="seg" id="cmSeg"><button type="button" class="on" data-c="all"><span data-i="list"></span>Tutti</button><button type="button" data-c="mail"><span data-i="Scrivi"></span>Email</button><button type="button" data-c="wa"><span data-i="WhatsApp"></span>WhatsApp<span class="cnt" id="waCnt"></span></button><button type="button" data-c="call"><span data-i="Chiama"></span>Chiamate<span class="cnt" id="callCnt"></span></button></div>
   <div id="cmAll"><div class="two"><button class="btn lbl" id="cm_aMail" type="button"><span data-i="Scrivi"></span>Nuova email</button><button class="btn lbl" id="cm_aWa" type="button"><span data-i="WhatsApp"></span>Scrivi WhatsApp</button></div><div id="allSt" class="hint" hidden style="margin-top:8px"></div><div id="allList" style="margin-top:10px"></div></div>
   <div id="cmMail" hidden><div class="two"><button class="btn lbl" id="cm_new" type="button"><span data-i="Scrivi"></span>Nuova email</button><button class="btn lbl" id="cm_ref" type="button"><span data-i="reset"></span>Aggiorna</button></div><div id="comm" style="margin-top:10px"></div></div>
   <div id="cmWa" hidden>
     <div class="mact"><button class="btn lbl" id="wa_new" type="button"><span data-i="WhatsApp"></span>Scrivi</button><button class="btn lbl" id="wa_reg" type="button"><span data-i="edit"></span>Registra</button><button class="btn lbl" id="wa_imp" type="button"><span data-i="carico"></span>Importa</button></div>
     <input type="file" id="wa_file" accept=".txt,.zip,text/plain,application/zip" hidden>
     <div id="waList" style="margin-top:10px"></div>
-  </div></div>
+  </div>
+  <div id="cmCall" hidden><div class="mact"><button class="btn lbl" id="cl_call" type="button"><span data-i="Chiama"></span>Chiama</button><button class="btn lbl" id="cl_reg" type="button"><span data-i="edit"></span>Registra</button></div><div id="callBox" style="margin-top:10px"></div><div id="callList" style="margin-top:10px"></div></div></div>
   <div class="f" id="linkedF" hidden><div id="linked"></div><button class="btn add" id="addOppFor" type="button" aria-label="Nuova opportunity per questo cliente" title="Nuova opportunity per questo cliente"><span data-i="add"></span></button></div>
   <div class="btns"><button class="btn d" id="del" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina cliente" title="Elimina cliente"><span data-i="trash"></span></button><button class="btn p" id="save" aria-label="Salva cliente" title="Salva cliente" style="flex:9 1 0"><span data-i="check"></span></button></div>
 </div>
@@ -786,12 +788,13 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 </div>
 <div class="lp" data-lp="tp" hidden><div id="l_tpBody"></div></div>
 <div class="lp" data-lp="msg" hidden>
-  <div class="seg" id="l_cmSeg"><button type="button" class="on" data-c="all"><span data-i="list"></span>Tutti</button><button type="button" data-c="mail"><span data-i="Scrivi"></span>Email<span class="cnt" id="l_mailCnt"></span></button><button type="button" data-c="wa"><span data-i="WhatsApp"></span>WhatsApp<span class="cnt" id="l_waCnt"></span></button></div>
+  <div class="seg" id="l_cmSeg"><button type="button" class="on" data-c="all"><span data-i="list"></span>Tutti</button><button type="button" data-c="mail"><span data-i="Scrivi"></span>Email<span class="cnt" id="l_mailCnt"></span></button><button type="button" data-c="wa"><span data-i="WhatsApp"></span>WhatsApp<span class="cnt" id="l_waCnt"></span></button><button type="button" data-c="call"><span data-i="Chiama"></span>Chiamate<span class="cnt" id="l_callCnt"></span></button></div>
   <div id="l_cmAll"><div class="two"><button class="btn lbl" id="l_aMail" type="button"><span data-i="Scrivi"></span>Nuova email</button><button class="btn lbl" id="l_aWa" type="button"><span data-i="WhatsApp"></span>Scrivi WhatsApp</button></div><div id="l_allList" style="margin-top:10px"></div></div>
   <div id="l_cmMail" hidden><div class="lact" id="l_act"><button class="btn lbl" id="l_reply" type="button"><span data-i="Scrivi"></span>Nuova email</button><button class="btn lbl" id="l_sync" type="button"><span data-i="reset"></span>Aggiorna</button><button class="btn lbl" id="l_open" type="button"><span data-i="list"></span>Thread</button></div>
     <div id="l_msgs" style="margin-top:10px"></div></div>
   <div id="l_cmWa" hidden><div class="mact"><button class="btn lbl" id="l_wa" type="button"><span data-i="WhatsApp"></span>Scrivi</button><button class="btn lbl" id="l_regwa" type="button"><span data-i="edit"></span>Registra</button><button class="btn lbl" id="l_wimp" type="button"><span data-i="carico"></span>Importa</button></div>
     <div id="l_waList" style="margin-top:10px"></div></div>
+  <div id="l_cmCall" hidden><div class="mact"><button class="btn lbl" id="l_call" type="button"><span data-i="Chiama"></span>Chiama</button><button class="btn lbl" id="l_regcall" type="button"><span data-i="edit"></span>Registra</button></div><div id="l_callBox" style="margin-top:10px"></div><div id="l_callList" style="margin-top:10px"></div></div>
   <div class="hint" id="l_chkh"></div><span id="l_msgN" hidden></span><span id="l_msgW" hidden></span>
 </div>
   <button class="btn p lbl" id="l_conv" type="button" style="width:100%;margin-top:8px"><span data-i="check"></span> Converti in prospect</button>

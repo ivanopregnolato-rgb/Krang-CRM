@@ -8986,19 +8986,43 @@ function callCheck(){let p=null;try{p=JSON.parse(localStorage.getItem(CALLK)||'n
   if(document.documentElement.classList.contains('noauth'))return;
   const rec=(p.lead?leads:clients).find(x=>x.id===p.id);if(!rec){callClear();return}openCallSheet(rec,p)}
 function paintCallEs(){const B=$('cl_es');B.textContent='';ESITI.forEach(([k,l])=>{const b=h('button','',l);b.type='button';b.classList.toggle('on',callCur.es===k);b.onclick=()=>{callCur.es=k;paintCallEs()};B.append(b)});$('cl_dw').hidden=callCur.es!=='ok'}
-function openCallSheet(rec,p){callCur={rec,lead:!!p.lead,t0:p.t0,es:'ok'};
+function paintCallRq(){const Q=$('cl_rq');Q.textContent='';[['Domani',1],['Tra 3 giorni',3],['Tra una settimana',7]].forEach(([l,n])=>{const b=h('button','',l);b.type='button';b.onclick=()=>{$('cl_ric').value=addDays(ymd(),n)};Q.append(b)})}
+function openCallSheet(rec,p){callCur={rec,lead:!!p.lead,t0:p.t0,es:'ok'};$('cl_t').textContent='Com’è andata la chiamata?';$('cl_dtw').hidden=true;
   $('cl_who').textContent=fullName(rec)+(rec.telefono?' · '+rec.telefono:'');
   $('cl_dur').value=String(Math.max(1,Math.round((Date.now()-p.t0)/60000)));$('cl_nota').value='';$('cl_ric').value='';setErr('cl_dur','');
-  paintCallEs();const Q=$('cl_rq');Q.textContent='';[['Domani',1],['Tra 3 giorni',3],['Tra una settimana',7]].forEach(([l,n])=>{const b=h('button','',l);b.type='button';b.onclick=()=>{$('cl_ric').value=addDays(ymd(),n)};Q.append(b)});
+  paintCallEs();paintCallRq();
   $('mCall').hidden=false}
 $('cl_ok').onclick=()=>{const c=callCur;if(!c)return;let dur=0;
   if(c.es==='ok'){dur=parseInt($('cl_dur').value,10);if(!(dur>=0&&dur<=600)){setErr('cl_dur','Inserisci i minuti (da 0 a 600).');return}}
-  const e={id:'k'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),data:new Date(c.t0).toISOString(),esito:c.es,dur,nota:$('cl_nota').value.trim().slice(0,2000),rich:$('cl_ric').value||''},rec=c.rec;
-  (rec.calls=rec.calls||[]).push(e);rec.rich=e.rich;if(!c.lead&&c.es==='ok')rec.agg=new Date().toISOString();
-  callClear();$('mCall').hidden=true;callCur=null;
+  let t0=c.t0;if(c.manual){t0=new Date($('cl_dt').value).getTime();if(isNaN(t0)){setErr('cl_dt','Inserisci data e ora.');return}setErr('cl_dt','')}
+  const e={id:'k'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),data:new Date(t0).toISOString(),esito:c.es,dur,nota:$('cl_nota').value.trim().slice(0,2000),rich:$('cl_ric').value||''},rec=c.rec;
+  (rec.calls=rec.calls||[]).push(e);if(!c.manual||e.rich)rec.rich=e.rich;if(!c.lead&&c.es==='ok')rec.agg=new Date().toISOString();
+  if(!c.manual)callClear();$('mCall').hidden=true;callCur=null;
   if(c.lead){persistL();try{paintLM()}catch(x){}try{renderL()}catch(x){}}else{persist();try{paintAllC()}catch(x){}try{render()}catch(x){}}
   try{renderH()}catch(x){}toast('Chiamata registrata.')};
-$('cl_x').onclick=()=>{callClear();$('mCall').hidden=true;callCur=null};
+$('cl_x').onclick=()=>{if(!(callCur&&callCur.manual))callClear();$('mCall').hidden=true;callCur=null};
+
+/* sezione Chiamate (cliente e lead) */
+function callCard(rec,k,isLead){const d=h('div','req'),ch=h('i','chip',esLabel(k.esito)+(k.esito==='ok'?' · '+k.dur+' min':''));ch.style.background=k.esito==='ok'?'#b5ebc0':'#bfe0f8';
+  const x=h('button','btn ico');x.type='button';x.innerHTML=ICONS.trash;x.setAttribute('aria-label','Elimina la chiamata');x.title='Elimina';x.style.cssText='float:right;width:36px;height:36px;min-height:0;padding:0';x.onclick=()=>delCall(rec,k,isLead);
+  d.append(x,ch,h('div','',fmtDT(new Date(k.data).getTime())));
+  if(k.nota){const t=h('div','',k.nota);t.style.cssText='white-space:pre-wrap;color:var(--ink);font-size:14px;margin-top:4px';d.append(t)}
+  if(k.rich)d.append(h('div','hint','Richiama il '+fmtD(k.rich)));return d}
+function paintCalls(rec,isLead){const p=isLead?'l_':'',L=$(p+'callList'),B=$(p+'callBox'),n=(rec&&rec.calls||[]).length;
+  $(isLead?'l_callCnt':'callCnt').textContent=n||'';if(!L||!rec)return;L.textContent='';B.textContent='';
+  $(isLead?'l_call':'cl_call').hidden=!rec.telefono;
+  if(rec.rich){const b=h('div','req');b.style.background='var(--lilac)';const t=h('b','','Da richiamare '+(rec.rich<ymd()?'dal ':'il ')+fmtD(rec.rich));const f=h('button','btn lbl');f.type='button';f.innerHTML=ICONS.check+'<span>Fatto</span>';f.style.marginTop='8px';
+    f.onclick=()=>{rec.rich='';if(isLead)persistL();else persist();paintCalls(rec,isLead);try{renderH()}catch(e){}};b.append(t,f);B.append(b)}
+  if(!n){L.append(h('div','hint','Nessuna chiamata registrata. Tocca Chiama: al ritorno nell’app registri l’esito. Con Registra aggiungi una chiamata già fatta o ricevuta.'));return}
+  L.append(h('div','hint',n+(n===1?' chiamata':' chiamate')+', dalla più recente.'));
+  rec.calls.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data))).forEach(k=>L.append(callCard(rec,k,isLead)))}
+const localDT=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
+function openCallManual(rec,isLead){callCur={rec,lead:isLead,t0:Date.now(),es:'ok',manual:true};$('cl_t').textContent='Registra una chiamata';$('cl_who').textContent=fullName(rec)+(rec.telefono?' · '+rec.telefono:'');
+  $('cl_dtw').hidden=false;$('cl_dt').value=localDT();setErr('cl_dt','');$('cl_dur').value='5';$('cl_nota').value='';$('cl_ric').value='';setErr('cl_dur','');paintCallEs();paintCallRq();$('mCall').hidden=false}
+$('cl_call').onclick=()=>{const c=editing;if(c&&c.telefono)launch('tel:'+telHref(c),c.telefono,c)};
+$('cl_reg').onclick=()=>{if(editing)openCallManual(editing,false)};
+$('l_call').onclick=()=>{const l=lCur;if(l&&l.telefono)launch('tel:'+telHref(l),l.telefono,l)};
+$('l_regcall').onclick=()=>{if(lCur)openCallManual(lCur,true)};
 function delCall(rec,k,isLead){askConfirm('Eliminare questa chiamata dal registro?','trash','Elimina',()=>{rec.calls=(rec.calls||[]).filter(x=>x.id!==k.id);
   rec.rich=((rec.calls.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data)))[0])||{}).rich||'';
   if(isLead){persistL();try{paintLM()}catch(x){}}else{persist();try{paintAllC()}catch(x){}}try{renderH()}catch(x){}toast('Chiamata eliminata.')})}
@@ -9009,9 +9033,9 @@ setTimeout(callCheck,1800);
 const waNum=c=>telHref(c).replace(/\D/g,''),waId=()=>'w'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const WA_TPL0=[['Ciao','Ciao {nome}, '],['Ordine','Ciao {nome}, ti scrivo per il tuo ordine: '],['Preventivo','Ciao {nome}, ti ho inviato il preventivo. Dimmi se va bene o se vuoi modificare qualcosa.'],['Grazie','Ciao {nome}, grazie per il tempo dedicatoci! ']];
 let waC=null,waShow=30,wrDir='in';
-function setCm(k){$('cmAll').hidden=k!=='all';if(k==='all')try{paintAllC()}catch(e){}$('cmMail').hidden=k!=='mail';$('cmWa').hidden=k!=='wa';document.querySelectorAll('#cmSeg button').forEach(b=>b.classList.toggle('on',b.dataset.c===k))}
+function setCm(k){$('cmAll').hidden=k!=='all';if(k==='all')try{paintAllC()}catch(e){}$('cmMail').hidden=k!=='mail';$('cmWa').hidden=k!=='wa';$('cmCall').hidden=k!=='call';if(k==='call')try{paintCalls(editing,false)}catch(e){}document.querySelectorAll('#cmSeg button').forEach(b=>b.classList.toggle('on',b.dataset.c===k))}
 $('cmSeg').onclick=e=>{const b=e.target.closest('button');if(b){setCm(b.dataset.c);if(b.dataset.c==='wa')paintWa()}};
-function paintAllC(){const c=editing;if(!c)return;paintAll($('allList'),allClient(c),'Nessun messaggio ancora. Scrivi una email o un WhatsApp, oppure registra a mano un messaggio ricevuto.')}
+function paintAllC(){const c=editing;if(!c)return;try{paintCalls(c,false)}catch(e){}paintAll($('allList'),allClient(c),'Nessun messaggio ancora. Scrivi una email o un WhatsApp, oppure registra a mano un messaggio ricevuto.')}
 $('cm_aMail').onclick=()=>$('cm_new').onclick();$('cm_aWa').onclick=()=>$('wa_new').onclick();
 {const _os=openSheet;openSheet=function(){const r=_os.apply(this,arguments);setCm('all');return r}}
 function paintWa(){const c=editing,L=$('waList');L.textContent='';try{paintAllC()}catch(e){}const a=(c&&c.wa||[]).slice().sort((x,y)=>y.data.localeCompare(x.data));$('waCnt').textContent=a.length||'';
@@ -9293,9 +9317,9 @@ function allClient(c){const mail=(c.email||'').toLowerCase(),it=[];(TM[c.id]||[]
 function allLead(l){const it=[];(l.msgs||[]).forEach(m=>{let t=String(m.testo||'');const ii=t.indexOf(INF_MARK);if(ii>=0)t=t.slice(0,ii).trim()+'\n[+ informativa privacy]';it.push({t:new Date(m.data).getTime(),kind:'mail',dir:m.dir,title:m.oggetto,text:t})});
   (l.wa||[]).forEach(m=>it.push({t:new Date(m.data).getTime(),kind:'wa',dir:m.dir,text:m.testo}));(l.calls||[]).forEach(k=>it.push({t:new Date(k.data).getTime(),kind:'call',dir:'out',call:k,text:callTxt(k),del:()=>delCall(l,k,true)}));return it}
 let lCm='all';
-function setLCm(k){lCm=k;$('l_cmAll').hidden=k!=='all';document.querySelectorAll('#l_cmSeg button').forEach(b=>b.classList.toggle('on',b.dataset.c===k));$('l_cmMail').hidden=k!=='mail';$('l_cmWa').hidden=k!=='wa'}
+function setLCm(k){lCm=k;$('l_cmAll').hidden=k!=='all';document.querySelectorAll('#l_cmSeg button').forEach(b=>b.classList.toggle('on',b.dataset.c===k));$('l_cmMail').hidden=k!=='mail';$('l_cmWa').hidden=k!=='wa';$('l_cmCall').hidden=k!=='call';if(k==='call')try{paintCalls(lCur,true)}catch(e){}}
 $('l_cmSeg').onclick=e=>{const b=e.target.closest('button');if(b)setLCm(b.dataset.c)};
-function paintLM(){const l=lCur,w=$('l_msgs'),W=$('l_waList');w.textContent='';W.textContent='';if(l)paintAll($('l_allList'),allLead(l),'Nessun messaggio ancora. Scrivi una email o un WhatsApp, oppure registra a mano un messaggio ricevuto.');if(!l){$('l_mailCnt').textContent='';$('l_waCnt').textContent='';return}paintLP();
+function paintLM(){const l=lCur,w=$('l_msgs'),W=$('l_waList');w.textContent='';W.textContent='';if(l)try{paintCalls(l,true)}catch(e){}if(l)paintAll($('l_allList'),allLead(l),'Nessun messaggio ancora. Scrivi una email o un WhatsApp, oppure registra a mano un messaggio ricevuto.');if(!l){$('l_mailCnt').textContent='';$('l_waCnt').textContent='';return}paintLP();
   const all=lMsgs(l),ml=all.filter(m=>m.via!=='WhatsApp'),wl=(l.wa||[]).slice().sort((x,y)=>String(y.data).localeCompare(String(x.data)));
   {const bd=$('l_bdg');bd.hidden=!all.length;bd.textContent=all.length}
   $('l_mailCnt').textContent=ml.length||'';$('l_waCnt').textContent=wl.length||'';
