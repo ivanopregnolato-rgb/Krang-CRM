@@ -9568,19 +9568,29 @@ $('st_bkf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f
   const last=(rec.wa||[])[rec.wa.length-1];if(last&&last.fonte==='app'){last.fonte='api';try{persist()}catch(e){}try{persistL()}catch(e){}try{paintLM()}catch(e){}}
   toast('Messaggio WhatsApp inviato.')}}
 /* ===== dati di esempio per provare i periodi ===== */
-{const XC=[['xd1','Laura','Conti','Enoteca Conti'],['xd2','Marco','Ferri','Ristorante Da Marco'],['xd3','Elena','Riva','Hotel Riva'],['xd4','Paolo','Serra','Serra Eventi']];
- const PR=[['Primatus',22,10],['Idealis',7.5,3.2],['Selezione Riserva',38,17],['Bollicine Brut',16,6.8]];
- const DEF=[[3,'vinta',[0,24],'Cena aziendale'],[9,'vinta',[2,12],'Riserva per ristorante'],[17,'vinta',[1,60],'Fornitura mensile'],[24,'persa',[2,30],'Offerta per hotel'],[33,'vinta',[3,48],'Aperitivi estate'],[47,'vinta',[0,36],'Regali clienti'],[58,'vinta',[1,40],'Riordino cantina'],[75,'persa',[0,20],'Evento privato'],[96,'vinta',[2,18],'Selezione matrimoni'],[125,'vinta',[3,72],'Brindisi di fine anno'],[160,'vinta',[1,90],'Fornitura stagionale'],[205,'vinta',[0,48],'Regalistica Natale'],[260,'persa',[3,40],'Gara hotel'],[310,'vinta',[2,24],'Carta vini nuova'],[360,'vinta',[1,120],'Contratto annuale'],[410,'vinta',[3,30],'Evento aziendale']];
- const OPEN=[['nuova',[0,12],'Richiesta degustazione'],['qualificata',[1,36],'Fornitura locale'],['proposta',[2,18],'Offerta catering'],['proposta',[3,60],'Contratto trimestrale']];
+{const NM=['Laura','Marco','Elena','Paolo','Chiara','Andrea','Sara','Davide','Marta','Luca','Francesca','Matteo','Giulia','Stefano','Valentina','Alberto','Silvia','Federico','Elisa','Roberto','Anna','Simone','Claudia','Fabio'];
+ const CG=['Conti','Ferri','Riva','Serra','Moretti','Gallo','Costa','Fontana','Greco','Bruno','Marino','Rinaldi','Caruso','Ferrara','Bianco','Villa','Lombardi','Barbieri','Testa','Longo','Pace','Monti','Orlando','Sala'];
+ const AZ=['Enoteca','Ristorante','Hotel','Eventi','Trattoria','Cantina','Osteria','Catering','Boutique','Pasticceria','Bistrot','Agriturismo','Wine Bar','Gastronomia','Resort','Pizzeria'];
+ const yp=(n,c)=>(n+'.'+c).toLowerCase().replace(/[^a-z.]/g,'')+'@yopmail.com';
+ const XC=Array.from({length:16},(_,i)=>['xd'+(i+1),NM[i],CG[i],AZ[i]+' '+CG[i]]);
+ const PR=[['Primatus',22,10],['Idealis',7.5,3.2],['Selezione Riserva',38,17],['Bollicine Brut',16,6.8],['Rosso Superiore',14,6],['Bianco Fermo',9.5,4],['Cassa degustazione',85,40],['Spumante Rosé',18,8]];
+ const TIT=['Cena aziendale','Riserva per ristorante','Fornitura mensile','Offerta per hotel','Aperitivi estate','Regali clienti','Riordino cantina','Evento privato','Selezione matrimoni','Brindisi di fine anno','Fornitura stagionale','Regalistica Natale','Gara hotel','Carta vini nuova','Contratto annuale','Evento aziendale','Degustazione guidata','Menù di primavera'];
+ let sd=7;const rnd=n=>{sd=(sd*1103515245+12345)&0x7fffffff;return sd%n};
+ const DEF=Array.from({length:44},(_,i)=>[Math.round(2+i*9.4+rnd(5)),rnd(100)<78?'vinta':'persa',[rnd(PR.length),6+rnd(90)],TIT[i%TIT.length]]);
+ const FS=['nuova','qualificata','proposta'];
+ const OPEN=Array.from({length:12},(_,j)=>[FS[j%3===0?0:j%3===1?1:2],[rnd(PR.length),8+rnd(70)],TIT[(j*5+3)%TIT.length]]);
+ const LR=[['Richiesta preventivo','Buongiorno, vorremmo un preventivo per alcune casse per un evento.'],['Listino ristorazione','Salve, è possibile avere il listino per la ristorazione?'],['Degustazione','Vorremmo organizzare una degustazione per i nostri ospiti: quali date avete?'],['Regali aziendali','Cerchiamo una selezione di vini per i regali ai clienti.'],['Fornitura locale','Siamo interessati a una fornitura mensile per il nostro locale.'],['Informazioni prodotti','Potete inviarmi le schede dei vostri prodotti?']];
+ const LS=['web','email','manuale','web'];
  $('st_exAdd').onclick=()=>{if(opps.some(o=>o.demo)){toast('Gli esempi sono già presenti: rimuovili prima di aggiungerli di nuovo.');return}
   const dAgo=n=>ymd(new Date(Date.now()-n*864e5)),fut=n=>ymd(new Date(Date.now()+n*864e5));
-  XC.forEach(([id,n,c,az])=>{if(!clients.some(x=>x.id===id))clients.push({id,tipo:'azienda',nome:n,cognome:c,azienda:az,ruolo:'Titolare',paese:'IT',telefono:'3331000'+id.slice(2)+'00',email:n.toLowerCase()+'@esempio.example',wa:[],agg:ymd(),demo:true,privacy:mkPriv({fonteDati:'interessato',base:'contratto'})})});
+  XC.forEach(([id,n,c,az],i)=>{if(!clients.some(x=>x.id===id))clients.push({id,tipo:'azienda',nome:n,cognome:c,azienda:az,ruolo:'Titolare',paese:'IT',telefono:'333'+String(1000100+i*37),email:yp(n,c),wa:[],agg:ymd(),demo:true,privacy:mkPriv({fonteDati:'interessato',base:'contratto'})})});
   const mk=(i,fase,pr,tit,chiusa,creata,data)=>{const [pi,q]=pr,P=PR[pi];const o={id:'ox'+i,demo:true,creata,titolo:tit,clienteId:XC[i%XC.length][0],fase,prob:(FASI.find(f=>f[0]===fase)||[])[2],fonte:FONTI[i%FONTI.length],data:data||chiusa||'',prodotti:[{prodId:'x'+pi,nome:P[0],unita:'bt',qta:q,prezzo:P[1],costo:P[2],iva:22,sconto:i%4===0?5:0}],allegati:[],note:'Opportunity di esempio.'};if(chiusa)o.chiusa=chiusa;o.valore=total(o);return o};
   DEF.forEach((d,i)=>opps.push(mk(i,d[1],d[2],d[3],dAgo(d[0]),dAgo(d[0]+25+(i%5)*6))));
-  OPEN.forEach((d,j)=>opps.push(mk(100+j,d[0],d[1],d[2],'',dAgo(10+j*7),fut(20+j*10))));
-  persist();persistO();render();renderO();try{renderH()}catch(e){}toast('Esempi aggiunti: '+(DEF.length+OPEN.length)+' opportunity.')};
- $('st_exDel').onclick=()=>{const n=opps.filter(o=>o.demo).length;if(!n&&!clients.some(c=>c.demo)){toast('Non ci sono esempi da rimuovere.');return}
-  askConfirm('Rimuovere le '+n+' opportunity e i clienti di esempio aggiunti da qui? I tuoi dati non vengono toccati.','trash','Rimuovi',()=>{opps=opps.filter(o=>!o.demo);clients=clients.filter(c=>!c.demo);persist();persistO();render();renderO();try{renderH()}catch(e){}toast('Esempi rimossi.')})}}
+  OPEN.forEach((d,j)=>opps.push(mk(100+j,d[0],d[1],d[2],'',dAgo(5+j*4),fut(10+j*6))));
+  const now=Date.now();let nl=0;for(let i=0;i<10;i++){const id='lx'+(i+1);if(leads.some(l=>l.id===id))continue;const n=NM[(i*3+5)%NM.length],c=CG[(i*5+2)%CG.length],r=LR[i%LR.length],t=now-(i*7+2)*36e5;leads.push({id,demo:true,nome:n,cognome:c,email:yp(n,c),telefono:'320'+String(5550200+i*41),azienda:i%3?'':AZ[(i+7)%AZ.length]+' '+c,richiesta:r[1],oggetto:r[0],fonte:LS[i%LS.length],data:t,creato:t,stato:'nuovo'});nl++}
+  persist();persistO();persistL();render();renderO();try{renderL()}catch(e){}try{renderH()}catch(e){}toast('Esempi aggiunti: '+XC.length+' clienti, '+(DEF.length+OPEN.length)+' opportunity, '+nl+' lead.')};
+$('st_exDel').onclick=()=>{const n=opps.filter(o=>o.demo).length;if(!n&&!clients.some(c=>c.demo)&&!leads.some(l=>l.demo)){toast('Non ci sono esempi da rimuovere.');return}
+  askConfirm('Rimuovere clienti, lead e opportunity di esempio aggiunti da qui? I tuoi dati non vengono toccati.','trash','Rimuovi',()=>{opps=opps.filter(o=>!o.demo);clients=clients.filter(c=>!c.demo);leads=leads.filter(l=>!l.demo);persist();persistO();persistL();render();renderO();try{renderL()}catch(e){}try{renderH()}catch(e){}toast('Esempi rimossi.')})}}
 /* ===== Marketing: segmenti, funnel, engagement ===== */
 {const sm=(a,f)=>a.reduce((x,o)=>x+(+f(o)||0),0),DAY=864e5,PERM=[[30,'30 giorni'],[90,'90 giorni'],[365,'12 mesi'],[0,'Sempre']];
  let sub='seg',mp=90;try{const v=localStorage.getItem('crm-mper');if(v!==null&&PERM.some(x=>x[0]===+v))mp=+v;const u=localStorage.getItem('crm-msub');if(['seg','cam'].includes(u))sub=u}catch(e){}
