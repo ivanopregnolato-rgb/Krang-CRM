@@ -10310,7 +10310,7 @@ const SB=(()=>{
   forget(){try{localStorage.removeItem(UK)}catch(e){}}}})();
 { let mode='in',ltok='',lmail='';const $a=id=>document.getElementById(id);
   const paintAu=()=>{if(mode==='new'){$a('au_t').textContent='Nuova password';$a('au_h').textContent='Scegli una nuova password per '+lmail+'.';$a('au_gl').textContent='Salva password';$a('au_sw').textContent='Annulla';$a('au_e').hidden=true;$a('au_p').autocomplete='new-password';$a('au_fg').hidden=true;return}$a('au_e').hidden=false;$a('au_t').textContent=mode==='in'?'Accedi':'Crea il tuo account';$a('au_h').textContent=mode==='in'?'Accedi per ritrovare i tuoi dati su ogni dispositivo.':'Con un account i tuoi dati restano al sicuro e sincronizzati tra i tuoi dispositivi.';$a('au_gl').textContent=mode==='in'?'Accedi':'Crea account';$a('au_sw').textContent=mode==='in'?'Crea un account':'Ho già un account';$a('au_p').autocomplete=mode==='in'?'current-password':'new-password';$a('au_fg').hidden=mode!=='in'};
-  const say=(t,ok)=>{const m=$a('au_m');m.textContent=t||'';m.hidden=!t;m.style.color=ok?'#1f6b4a':''};
+  const say=(t,ok)=>{const m=$a('au_m');m.textContent=t||'';m.hidden=!t;m.style.color=ok?'#8ff0c4':''};
   $a('au_sw').onclick=()=>{if(mode==='new'){ltok='';mode='in';say('');paintAu();if(SB.has())document.documentElement.classList.remove('noauth');return}mode=mode==='in'?'up':'in';say('');paintAu()};
   const go=async()=>{const e=$a('au_e').value.trim().toLowerCase(),p=$a('au_p').value;say('');
    if(mode==='new'){if(p.length<8){say('La password deve avere almeno 8 caratteri.');return}const b=$a('au_go');b.disabled=true;try{await SB.linkPassword(ltok,p);ltok='';$a('au_p').value='';cloudStop();mode='in';paintAu();say('Password aggiornata: ora accedi con la nuova password.',true)}catch(x){say(SB.msg(x))}finally{b.disabled=false}return}
@@ -10342,7 +10342,7 @@ const SB=(()=>{
 /* ===== info e versione ===== */
 {const rd=t=>{const m=/name="app-version" content="([^"|]+)\|([^"]+)"/.exec(t);return m?{v:m[1],d:m[2]}:null},cur=rd('<meta name="app-version" content="'+(document.querySelector('meta[name=app-version]')||{content:''}).content+'">')||{v:'?',d:''};
  const dl=d=>{const p=String(d).split('-');return p.length===3?(+p[2])+' '+['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'][+p[1]-1]+' '+p[0]:d};
- const M=$('mInfo');let newer=false;
+ const M=$('mInfo');let newer=false;try{$('au_v').textContent='K-CRM · versione '+cur.v}catch(e){}
  $('inX').onclick=()=>{M.hidden=true};M.onclick=e=>{if(e.target===M)M.hidden=true};
  $('inU').onclick=async()=>{const b=$('inU');b.disabled=true;try{if(navigator.serviceWorker)for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister();if(window.caches)for(const k of await caches.keys())await caches.delete(k)}catch(e){}location.reload()};
  window.openInfo=async()=>{$('inV').textContent='Versione '+cur.v;$('inD').textContent='Aggiornata il '+dl(cur.d);const st=$('inS'),u=$('inU');st.textContent='Controllo aggiornamenti…';u.hidden=true;M.hidden=false;

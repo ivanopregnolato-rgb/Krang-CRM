@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self'; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.1.1"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="K-CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.1.1|2026-11-10"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Rubrica clienti</title>
+<script src="boot.js?v=1.1.2"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="K-CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.1.2|2026-11-10"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>K-CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
 <style>
@@ -203,7 +203,24 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 .om{display:flex;justify-content:space-between;margin-top:6px}
 .om em{font-style:normal;color:var(--muted)}
 .stk{position:sticky;top:0;z-index:4;background:var(--bg);margin:0 -16px;padding:8px 16px 2px}
-#authScr{display:none;position:fixed;inset:0;z-index:1100;background:var(--bg);align-items:center;justify-content:center;padding:24px;overflow:auto}.noauth #authScr{display:flex}.noauth body>*:not(#authScr){visibility:hidden}#authScr .lkb input{width:100%;margin:0 0 10px;box-sizing:border-box;border:1.5px solid var(--out);border-radius:14px;padding:13px 14px;background:var(--surface);color:var(--ink);font:inherit;font-size:16px}#authScr .lkb input:focus{outline:2px solid var(--accent);outline-offset:1px}#authScr .btn{width:100%;justify-content:center;margin-top:8px}#authScr .err{margin:2px 0 6px}#lockScr{display:none;position:fixed;inset:0;z-index:1000;background:var(--bg);align-items:center;justify-content:center;padding:24px}.locked #lockScr{display:flex}.locked body>*:not(#lockScr){visibility:hidden}.lkb{width:100%;max-width:340px;text-align:center}.lki{width:72px;height:72px;margin:0 auto 14px;border-radius:24px;background:var(--lilac);display:grid;place-items:center;color:#2d2b55}.lki svg{width:34px;height:34px}.lkb h2{margin:0 0 6px;font-size:24px;font-weight:800}.lkp{display:flex;flex-direction:column;gap:8px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}.lkb .err{margin-top:10px}#lkPin{width:100%;min-height:48px;box-sizing:border-box;border:1.5px solid var(--out,#cfd6e6);border-radius:14px;padding:0 14px;font:inherit;font-size:16px;background:var(--surface);color:var(--ink);text-align:center;letter-spacing:.2em}#lkPin::placeholder{letter-spacing:0}
+#authScr{display:none;position:fixed;inset:0;z-index:1100;align-items:center;justify-content:center;padding:24px;overflow:auto;color:#eef4ff;background:radial-gradient(120% 80% at 50% -10%,#14508f 0%,#0a2f5c 38%,#00204a 70%,#001330 100%)}
+.noauth #authScr{display:flex}.noauth body>*:not(#authScr){visibility:hidden}
+#authScr .lkb{max-width:360px;padding:8px 0 24px}
+#authScr .brand{display:block;width:104px;height:104px;margin:0 auto 14px;border-radius:26px;box-shadow:0 0 0 1px rgba(255,255,255,.14),0 14px 40px rgba(0,0,0,.45),0 0 60px rgba(70,160,255,.28)}
+#authScr .wm{margin:0;font-size:38px;font-weight:800;letter-spacing:.01em;line-height:1.1;color:#fff}
+#authScr .tag{margin:6px 0 26px;font-size:14px;color:rgba(222,234,255,.72)}
+#authScr h2{margin:0 0 4px;font-size:20px;font-weight:800;color:#fff}
+#authScr .hint{color:rgba(222,234,255,.74);margin:0 0 16px}
+#authScr .lkb input{width:100%;margin:0 0 10px;box-sizing:border-box;border:1.5px solid rgba(255,255,255,.18);border-radius:14px;padding:14px 15px;background:rgba(255,255,255,.96);color:#0b1c33;font:inherit;font-size:16px}
+#authScr .lkb input::placeholder{color:#6b7a93}
+#authScr .lkb input:focus{outline:2px solid #5cc2ff;outline-offset:1px}
+#authScr .btn{width:100%;justify-content:center;margin-top:8px;min-height:48px}
+#authScr .btn.p{background:linear-gradient(135deg,#46c6ff,#6f8cff);border-color:transparent;color:#00183a;font-weight:800;box-shadow:0 8px 24px rgba(70,160,255,.35)}
+#authScr .btn:not(.p){background:transparent;border:1.5px solid rgba(255,255,255,.28);color:#eef4ff;box-shadow:none}
+#authScr .btn:disabled{opacity:.6}
+#authScr .err{margin:2px 0 8px;color:#ffb3c0;font-weight:600}
+#authScr .ver{margin-top:26px;font-size:12px;color:rgba(222,234,255,.45)}
+#lockScr{display:none;position:fixed;inset:0;z-index:1000;background:var(--bg);align-items:center;justify-content:center;padding:24px}.locked #lockScr{display:flex}.locked body>*:not(#lockScr){visibility:hidden}.lkb{width:100%;max-width:340px;text-align:center}.lki{width:72px;height:72px;margin:0 auto 14px;border-radius:24px;background:var(--lilac);display:grid;place-items:center;color:#2d2b55}.lki svg{width:34px;height:34px}.lkb h2{margin:0 0 6px;font-size:24px;font-weight:800}.lkp{display:flex;flex-direction:column;gap:8px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}.lkb .err{margin-top:10px}#lkPin{width:100%;min-height:48px;box-sizing:border-box;border:1.5px solid var(--out,#cfd6e6);border-radius:14px;padding:0 14px;font:inherit;font-size:16px;background:var(--surface);color:var(--ink);text-align:center;letter-spacing:.2em}#lkPin::placeholder{letter-spacing:0}
 #mSet{z-index:8}#stBack{order:-1;background:transparent!important;border:0;box-shadow:none;margin-left:-8px}.sp[hidden]{display:none}#mSet .sp{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px 14px 6px;margin:0 0 12px;box-shadow:var(--sh)}#mSet .sp>h3{margin:0 0 8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
 .shg{margin:0 0 16px}.shg>h3{margin:0 0 8px 4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}.shg .sl{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--sh);overflow:hidden}.shr{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);cursor:pointer;color:inherit;font:inherit;min-height:60px}.shr:last-child{border-bottom:0}.shr:active{background:var(--bg)}.shr .ic{width:38px;height:38px;border-radius:12px;background:var(--lilac);display:grid;place-items:center;flex:none;color:#2d2b55}.shr .ic svg{width:20px;height:20px}.shr .tx{flex:1;min-width:0}.shr .tx b{display:block;font-size:15px}.shr .tx span{display:block;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.shr .ch{width:18px;flex:none;color:var(--muted)}
 .lbar{display:flex;gap:8px;align-items:center;margin:4px 0 6px}.lbar .cfl{flex:1;margin:0;flex-wrap:wrap}.lbar #lScan{width:44px;height:34px;min-height:0;padding:0;border-radius:999px;flex:none;display:grid;place-items:center;background:var(--lilac);color:#2d2b55;border:0;box-shadow:none}.lbar #lScan svg{width:19px;height:19px}.lbar #lScan:active{transform:scale(.94)}.lbar #lScan:disabled{opacity:1}.lbar #lScan:disabled svg{animation:lspin 1s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}
@@ -349,7 +366,9 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 </head>
 <body>
 <div id="authScr" role="dialog" aria-modal="true" aria-label="Accesso"><div class="lkb">
-  <div class="lki"><span data-i="user"></span></div>
+  <img class="brand" src="kcrm-192.png" alt="" width="104" height="104">
+  <h1 class="wm">K-CRM</h1>
+  <p class="tag">I tuoi clienti, sempre con te.</p>
   <h2 id="au_t">Accedi</h2>
   <p class="hint" id="au_h">Accedi per ritrovare i tuoi dati su ogni dispositivo.</p>
   <input id="au_e" type="email" autocomplete="email" inputmode="email" placeholder="Email" aria-label="Email">
@@ -358,6 +377,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <button class="btn p lbl" id="au_go" type="button"><span data-i="check"></span><span id="au_gl">Accedi</span></button>
   <button class="btn lbl" id="au_sw" type="button">Crea un account</button>
   <button class="btn lbl" id="au_fg" type="button">Password dimenticata</button>
+  <div class="ver" id="au_v"></div>
 </div></div>
 <div id="lockScr" role="dialog" aria-modal="true" aria-label="App bloccata"><div class="lkb">
   <div class="lki"><span data-i="shield"></span></div>
@@ -770,6 +790,6 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunity" title="Elimina opportunity"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunity" title="Salva opportunity"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.1.1"></script>
+<script src="app.js?v=1.1.2"></script>
 </body>
 </html>
