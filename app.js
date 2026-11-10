@@ -9466,17 +9466,16 @@ async function leadScan(){if(lBusy)return;LAST.scan=Date.now();lBusy=true;try{if
 $('lScan').onclick=leadScan;
 
 let broK='file';
-function setBroK(k){broK=k;[['file','st_bFile'],['url','st_bUrl'],['cloud','st_bCloud']].forEach(([x,id])=>$(id).hidden=x!==k);document.querySelectorAll('#st_broSeg button').forEach(b=>b.classList.toggle('on',b.dataset.b===k))}
+function setBroK(k){broK=k;[['file','st_bFile'],['url','st_bUrl']].forEach(([x,id])=>$(id).hidden=x!==k);document.querySelectorAll('#st_broSeg button').forEach(b=>b.classList.toggle('on',b.dataset.b===k))}
 function paintBro(){const b=S.brochure,L=S.broLink&&S.broLink.url||'';
-  $('st_brolink').value=S.broLink&&S.broLink.kind!=='cloud'?L:'';$('st_brolink2').value=S.broLink&&S.broLink.kind==='cloud'?L:'';
+  $('st_brolink').value=L;
   const p=[];if(b&&b.b64)p.push('File allegato alle email: '+b.name+' ('+Math.round(b.b64.length*.75/1024)+' KB).');if(L)p.push('Link nei testi: '+L);
   $('st_bro').textContent=p.length?p.join(' '):'Nessuna brochure impostata. Scegli come aggiungerla.';
   $('st_broDel').hidden=!(b&&b.b64);$('st_listino').checked=S.listino!==false;
-  if(!paintBro.done){paintBro.done=1;setBroK(L?(S.broLink.kind==='cloud'?'cloud':'url'):'file')}}
+  if(!paintBro.done){paintBro.done=1;setBroK(L?'url':'file')}}
 document.querySelectorAll('#st_broSeg button').forEach(b=>b.onclick=()=>setBroK(b.dataset.b));
-const broLinkSave=(id,kind)=>{const v=$(id).value.trim();if(v&&!/^https:\/\//i.test(v)){setErr(id,'Inserisci un link che inizia con https://');return}setErr(id,'');S.broLink=v?{url:v,kind}:null;saveS();paintBro()};
-$('st_brolink').onchange=()=>broLinkSave('st_brolink','url');
-$('st_brolink2').onchange=()=>broLinkSave('st_brolink2','cloud');
+const broLinkSave=(id)=>{const v=$(id).value.trim();if(v&&!/^https:\/\//i.test(v)){setErr(id,'Inserisci un link che inizia con https://');return}setErr(id,'');S.broLink=v?{url:v}:null;saveS();paintBro()};
+$('st_brolink').onchange=()=>broLinkSave('st_brolink');
 $('st_broAdd').onclick=()=>$('st_broFile').click();
 $('st_broFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;setErr('st_bro','');
   if(f.type!=='application/pdf'&&!/\.pdf$/i.test(f.name)){setErr('st_bro','Seleziona un file PDF.');return}

@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.10.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.10.0|2026-11-11"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.10.1"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.10.1|2026-11-11"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -681,14 +681,13 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
     <label class="chk"><input type="checkbox" id="st_listino"><span>Allega il listino prezzi<em>Usa i prezzi del listino attivo del destinatario (per nazione o generale). Se non ce n’è, usa il catalogo. Mai i costi.</em></span></label></div>
   <div class="f"><label>Brochure</label>
     <div id="st_bro" class="hint" style="margin:0 0 8px"></div>
-    <div class="seg" id="st_broSeg" style="margin:4px 0 10px"><button type="button" class="on" data-b="file" aria-label="File" title="File"><span data-i="clip"></span><span class="lb">File</span></button><button type="button" data-b="url" aria-label="Link pubblico" title="Link pubblico"><span data-i="link"></span><span class="lb">Link</span></button><button type="button" data-b="cloud" aria-label="Cloud" title="Cloud"><span data-i="cloud"></span><span class="lb">Cloud</span></button></div>
+    <div class="seg" id="st_broSeg" style="margin:4px 0 10px"><button type="button" class="on" data-b="file" aria-label="File" title="File"><span data-i="clip"></span><span class="lb">File</span></button><button type="button" data-b="url" aria-label="Link pubblico" title="Link pubblico"><span data-i="link"></span><span class="lb">Link</span></button></div>
     <div id="st_bFile"><div class="dual"><button class="btn lbl" id="st_broAdd" type="button"><span data-i="clip"></span> Carica PDF</button><button class="btn lbl" id="st_broDel" type="button"><span data-i="trash"></span> Rimuovi</button></div>
       <input type="file" id="st_broFile" accept="application/pdf" hidden><div class="err" id="err-st_bro" hidden></div>
       <div class="hint">La brochure resta sul dispositivo e viene allegata alle email. Massimo 700 KB: se è più pesante la comprimo in zip. Oltre, il connettore non riesce a trasferirla.</div></div>
-    <div id="st_bUrl" hidden><label for="st_brolink">Link pubblico</label><input id="st_brolink" type="url" placeholder="https://www.tuosito.it/brochure.pdf" autocomplete="off"><div class="err" id="err-st_brolink" hidden></div>
-      <div class="hint">Indirizzo web del PDF, raggiungibile da chiunque senza accesso. Nelle email e nei messaggi WhatsApp il testo contiene questo link.</div></div>
-    <div id="st_bCloud" hidden><label for="st_brolink2">Link dal tuo cloud</label><input id="st_brolink2" type="url" placeholder="https://drive.google.com/…" autocomplete="off"><div class="err" id="err-st_brolink2" hidden></div>
-      <div class="hint">Per file grandi. Carica il PDF su Google Drive (o Dropbox, OneDrive, Google Cloud Storage) dal tuo account, scegli Condividi → “Chiunque abbia il link” e incolla qui il link. Nelle risposte ai lead, se la brochure non è allegata, il testo contiene il link.</div></div>
+    <div id="st_bUrl" hidden><label for="st_brolink">Link alla brochure</label><input id="st_brolink" type="url" placeholder="https://…" autocomplete="off"><div class="err" id="err-st_brolink" hidden></div>
+      <div class="hint">Incolla l’indirizzo del PDF, raggiungibile da chiunque senza accesso: una pagina del tuo sito oppure un file nel tuo cloud. Per Google Drive (o Dropbox, OneDrive, Google Cloud Storage) carica il PDF dal tuo account, scegli Condividi → “Chiunque abbia il link” e incolla qui il link. Va bene anche per file grandi. Nelle email e nei messaggi WhatsApp il testo contiene questo link; nelle risposte ai lead, se la brochure non è allegata, il testo contiene il link.</div></div>
+    
   </div>
 </div>
   <div hidden><button id="st_ok" type="button"></button><button id="st_x" type="button"></button></div></div></div>
@@ -828,7 +827,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="gmail.js?v=1.10.0"></script>
-<script src="app.js?v=1.10.0"></script>
+<script src="gmail.js?v=1.10.1"></script>
+<script src="app.js?v=1.10.1"></script>
 </body>
 </html>
