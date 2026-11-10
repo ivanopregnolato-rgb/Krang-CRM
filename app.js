@@ -626,22 +626,32 @@ function openCompose(c){cmpLeadRef=null;cmpInfC=null;cmpAtt=[];cmpQ=null;cmpOpts
   $('mc_hint').textContent=ok?'':'Questo cliente non ha dato il consenso al marketing via email: usa questa email solo per comunicazioni legate al rapporto in corso.';
   $('mc_gmail').hidden=true;
   const T=$('mc_tpl');T.textContent='';TEMPLATES.forEach(([l,s,t])=>{const b=h('button','',l);b.type='button';b.style.background='var(--lilac)';b.onclick=()=>{$('mc_sub').value=subj(s);$('mc_body').value=tpl('Gentile {nome},\n\n'+t+'\n\n',{nome})+firma()};T.append(b)});
-  gm().then(m=>{$('mc_gmail').hidden=!((m||(!hasClaude()&&S.gcid&&PV().id==='gmail'))&&autoOk());$('mc_gmail').lastChild.textContent='Invia con '+PV().nome}).catch(()=>{});$('mCompose').hidden=false}
+  gm().then(m=>{$('mc_gmail').hidden=!((m||(!hasClaude()&&S.gcid&&PV().id==='gmail'))&&autoOk());$('mc_gmail').lastChild.textContent='Invia con '+PV().nome}).catch(()=>{});mcActs();$('mCompose').hidden=false}
 $('mr_more').onclick=()=>$('mResp').firstElementChild.classList.remove('compact');
 $('mc_x').onclick=()=>{$('mCompose').hidden=true};
-$('mc_open').onclick=async()=>{let bad=false;for(const a of cmpAtt){if(!(await savePdf(a.u8,a.name)))bad=true}if(bad)toast('Allegati non salvati: allegali a mano.');launchMail()};
+const mcFiles=()=>cmpAtt.map(a=>new File([a.u8],a.name,{type:a.mime||'application/pdf'}));
+const canShareF=()=>{try{return !!(cmpAtt.length&&navigator.share&&navigator.canShare&&navigator.canShare({files:mcFiles()}))}catch(e){return false}};
+const attNote=()=>canShareF()?'Con “Condividi con allegati” li alleghi in un tocco; con “Apri posta” vanno allegati a mano.':'Con “Apri posta” i file vengono salvati e vanno allegati a mano.';
+function mcActs(){const ok=canShareF();$('mc_share').hidden=!ok;$('mc_open').classList.toggle('p',!ok)}
+const mcCheck=()=>{const s=$('mc_sub').value.trim(),t=$('mc_body').value.trim();setErr('mc_sub',s?'':'Inserisci l’oggetto.');setErr('mc_body',t?'':'Scrivi il testo del messaggio.');return !!(s&&t)};
+$('mc_open').onclick=async()=>{if(!mcCheck())return;let bad=false;for(const a of cmpAtt){if(!(await savePdf(a.u8,a.name)))bad=true}if(bad)toast('Allegati non salvati: allegali a mano.');launchMail()};
+$('mc_share').onclick=async()=>{if(!mcCheck())return;try{await navigator.share({files:mcFiles(),title:$('mc_sub').value.trim(),text:$('mc_body').value})}catch(e){if(e&&e.name==='AbortError')return;toast('Condivisione non riuscita: usa Apri posta.')}};
+$('mc_done').onclick=()=>{if(!mcCheck())return;afterSent('Registrata come inviata.')};
 const launchMail=()=>launch('mailto:'+cmpTo+'?subject='+encodeURIComponent($('mc_sub').value)+'&body='+encodeURIComponent($('mc_body').value),$('mc_body').value);
+function afterSent(msg){
+    {const cc=clients.find(x=>x.email&&x.email.toLowerCase()===String(cmpTo||'').toLowerCase());if(cc)emSave(cc,null,true)}
+    if(cmpLeadRef&&$('mc_body').value.includes(INF_MARK)){const inf={d:ymd(),via:'Email'};if(cmpLeadRef.l){cmpLeadRef.l.inf=inf;persistL()}else pendInf[cmpLeadRef.email]=inf}
+    if(cmpLeadRef&&cmpLeadRef.l){lLog(cmpLeadRef.l,{dir:'out',via:'Email',data:new Date().toISOString(),oggetto:$('mc_sub').value.trim(),testo:$('mc_body').value.split(INF_MARK)[0].trim()+($('mc_body').value.includes(INF_MARK)?'\n[+ informativa privacy]':'')});try{paintLM()}catch(e){}}
+    if(cmpInfC&&$('mc_body').value.includes(INF_MARK)){const c=cmpInfC,pv=c.privacy=c.privacy||mkPriv();pv.informativa=true;pv.infData=ymd();pv.infModo='Email';pv.infVer='1.0';logP(c,'Informativa inviata via email a '+cmpTo,'invio');persist();if(editing===c)loadPriv(pv);try{render()}catch(e){}}
+    if(cmpLog){logP(editing,cmpLog,'promemoria');persist();loadPriv(editing.privacy);cmpLog=''}$('mCompose').hidden=true;toast(cmpQ?markSent(cmpQ,'Email registrata. Preventivo impostato su “Inviato”.','email'):(msg||'Email inviata.'));if(!$('commF').classList.contains('pane-hide'))loadComm();
+}
 async function doCompose(){
   const b=$('mc_gmail');b.disabled=true;setErr('mc_gmail','');
   try{
     const mcp=await gm();if(!mcp){setErr('mc_gmail',hasClaude()?'Collegamento a Gmail non disponibile qui: usa Apri posta.':gmNo()+' Oppure usa Apri posta.');return}
     if(!autoOk()){setErr('mc_gmail','L’invio automatico non è disponibile per '+PV().nome+': usa Apri posta.');return}
     await PV().send(mcp,{to:cmpTo,subject:$('mc_sub').value.trim(),text:$('mc_body').value,html:mailHtmlBro($('mc_body').value)||undefined,fromName:mitt(),atts:cmpAtt.map(a=>({name:a.name,b64:b64(a.u8),mime:a.mime}))});
-    {const cc=clients.find(x=>x.email&&x.email.toLowerCase()===String(cmpTo||'').toLowerCase());if(cc)emSave(cc,null,true)}
-    if(cmpLeadRef&&$('mc_body').value.includes(INF_MARK)){const inf={d:ymd(),via:'Email'};if(cmpLeadRef.l){cmpLeadRef.l.inf=inf;persistL()}else pendInf[cmpLeadRef.email]=inf}
-    if(cmpLeadRef&&cmpLeadRef.l){lLog(cmpLeadRef.l,{dir:'out',via:'Email',data:new Date().toISOString(),oggetto:$('mc_sub').value.trim(),testo:$('mc_body').value.split(INF_MARK)[0].trim()+($('mc_body').value.includes(INF_MARK)?'\n[+ informativa privacy]':'')});try{paintLM()}catch(e){}}
-    if(cmpInfC&&$('mc_body').value.includes(INF_MARK)){const c=cmpInfC,pv=c.privacy=c.privacy||mkPriv();pv.informativa=true;pv.infData=ymd();pv.infModo='Email';pv.infVer='1.0';logP(c,'Informativa inviata via email a '+cmpTo,'invio');persist();if(editing===c)loadPriv(pv);try{render()}catch(e){}}
-    if(cmpLog){logP(editing,cmpLog,'promemoria');persist();loadPriv(editing.privacy);cmpLog=''}$('mCompose').hidden=true;toast(cmpQ?markSent(cmpQ,'Email inviata. Preventivo impostato su “Inviato”.','email'):'Email inviata.');if(!$('commF').classList.contains('pane-hide'))loadComm();
+    afterSent();
   }catch(e){setErr('mc_gmail',gmSendErr(e))}
   finally{b.disabled=false}}
 $('mc_gmail').onclick=()=>{
@@ -649,7 +659,7 @@ $('mc_gmail').onclick=()=>{
   if(!s||!t)return;
   doCompose()};
 let cmpInfC=null,cmpLeadRef=null,cmpName='',cmpLog='',cmpAtt=[],cmpQ=null,cmpOpts=null;
-let S={azienda:'',replyTo:'',alias:'',firma:'Cordiali saluti\n{azienda}',provider:'gmail'};try{S=Object.assign(S,JSON.parse(localStorage.getItem('crm-settings-v1')||'{}'))}catch(e){}
+let S={azienda:'',replyTo:'',alias:'',firma:'Cordiali saluti\n{azienda}',provider:'mailto'};try{S=Object.assign(S,JSON.parse(localStorage.getItem('crm-settings-v1')||'{}'))}catch(e){}
 S.ret=Object.assign({contratto:120,contatti:24,marketing:24,profilazione:12,comunicazioni:24},S.ret||{});
 S.qValid=S.qValid>0?S.qValid:30;S.qCond=S.qCond||'Prezzi in euro, IVA esclusa salvo diversa indicazione. Pagamento e tempi di consegna da concordare.';
 S.lead=Object.assign({scartati:30,nuovi:12,giorni:30,inf:true},S.lead||{});
@@ -674,22 +684,13 @@ const TEMPLATES=[['Ringraziamento','Grazie per il nostro incontro – {azienda}'
    subject, internalDate (ms), plaintextBody, snippet, labelIds.
    Un provider senza send/search resta in modalità manuale (Apri posta, Copia). */
 const PROVIDERS=[
- {id:'gmail',nome:'Gmail',server:'Gmail',gruppo:'Caselle di posta',stato:'attivo',alias:'account',aliasHelp:'In Gmail il nome del mittente si imposta nell’account: Impostazioni, Account e importazione, Invia messaggio come.',
+ {id:'mailto',nome:'Programma di posta del dispositivo',gruppo:'Consigliato',stato:'manuale'},
+ {id:'gmail',nome:'Gmail',server:'Gmail',gruppo:'Avanzato: invio automatico',stato:'attivo',alias:'account',aliasHelp:'In Gmail il nome del mittente si imposta nell’account: Impostazioni, Account e importazione, Invia messaggio come.',
   send:(m,a)=>{const g={to:[a.to],subject:a.subject,body:a.text};if(a.html)g.htmlBody=a.html;if(a.atts&&a.atts.length)g.attachments=a.atts.map(x=>({filename:x.name,content:x.b64,mimeType:x.mime||'application/pdf'}));return m.callTool('Gmail','send_message',g)},
   search:(m,q)=>m.callTool('Gmail','search_threads',{query:q,pageSize:20}),
   thread:(m,id)=>m.callTool('Gmail','get_thread',{threadId:id}),
   qContact:e=>'from:'+e+' OR to:'+e+' OR cc:'+e,qCode:t=>'"'+t+'"',
-  qInbound:'in:inbox newer_than:30d -category:promotions -category:social -category:updates -category:forums',qBounce:(e,d)=>'from:(mailer-daemon OR postmaster) "'+e+'" after:'+d.replace(/-/g,'/'),qSent:'in:sent'},
- {id:'m365',nome:'Microsoft 365 (Outlook)',server:'Microsoft 365',gruppo:'Caselle di posta',stato:'prossimo',note:'Il connettore espone la ricerca delle email Outlook; l’invio non risulta tra i suoi strumenti.'},
- {id:'fastmail',nome:'Fastmail',server:'Fastmail',gruppo:'Caselle di posta',stato:'prossimo'},
- {id:'superhuman',nome:'Superhuman Mail',server:'Superhuman Mail',gruppo:'Caselle di posta',stato:'prossimo',note:'Funziona sopra Gmail e Outlook.'},
- {id:'resend',nome:'Resend',server:'Resend',gruppo:'Invio tecnico',stato:'prossimo',alias:'messaggio'},
- {id:'agentmail',nome:'AgentMail',server:'AgentMail',gruppo:'Invio tecnico',stato:'prossimo',alias:'messaggio'},
- {id:'mailchimp',nome:'Mailchimp',server:'Intuit Mailchimp',gruppo:'Email marketing',stato:'prossimo',note:'Pensato per campagne e liste, non per la corrispondenza uno a uno.'},
- {id:'mailerlite',nome:'MailerLite',server:'MailerLite',gruppo:'Email marketing',stato:'prossimo',note:'Pensato per campagne e liste, non per la corrispondenza uno a uno.'},
- {id:'brevo',nome:'Brevo',server:'Brevo',gruppo:'Email marketing',stato:'prossimo',note:'Pensato per campagne e liste, non per la corrispondenza uno a uno.'},
- {id:'mailto',nome:'Programma di posta del dispositivo',gruppo:'Senza connettore',stato:'manuale'},
- {id:'smtp',nome:'Altro server (IMAP/POP3/SMTP)',gruppo:'Senza connettore',stato:'server'}];
+  qInbound:'in:inbox newer_than:30d -category:promotions -category:social -category:updates -category:forums',qBounce:(e,d)=>'from:(mailer-daemon OR postmaster) "'+e+'" after:'+d.replace(/-/g,'/'),qSent:'in:sent'}];
 const PV=()=>PROVIDERS.find(p=>p.id===S.provider)||PROVIDERS[0];
 const autoOk=()=>!!PV().send;
 const pn=s=>String(s).replace(/Gmail/g,PV().nome);
@@ -705,8 +706,8 @@ function aliasHint(){const P=selProv(),al=$('st_alias').value.trim()||$('st_az')
   else t='Il nome mostrato al destinatario dipende dall’account di posta o dal programma usato. Il nome azienda compare comunque in oggetto, testo e firma.';
   $('st_aliashint').textContent=t}
 function gdPaint(){const e=$('st_gds');if(!e)return;const c=($('st_gcid').value||'').trim();GD.setClient(c);e.textContent=GD.ready()?'Gmail è collegato. Il collegamento dura circa un’ora: poi tocca di nuovo Collega Gmail.':c?'Non collegato: tocca Collega Gmail.':'Inserisci l’ID client per collegare Gmail.'}
-function provHint(){const P=selProv(),el=$('st_provhint');const dir=P.id==='gmail'&&!hasClaude();{const b=$('st_gd');if(b)b.hidden=!dir}if(dir){el.textContent='Gmail si collega direttamente al tuo account Google: le email vanno dal tuo dispositivo a Google, senza passare da altri server.';gdPaint();return}
-  const T={manuale:'Nessun collegamento automatico: le email si preparano qui e si inviano con Apri posta o Copia. Le risposte si registrano a mano.',server:'Un server IMAP/POP3/SMTP non è raggiungibile da una pagina web: serve il servizio di posta previsto per l’app. Intanto puoi salvare qui i parametri e usare Apri posta o Copia.',prossimo:'Il connettore esiste su claude.ai. Invio e lettura automatici si attivano dopo il collegamento e la verifica dei suoi strumenti. Nel frattempo si usa Apri posta o Copia.'+(P.note?' '+P.note:'')};
+function provHint(){const P=selProv(),el=$('st_provhint');{const dt=$('st_det');if(dt)dt.hidden=P.id!=='gmail'}const dir=P.id==='gmail'&&!hasClaude();{const b=$('st_gd');if(b)b.hidden=!dir}if(dir){el.textContent='Gmail si collega direttamente al tuo account Google: le email vanno dal tuo dispositivo a Google, senza passare da altri server.';gdPaint();return}
+  const T={manuale:'Nessun collegamento e nessun permesso: scrivi l’email qui e inviala dal tuo programma di posta con Apri posta (o con Condividi con allegati, se ci sono PDF). Poi tocca Segna come inviata. Le risposte dei clienti si registrano a mano.',};
   if(P.stato!=='attivo'){el.textContent=T[P.stato]||'';return}
   el.textContent='Verifica del collegamento…';
   provStatus(P).then(s=>{if(selProv()!==P)return;el.textContent=s==='connected'?P.nome+' è collegato.':s==='needs_reauth'?'La connessione a '+P.nome+' è scaduta: ricollegala da claude.ai, Impostazioni, Connettori.':s==='assente'?P.nome+' non risulta collegato: collegalo da claude.ai, Impostazioni, Connettori.':''})}
@@ -723,28 +724,23 @@ async function bounceCheck(mcp,r){
 function remind(r){openCompose(editing);$('mc_sub').value='Promemoria: informativa sulla privacy'+(az()?' – '+az():'');
   $('mc_body').value='Gentile '+cmpName+',\n\nle abbiamo inviato alcuni giorni fa la nostra informativa sulla privacy. Se desidera indicare i consensi facoltativi, può rispondere alla nostra email precedente con il codice '+r.token+' e i numeri delle voci. Non è necessario rispondere se non desidera prestare consensi.\n\n'+firma();
   cmpLog='Promemoria inviato via email (codice '+r.token+')'}
-function openSettings(){setSp(null);try{$('st_gcid').value=S.gcid||''}catch(e){}try{paintCloud();paintDrive()}catch(e){}paintWaSet();$('st_qv').value=S.qValid;$('st_qc').value=S.qCond;$('st_ls').value=S.lead.scartati;$('st_ln').value=S.lead.nuovi;$('st_lg').value=S.lead.giorni;$('st_linf').checked=S.lead.inf!==false;['st_qv','st_ls','st_ln','st_lg'].forEach(k=>setErr(k,''));try{paintBro()}catch(e){}$('st_piva').value=S.piva||'';$('st_ind').value=S.indirizzo||'';$('st_tel').value=S.telefono||'';$('st_sito').value=S.sito||'';fillProv();$('st_acons').checked=S.autoCons!==false;$('st_az').value=S.azienda;$('st_alias').value=S.alias;$('st_firma').value=S.firma;$('st_prov').value=PV().id;$('st_rt').value=S.replyTo;['contratto','contatti','marketing','profilazione','comunicazioni'].forEach(k=>{$('st_r_'+k).value=S.ret[k];setErr('st_r_'+k,'')});['st_rt','st_az'].forEach(k=>setErr(k,''));detName='';fillSrv();aliasHint();provHint();$('mSet').hidden=false;stTouched=false;stBase=stSig();setTimeout(()=>{if(!stTouched)stBase=stSig()},900)}
+function openSettings(){setSp(null);try{$('st_gcid').value=S.gcid||''}catch(e){}try{paintCloud();paintDrive()}catch(e){}paintWaSet();$('st_qv').value=S.qValid;$('st_qc').value=S.qCond;$('st_ls').value=S.lead.scartati;$('st_ln').value=S.lead.nuovi;$('st_lg').value=S.lead.giorni;$('st_linf').checked=S.lead.inf!==false;['st_qv','st_ls','st_ln','st_lg'].forEach(k=>setErr(k,''));try{paintBro()}catch(e){}$('st_piva').value=S.piva||'';$('st_ind').value=S.indirizzo||'';$('st_tel').value=S.telefono||'';$('st_sito').value=S.sito||'';fillProv();$('st_acons').checked=S.autoCons!==false;$('st_az').value=S.azienda;$('st_alias').value=S.alias;$('st_firma').value=S.firma;$('st_prov').value=PV().id;$('st_rt').value=S.replyTo;['contratto','contatti','marketing','profilazione','comunicazioni'].forEach(k=>{$('st_r_'+k).value=S.ret[k];setErr('st_r_'+k,'')});['st_rt','st_az'].forEach(k=>setErr(k,''));detName='';aliasHint();provHint();$('mSet').hidden=false;stTouched=false;stBase=stSig();setTimeout(()=>{if(!stTouched)stBase=stSig()},900)}
 ['st_az','st_alias'].forEach(id=>$(id).addEventListener('input',aliasHint));
-const SRVD={imap:{ssl:993,starttls:143,none:143},pop3:{ssl:995,starttls:110,none:110}},SMTPD={starttls:587,ssl:465,none:25};let stTouched=false,stBase='';
+let stTouched=false,stBase='';
 const stSig=()=>[...$('mSet').querySelectorAll('input:not([type=file]):not([data-ns]),select:not([data-ns]),textarea')].map(e=>e.type==='checkbox'?(e.checked?1:0):e.value).join('\u0001');
 $('mSet').addEventListener('input',()=>{stTouched=true});$('mSet').addEventListener('change',()=>{stTouched=true});
-function srvShow(){$('st_srv').hidden=selProv().id!=='smtp'}
-function fillSrv(){const m=S.mailSrv||{};$('st_sproto').value=m.proto||'imap';$('st_shost').value=m.host||'';$('st_ssec').value=m.sec||'ssl';$('st_sport').value=m.port||SRVD[$('st_sproto').value][$('st_ssec').value];$('st_suser').value=m.user||'';$('st_smtph').value=m.shost||'';$('st_smtps').value=m.ssec||'starttls';$('st_smtpp').value=m.sport||SMTPD[$('st_smtps').value];srvShow()}
-{const ALLIN=[993,143,995,110],ALLOUT=[587,465,25],pi=()=>SRVD[$('st_sproto').value][$('st_ssec').value];
- ['st_sproto','st_ssec'].forEach(id=>$(id).addEventListener('change',()=>{const c=+$('st_sport').value;if(!c||ALLIN.includes(c))$('st_sport').value=pi()}));
- $('st_smtps').addEventListener('change',()=>{const c=+$('st_smtpp').value;if(!c||ALLOUT.includes(c))$('st_smtpp').value=SMTPD[$('st_smtps').value]})}
 $('st_gdb').onclick=async()=>{const b=$('st_gdb'),id=($('st_gcid').value||'').trim();if(!/^[\w.-]+\.apps\.googleusercontent\.com$/.test(id)){$('st_gds').textContent='L’ID client deve finire con .apps.googleusercontent.com.';return}
   S.gcid=id;GD.setClient(id);b.disabled=true;$('st_gds').textContent='Apro l’accesso Google…';
   try{await GD.connect();saveS();if(!$('st_rt').value.trim()){try{const w=await detectMe(selProv());if(w.email){$('st_rt').value=w.email;detName=w.name;aliasHint()}}catch(e){}}toast('Gmail collegato.')}
   catch(e){$('st_gds').textContent=e&&e.code==='server_unavailable'?'Impossibile contattare Google: controlla la connessione.':'Accesso non riuscito o annullato. Controlla l’ID client e che la tua email sia tra gli utenti di prova.';b.disabled=false;return}
   b.disabled=false;gdPaint()};
 $('st_gcid').addEventListener('input',()=>{try{gdPaint()}catch(e){}});
-$('st_prov').addEventListener('change',()=>{detName='';srvShow();aliasHint();provHint()});
+$('st_prov').addEventListener('change',()=>{detName='';aliasHint();provHint()});
 $('st_x').onclick=()=>{$('mSet').hidden=true};
 $('stBack').onclick=()=>{if(spCur){setSp(null);return}if(stSig()===stBase){$('mSet').hidden=true;return}$('mDirty').hidden=false;$('dC').onclick=()=>{$('mDirty').hidden=true};$('dN').onclick=()=>{$('mDirty').hidden=true;$('mSet').hidden=true};$('dY').onclick=()=>{$('mDirty').hidden=true;$('st_ok').onclick()}};
 $('st_det').onclick=async()=>{const b=$('st_det');b.disabled=true;setErr('st_rt','');try{const w=await detectMe(selProv());if(w.email){$('st_rt').value=w.email;detName=w.name;aliasHint()}else setErr('st_rt','Non sono riuscito a rilevarlo: scrivilo a mano.')}catch(e){setErr('st_rt',gmReadErr(e))}finally{b.disabled=false}};
 $('st_ok').onclick=()=>{const RK=['contratto','contatti','marketing','profilazione','comunicazioni'],nr={};let rok=true;RK.forEach(k=>{const v=parseInt($('st_r_'+k).value,10);if(!(v>=1&&v<=240)){setErr('st_r_'+k,'Inserisci i mesi (da 1 a 240).');rok=false;setSp('pv')}else{setErr('st_r_'+k,'');nr[k]=v}});if(!rok)return;const NV=[['st_qv',1,365,'pr'],['st_ls',1,365,'ld'],['st_ln',1,60,'ld'],['st_lg',1,365,'ld']],nvv={};for(const [k,a,b,pn] of NV){const v=parseInt($(k).value,10);if(!(v>=a&&v<=b)){setSp(pn);setErr(k,'Inserisci un numero da '+a+' a '+b+'.');return}setErr(k,'');nvv[k]=v}{const su=$('st_surl').value.trim();if($('st_smode').value==='api'&&!/^https:\/\//i.test(su)){setSp('wa');toast('Per l’invio automatico inserisci un indirizzo che inizia con https://');return}}
-  S.gcid=($('st_gcid').value||'').trim();S.wa={send:{mode:$('st_smode').value,url:$('st_surl').value.trim(),token:$('st_stok').value.trim()},bus:{on:$('st_rmode').value==='bus',url:$('st_burl').value.trim(),token:$('st_btok').value.trim()},paese:$('st_wpaese').value||'IT',inf:$('st_winf').value,tpl:[...document.querySelectorAll('#st_wtpl .wt')].map(r=>[r.querySelector('input').value.trim(),r.querySelector('textarea').value]).filter(x=>x[0]&&x[1].trim())};if(!S.wa.tpl.length)S.wa.tpl=[['Ciao','Ciao {nome}, ']];S.qValid=nvv.st_qv;S.qCond=$('st_qc').value.trim()||S.qCond;S.lead={scartati:nvv.st_ls,nuovi:nvv.st_ln,giorni:nvv.st_lg,inf:$('st_linf').checked};S.ret=nr;const rt=$('st_rt').value.trim().toLowerCase();if(rt&&!mailRe.test(rt)){setSp('em');setErr('st_rt','Indirizzo email non valido.');return}S.azienda=$('st_az').value.trim();S.piva=$('st_piva').value.trim();S.indirizzo=$('st_ind').value.trim();S.telefono=$('st_tel').value.trim();S.sito=$('st_sito').value.trim();S.alias=$('st_alias').value.trim();S.firma=$('st_firma').value.trim()||'Cordiali saluti\n{azienda}';S.autoCons=$('st_acons').checked;S.provider=$('st_prov').value;S.replyTo=rt;S.mailSrv={proto:$('st_sproto').value,host:$('st_shost').value.trim(),port:parseInt($('st_sport').value,10)||0,sec:$('st_ssec').value,user:$('st_suser').value.trim(),shost:$('st_smtph').value.trim(),sport:parseInt($('st_smtpp').value,10)||0,ssec:$('st_smtps').value};saveS();$('mSet').hidden=true;try{paintReq()}catch(e){}toast('Impostazioni salvate.')};
+  S.gcid=($('st_gcid').value||'').trim();S.wa={send:{mode:$('st_smode').value,url:$('st_surl').value.trim(),token:$('st_stok').value.trim()},bus:{on:$('st_rmode').value==='bus',url:$('st_burl').value.trim(),token:$('st_btok').value.trim()},paese:$('st_wpaese').value||'IT',inf:$('st_winf').value,tpl:[...document.querySelectorAll('#st_wtpl .wt')].map(r=>[r.querySelector('input').value.trim(),r.querySelector('textarea').value]).filter(x=>x[0]&&x[1].trim())};if(!S.wa.tpl.length)S.wa.tpl=[['Ciao','Ciao {nome}, ']];S.qValid=nvv.st_qv;S.qCond=$('st_qc').value.trim()||S.qCond;S.lead={scartati:nvv.st_ls,nuovi:nvv.st_ln,giorni:nvv.st_lg,inf:$('st_linf').checked};S.ret=nr;const rt=$('st_rt').value.trim().toLowerCase();if(rt&&!mailRe.test(rt)){setSp('em');setErr('st_rt','Indirizzo email non valido.');return}S.azienda=$('st_az').value.trim();S.piva=$('st_piva').value.trim();S.indirizzo=$('st_ind').value.trim();S.telefono=$('st_tel').value.trim();S.sito=$('st_sito').value.trim();S.alias=$('st_alias').value.trim();S.firma=$('st_firma').value.trim()||'Cordiali saluti\n{azienda}';S.autoCons=$('st_acons').checked;S.provider=$('st_prov').value;S.replyTo=rt;saveS();$('mSet').hidden=true;try{paintReq()}catch(e){}toast('Impostazioni salvate.')};
 function renderLinked(){
   const f=$('linkedF'),w=$('linked');w.textContent='';
   if(!editing){f.hidden=true;return}
@@ -8825,7 +8821,7 @@ $('qCopy').onclick=async()=>{toast(await copyText(quoteText())?'Testo del preven
 $('qRefresh').onclick=()=>askConfirm('Sostituire le righe del preventivo con i prodotti attuali dell’opportunity?','reset','Aggiorna',()=>{if(!(qO.prodotti||[]).length){toast('L’opportunity non ha prodotti.');return}qW.righe=qO.prodotti.map(p=>({...p}));paintDoc()});
 $('qSend').onclick=()=>{if(!saveQuote())return;const c=clients.find(x=>x.id===qO.clienteId);if(!c){toast('Cliente non trovato.');return}
   openCompose(c);if($('mCompose').hidden)return;$('mc_sub').value='Preventivo n. '+qW.num+(S.azienda?' – '+S.azienda:'');
-  cmpQ=qC;cmpAtt=[{name:qName(),u8:quotePdf()}];$('mc_att').hidden=false;$('mc_att').textContent='Allegato: '+cmpAtt[0].name+' ('+Math.max(1,Math.round(cmpAtt[0].u8.length/1024))+' KB). Con “Apri posta” il PDF viene salvato e va allegato a mano.';
+  cmpQ=qC;cmpAtt=[{name:qName(),u8:quotePdf()}];$('mc_att').hidden=false;$('mc_att').textContent='Allegato: '+cmpAtt[0].name+' ('+Math.max(1,Math.round(cmpAtt[0].u8.length/1024))+' KB). '+attNote();mcActs();
   $('mc_body').value='Gentile '+contactName(c)+',\n\nin allegato il preventivo n. '+qW.num+' (totale '+e2(qTot(qW.righe).lordo)+').\n\nRestiamo a disposizione per qualsiasi chiarimento.\n\n'+firma();};
 function markSent(q,msg,via){q.inviato=ymd();q.via=via||q.via||'';if(q.stato==='bozza')q.stato='inviato';advOpp(opps.find(o=>(o.preventivi||[]).includes(q))||qO);persistO();paintQ();renderO();if(qC===q){qW.stato=q.stato;qW.inviato=q.inviato;qW.via=q.via;paintStati()}return msg}
 const qName=()=>'Preventivo-'+qW.num+'.pdf';
@@ -8965,6 +8961,7 @@ function infoBtn(el,text){el.style.position='relative';const b=document.createEl
   b.onclick=e=>{e.stopPropagation();if(tip){tip.remove();tip=null;b.classList.remove('on');return}tip=document.createElement('div');tip.className='itip';tip.textContent=text;el.append(tip);b.classList.add('on')};el.append(b)}
 function renderH(){
   const hr=new Date().getHours(),op=(()=>{try{return localStorage.getItem('crm-op')||''}catch(e){return''}})();
+  try{paintWel()}catch(e){}
   $('hGreet').textContent=(hr<13?'Buongiorno':hr<18?'Buon pomeriggio':'Buonasera')+(op?', '+op:'');
   const dt=new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long'}).format(new Date());$('hDate').textContent=(S.azienda?S.azienda+' · ':'')+dt.charAt(0).toUpperCase()+dt.slice(1);
   const open=opps.filter(o=>o.fase!=='vinta'&&o.fase!=='persa'),sm=(a,f)=>a.reduce((t,o)=>t+(+f(o)||0),0),won=opps.filter(o=>o.fase==='vinta');
@@ -9312,7 +9309,7 @@ $('l_open').onclick=()=>{if(lCur&&lCur.threadId)openThread(lCur.threadId)};
 function leadAttPaint(){const w=$('mc_att');w.textContent='';w.hidden=false;
   w.append(h('div','','Allegati e informativa (tocca per includere o togliere):'));
   const row=h('div','tp-chips');cmpOpts.forEach(o=>{const b=h('button');b.type='button';b.classList.toggle('on',o.on);b.textContent=(o.on?'✓ ':'')+o.label;b.onclick=()=>{if(o.none){toast('Carica la brochure o incolla il suo link in Impostazioni, Allegati.');return}o.on=!o.on;if(o.inf)infSet(o.on);if(o.link)broLinkSet(o.on);leadAttApply();leadAttPaint()};row.append(b)});w.append(row);
-  const k=cmpAtt.reduce((t,a)=>t+a.u8.length,0);w.append(h('div','',cmpAtt.length?cmpAtt.length+' allegat'+(cmpAtt.length===1?'o':'i')+' · '+Math.max(1,Math.round(k/1024))+' KB. Con “Apri posta” i file vengono salvati e vanno allegati a mano.':''))}
+  const k=cmpAtt.reduce((t,a)=>t+a.u8.length,0);w.append(h('div','',cmpAtt.length?cmpAtt.length+' allegat'+(cmpAtt.length===1?'o':'i')+' · '+Math.max(1,Math.round(k/1024))+' KB. '+attNote():''));mcActs()}
 const INF_MARK='\n\n— INFORMATIVA PRIVACY (art. 13-14 GDPR) —\n',pendInf={};
 const infBlock=()=>INF_MARK+infoTxt();
 const BROL=()=>'\n\nLa brochure è disponibile a questo link: '+((S.broLink&&S.broLink.url)||'');
@@ -10074,7 +10071,7 @@ setTimeout(()=>{try{if(applyStops())render()}catch(e){}try{runBday()}catch(e){}t
 {const mb=$('menuBtn'),mn=$('appMenu'),bk=$('amBack');const close=()=>{mn.hidden=true;bk.hidden=true;mb.setAttribute('aria-expanded','false')};
  mb.onclick=()=>{const o=mn.hidden;mn.hidden=!o;bk.hidden=!o;mb.setAttribute('aria-expanded',String(o));if(o)mn.querySelector('button').focus()};bk.onclick=close;
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!mn.hidden){close();mb.focus()}});
- mn.onclick=e=>{const b=e.target.closest('button');if(!b)return;close();({home:()=>setTab('home'),an:()=>openAn(),prod:()=>setTab('prod'),mkt:()=>setTab('mkt'),set:()=>{openSettings();paintBro()},info:()=>openInfo(),legal:()=>{location.href='privacy.html'}})[b.dataset.m]()}}
+ mn.onclick=e=>{const b=e.target.closest('button');if(!b)return;close();({home:()=>setTab('home'),an:()=>openAn(),prod:()=>setTab('prod'),mkt:()=>setTab('mkt'),set:()=>{openSettings();paintBro()},info:()=>openInfo(),legal:()=>{location.href='privacy.html'},wel:()=>openWel()})[b.dataset.m]()}}
 
 
 /* ===== password dei backup (cifratura dei file esportati) ===== */
@@ -10132,6 +10129,50 @@ async function autoSync(){if(autoBusy||document.hidden)return;autoBusy=true;
 setTimeout(autoSync,2500);setInterval(autoSync,24e4);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(autoSync,800)});
 const _setTab=setTab;setTab=function(v){_setTab(v);paintBadges();if(v==='lead'&&Date.now()-(LAST.scan||0)>12e4)leadScan()};
 render();renderO();renderP();setTab('home');
+/* ===== guida di benvenuto: primi passi ===== */
+const wState=()=>{let enc=false;try{enc=SB.e2e.state()==='ready'}catch(e){}return[
+ {k:'az',ic:'building',t:'Il profilo della tua azienda',d:'Nome, partita IVA e firma delle email',done:!!(S.azienda&&S.azienda.trim())},
+ {k:'cl',ic:'users',t:'Il tuo primo cliente',d:'Scrivi i dati o fotografa un biglietto da visita',done:clients.length>0},
+ {k:'em',ic:'Scrivi',t:'La posta',d:'Come invii le email ai clienti',done:!!S.mailOk},
+ {k:'cr',ic:'shield',t:'La cifratura dei dati',d:'Come proteggiamo ciò che salvi',done:!!S.cryptoOk||enc}]};
+function paintWel(){const w=$('hWel');if(!w)return;w.textContent='';if(S.welcomeOff)return;const st=wState(),n=st.filter(x=>x.done).length;if(n===st.length)return;
+  const b=h('button','wcard');b.type='button';const i=h('span','ic');i.innerHTML=ICONS.star;const tx=h('div','tx');const bar=h('div','wbar'),f=h('i');f.style.width=Math.round(n/st.length*100)+'%';bar.append(f);
+  tx.append(h('b','','Primi passi'),h('span','',n+' di '+st.length+' completati'),bar);
+  const x=h('span','wx');x.setAttribute('role','button');x.setAttribute('aria-label','Nascondi i primi passi');x.title='Nascondi';x.innerHTML=ICONS.x;x.onclick=e=>{e.stopPropagation();S.welcomeOff=true;saveS();paintWel()};
+  b.append(i,tx,x);b.onclick=()=>openWel();w.append(b)}
+function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
+function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
+  if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
+  const back=()=>{const b=h('button','btn lbl');b.type='button';b.innerHTML=ICONS.back+'<span>Indietro</span>';b.onclick=()=>openWel();return b};
+  if(view==='cl'){
+    B.append(h('h3','','Il tuo primo cliente'),h('p','wsub','Scegli come inserirlo: puoi cambiare tutto dopo.'));
+    const a=h('button','btn p lbl');a.type='button';a.innerHTML=ICONS.edit+'<span>Scrivo i dati</span>';a.onclick=()=>{closeWel();setTab('clienti');openSheet(null)};
+    const c=h('button','btn lbl');c.type='button';c.innerHTML=ICONS.camera+'<span>Fotografo un biglietto da visita</span>';c.onclick=()=>{closeWel();setTab('clienti');CARD.add(false);$('cardFile').click()};
+    B.append(a,c,back());return}
+  if(view==='cr'){
+    let ready=false,can=false;try{ready=SB.e2e.state()==='ready';can=!!(SB.has&&SB.has())}catch(e){}
+    B.append(h('h3','','La cifratura dei dati'));
+    const p=(t)=>{const d=h('p','wtx');d.innerHTML=t;B.append(d)};
+    p('<b>Cosa fa.</b> I tuoi clienti, lead e preventivi vengono cifrati sul tuo telefono prima di essere salvati nel cloud. Nemmeno io posso leggerli.');
+    p('<b>Cosa devi fare.</b> Scegli una passphrase di almeno 10 caratteri e salva la <b>chiave di recupero</b> fuori dal telefono: in un gestore di password o su carta.');
+    p('<b>Attenzione.</b> Se perdi sia la passphrase sia la chiave di recupero, i dati nel cloud non si possono recuperare da nessuno.');
+    if(ready){const d=h('p','wtx');d.innerHTML='<b>Stato:</b> la cifratura è attiva su questo dispositivo.';B.append(d)}
+    const ok=h('button','btn p lbl');ok.type='button';ok.innerHTML=ICONS.check+'<span>Ho capito</span>';ok.onclick=()=>{S.cryptoOk=true;saveS();openWel()};B.append(ok);
+    if(!ready&&can){const g=h('button','btn lbl');g.type='button';g.innerHTML=ICONS.shield+'<span>Attiva ora</span>';g.onclick=()=>{S.cryptoOk=true;saveS();closeWel();CLOUD.started=false;cloudGate()};B.append(g)}
+    B.append(back());return}
+  const st=wState(),n=st.filter(x=>x.done).length;
+  B.append(h('h3','','Benvenuto in KRANG CRM'),h('p','wsub',n===st.length?'Hai completato i primi passi.':'Quattro passi per iniziare. Puoi saltarli e tornare qui dal menu, voce Primi passi.'));
+  const g=h('div','shg'),l=h('div','sl');
+  st.forEach(x=>{const b=h('button','shr wlr');b.type='button';const i=h('span','ic');i.innerHTML=x.done?ICONS.check:ICONS[x.ic];if(x.done)i.classList.add('ok');const tx=h('div','tx');tx.append(h('b','',x.t),h('span','',x.d));const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(i,tx,c);
+    b.onclick=()=>{if(x.k==='az'){closeWel();openSettings();setSp('az')}else if(x.k==='em'){S.mailOk=true;saveS();closeWel();openSettings();setSp('em')}else openWel(x.k)};l.append(b)});
+  g.append(l);B.append(g);
+  const go=h('button','btn p lbl');go.type='button';go.innerHTML=ICONS.check+'<span>'+(n===st.length?'Inizia':'Più tardi')+'</span>';go.onclick=closeWel;B.append(go)}
+(()=>{let k=0;const t=setInterval(()=>{k++;if(k>40||S.welcomeSeen||S.welcomeOff){clearInterval(t);return}
+  if(document.documentElement.classList.contains('noauth')||!$('mE2E').hidden||!$('mWel').hidden)return;
+  if(clients.length||leads.length||opps.length||(S.azienda&&S.azienda.trim())){S.welcomeSeen=true;saveS();clearInterval(t);return}
+  if(CLOUD.on&&!CLOUD.last&&k<15)return;
+  clearInterval(t);openWel()},1500)})();
+
 
 /* diagnostica spazio: chiede archiviazione persistente e avvisa se il browser sta per riempirsi */
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{})}catch(e){}
@@ -10260,7 +10301,6 @@ const SB=(()=>{
   f1.append(h('label','','Account'),em,st,ce,b3,b1,b2,bo,bd,nt);pg.append(f1);
   document.querySelector('#mSet .sp[data-sp=cl]').after(pg);
   SPG[0][1].push(['ac','user','Account',()=>SB.email()||'Non connesso']);SPN.ac='Account';
-  {const s=$('st_store');if(s){s.hidden=true;const l=document.querySelector('label[for=st_store]');if(l)l.hidden=true;const t=$('st_sthint');if(t)t.hidden=true}}
   const em0=setSp;setSp=function(k){if(k==='ac'){em.textContent='Connesso come '+(SB.email()||'—');try{paintE2()}catch(e){}}return em0.apply(this,arguments)};
   bo.onclick=()=>askConfirm('Uscire da questo dispositivo? I dati vengono rimossi da qui ma restano nel tuo account.','user','Esci',async()=>{try{await Promise.all(Object.keys(CSPEC).map(k=>cloudFlush(k)))}catch(e){}cloudStop();await SB.logout();SB.wipe();SB.forget();location.reload()});
   bd.onclick=()=>askConfirm('Eliminare definitivamente il tuo account? Clienti, opportunità, prodotti, foto e tutto il resto vengono cancellati dal cloud e da questo dispositivo. Non si può annullare.','trash','Elimina tutto',async()=>{try{cloudStop();await SB.removeAccount();SB.wipe();SB.forget();location.reload()}catch(e){toast('Eliminazione non riuscita: '+SB.msg(e))}});
