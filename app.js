@@ -8876,7 +8876,7 @@ function priceListPdf(){const D=pdfDoc(),L=40,R=555,BOT=790,list=prods.filter(p=
   if(!list.length)D.text(L,y+10,'Nessun prodotto attivo con prezzo.',10,0,'l',.5);
   y+=14;D.wrap('Prezzi in euro, validi salvo variazioni e salvo errori od omissioni. Per quantità e condizioni particolari contattaci per un preventivo.',R-L,9,0).forEach(l=>{if(y>BOT){D.page();y=50}D.text(L,y,l,9,0,'l',.35);y+=12});
   return D.build()}
-const brochureOk=()=>!!(S.brochure&&S.brochure.b64);const broDrv=()=>!!(S.broDrive&&S.broDrive.id&&!(S.brochure&&S.brochure.b64));
+const brochureOk=()=>!!(S.brochure&&S.brochure.b64);
 function quotePdf(){const D=pdfDoc(),c=clients.find(x=>x.id===qO.clienteId),t=qTot(qW.righe),val=Math.max(0,parseInt(qW.validita,10)||0),L=40,R=555,TOP=50,BOT=790;
   let y=TOP;D.page();
   const need=n=>{if(y+n>BOT){D.page();y=TOP;head()}};
@@ -9332,14 +9332,12 @@ $('l_reply').onclick=()=>{const d=lRead();if(!d.email||!mailRe.test(d.email)){se
   cmpOpts=[];
   if(S.listino!==false)cmpOpts.push({label:'Listino prezzi',on:true,make:()=>({name:'Listino-prezzi.pdf',u8:priceListPdf()})});
   if(brochureOk())cmpOpts.push({label:'Brochure',on:true,make:()=>({name:S.brochure.name||'Brochure.pdf',u8:fromB64(S.brochure.b64),mime:S.brochure.mime||'application/pdf'})});
-  let bro=null;if(broDrv()){bro={label:'Brochure (in caricamento…)',on:false,drv:true};cmpOpts.push(bro)}
-  const hasLink=!!(S.broLink&&S.broLink.url);if(!brochureOk()&&!bro){cmpOpts.push(hasLink?{label:'Brochure (link)',on:true,link:true}:{label:'Brochure (non impostata)',on:false,none:true})}
+  const hasLink=!!(S.broLink&&S.broLink.url);if(!brochureOk()){cmpOpts.push(hasLink?{label:'Brochure (link)',on:true,link:true}:{label:'Brochure (non impostata)',on:false,none:true})}
   const hasInf=!(l&&l.inf)&&S.lead.inf!==false;cmpOpts.push({label:'Informativa privacy',on:hasInf,inf:true});cmpLeadRef={l:l,email:d.email.toLowerCase()};
   leadAttApply();leadAttPaint();
   const mkBody=()=>{const al=cmpOpts.filter(o=>o.on&&o.make).map(o=>o.label.toLowerCase());return 'Gentile '+contactName({tipo:'persona',nome:d.nome,cognome:d.cognome,azienda:d.azienda})+',\n\ngrazie per averci contattato'+(l&&l.richiesta?' in merito alla sua richiesta':'')+'.'+(al.length?'\n\nIn allegato trova il '+al.join(' e la ')+'.':'')+'\n\nSe desidera un preventivo personalizzato mi indichi prodotti e quantità: le rispondo subito.\n\n'+firma()};
-  const b0=mkBody();$('mc_body').value=b0;if(hasLink&&!brochureOk()&&!bro)broLinkSet(true);if(hasInf)infSet(true);
-  if(bro)dGetBro().then(x=>{bro.label='Brochure';bro.make=()=>({name:S.broDrive.name,u8:x.u8,mime:S.broDrive.mime});bro.on=true;leadAttApply();leadAttPaint();
-      const cur=$('mc_body').value,i=cur.indexOf(INF_MARK),head=i>=0?cur.slice(0,i):cur;if(head===b0){$('mc_body').value=mkBody();if(i>=0)infSet(true)}}).catch(e=>{bro.label='Brochure non scaricata da Drive';bro.drvErr=1;leadAttPaint()})};
+  const b0=mkBody();$('mc_body').value=b0;if(hasLink&&!brochureOk())broLinkSet(true);if(hasInf)infSet(true);
+};
 function waLeadSet(m){const t=$('wa_txt'),i=t.value.indexOf(INF_MARK);if(i>=0)t.value=t.value.slice(0,i);t.value=t.value.replace(/\s+$/,'');
   if(m==='full')t.value+=INF_MARK+infoTxt();else if(m==='short')t.value+=INF_MARK+infoSections().filter(x=>/^(Titolare|Finalit|Diritti)/.test(x[0])).map(x=>x[0]+': '+x[1]).join('\n\n')+'\n\nIl testo completo è disponibile su richiesta.'}
 $('l_wa').onclick=()=>{const d=lRead();if(!d.telefono||!d.telefono.replace(/\D/g,'')){setErr('l_email','');toast('Aggiungi un numero di telefono al lead.');return}
@@ -9387,7 +9385,7 @@ async function leadScan(){if(lBusy)return;LAST.scan=Date.now();lBusy=true;try{if
   finally{lBusy=false;btn.disabled=false;try{renderH()}catch(e){}}}
 $('lScan').onclick=leadScan;
 
-function paintBro(){const b=S.brochure,d=S.broDrive;{const e=$('st_brolink');if(e)e.value=(S.broLink&&S.broLink.url)||''}$('st_bro').textContent=b&&b.b64?'Brochure: '+b.name+' ('+Math.round(b.b64.length*.75/1024)+' KB)':d?'Brochure su Google Drive: '+d.name+' ('+Math.round((d.size||0)/1024)+' KB)':'Nessuna brochure caricata.';$('st_broDel').hidden=!((b&&b.b64)||d);$('st_listino').checked=S.listino!==false}
+function paintBro(){const b=S.brochure;{const e=$('st_brolink');if(e)e.value=(S.broLink&&S.broLink.url)||''}$('st_bro').textContent=b&&b.b64?'Brochure: '+b.name+' ('+Math.round(b.b64.length*.75/1024)+' KB)':'Nessuna brochure caricata.';$('st_broDel').hidden=!(b&&b.b64);$('st_listino').checked=S.listino!==false}
 $('st_listino').onchange=()=>{S.listino=$('st_listino').checked;saveS()};
 $('st_brolink').onchange=()=>{const v=$('st_brolink').value.trim();if(v&&!/^https:\/\//i.test(v)){setErr('st_brolink','Inserisci un link che inizia con https://');return}setErr('st_brolink','');S.broLink=v?{url:v}:null;saveS()};
 $('st_broAdd').onclick=()=>$('st_broFile').click();
@@ -9401,7 +9399,7 @@ $('st_broFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';i
   S.brochure={name,b64:b64(u8),mime};
   try{localStorage.setItem('crm-settings-v1',JSON.stringify(S))}catch(x){S.brochure=null;setErr('st_bro','Spazio pieno: impossibile salvare la brochure.');paintBro();return}
   paintBro();toast(msg)};
-$('st_broDel').onclick=()=>{const d=S.broDrive;S.brochure=null;S.broDrive=null;DRV.bro=null;saveS();paintBro();if(d)dcall('trash_file',{fileId:d.id}).catch(()=>{})};
+$('st_broDel').onclick=()=>{S.brochure=null;saveS();paintBro()};
 
 const SPG=[['La tua azienda',[['az','building','Profilo azienda',()=>S.azienda||'Nome, partita IVA, sede e contatti']]],
  ['Comunicazione',[['em','Scrivi','Posta',()=>provName(S.provider)+(S.replyTo?' · '+S.replyTo:'')],['wa','WhatsApp','WhatsApp',()=>'Messaggi rapidi, ricezione e invio'],['al','clip','Allegati e brochure',()=>'Listino e brochure per le risposte ai lead']]],
@@ -10069,21 +10067,14 @@ setTimeout(()=>{try{if(applyStops())render()}catch(e){}try{runBday()}catch(e){}t
  mn.onclick=e=>{const b=e.target.closest('button');if(!b)return;close();({home:()=>setTab('home'),an:()=>openAn(),prod:()=>setTab('prod'),mkt:()=>setTab('mkt'),set:()=>{openSettings();paintBro()},info:()=>openInfo(),legal:()=>{location.href='privacy.html'}})[b.dataset.m]()}}
 
 
-/* ===== Google Drive come archivio dei dati ===== */
-const DKEY='crm-drive-v1',DFOLD='CRM Clienti',DSRV='Google Drive';
-const DRV={pmax:0,rec:null,pk:null,pend:null,enc:true,pw:'',rem:false,mode:'claude',cid:'',on:false,folder:'',ts:0,hashes:{},busy:false,err:'',last:0,t:0,info:'',n:0,bro:null};
-try{Object.assign(DRV,JSON.parse(localStorage.getItem(DKEY)||'{}'),{pend:null,pw:(()=>{try{return localStorage.getItem(DKEY+'-pw')||''}catch(e){return ''}})(),busy:false,err:'',t:0,info:'',bro:null})}catch(e){}
-const dSave=()=>{try{localStorage.setItem(DKEY,JSON.stringify({pmax:DRV.pmax,rec:DRV.rec,pk:DRV.pk,enc:DRV.enc,rem:DRV.rem,on:DRV.on,mode:DRV.mode,cid:DRV.cid,folder:DRV.folder,ts:DRV.ts,hashes:DRV.hashes,last:DRV.last}))}catch(e){}};
+/* ===== password dei backup (cifratura dei file esportati) ===== */
+const DKEY='crm-drive-v1';
+const DRV={pw:'',rem:false};
+try{const o=JSON.parse(localStorage.getItem(DKEY)||'{}');DRV.rem=!!o.rem;DRV.pw=localStorage.getItem(DKEY+'-pw')||''}catch(e){}
+const dSave=()=>{try{localStorage.setItem(DKEY,JSON.stringify({rem:DRV.rem}))}catch(e){}};
 async function ckey(pw,salt){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
 async function encBytes(u8){if(!DRV.pw)throw {code:'nopw'};const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},await ckey(DRV.pw,salt),u8));return {enc:1,alg:'AES-256-GCM/PBKDF2',salt:b64(salt),iv:b64(iv),data:b64(ct)}}
 async function decEnv(e){if(!DRV.pw)throw {code:'nopw'};try{return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:fromB64(e.iv)},await ckey(DRV.pw,fromB64(e.salt)),fromB64(e.data)))}catch(x){throw {code:'badpw'}}}
-const dPack=async txt=>{if(!DRV.enc)return txt;const e=await encBytes(new TextEncoder().encode(txt));if(DRV.rec)e.rec=DRV.rec;if(DRV.pk)e.pk=DRV.pk;return JSON.stringify(e)};
-const dUnpack=async o=>{if(!(o&&o.enc===1&&o.data))return o;if(!DRV.pw){DRV.pend={rec:o.rec||null,pk:o.pk||null};throw {code:'nopw'}}return JSON.parse(new TextDecoder().decode(await decEnv(o)))};
-const BASE32='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-async function wrapPw(key){const iv=crypto.getRandomValues(new Uint8Array(12));return {iv:b64(iv),data:b64(new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(DRV.pw))))}}
-async function unwrapPw(key,w){return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:fromB64(w.iv)},key,fromB64(w.data)))}
-async function recMake(){if(!DRV.pw)throw {code:'nopw'};const r=crypto.getRandomValues(new Uint8Array(20));let c='';r.forEach(x=>c+=BASE32[x%32]);const salt=crypto.getRandomValues(new Uint8Array(16));const w=await wrapPw(await ckey(c,salt));DRV.rec=Object.assign({salt:b64(salt)},w);DRV.hashes.s='';dSave();return c.match(/.{4}/g).join('-')}
-async function recUse(code){const w=DRV.pend&&DRV.pend.rec;if(!w)throw {code:'norec'};try{return await unwrapPw(await ckey(code.replace(/[^A-Za-z0-9]/g,'').toUpperCase(),fromB64(w.salt)),w)}catch(e){throw {code:'badrec'}}}
 const LK='crm-lock-v1';
 let LOCK=(()=>{try{return JSON.parse(localStorage.getItem(LK)||'null')||{}}catch(e){return {}}})();
 const lkSave=()=>{try{localStorage.setItem(LK,JSON.stringify(LOCK))}catch(e){}};
@@ -10114,99 +10105,10 @@ $('sc_delay').onchange=()=>{LOCK.delay=+$('sc_delay').value;lkSave();toast('Impo
 $('sc_pinok').onclick=async()=>{const v=$('sc_pin2').value.trim();if(!pinOk(v)){setErr('sc_pin2','Scegli un PIN di 4–8 cifre.');return}setErr('sc_pin2','');LOCK.salt=b64(rnd(16));LOCK.pin=await pinHash(v,LOCK.salt,'p2');LOCK.kdf='p2';lkSave();$('sc_pin2').value='';toast('PIN aggiornato.')};
 $('sc_test').onclick=async()=>{try{await lkVerify();toast('Biometria riconosciuta.')}catch(e){toast('Riconoscimento non riuscito.')}};
 $('sc_dis').onclick=()=>askConfirm('Disattivare il blocco? L’app si aprirà senza biometria.','trash','Disattiva',()=>{LOCK={};lkSave();document.documentElement.classList.remove('locked');paintLock();toast('Blocco disattivato.')});
-const PRFSALT=new TextEncoder().encode('crm-clienti-prf-v1');
-async function pkGet(id){if(!navigator.credentials)throw {code:'nopk'};const pk={challenge:crypto.getRandomValues(new Uint8Array(32)),userVerification:'required',timeout:60000,extensions:{prf:{eval:{first:PRFSALT}}}};if(id)pk.allowCredentials=[{type:'public-key',id:fromB64(id)}];
-  const c=await navigator.credentials.get({publicKey:pk});const x=c.getClientExtensionResults(),r=x.prf&&x.prf.results&&x.prf.results.first;if(!r)throw {code:'noprf'};return {id:b64(new Uint8Array(c.rawId)),key:await crypto.subtle.importKey('raw',r,'AES-GCM',false,['encrypt','decrypt'])}}
-async function pkMake(){if(!DRV.pw)throw {code:'nopw'};if(!navigator.credentials)throw {code:'nopk'};
-  const c=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:'CRM Clienti'},user:{id:crypto.getRandomValues(new Uint8Array(16)),name:'crm-clienti',displayName:'CRM Clienti'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{residentKey:'required',userVerification:'required'},extensions:{prf:{}}}});
-  const g=await pkGet(b64(new Uint8Array(c.rawId)));DRV.pk=Object.assign({id:g.id},await wrapPw(g.key));DRV.hashes.s='';dSave()}
-async function pkUse(){const w=DRV.pend&&DRV.pend.pk;if(!w)throw {code:'nopkdata'};const g=await pkGet(w.id);try{return await unwrapPw(g.key,w)}catch(e){throw {code:'badrec'}}}
-async function dPeek(){try{if(DRV.pend)return;const l=await dList(),g=l.find(x=>x.complete);if(!g)return;const d=await dcall('download_file_content',{fileId:g.parts[0].id});const t=dContent(d);if(!t)return;const o=JSON.parse(t);if(o&&o.enc===1)DRV.pend={rec:o.rec||null,pk:o.pk||null}}catch(e){}}
-const dfid=x=>x&&(x.id||(x.file&&x.file.id)||(x.files&&x.files[0]&&x.files[0].id)||'');
-/* Google Drive diretto: Google Identity Services + API REST (nessun connettore Claude) */
-const GTOK={t:'',exp:0};
-function gLoad(){return new Promise((ok,ko)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return ok();const sc=document.createElement('script');sc.src='https://accounts.google.com/gsi/client';sc.onload=()=>ok();sc.onerror=()=>ko({code:'gsi'});document.head.appendChild(sc);setTimeout(()=>ko({code:'gsi'}),15000)})}
-async function gToken(interactive){if(GTOK.t&&Date.now()<GTOK.exp-60000)return GTOK.t;if(!DRV.cid)throw {code:'cid'};await gLoad();
-  return new Promise((ok,ko)=>{try{const tc=google.accounts.oauth2.initTokenClient({client_id:DRV.cid,scope:'https://www.googleapis.com/auth/drive.file',callback:r=>{if(r&&r.access_token){GTOK.t=r.access_token;GTOK.exp=Date.now()+(+r.expires_in||3600)*1000;ok(GTOK.t)}else ko({code:'auth',info:r&&r.error})},error_callback:e=>ko({code:'auth',info:e&&e.type})});tc.requestAccessToken({prompt:interactive?'consent':''})}catch(e){ko({code:'gsi'})}})}
-async function gapi(path,opt){const t=await gToken(false);const r=await fetch('https://www.googleapis.com'+path,Object.assign({},opt,{headers:Object.assign({Authorization:'Bearer '+t},(opt&&opt.headers)||{})}));if(r.status===401){GTOK.t='';throw {code:'auth',info:'401'}}if(!r.ok)throw {code:'http',info:String(r.status)};return r}
-async function gcall(tool,a){
-  if(tool==='search_files'){const q=String(a.query).replace(/\btitle (=|contains)/g,'name $1').replace(/parentId = ('[^']+')/g,'$1 in parents');
-    const r=await gapi('/drive/v3/files?pageSize='+(a.pageSize||20)+'&fields='+encodeURIComponent('files(id,name,mimeType)')+(a.orderBy?'&orderBy='+encodeURIComponent(a.orderBy):'')+'&q='+encodeURIComponent(q));const j=await r.json();return {files:(j.files||[]).map(x=>({id:x.id,title:x.name,mimeType:x.mimeType}))}}
-  if(tool==='create_file'){const meta={name:a.title,mimeType:a.contentMimeType};if(a.parentId)meta.parents=[a.parentId];
-    if(a.contentMimeType==='application/vnd.google-apps.folder'){const r=await gapi('/drive/v3/files?fields=id',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(meta)});return await r.json()}
-    const body=a.base64Content?fromB64(a.base64Content):new TextEncoder().encode(a.textContent||'');const bd='crm'+Date.now();
-    const enc=new TextEncoder(),h=enc.encode('--'+bd+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(meta)+'\r\n--'+bd+'\r\nContent-Type: '+(a.contentMimeType||'application/octet-stream')+'\r\n\r\n'),e=enc.encode('\r\n--'+bd+'--');
-    const r=await gapi('/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+bd},body:new Blob([h,body,e])});return await r.json()}
-  if(tool==='download_file_content'){const r=await gapi('/drive/v3/files/'+encodeURIComponent(a.fileId)+'?alt=media');return {content:b64(new Uint8Array(await r.arrayBuffer()))}}
-  if(tool==='trash_file'){await gapi('/drive/v3/files/'+encodeURIComponent(a.fileId),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({trashed:true})});return {}}
-  throw {code:'tool'}}
-async function dcall(tool,args){if(DRV.mode==='direct')return gcall(tool,args);const m=await gm();if(!m)throw {code:'nomcp'};return pj(await m.callTool(DSRV,tool,args))}
-function dErr(e){const c=e&&e.code,m=e&&e.message?String(e.message).slice(0,200):'';const M={nomcp:'Collegamento a Google Drive non disponibile in questa visualizzazione.',server_not_connected:'Google Drive non è collegato: collegalo da Impostazioni, Connettori, su claude.ai.',needs_reauth:'La connessione a Google Drive è scaduta: ricollegala da Impostazioni, Connettori.',not_in_manifest:'Autorizzazione negata: riprova e consenti l’accesso a Google Drive.',approval_required:'Serve la tua approvazione per usare Google Drive: riprova.',blocked_by_policy:'Il tuo amministratore blocca l’accesso a Google Drive.',server_unavailable:'Google Drive non risponde: riprova tra poco.',tool_error:'Google Drive ha rifiutato la richiesta'+(m?': '+m:'.')};
-  return M[c]||('Operazione su Google Drive non riuscita'+(c?' (codice '+c+')':'')+(m?': '+m:'.'))}
-async function dFolder(){if(DRV.folder)return DRV.folder;
-  let r=await dcall('search_files',{query:"mimeType = 'application/vnd.google-apps.folder' and title = '"+DFOLD+"' and trashed = false",pageSize:5,excludeContentSnippets:true});
-  let id=(r.files&&r.files[0]&&r.files[0].id)||'';
-  if(!id){let c;try{c=await dcall('create_file',{title:DFOLD,contentMimeType:'application/vnd.google-apps.folder'})}catch(e1){c=await dcall('create_file',{title:DFOLD,mimeType:'application/vnd.google-apps.folder'})}id=dfid(c);if(!id)throw {code:'shape',info:Object.keys(c||{}).join(',')}}
-  DRV.folder=id;dSave();return id}
-// il contenuto scaricato arriva in base64: cerco la stringa utile ovunque nella risposta
-function dContent(o){const tryStr=t=>{if(typeof t!=='string'||t.length<2)return null;try{const j=JSON.parse(t);if(j&&typeof j==='object')return t}catch(e){}try{const d=new TextDecoder().decode(fromB64(t.replace(/\s/g,'')));JSON.parse(d);return d}catch(e){}return null};
-  const walk=v=>{if(typeof v==='string')return tryStr(v);if(v&&typeof v==='object')for(const k of Object.keys(v)){const r=walk(v[k]);if(r)return r}return null};return walk(o)}
-function dBytes(o){const walk=v=>{if(typeof v==='string'&&v.length>20&&/^[A-Za-z0-9+/=\s_-]+$/.test(v))return v;if(v&&typeof v==='object')for(const k of ['base64Content','content','data','contents'].concat(Object.keys(v))){const r=walk(v[k]);if(r)return r}return null};const b=walk(o);return b?fromB64(b.replace(/\s/g,'').replace(/-/g,'+').replace(/_/g,'/')):null}
-const dSnap=()=>{const o={v:2,ts:Date.now(),by:'',clienti:clients,opportunita:opps,prodotti:prods,movimenti:movs,lead:leads,impostazioni:Object.assign({},S,{brochure:undefined,cloudOn:undefined})};return o};
-function dHashes(){const h={};Object.keys(CSPEC).forEach(k=>{h[k]={};CSPEC[k].arr().forEach(r=>{if(r&&r.id)h[k][String(r.id)]=hs(JSON.stringify(r))})});const s2=Object.assign({},S);delete s2.brochure;h.s=hs(JSON.stringify(s2));return h}
-function dDirty(){const cur=dHashes(),old=DRV.hashes||{};if(cur.s!==old.s)return true;for(const k of Object.keys(CSPEC)){const a=cur[k],b=old[k]||{};const ka=Object.keys(a),kb=Object.keys(b);if(ka.length!==kb.length)return true;if(ka.some(i=>a[i]!==b[i]))return true}return false}
-function dMerge(rem){const old=DRV.hashes||{};let ch=false;CLOUD.applying=true;
-  try{const map={cl:rem.clienti,op:rem.opportunita,pr:rem.prodotti,mv:rem.movimenti,ld:rem.lead};
-    Object.keys(CSPEC).forEach(k=>{const sp=CSPEC[k],R=map[k];if(!Array.isArray(R))return;const sy=old[k]||{};let arr=sp.arr().slice();const idx=new Map(arr.map((r,i)=>[String(r.id),i]));let c2=false;const rid=new Set();
-      R.forEach(r=>{if(!r||!r.id)return;const id=String(r.id);rid.add(id);const hr=hs(JSON.stringify(r)),i=idx.get(id);
-        if(i===undefined){arr.push(r);idx.set(id,arr.length-1);c2=true;return}
-        const hc=hs(JSON.stringify(arr[i]));if(hc===hr)return;if(sy[id]!==undefined&&sy[id]!==hc)return;arr[i]=r;c2=true});
-      Object.keys(sy).forEach(id=>{if(rid.has(id))return;const i=idx.get(id);if(i===undefined)return;if(hs(JSON.stringify(arr[i]))===sy[id]){arr=arr.filter(r=>String(r.id)!==id);idx.clear();arr.forEach((r,j)=>idx.set(String(r.id),j));c2=true}});
-      if(c2){sp.set(arr);sp.save();sp.after();ch=true}});
-    const rs=rem.impostazioni;if(rs&&typeof rs==='object'){const s2=Object.assign({},S);delete s2.brochure;if(old.s===undefined||hs(JSON.stringify(s2))===old.s){const br=S.brochure;const hr=hs(JSON.stringify(Object.assign({},rs)));if(hr!==hs(JSON.stringify(s2))){Object.assign(S,rs);if(br)S.brochure=br;try{localStorage.setItem('crm-settings-v1',JSON.stringify(S))}catch(e){}try{paintReq()}catch(e){}ch=true}}}
-  }finally{CLOUD.applying=false}
-  return ch}
-async function dList(){const f=await dFolder();const r=await dcall('search_files',{query:"parentId = '"+f+"' and title contains 'crm-db-' and trashed = false",pageSize:100,orderBy:'modifiedTime desc',excludeContentSnippets:true});
-  const G={};(r.files||[]).forEach(x=>{const m=/crm-db-(\d+)(?:-(\d+)of(\d+))?\.json$/.exec(String(x.title||''));if(!m)return;const ts=+m[1],g=G[ts]||(G[ts]={ts,parts:[],n:+(m[3]||1)});g.parts.push({id:x.id,i:+(m[2]||1)})});
-  return Object.values(G).map(g=>{g.parts.sort((a,b)=>a.i-b.i);g.complete=g.parts.length===g.n&&g.parts.every((p,k)=>p.i===k+1);return g}).sort((a,b)=>b.ts-a.ts)}
-function dParts(snap,max){const keys=['clienti','opportunita','prodotti','movimenti','lead'],parts=[];let cur,size;const nw=()=>{cur={v:2,ts:snap.ts};keys.forEach(k=>cur[k]=[]);size=0;parts.push(cur)};nw();cur.impostazioni=snap.impostazioni;size=JSON.stringify(snap.impostazioni).length;
-  keys.forEach(k=>(snap[k]||[]).forEach(r=>{const n=JSON.stringify(r).length;if(size+n>max&&size>0)nw();cur[k].push(r);size+=n}));return parts}
-async function dPull(g){const rem={clienti:[],opportunita:[],prodotti:[],movimenti:[],lead:[],impostazioni:null};
-  for(const p of g.parts){const d=await dcall('download_file_content',{fileId:p.id});const t=dContent(d);if(!t)throw {code:'shape',info:Object.keys(d||{}).join(',')};const o=await dUnpack(JSON.parse(t));
-    ['clienti','opportunita','prodotti','movimenti','lead'].forEach(k=>{if(Array.isArray(o[k]))rem[k]=rem[k].concat(o[k])});if(o.impostazioni)rem.impostazioni=o.impostazioni}
-  return rem}
-async function dUp(snap){const ts=snap.ts,f=await dFolder();let max=DRV.pmax||300000;
-  for(let tries=0;;tries++){const parts=dParts(snap,max),ids=[];
-    try{for(let i=0;i<parts.length;i++){parts[i].part=i+1;parts[i].of=parts.length;const c=await dcall('create_file',{title:'crm-db-'+ts+'-'+(i+1)+'of'+parts.length+'.json',parentId:f,contentMimeType:'application/json',textContent:await dPack(JSON.stringify(parts[i])),disableConversionToGoogleType:true});const id=dfid(c);if(!id)throw {code:'shape',info:Object.keys(c||{}).join(',')};ids.push(id)}
-      if(max!==(DRV.pmax||300000)){DRV.pmax=max}return parts.length}
-    catch(e){for(const id of ids){try{await dcall('trash_file',{fileId:id})}catch(x){}}
-      if(e&&e.code==='bad_request'&&max>30000&&tries<5){max=Math.floor(max/2);DRV.pmax=max;continue}
-      if(e&&e.code==='bad_request')throw {code:'toobig'};throw e}}}
-async function dSync(manual){if(!DRV.on||DRV.busy)return;if(DRV.enc&&!DRV.pw){await dPeek();DRV.err='Inserisci la password di cifratura nelle impostazioni per sincronizzare.';paintDrive();return}DRV.busy=true;DRV.err='';paintDrive();
-  try{const list=await dList(),g0=list.find(x=>x.complete);
-    if(g0&&g0.ts>DRV.ts){const rem=await dPull(g0);dMerge(rem);DRV.ts=g0.ts;DRV.hashes=Object.assign({},DRV.hashes,{});
-      // dopo l'unione, l'archivio e i dati locali coincidono per i record non modificati: riallinea i riferimenti
-      const cur=dHashes();const old=DRV.hashes||{};Object.keys(CSPEC).forEach(k=>{const n={};const R=({cl:rem.clienti,op:rem.opportunita,pr:rem.prodotti,mv:rem.movimenti,ld:rem.lead})[k]||[];R.forEach(r=>{if(r&&r.id){const id=String(r.id);if(cur[k][id]===hs(JSON.stringify(r)))n[id]=cur[k][id]}});
-        // i record locali ancora diversi dall'archivio restano "da inviare": non li registro
-        DRV.hashes[k]=n});DRV.hashes.s=cur.s===undefined?undefined:(()=>{const r=rem.impostazioni;if(!r)return cur.s;const s2=Object.assign({},S);delete s2.brochure;return hs(JSON.stringify(s2))===hs(JSON.stringify(r))?cur.s:old.s})()}
-    if(dDirty()){const snap=dSnap(),ts=snap.ts;
-      await dUp(snap);
-      DRV.ts=ts;DRV.hashes=dHashes();
-      const all=await dList();for(const g of all.slice(5)){for(const p of g.parts){try{await dcall('trash_file',{fileId:p.id})}catch(e){}}}}
-    DRV.last=Date.now();DRV.err='';dSave();
-  }catch(e){DRV.err=e&&e.code==='cid'?'Inserisci l’ID client OAuth Google.':e&&e.code==='gsi'?'Impossibile caricare l’accesso Google: la pagina non può contattare Google da qui.':e&&e.code==='norec'||e&&e.code==='nopkdata'?'Su Drive non c’è un recupero di questo tipo: usa la password.':e&&e.code==='badrec'?'Chiave di recupero o passkey non valida.':e&&e.code==='nopk'?'Le passkey non sono disponibili in questa pagina o in questo browser.':e&&e.code==='noprf'?'Questa passkey non supporta il recupero (serve un autenticatore con estensione PRF).':e&&e.code==='nopw'?'Questi dati su Drive sono cifrati: inserisci la password di cifratura.':e&&e.code==='badpw'?'Password di cifratura errata (o dati danneggiati).':e&&e.code==='auth'?'Accesso a Google non riuscito o scaduto: premi “Sincronizza ora” per accedere.':e&&e.code==='http'?'Google Drive ha risposto con errore '+e.info+'.':e&&e.code==='toobig'?'Google Drive rifiuta anche i file più piccoli: un singolo cliente, con foto o allegati molto pesanti, supera il limite. Riduci le foto e riprova.':e&&e.code==='shape'?'Risposta di Drive non riconosciuta (campi: '+(e.info||'nessuno')+')':dErr(e)}
-  finally{DRV.busy=false;paintDrive()}}
-function dPush(){if(!DRV.on)return;clearTimeout(DRV.t);DRV.t=setTimeout(()=>dSync(),20000)}
 function paintDrive(){if(!$('st_pw'))return;$('st_pwrem').checked=DRV.rem;if(document.activeElement!==$('st_pw'))$('st_pw').value=DRV.pw}
 $('st_pw').onchange=()=>{DRV.pw=$('st_pw').value;try{if(DRV.rem)localStorage.setItem(DKEY+'-pw',DRV.pw)}catch(e){}dSave()};
 $('st_pwrem').onchange=()=>{DRV.rem=$('st_pwrem').checked;try{if(DRV.rem)localStorage.setItem(DKEY+'-pw',DRV.pw);else localStorage.removeItem(DKEY+'-pw')}catch(e){}dSave()};
-DRV.on=false;dSave();
-/* brochure su Drive */
-async function dUploadBro(f){const f0=await dFolder();const u8=new Uint8Array(await f.arrayBuffer());
-  const en=DRV.enc;if(en&&!DRV.pw)throw {code:'nopw'};const c=await dcall('create_file',{title:en?f.name+'.enc':f.name,parentId:f0,contentMimeType:en?'application/json':(f.type||'application/pdf'),textContent:en?JSON.stringify(await encBytes(u8)):undefined,base64Content:en?undefined:b64(u8),disableConversionToGoogleType:true});const id=dfid(c);if(!id)throw {code:'shape',info:Object.keys(c||{}).join(',')};
-  S.broDrive={id,name:f.name,size:u8.length,mime:f.type||'application/pdf',enc:en?1:0};S.brochure=null;saveS();return S.broDrive}
-async function dGetBro(){const b=S.broDrive;if(!b)return null;if(DRV.bro&&DRV.bro.id===b.id)return DRV.bro;
-  const d=await dcall('download_file_content',{fileId:b.id});let u8=b.enc?null:dBytes(d);if(b.enc){const t=dContent(d);if(!t)throw {code:'shape',info:Object.keys(d||{}).join(',')};u8=await decEnv(JSON.parse(t))}if(!u8||u8.length<100)throw {code:'shape',info:Object.keys(d||{}).join(',')};DRV.bro={id:b.id,u8};return DRV.bro}
+
 const autoReq=r=>{if(Date.now()-(LAST['r'+r.token]||0)<6e4)return;LAST['r'+r.token]=Date.now();checkReplies(r,null,true)};
 let autoBusy=false;
 async function autoSync(){if(autoBusy||document.hidden)return;autoBusy=true;
