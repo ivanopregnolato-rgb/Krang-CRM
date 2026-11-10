@@ -1,8 +1,8 @@
 /* Dati del gestore del servizio: modifica solo questi valori, le pagine Privacy e Termini si aggiornano da sole. */
 window.LEGAL={
- titolare:'[Nome e cognome o ragione sociale del gestore]',
- sede:'[Indirizzo / sede del gestore]',
- email:'[Email di contatto per la privacy]',
+ titolare:'Ivano Pregnolato',
+ sede:'Via Medici 13, 32123 Trento (TN)',
+ email:'kcrm.privacy@yopmail.com',
  regione:'[Regione dei server dati: da verificare in Supabase]',
  aggiornato:'10 novembre 2026'
 };
