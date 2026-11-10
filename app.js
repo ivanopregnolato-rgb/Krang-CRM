@@ -100,7 +100,7 @@ let swOpen=null;
 function swipeRow(b,c,o){o=o||{};
   const w=h('div','swp'),hasTel=!!c.telefono,hasMail=!!c.email,Lw=hasTel?72:0,Rw=(hasMail?72:0)+(hasTel?72:0);
   const mk=(cls,ic,lab,bg,fn)=>{const x=h('button');x.type='button';x.innerHTML=ICONS[ic];x.title=lab;x.setAttribute('aria-label',lab+' '+fullName(c));x.style.background=bg;x.onclick=e=>{e.stopPropagation();close();fn()};return x};
-  if(Lw){const a=h('div','swa l');a.append(mk('','Chiama','Chiama','#b5ebc0',()=>launch('tel:'+telHref(c),c.telefono)));w.append(a)}
+  if(Lw){const a=h('div','swa l');a.append(mk('','Chiama','Chiama','#b5ebc0',()=>launch('tel:'+telHref(c),c.telefono,c)));w.append(a)}
   if(Rw){const a=h('div','swa r');if(hasMail)a.append(mk('','Scrivi','Email','#bfe0f8',()=>{if(o.mail)o.mail();else{openCompose(c);offerInf(c)}}));if(hasTel)a.append(mk('','WhatsApp','WhatsApp','#b9e6d3',()=>{if(o.wa)o.wa();else openWa(c)}));w.append(a)}
   w.append(b);
   let x0=0,y0=0,off=0,cur=0,drag=false,down=false,moved=false;
@@ -126,7 +126,7 @@ function openSheet(c,data){
   const a=$('acts');a.textContent='';a.hidden=!c;
   if(c){
     [['Chiama',c.telefono&&'tel:'+telHref(c)],['Scrivi',c.email&&'mailto:'+c.email],['WhatsApp',c.telefono&&'https://wa.me/'+telHref(c).replace(/\D/g,'')]]
-    .forEach(([n,h])=>{if(!h)return;const x=document.createElement('a');x.innerHTML=ICONS[n];x.setAttribute('aria-label',n);x.title=n;x.href=h;x.target='_blank';x.rel='noopener noreferrer';if(n==='Chiama')x.onclick=ev=>{ev.preventDefault();launch(h,telHref(c))};if(n==='Scrivi')x.onclick=ev=>{ev.preventDefault();openCompose(c)};if(n==='WhatsApp')x.onclick=ev=>{ev.preventDefault();openWa(c)};a.append(x)});
+    .forEach(([n,h])=>{if(!h)return;const x=document.createElement('a');x.innerHTML=ICONS[n];x.setAttribute('aria-label',n);x.title=n;x.href=h;x.target='_blank';x.rel='noopener noreferrer';if(n==='Chiama')x.onclick=ev=>{ev.preventDefault();launch(h,telHref(c),c)};if(n==='Scrivi')x.onclick=ev=>{ev.preventDefault();openCompose(c)};if(n==='WhatsApp')x.onclick=ev=>{ev.preventDefault();openWa(c)};a.append(x)});
     a.hidden=!a.children.length}
   showMsg(data?'Dati letti dal biglietto. Controllali e salva.':'');
   $('sheet').hidden=false;$('sheet').scrollTop=0;
@@ -201,12 +201,12 @@ function validate(d,only,commit=true){
   if(!ok){const el=$('sheet').querySelector('.bad');if(el)el.scrollIntoView({block:'center'})}
   return ok}
 async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.append(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();return ok}}
-function launch(h,val){
+function launch(h,val,rec){
   const m=$('mLaunch'),kind=/^tel:/.test(h)?'Chiama':/^mailto:/.test(h)?'Apri posta':/wa\.me/.test(h)?'Apri WhatsApp':'Apri';
   $('ml_txt').textContent=/^tel:/.test(h)?String(val||''):kind==='Apri posta'?'Apre la tua app di posta con il messaggio pronto.':kind==='Apri WhatsApp'?'Apre WhatsApp con il messaggio pronto.':'';
   const a=$('ml_go');a.href=h;a.target='_blank';a.rel='noopener noreferrer';a.querySelector('span:last-child').textContent=kind;a.firstElementChild.innerHTML=ICONS[kind==='Chiama'?'Chiama':kind==='Apri posta'?'Scrivi':'WhatsApp'];a.style.textDecoration='none';
   $('ml_copy').onclick=async()=>{$('ml_copy').lastChild.textContent=(await copyText(String(val||h)))?' Copiato':' Seleziona e copia'};$('ml_copy').lastChild.textContent=' Copia '+(/^tel:/.test(h)?'numero':'testo');
-  a.onclick=()=>{setTimeout(()=>{m.hidden=true},400)};m.hidden=false}
+  a.onclick=()=>{if(kind==='Chiama'&&rec)try{callMark(rec)}catch(e){}setTimeout(()=>{m.hidden=true},400)};m.hidden=false}
 function toast(t){const e=$('toast');e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{e.hidden=true},4000)}
 function askConfirm(text,icon,label,fn){$('confirmText').textContent=text;$('cYes').firstChild.innerHTML=ICONS[icon];$('cYes').lastChild.textContent=label;$('cYes').onclick=()=>{$('confirm').hidden=true;fn()};$('confirm').hidden=false}
 $('cNo').onclick=()=>{$('confirm').hidden=true};
@@ -8922,6 +8922,8 @@ function actions(){const A=[],noInf=[],td=ymd(),add=(pri,ic,title,sub,go)=>A.pus
   clients.forEach(c=>{const b=bday(c.nascita);if(b&&b.days<=7)add(b.days===0?90:60-b.days,'gift','Compleanno di '+fullName(c),(b.days===0?'Oggi':b.days===1?'Domani':'Tra '+b.days+' giorni')+' · '+(b.age+(b.days===0?0:1))+' anni',()=>openSheet(c));
     const pv=c.privacy;if(!pv||!pv.informativa)noInf.push(c);
     (pv&&pv.richieste||[]).forEach(r=>{if(effSt(r)==='scaduta')add(62,'clock','Richiesta consensi scaduta',fullName(c)+' · codice '+r.token,()=>openSheet(c))})});
+  clients.forEach(c=>{if(c.rich&&c.rich<=td)add(c.rich<td?88:84,'Chiama','Richiama '+fullName(c),c.rich<td?'In ritardo dal '+fmtD(c.rich):'Da richiamare oggi',()=>openSheet(c))});
+  (typeof leads!=='undefined'?leads:[]).forEach(l=>{if(l.rich&&l.rich<=td&&l.stato!=='scartato')add(l.rich<td?88:84,'Chiama','Richiama '+fullName(l),l.rich<td?'In ritardo dal '+fmtD(l.rich):'Da richiamare oggi',()=>openLead(l))});
   const nl=(typeof leads!=='undefined'?leads:[]).filter(l=>l.stato==='nuovo').length;if(nl)add(70,'plus',nl===1?'1 lead da valutare':nl+' lead da valutare','Convertili in prospect o scartali',()=>setTab('lead'));
   opps.forEach(o=>{const open=o.fase!=='vinta'&&o.fase!=='persa',cn=cname(o.clienteId);
     if(open&&o.data&&o.data<td)add(75,'clock','Chiusura prevista scaduta',o.titolo+' · '+cn,()=>openOpp(o));
@@ -8970,6 +8972,38 @@ function renderH(){
   const P=$('hPipe');P.textContent='';const FA=FASI.filter(f=>f[0]!=='vinta'&&f[0]!=='persa'),mx=Math.max(1,...FA.map(f=>sm(opps.filter(o=>o.fase===f[0]),o=>o.valore)));
   FA.forEach(f=>{const it=opps.filter(o=>o.fase===f[0]),v=sm(it,o=>o.valore),b=h('button','pbar');b.type='button';b.onclick=()=>{oFilt=f[0];setTab('opp');renderO();window.scrollTo(0,0)};const tr=h('div','tr'),bar=h('i');bar.style.width=(it.length?Math.max(4,v/mx*100):0)+'%';bar.style.background=f[3];tr.append(bar);const lb=h('span','',f[1]+' ');lb.append(h('small','','('+it.length+')'));const mr=sm(it,o=>mg(o).mar),em=h('em','',eur(v));em.append(h('small','','margine '+eur(mr)));b.setAttribute('aria-label',f[1]+': '+it.length+' opportunity, valore '+eur(v)+', margine '+eur(mr));b.append(lb,tr,em);P.append(b)});
   $('hPipeBox').hidden=!opps.length;if(!$('hPipeBox').querySelector('.ib'))infoBtn($('hPipeBox'),'Opportunity aperte per fase: tra parentesi quante sono, a destra il valore totale e sotto il margine stimato. La barra mette a confronto i valori delle fasi.')}
+
+
+/* ===== registro chiamate ===== */
+const CALLK='crm-call-v1',ESITI=[['ok','Ha risposto'],['no','Non risponde'],['occ','Occupato'],['seg','Segreteria'],['err','Numero errato']];
+const esLabel=k=>(ESITI.find(e=>e[0]===k)||['','Chiamata'])[1];
+const callTxt=k=>(k.nota||'')+(k.rich?(k.nota?'\n':'')+'Richiama il '+fmtD(k.rich):'');
+let callCur=null;
+function callMark(rec){try{localStorage.setItem(CALLK,JSON.stringify({id:rec.id,lead:leads.includes(rec),t0:Date.now()}))}catch(e){}}
+function callClear(){try{localStorage.removeItem(CALLK)}catch(e){}}
+function callCheck(){let p=null;try{p=JSON.parse(localStorage.getItem(CALLK)||'null')}catch(e){}
+  if(!p||!$('mCall').hidden||callCur)return;const el=Date.now()-p.t0;if(el<0||el>3*36e5){callClear();return}if(el<4000)return;
+  if(document.documentElement.classList.contains('noauth'))return;
+  const rec=(p.lead?leads:clients).find(x=>x.id===p.id);if(!rec){callClear();return}openCallSheet(rec,p)}
+function paintCallEs(){const B=$('cl_es');B.textContent='';ESITI.forEach(([k,l])=>{const b=h('button','',l);b.type='button';b.classList.toggle('on',callCur.es===k);b.onclick=()=>{callCur.es=k;paintCallEs()};B.append(b)});$('cl_dw').hidden=callCur.es!=='ok'}
+function openCallSheet(rec,p){callCur={rec,lead:!!p.lead,t0:p.t0,es:'ok'};
+  $('cl_who').textContent=fullName(rec)+(rec.telefono?' · '+rec.telefono:'');
+  $('cl_dur').value=String(Math.max(1,Math.round((Date.now()-p.t0)/60000)));$('cl_nota').value='';$('cl_ric').value='';setErr('cl_dur','');
+  paintCallEs();const Q=$('cl_rq');Q.textContent='';[['Domani',1],['Tra 3 giorni',3],['Tra una settimana',7]].forEach(([l,n])=>{const b=h('button','',l);b.type='button';b.onclick=()=>{$('cl_ric').value=addDays(ymd(),n)};Q.append(b)});
+  $('mCall').hidden=false}
+$('cl_ok').onclick=()=>{const c=callCur;if(!c)return;let dur=0;
+  if(c.es==='ok'){dur=parseInt($('cl_dur').value,10);if(!(dur>=0&&dur<=600)){setErr('cl_dur','Inserisci i minuti (da 0 a 600).');return}}
+  const e={id:'k'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),data:new Date(c.t0).toISOString(),esito:c.es,dur,nota:$('cl_nota').value.trim().slice(0,2000),rich:$('cl_ric').value||''},rec=c.rec;
+  (rec.calls=rec.calls||[]).push(e);rec.rich=e.rich;if(!c.lead&&c.es==='ok')rec.agg=new Date().toISOString();
+  callClear();$('mCall').hidden=true;callCur=null;
+  if(c.lead){persistL();try{paintLM()}catch(x){}try{renderL()}catch(x){}}else{persist();try{paintAllC()}catch(x){}try{render()}catch(x){}}
+  try{renderH()}catch(x){}toast('Chiamata registrata.')};
+$('cl_x').onclick=()=>{callClear();$('mCall').hidden=true;callCur=null};
+function delCall(rec,k,isLead){askConfirm('Eliminare questa chiamata dal registro?','trash','Elimina',()=>{rec.calls=(rec.calls||[]).filter(x=>x.id!==k.id);
+  rec.rich=((rec.calls.slice().sort((a,b)=>String(b.data).localeCompare(String(a.data)))[0])||{}).rich||'';
+  if(isLead){persistL();try{paintLM()}catch(x){}}else{persist();try{paintAllC()}catch(x){}}try{renderH()}catch(x){}toast('Chiamata eliminata.')})}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(callCheck,600)});
+setTimeout(callCheck,1800);
 
 /* ===== WhatsApp: registro comunicazioni ===== */
 const waNum=c=>telHref(c).replace(/\D/g,''),waId=()=>'w'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -9204,7 +9238,7 @@ function renderL(){
     t.append(n,sp,...ex,h('span','lq',l.richiesta||l.oggetto||''),h('span','',fmtD(ymd(new Date(l.data)))));{const rr=rsRow(lReasons(l));if(rr)t.append(rr)}
     b.append(av,t);b.onclick=()=>openLead(l);w.append(swipeRow(b,l,{open:openLead,mail:()=>{openLead(l);setLTab('msg');setLCm('mail');$('l_reply').onclick()},wa:()=>{openLead(l);setLTab('msg');setLCm('wa');$('l_wa').onclick()}}))});if(rows.length)w.prepend(h('div','hint','Scorri una scheda: a destra chiami, a sinistra scrivi una email o un WhatsApp.'))}
 function paintLActs(l){const a=$('l_acts');a.textContent='';a.hidden=!l;if(!l)return;const tel=l.telefono&&l.telefono.replace(/\D/g,'');
-  [['Chiama',tel,()=>launch('tel:'+telHref(l),l.telefono)],['Scrivi',l.email,()=>{setLTab('msg');setLCm('mail');$('l_reply').onclick()}],['WhatsApp',tel,()=>{setLTab('msg');setLCm('wa');$('l_wa').onclick()}]]
+  [['Chiama',tel,()=>launch('tel:'+telHref(l),l.telefono,l)],['Scrivi',l.email,()=>{setLTab('msg');setLCm('mail');$('l_reply').onclick()}],['WhatsApp',tel,()=>{setLTab('msg');setLCm('wa');$('l_wa').onclick()}]]
   .forEach(([n,ok,fn])=>{if(!ok)return;const x=document.createElement('a');x.innerHTML=ICONS[n];x.setAttribute('aria-label',n);x.title=n;x.href='#';x.onclick=ev=>{ev.preventDefault();fn()};a.append(x)});a.hidden=!a.children.length}
 function openLead(l){
   lCur=l||null;const d=l||{};
@@ -9248,15 +9282,16 @@ function lUnread(l,days){const m=lMsgs(l)[0];if(!m||m.dir!=='in')return false;co
 function lMsgs(l){const a=[];((l&&l.msgs)||[]).forEach(m=>a.push(m));((l&&l.wa)||[]).forEach(m=>a.push({dir:m.dir,via:'WhatsApp',data:m.data,testo:m.testo}));return a.sort((x,y)=>String(y.data).localeCompare(String(x.data)))}
 function paintAll(host,items,empty){host.textContent='';items.sort((a,b)=>b.t-a.t);
   if(!items.length){host.append(h('div','hint',empty));return}
-  host.append(h('div','hint',items.length+(items.length===1?' messaggio':' messaggi')+' tra email e WhatsApp, dal più recente.'));
-  items.slice(0,80).forEach(m=>{const d=h('div','req'),ch=h('i','chip',(m.kind==='wa'?'WhatsApp · ':'Email · ')+(m.dir==='in'?(m.kind==='wa'?'Ricevuto':'Ricevuta'):(m.kind==='wa'?'Inviato':'Inviata')));ch.style.background=m.dir==='in'?'#b5ebc0':'#d9d1f3';d.append(ch);
+  host.append(h('div','hint',items.length+(items.length===1?' voce':' voci')+' tra email, WhatsApp e chiamate, dal più recente.'));
+  items.slice(0,80).forEach(m=>{const d=h('div','req'),ch=h('i','chip',m.kind==='call'?'Chiamata · '+esLabel(m.call.esito)+(m.call.esito==='ok'?' · '+m.call.dur+' min':''):(m.kind==='wa'?'WhatsApp · ':'Email · ')+(m.dir==='in'?(m.kind==='wa'?'Ricevuto':'Ricevuta'):(m.kind==='wa'?'Inviato':'Inviata')));ch.style.background=m.kind==='call'?'#bfe0f8':m.dir==='in'?'#b5ebc0':'#d9d1f3';d.append(ch);
     if(m.title)d.append(h('b','',m.title));d.append(h('div','',fmtDT(m.t)));
     if(m.text){const x=h('div','',m.text.length>300?m.text.slice(0,300)+'…':m.text);x.style.cssText='white-space:pre-wrap;color:var(--ink);font-size:14px;margin-top:4px';d.append(x)}
+    if(m.del){const x=h('button','btn ico');x.type='button';x.innerHTML=ICONS.trash;x.setAttribute('aria-label','Elimina la chiamata');x.title='Elimina';x.style.cssText='float:right;width:36px;height:36px;min-height:0;padding:0';x.onclick=e=>{e.stopPropagation();m.del()};d.prepend(x)}
     if(m.go){d.tabIndex=0;d.style.cursor='pointer';d.onclick=m.go;d.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();m.go()}}}host.append(d)})}
 function allClient(c){const mail=(c.email||'').toLowerCase(),it=[];(TM[c.id]||[]).forEach(m=>it.push({t:+m.internalDate,kind:'mail',dir:String(m.sender||'').toLowerCase().includes(mail)?'in':'out',title:dec(m.subject)||'(senza oggetto)',text:dec(m.snippet),go:()=>openThread(m.threadId)}));
-  (c.wa||[]).forEach(m=>it.push({t:new Date(m.data).getTime(),kind:'wa',dir:m.dir,text:m.testo}));return it}
+  (c.wa||[]).forEach(m=>it.push({t:new Date(m.data).getTime(),kind:'wa',dir:m.dir,text:m.testo}));(c.calls||[]).forEach(k=>it.push({t:new Date(k.data).getTime(),kind:'call',dir:'out',call:k,text:callTxt(k),del:()=>delCall(c,k,false)}));return it}
 function allLead(l){const it=[];(l.msgs||[]).forEach(m=>{let t=String(m.testo||'');const ii=t.indexOf(INF_MARK);if(ii>=0)t=t.slice(0,ii).trim()+'\n[+ informativa privacy]';it.push({t:new Date(m.data).getTime(),kind:'mail',dir:m.dir,title:m.oggetto,text:t})});
-  (l.wa||[]).forEach(m=>it.push({t:new Date(m.data).getTime(),kind:'wa',dir:m.dir,text:m.testo}));return it}
+  (l.wa||[]).forEach(m=>it.push({t:new Date(m.data).getTime(),kind:'wa',dir:m.dir,text:m.testo}));(l.calls||[]).forEach(k=>it.push({t:new Date(k.data).getTime(),kind:'call',dir:'out',call:k,text:callTxt(k),del:()=>delCall(l,k,true)}));return it}
 let lCm='all';
 function setLCm(k){lCm=k;$('l_cmAll').hidden=k!=='all';document.querySelectorAll('#l_cmSeg button').forEach(b=>b.classList.toggle('on',b.dataset.c===k));$('l_cmMail').hidden=k!=='mail';$('l_cmWa').hidden=k!=='wa'}
 $('l_cmSeg').onclick=e=>{const b=e.target.closest('button');if(b)setLCm(b.dataset.c)};

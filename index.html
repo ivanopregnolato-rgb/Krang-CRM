@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.7.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.7.0|2026-11-10"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.8.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.8.0|2026-11-10"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -167,6 +167,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 .top h2{margin:0;font-size:22px;font-weight:800}
 .wcard{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--lilac);border:0;border-radius:18px;padding:12px 14px;margin:0 0 12px;color:#2d2b55;font:inherit;cursor:pointer;min-height:64px}.wcard .ic{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.65);display:grid;place-items:center;flex:none}.wcard .ic svg{width:20px;height:20px}.wcard .tx{flex:1;min-width:0}.wcard .tx b{display:block;font-size:15px}.wcard .tx span{display:block;font-size:13px;opacity:.8}.wcard .wx{width:32px;height:32px;display:grid;place-items:center;flex:none;border-radius:50%}.wcard .wx svg{width:16px;height:16px}.wbar{height:6px;border-radius:99px;background:rgba(45,43,85,.15);margin-top:7px;overflow:hidden}.wbar i{display:block;height:100%;border-radius:99px;background:#2d2b55}
 #mWel{z-index:25}#mWel .box{max-width:400px}#wBody h3{margin:0 0 6px;font-size:20px}#wBody .wsub{margin:0 0 12px;color:var(--muted);font-weight:400;font-size:14px}#wBody .shg .sl{margin:12px 0}.wlr .tx span{white-space:normal!important}.shr .ic.ok{background:#b5ebc0}.wtx{margin:0 0 10px;font-size:14px;line-height:1.45;font-weight:400}.wtx b{font-weight:700}
+.clEs{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}.clEs button{border:1.5px solid var(--out);background:var(--surface);border-radius:999px;padding:9px 13px;font:inherit;font-size:14px;color:inherit;cursor:pointer}.clEs button.on{background:#b5ebc0;border-color:#2d2b55;font-weight:700}#mCall{z-index:25}
 .modal{position:fixed;inset:0;background:rgba(15,20,35,.5);display:grid;place-items:center;padding:20px;z-index:20}
 .crPh{display:flex;gap:8px;overflow-x:auto;margin:4px 0 8px}.crThumb{height:84px;border-radius:10px;border:1px solid var(--out);object-fit:cover}.crH{margin:18px 0 4px;font-size:16px}
 .crRow{position:relative;margin:7px 0}.crRow input,.crRow textarea{padding-top:10px;padding-bottom:10px}.crRow.hi input,.crRow.hi textarea{outline:2px dashed var(--accent);background:var(--surface)}.crRow.unk label::after{content:" · da verificare";color:#b26a00;font-weight:600}
@@ -685,6 +686,13 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div id="pa_list" class="palist"></div>
   <button class="btn lbl" id="pa_x" type="button" style="margin-top:8px"><span data-i="x"></span>Chiudi</button></div></div>
 <div class="modal" id="mWel" hidden><div class="box info" role="dialog" aria-labelledby="wTitle"><div id="wBody"></div></div></div>
+<div class="modal" id="mCall" hidden><div class="box info" role="dialog" aria-labelledby="cl_t"><p id="cl_t">Com’è andata la chiamata?</p><div class="hint" id="cl_who"></div>
+  <div class="clEs" id="cl_es"></div>
+  <div class="f" id="cl_dw"><label for="cl_dur">Durata (minuti, stimata)</label><input id="cl_dur" inputmode="numeric" autocomplete="off"><div class="err" id="err-cl_dur" hidden></div><div class="hint">Stimata dal tempo passato fuori dall’app: correggila se serve.</div></div>
+  <div class="f"><label for="cl_nota">Nota</label><textarea id="cl_nota" rows="3" placeholder="Puoi dettarla con il microfono della tastiera"></textarea></div>
+  <div class="f"><label for="cl_ric">Richiama il (facoltativo)</label><input id="cl_ric" type="date"><div class="clEs" id="cl_rq" style="margin:8px 0 0"></div></div>
+  <button class="btn p lbl" id="cl_ok" type="button"><span data-i="check"></span>Salva la chiamata</button>
+  <button class="btn lbl" id="cl_x" type="button"><span data-i="x"></span>Non registrare</button></div></div>
 <div class="modal" id="mLaunch" hidden><div class="box info" role="dialog"><p id="ml_txt"></p>
   <a class="btn p lbl" id="ml_go" href="#"><span data-i="Chiama"></span><span>Apri</span></a>
   <button class="btn lbl" id="ml_copy" type="button"><span data-i="copy"></span> Copia</button>
@@ -803,7 +811,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunity" title="Elimina opportunity"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunity" title="Salva opportunity"><span data-i="check"></span></button></div>
 </div></div>
-<script src="gmail.js?v=1.7.0"></script>
-<script src="app.js?v=1.7.0"></script>
+<script src="gmail.js?v=1.8.0"></script>
+<script src="app.js?v=1.8.0"></script>
 </body>
 </html>
