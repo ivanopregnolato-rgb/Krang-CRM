@@ -10355,15 +10355,20 @@ const SB=(()=>{
 /* ===== scansione del biglietto da visita (lettura del testo sul telefono, gratuita) ===== */
 const CARD=(()=>{
  const TITLES=/^(dott\.?ssa|dott\.?|dr\.?|ing\.?|avv\.?|arch\.?|geom\.?|rag\.?|prof\.?ssa|prof\.?|sig\.?ra|sig\.?|mr\.?|mrs\.?|ms\.?)\s+/i;
- const ROLE=/\b(ceo|cfo|coo|cto|titolare|direttore|direttrice|responsabile|amministratore|presidente|socio|manager|sales|commerciale|agente|consulente|export|marketing|buyer|owner|founder|director|head of|account|enologo|sommelier|project|general manager|partner|legale rappresentante|ufficio)\b/i;
- const COMP=/(\bs\.?r\.?l\.?s?\b|\bs\.?p\.?a\.?\b|\bs\.?n\.?c\.?\b|\bs\.?a\.?s\.?\b|\bs\.?s\.?\b|societ[àa]|cantina|azienda|ditta|studio|& ?c\.?\b|\bgroup\b|\bltd\b|\bgmbh\b|\binc\b|\bllc\b|\bsrl\b|vini|tenuta|fattoria|consorzio|cooperativa)/i;
+ const ROLE=/\b(ceo|cfo|coo|cto|titolare|direttore|direttrice|responsabile|amministratore|presidente|socio|manager|sales|commerciale|agente|consulente|export|marketing|buyer|owner|founder|director|head of|account|enologo|sommelier|project|general manager|partner|legale rappresentante|ufficio|proprietario|gestore|chef|maitre|maître|rappresentante|promotore|procuratore|avvocato|architetto|ingegnere|geometra|notaio|commercialista|vendite|acquisti|logistica|amministrazione|direzione|area manager|key account|segreteria|assistant|specialist|coordinator|coordinatore|coordinatrice)\b/i;
+ const COMP=/(\bs\.?r\.?l\.?s?\b|\bs\.?p\.?a\.?\b|\bs\.?n\.?c\.?\b|\bs\.?a\.?s\.?\b|\bs\.?s\.?\b|societ[àa]|cantina|azienda|ditta|studio|& ?c\.?\b|\bgroup\b|\bltd\b|\bgmbh\b|\binc\b|\bllc\b|\bsrl\b|vini|tenuta|fattoria|consorzio|cooperativa|hotel|albergo|locanda|enoteca|vineria|ristorante|trattoria|osteria|pizzeria|bistrot|agriturismo|resort|boutique|pasticceria|gastronomia|catering|eventi|caff[èe]|\bbar\b|b&b|wine|winery|distribuzione|import|export srl|commerciale s)/i;
  const STREET=/\b(via|viale|v\.le|piazza|p\.zza|corso|c\.so|strada|largo|vicolo|localit[àa]|loc\.|contrada|c\.da|piazzale|lungomare|borgo|vico|salita|str\.)\s/i;
  const PART=['de','di','del','della','dello','dei','degli','dal','dalla','da','la','lo','le','van','von','mc','mac','d\'','dell\''];
  const cap=w=>w.length?w[0].toUpperCase()+w.slice(1).toLowerCase():w;
- const fixCase=s=>s.split(/\s+/).map(w=>/^[A-ZÀ-Ý'’.-]{2,}$/.test(w)?w.split(/(['’-])/).map(cap).join(''):w).join(' ');
+ const LOWP=['del','della','dello','dei','degli','delle','di','da','de','e','&','and','the'];
+ const fixCase=s=>s.split(/\s+/).map((w,i)=>/^[A-ZÀ-Ý'’.-]{2,}$/.test(w)?(i>0&&LOWP.includes(w.toLowerCase())?w.toLowerCase():w.split(/(['’-])/).map(cap).join('')):w).join(' ');
+ const lev=(a,b)=>{const m=[];for(let i=0;i<=a.length;i++){m[i]=[i];for(let j=1;j<=b.length;j++)m[i][j]=i?0:j}for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return m[a.length][b.length]};
+ const FREE=/^(gmail|googlemail|yahoo|hotmail|outlook|libero|virgilio|tiscali|alice|icloud|me|live|msn|aruba|fastweb|tin|email|inwind|iol|yopmail|pec)\./i;
+ const fixNum=l=>l.replace(/[\d+(][\dOoIl\s().\/-]{6,}/g,m=>m.replace(/[Oo]/g,'0').replace(/[Il]/g,'1'));
+ const grp=n=>{const d=n.replace(/\D/g,'');if(!/^3\d{8,9}$/.test(d))return n;return d.length===10?d.replace(/^(\d{3})(\d{3})(\d{4})$/,'$1 $2 $3'):d.replace(/^(\d{3})(\d{3})(\d{3})$/,'$1 $2 $3')};
  const dialIso=n=>{const m=n.replace(/[^\d+]/g,'');if(!m.startsWith('+'))return null;let best=null;COUNTRIES.forEach(c=>{const d=String(c[2]);if(m.startsWith(d)&&(!best||d.length>String(best[2]).length))best=c});return best};
  function parse(raw){
-  const lines=String(raw||'').split(/\r?\n/).map(l=>l.replace(/[|¦_•·►▶■□]/g,' ').replace(/\s+/g,' ').trim()).filter(l=>l.length>1);
+  const lines=String(raw||'').replace(/\(at\)|\[at\]/gi,'@').replace(/(\w)\s?[©®]\s?(\w)/g,'$1@$2').split(/\r?\n/).map(l=>fixNum(l.replace(/[|¦_•·►▶■□]/g,' ').replace(/\s+/g,' ').trim())).filter(l=>l.length>1);
   const used=new Set(),out={},extra=[];
   const text=lines.join('\n');
   // email
@@ -10376,9 +10381,10 @@ const CARD=(()=>{
   if(pi){const d=pi[1].replace(/\s/g,'');if(d.length===11){out.piva=d;lines.forEach((l,i)=>{if(/p\.?\s?iva|partita\s+iva|\bvat\b/i.test(l)&&l.replace(/\D/g,'').includes(d))used.add(i)})}}
   // sito web
   const mailHosts=mails.map(m=>m.split('@')[1]);
-  const web=(text.match(/\b(?:https?:\/\/)?(?:www\.)[A-Za-z0-9.-]+\.[A-Za-z]{2,}[^\s,;]*|\b[A-Za-z0-9-]+\.(?:it|com|net|org|eu|info|biz|wine|vin)\b(?![A-Za-z0-9@])/gi)||[]).map(w=>w.replace(/[.,;)]+$/,'')).filter(w=>/^(https?:\/\/|www\.)/i.test(w)||!mails.some(m=>m.includes('@'+w.toLowerCase())));
+  const noMail=text.replace(/[A-Za-z0-9._%+-]+\s?@\s?[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g,' ');
+  const web=(noMail.match(/\b(?:https?:\/\/)?(?:www\.)[A-Za-z0-9.-]+\.[A-Za-z]{2,}[^\s,;]*|\b[A-Za-z0-9-]+\.(?:it|com|net|org|eu|info|biz|wine|vin)\b(?![A-Za-z0-9@])/gi)||[]).map(w=>w.replace(/[.,;)]+$/,'')).filter(w=>!/^(pec|legalmail)\./i.test(w));
   if(web[0])out.sito=web[0].replace(/^https?:\/\//i,'').toLowerCase();
-  lines.forEach((l,i)=>{if(/(?:https?:\/\/|www\.)/i.test(l)||(out.sito&&l.toLowerCase().includes(out.sito.replace(/^www\./,''))))used.add(i)});
+  lines.forEach((l,i)=>{if(/@/.test(l))return;if(/(?:https?:\/\/|www\.)/i.test(l)||(out.sito&&l.toLowerCase().includes(out.sito.replace(/^www\./,''))))used.add(i)});
   // telefoni
   const phones=[];
   lines.forEach((l,i)=>{if(used.has(i)&&/@/.test(l))return;const lab=/\bfax\b/i.test(l)&&!/\b(tel|t\.|mob|cell|m\.)\b/i.test(l);
@@ -10389,7 +10395,7 @@ const CARD=(()=>{
   const isMob=p=>/^(\+?39)?\s?3\d{8,9}$/.test(p.dg.replace(/^0039/,'39'))||/^\+?39?3\d/.test(p.dg)&&p.dg.replace(/^39/,'').length>=9&&p.dg.replace(/^39/,'')[0]==='3';
   const main=good.find(isMob)||good[0]||phones[0];
   if(main){let n=main.n,iso=null;const c=dialIso(n);if(c){iso=c[0];const d=String(c[2]);n=n.replace(/[^\d+]/g,'').slice(d.length).replace(/^0+(?=\d{6})/,'');if(iso!=='IT')n=n}
-   out.telefono=n.replace(/^(\d{3})(\d{3,4})(\d{3,4})$/,'$1 $2 $3');if(iso)out.paese=iso;used.add(main.line)}
+   out.telefono=grp(n);if(iso)out.paese=iso;used.add(main.line)}
   phones.filter(p=>p!==main).forEach(p=>extra.push((p.fax?'Fax ':'Tel ')+p.n));
   phones.forEach(p=>used.add(p.line));
   // indirizzo
@@ -10401,6 +10407,8 @@ const CARD=(()=>{
   const ri=lines.findIndex((l,i)=>!used.has(i)&&ROLE.test(l)&&!/\d{4}/.test(l)&&l.length<60);if(ri>=0){out.ruolo=lines[ri];used.add(ri)}
   // azienda
   let ci=lines.findIndex((l,i)=>!used.has(i)&&COMP.test(l)&&l.length<70);
+  const core=out.email&&!FREE.test(out.email.split('@')[1])?out.email.split('@')[1].split('.')[0].replace(/[^a-z0-9]/g,''):(out.sito&&!FREE.test(out.sito.replace(/^www\./,''))?out.sito.replace(/^www\./,'').split('.')[0].replace(/[^a-z0-9]/g,''):'');
+  if(core.length>=4){const dl=lines.findIndex((l,i)=>{if(used.has(i)||i===ri)return false;const t=l.toLowerCase().replace(/[^a-z0-9]/g,'');return t.length>=4&&(t===core||t.includes(core)||core.includes(t))&&!/@|\d{4}/.test(l)&&!STREET.test(l)});if(dl>=0&&(ci<0||dl!==ci)&&!(out.nome&&lines[dl].toLowerCase().includes(out.nome.toLowerCase())&&lines[dl].toLowerCase().includes((out.cognome||'').toLowerCase())))ci=dl}
   // nome persona
   const local=(out.email||'').split('@')[0].replace(/[^a-z.\-_]/g,' ').split(/[.\-_ ]+/).filter(x=>x.length>1);
   const cand=lines.map((l,i)=>({l,i})).filter(({l,i})=>{if(used.has(i)||i===ci)return false;const t=l.replace(TITLES,'');if(/\d|@|www/i.test(t))return false;if(COMP.test(t)||STREET.test(t)||ROLE.test(t))return false;const w=t.split(/\s+/);return w.length>=2&&w.length<=4&&w.every(x=>/^[A-Za-zÀ-ÿ'’.-]+$/.test(x))});
@@ -10411,6 +10419,8 @@ const CARD=(()=>{
    let nome=w.slice(0,k).join(' '),cogn=w.slice(k).join(' ');
    if(local.length>=2){const a=local[0],b=local[local.length-1],ln=nome.toLowerCase(),lc=cogn.toLowerCase();if(ln.includes(b)&&lc.includes(a)){const x=nome;nome=cogn;cogn=x}}
    out.nome=nome;out.cognome=cogn}
+  if(out.email&&(out.nome||out.cognome)){const [lp,dm]=out.email.split('@'),ref=[out.nome,out.cognome].filter(Boolean).join(' ').toLowerCase().split(/\s+/).map(x=>x.replace(/[^a-zà-ÿ]/g,'')).filter(x=>x.length>=5);
+   const toks=lp.split(/([._-])/);let ch=false;const nt=toks.map(t=>{if(t.length<5)return t;const r=ref.find(x=>x!==t&&lev(x,t)===1);if(r){ch=true;return r}return t});if(ch)out.email=nt.join('')+'@'+dm}
   if(ci<0){ci=lines.findIndex((l,i)=>!used.has(i)&&!/\d{5}/.test(l)&&l.length>=3&&l.length<60&&!(out.nome&&l.toLowerCase().includes(out.nome.toLowerCase())))}
   if(ci>=0){out.azienda=fixCase(lines[ci]);used.add(ci)}
   if(!out.nome&&!out.cognome&&out.azienda)out.tipo='azienda';
@@ -10419,13 +10429,20 @@ const CARD=(()=>{
   if(extra.length)note.push('Altri recapiti: '+extra.join(' · '));
   if(rest.length)note.push('Testo non assegnato: '+rest.slice(0,6).join(' / '));
   out.note=note.join('\n');return out}
- /* immagine: ridimensiona, scala di grigi e contrasto */
- function prep(file){return new Promise((ok,ko)=>{const img=new Image(),u=URL.createObjectURL(file);
-  img.onload=()=>{try{const mx=Math.max(img.naturalWidth,img.naturalHeight),s=Math.min(2,Math.max(.5,2000/mx)),c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*s);c.height=Math.round(img.naturalHeight*s);
-   const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(img,0,0,c.width,c.height);const d=x.getImageData(0,0,c.width,c.height),p=d.data,hist=new Uint32Array(256);
-   for(let i=0;i<p.length;i+=4){const g=(p[i]*.299+p[i+1]*.587+p[i+2]*.114)|0;p[i]=p[i+1]=p[i+2]=g;hist[g]++}
-   const tot=c.width*c.height;let a=0,lo=0,hi=255;for(let g=0;g<256;g++){a+=hist[g];if(a>tot*.01){lo=g;break}}a=0;for(let g=255;g>=0;g--){a+=hist[g];if(a>tot*.01){hi=g;break}}
-   const k=hi>lo+20?255/(hi-lo):1;for(let i=0;i<p.length;i+=4){const v=Math.max(0,Math.min(255,((p[i]-lo)*k)|0));p[i]=p[i+1]=p[i+2]=v}
+ /* immagine: ridimensiona, scala di grigi; mode 'g' = contrasto, 'b' = binarizzazione adattiva (sfondi/luci irregolari) */
+ function prep(file,mode){return new Promise((ok,ko)=>{const img=new Image(),u=URL.createObjectURL(file);
+  img.onload=()=>{try{const mx=Math.max(img.naturalWidth,img.naturalHeight),s=Math.min(2.5,Math.max(.4,2400/mx)),c=document.createElement('canvas'),W=c.width=Math.round(img.naturalWidth*s),H=c.height=Math.round(img.naturalHeight*s);
+   const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingQuality='high';x.drawImage(img,0,0,W,H);const d=x.getImageData(0,0,W,H),p=d.data,N=W*H,g=new Uint8Array(N),hist=new Uint32Array(256);let sum=0;
+   for(let i=0,j=0;j<N;i+=4,j++){const v=(p[i]*.299+p[i+1]*.587+p[i+2]*.114)|0;g[j]=v;hist[v]++;sum+=v}
+   let lo=0,hi=255,a=0;for(let v=0;v<256;v++){a+=hist[v];if(a>N*.01){lo=v;break}}a=0;for(let v=255;v>=0;v--){a+=hist[v];if(a>N*.01){hi=v;break}}
+   const k=hi>lo+20?255/(hi-lo):1;let out=new Uint8Array(N);
+   for(let j=0;j<N;j++)out[j]=Math.max(0,Math.min(255,((g[j]-lo)*k)|0));
+   /* biglietto scuro con testo chiaro: inverto */
+   let m2=0;for(let j=0;j<N;j++)m2+=out[j];if(m2/N<105)for(let j=0;j<N;j++)out[j]=255-out[j];
+   if(mode==='b'){const R=Math.max(12,(Math.min(W,H)/18)|0),I=new Float64Array((W+1)*(H+1));
+    for(let y=0;y<H;y++){let r=0;for(let xx=0;xx<W;xx++){r+=out[y*W+xx];I[(y+1)*(W+1)+xx+1]=I[y*(W+1)+xx+1]+r}}
+    const o2=new Uint8Array(N);for(let y=0;y<H;y++){const y0=Math.max(0,y-R),y1=Math.min(H,y+R+1);for(let xx=0;xx<W;xx++){const x0=Math.max(0,xx-R),x1=Math.min(W,xx+R+1),n=(y1-y0)*(x1-x0),mean=(I[y1*(W+1)+x1]-I[y0*(W+1)+x1]-I[y1*(W+1)+x0]+I[y0*(W+1)+x0])/n;o2[y*W+xx]=out[y*W+xx]<mean*.86?0:255}}out=o2}
+   for(let i=0,j=0;j<N;i+=4,j++){p[i]=p[i+1]=p[i+2]=out[j]}
    x.putImageData(d,0,0);URL.revokeObjectURL(u);ok(c)}catch(e){URL.revokeObjectURL(u);ko(e)}};
   img.onerror=()=>{URL.revokeObjectURL(u);ko(new Error('img'))};img.src=u})}
  const load=()=>window.Tesseract?Promise.resolve():new Promise((ok,ko)=>{const s=document.createElement('script');s.src='ocr/tesseract.min.js?v=5.1.1';s.onload=ok;s.onerror=()=>ko(new Error('motore'));document.head.append(s)});
@@ -10443,7 +10460,7 @@ const CARD=(()=>{
  const WHY={email:'lo stesso indirizzo email',piva:'la stessa partita IVA',telefono:'lo stesso numero di telefono',nome:'lo stesso nome e cognome',azienda:'lo stesso nome di azienda'};
  function diff(c,d){const ch=[];FL2.forEach(([k,l])=>{const v=d[k];if(!v)return;const o=c[k]||'';if(!o)ch.push({k,l,o:'',v,add:true});else if(!same(k,o,v))ch.push({k,l,o,v})});return ch}
  function fillSheet(d,only){Object.keys(d).forEach(k=>{if(!FIELDS.includes(k)||!d[k]||(only&&!only.includes(k)))return;const e=$(k);if(!e)return;e.value=d[k];e.dispatchEvent(new Event('input',{bubbles:true}));if(k==='paese')e.dispatchEvent(new Event('change',{bubbles:true}))});if(d.tipo&&!only)applyTipo(d.tipo)}
- function startNew(d){openSheet(null);fillSheet(d);showMsg('Dati letti dal biglietto: controllali e correggi se serve prima di salvare.')}
+ function startNew(d){if(window.holdDirty)window.holdDirty('sheet');openSheet(null);fillSheet(d);showMsg('Dati letti dal biglietto: controllali e correggi se serve prima di salvare.')}
  function askDup(m,d){const M=$('mDup'),L=$('dpL'),c=m.c,ch=diff(c,d);L.textContent='';
   $('dpT').textContent='Cliente già presente';
   $('dpS').textContent='«'+fullName(c)+'» ha '+WHY[m.why]+' di questo biglietto.';
@@ -10458,13 +10475,21 @@ const CARD=(()=>{
   try{const cv=await prep(file);if(cancelled)return;T.textContent='Carico il lettore di testo…';H.textContent='Solo la prima volta può richiedere qualche istante.';await load();if(cancelled)return;
    const base=new URL('ocr/',location.href).href;
    worker=await Tesseract.createWorker('ita+eng',1,{workerPath:base+'worker.min.js',corePath:base,langPath:base,gzip:false,cacheMethod:'none',logger:m=>{if(cancelled)return;if(m.status==='recognizing text'){T.textContent='Leggo il biglietto…';B.style.width=(15+Math.round(m.progress*80))+'%'}else if(/loading|initializ/.test(m.status||'')){B.style.width=Math.max(6,Math.round(5+(m.progress||0)*10))+'%'}}});
-   if(cancelled)return;const r=await worker.recognize(cv);await worker.terminate();worker=null;if(cancelled)return;
-   const txt=(r&&r.data&&r.data.text)||'';M.hidden=true;
+   if(cancelled)return;
+   const pass=async(c,psm)=>{await worker.setParameters({tessedit_pageseg_mode:psm,preserve_interword_spaces:'1'});const r=await worker.recognize(c),t=(r&&r.data&&r.data.text)||'',d=parse(t);return{t,d,conf:(r&&r.data&&r.data.confidence)||0}};
+   const rate=x=>x.conf+['email','telefono','nome','azienda','indirizzo','piva','sito'].filter(k=>x.d[k]).length*4;
+   let best=await pass(cv,'3');
+   if(!cancelled&&(best.conf<82||!(best.d.email||best.d.telefono))){T.textContent='Rileggo con più attenzione…';B.style.width='70%';
+    const cv2=await prep(file,'b');if(!cancelled){const alt=await pass(cv2,'6');
+     const win=rate(alt)>rate(best)?alt:best,los=win===alt?best:alt;
+     ['email','pec','telefono','paese','piva','sito'].forEach(k=>{if(!win.d[k]&&los.d[k])win.d[k]=los.d[k]});best=win}}
+   await worker.terminate();worker=null;if(cancelled)return;
+   const txt=best.t,d=best.d;M.hidden=true;
    if(txt.replace(/\W/g,'').length<8){toast('Non riesco a leggere il biglietto: riprova con più luce e il biglietto dritto.');return}
-   const d=parse(txt),m=findDup(d);if(m)askDup(m,d);else startNew(d)}
+   const m=findDup(d);if(m)askDup(m,d);else startNew(d)}
   catch(e){M.hidden=true;if(!cancelled)toast('Lettura non riuscita'+(navigator.onLine===false?': sei offline e il lettore non è ancora scaricato.':'. Riprova.'))}
   finally{try{worker&&worker.terminate()}catch(e){}busy=false;stop=null;M.hidden=true}}
- return{parse,run,cancel:()=>stop&&stop()}})();
+ return{parse,run,prep,cancel:()=>stop&&stop()}})();
 {const f=$('cardFile');$('cScan').onclick=()=>f.click();f.onchange=()=>{const x=f.files&&f.files[0];f.value='';if(x)CARD.run(x)};$('scX').onclick=()=>CARD.cancel()}
 
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
