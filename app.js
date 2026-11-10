@@ -479,7 +479,7 @@ async function doGmailSend(){
   const b=$('ms_gmail');b.disabled=true;setErr('ms_gmail','');
   try{
     const mcp=await gm();
-    if(!mcp||!autoOk()){setErr('ms_gmail',pn('Collegamento a Gmail non disponibile qui: usa Apri posta o invia l’email a mano.'));return}
+    if(!mcp||!autoOk()){setErr('ms_gmail',hasClaude()?pn('Collegamento a Gmail non disponibile qui: usa Apri posta o invia l’email a mano.'):gmNo()+' Oppure usa Apri posta.');return}
     if(!S.replyTo){try{const w=await detectMe();if(w.email){S.replyTo=w.email;saveS()}}catch(e){}}
     const a={to:rq.email,subject:$('ms_sub').value,text:$('ms_body').value,fromName:mitt()};
     if(S.replyTo&&mailRe.test(S.replyTo))a.html=mailHtml($('ms_body').value,rq,S.replyTo,$('ms_sub').value);
@@ -495,7 +495,7 @@ $('ms_gmail').onclick=()=>{const op=$('ms_op').value.trim();if(!op){setErr('ms_o
 let rrMsg=null,rrFrom='';
 const pj=r=>{let p=r&&r.payload;if(typeof p==='string'){try{p=JSON.parse(p)}catch(e){}}return(p&&typeof p==='object')?p:{}};
 function gmReadErr(e){return pn(gmReadErr0(e))}
-function gmReadErr0(e){const c=e&&e.code;return({server_not_connected:'Gmail non è collegato: collegalo da Impostazioni, Connettori, su claude.ai.',needs_reauth:'La connessione a Gmail è scaduta: ricollegala da Impostazioni, Connettori.',not_in_manifest:'Autorizzazione negata: riprova e consenti la lettura di Gmail.',approval_required:'Serve la tua approvazione per leggere Gmail: riprova.',blocked_by_policy:'Il tuo amministratore blocca l’accesso a Gmail.',server_unavailable:'Gmail non risponde: riprova tra poco.'})[c]||'Lettura di Gmail non riuscita. Riprova.'}
+function gmReadErr0(e){const c=e&&e.code;if(e&&e.gd&&GDM[c])return GDM[c];return({server_not_connected:'Gmail non è collegato: collegalo da Impostazioni, Connettori, su claude.ai.',needs_reauth:'La connessione a Gmail è scaduta: ricollegala da Impostazioni, Connettori.',not_in_manifest:'Autorizzazione negata: riprova e consenti la lettura di Gmail.',approval_required:'Serve la tua approvazione per leggere Gmail: riprova.',blocked_by_policy:'Il tuo amministratore blocca l’accesso a Gmail.',server_unavailable:'Gmail non risponde: riprova tra poco.'})[c]||'Lettura di Gmail non riuscita. Riprova.'}
 function newText(body){const out=[];for(const l of String(body||'').split('\n')){const t=l.trim();if(t.startsWith('>')||/^(Il giorno|On)\s.*(scritto|wrote|alle ore|<.+@.+>)/i.test(t)||/^-{2,}\s*(Messaggio inoltrato|Original Message)/i.test(t))break;out.push(l)}return out.join('\n').replace(/Inviato da .*/i,'').trim()}
 function parseCons(txt,token){
   const low=txt.toLowerCase(),t=txt.toUpperCase().split(token).join(' '),map={},rev=/revoc|annull|ritir|non acconsent/.test(low),v=rev?'revoca':'dato';
@@ -550,10 +550,13 @@ function showFound(r,best,P){
   }}
 const AUTOREP={},LAST={};
 let tr='',cmpTo='';
-const gm=async()=>typeof claude!=='undefined'?await claude.use('mcp'):null;
+const gm=async()=>{if(typeof claude!=='undefined'){const m=await claude.use('mcp');if(m)return m}if(window.GD){GD.setClient(S.gcid||'');if(GD.ready())return GD}return null};
+const hasClaude=()=>typeof claude!=='undefined';
+const gmNo=d=>hasClaude()?d:'Gmail non è collegato (il collegamento dura circa un’ora): tocca Collega Gmail in Impostazioni, Posta.';
 const dec=s=>new DOMParser().parseFromString(String(s||''),'text/html').documentElement.textContent;
 function gmSendErr(e){return pn(gmSendErr0(e))}
-function gmSendErr0(e){const c=e&&e.code,U='Esito incerto: controlla la cartella Posta inviata di Gmail prima di riprovare.';return({server_not_connected:'Gmail non è collegato: collegalo da Impostazioni, Connettori, su claude.ai.',needs_reauth:'La connessione a Gmail è scaduta: ricollegala da Impostazioni, Connettori.',selection_required:'Hai più connettori Gmail: sceglinone uno e riprova.',not_in_manifest:'Autorizzazione negata: riprova e consenti l’invio.',approval_required:'Serve la tua approvazione: riprova e consenti l’invio.',blocked_by_policy:'Il tuo amministratore blocca l’invio da Gmail.',tool_error:'Gmail ha rifiutato l’invio. Controlla l’indirizzo del destinatario.',server_unavailable:U,upstream_error:U,cancelled:U})[c]||'Invio non riuscito. Riprova o usa Apri posta.'}
+const GDM={server_not_connected:'Gmail non è collegato: inserisci l’ID client e tocca Collega Gmail (Impostazioni, Posta).',needs_reauth:'La connessione a Gmail è scaduta (dura circa un’ora): tocca Collega Gmail in Impostazioni, Posta.',not_in_manifest:'Google ha negato l’accesso: ricollega Gmail e consenti sia l’invio sia la lettura.',gd_api:'La Gmail API non è attiva nel tuo progetto Google Cloud: attivala e riprova.',tool_error:'Gmail ha rifiutato la richiesta. Controlla l’indirizzo del destinatario.',server_unavailable:'Gmail non risponde: riprova tra poco.'};
+function gmSendErr0(e){const c=e&&e.code;if(e&&e.gd&&GDM[c])return c==='server_unavailable'?'Esito incerto: controlla la cartella Posta inviata di Gmail prima di riprovare.':GDM[c];const U='Esito incerto: controlla la cartella Posta inviata di Gmail prima di riprovare.';return({server_not_connected:'Gmail non è collegato: collegalo da Impostazioni, Connettori, su claude.ai.',needs_reauth:'La connessione a Gmail è scaduta: ricollegala da Impostazioni, Connettori.',selection_required:'Hai più connettori Gmail: sceglinone uno e riprova.',not_in_manifest:'Autorizzazione negata: riprova e consenti l’invio.',approval_required:'Serve la tua approvazione: riprova e consenti l’invio.',blocked_by_policy:'Il tuo amministratore blocca l’invio da Gmail.',tool_error:'Gmail ha rifiutato l’invio. Controlla l’indirizzo del destinatario.',server_unavailable:U,upstream_error:U,cancelled:U})[c]||'Invio non riuscito. Riprova o usa Apri posta.'}
 /* registro minimo delle email sul cliente (solo data e direzione, niente testo) */
 function emSave(c,ms,local){if(!c)return 0;const em=c.em=c.em||[],mail=(c.email||'').toLowerCase();let n=0;
   const add=(id,dir,iso,stop)=>{if(!iso||isNaN(new Date(iso)))return;if(id&&em.some(e=>e.id===id)){if(stop){const e=em.find(x=>x.id===id);if(!e.stop){e.stop=1;n++}}return}
@@ -595,7 +598,7 @@ async function loadComm(){
   w.append(h('div','hint',pn('Lettura da Gmail in corso…')));cmStat('Lettura delle email da Gmail in corso…');
   try{
     const mcp=await gm();if(editing!==cl)return;
-    if(!mcp){w.textContent='';w.append(h('div','hint',pn('Collegamento a Gmail non disponibile in questa visualizzazione.')));cmStat('Collegamento a Gmail non disponibile in questa visualizzazione: si vedono solo i messaggi WhatsApp registrati.');return}
+    if(!mcp){w.textContent='';w.append(h('div','hint',hasClaude()?pn('Collegamento a Gmail non disponibile in questa visualizzazione.'):gmNo()));cmStat(hasClaude()?'Collegamento a Gmail non disponibile in questa visualizzazione: si vedono solo i messaggi WhatsApp registrati.':gmNo()+' Si vedono solo i messaggi WhatsApp registrati.');return}
     const P=PV();if(!P.search){w.textContent='';w.append(h('div','hint','La lettura delle email non è ancora disponibile per '+P.nome+'.'));cmStat('La lettura delle email non è ancora disponibile per '+P.nome+'.');return}
     const s=await P.search(mcp,P.qContact(cl.email));
     if(editing!==cl)return;paintComm(pj(s).threads||[]);cmStat('');
@@ -603,7 +606,7 @@ async function loadComm(){
 async function openThread(id){
   tr='';$('mt_title').textContent='Conversazione';$('mt_body').textContent='Lettura in corso…';$('mThread').hidden=false;
   try{
-    const mcp=await gm();if(!mcp){$('mt_body').textContent='Collegamento a Gmail non disponibile.';return}
+    const mcp=await gm();if(!mcp){$('mt_body').textContent=hasClaude()?'Collegamento a Gmail non disponibile.':gmNo();return}
     const P=PV();if(!P.thread){$('mt_body').textContent='Non disponibile per '+P.nome+'.';return}
     const g=pj(await P.thread(mcp,id)),ms=(g.messages||[]).slice().sort((a,b)=>+a.internalDate-+b.internalDate);
     $('mt_title').textContent=dec((ms[0]&&ms[0].subject)||'Conversazione');
@@ -623,7 +626,7 @@ function openCompose(c){cmpLeadRef=null;cmpInfC=null;cmpAtt=[];cmpQ=null;cmpOpts
   $('mc_hint').textContent=ok?'':'Questo cliente non ha dato il consenso al marketing via email: usa questa email solo per comunicazioni legate al rapporto in corso.';
   $('mc_gmail').hidden=true;
   const T=$('mc_tpl');T.textContent='';TEMPLATES.forEach(([l,s,t])=>{const b=h('button','',l);b.type='button';b.style.background='var(--lilac)';b.onclick=()=>{$('mc_sub').value=subj(s);$('mc_body').value=tpl('Gentile {nome},\n\n'+t+'\n\n',{nome})+firma()};T.append(b)});
-  gm().then(m=>{$('mc_gmail').hidden=!(m&&autoOk());$('mc_gmail').lastChild.textContent='Invia con '+PV().nome}).catch(()=>{});$('mCompose').hidden=false}
+  gm().then(m=>{$('mc_gmail').hidden=!((m||(!hasClaude()&&S.gcid&&PV().id==='gmail'))&&autoOk());$('mc_gmail').lastChild.textContent='Invia con '+PV().nome}).catch(()=>{});$('mCompose').hidden=false}
 $('mr_more').onclick=()=>$('mResp').firstElementChild.classList.remove('compact');
 $('mc_x').onclick=()=>{$('mCompose').hidden=true};
 $('mc_open').onclick=async()=>{let bad=false;for(const a of cmpAtt){if(!(await savePdf(a.u8,a.name)))bad=true}if(bad)toast('Allegati non salvati: allegali a mano.');launchMail()};
@@ -631,7 +634,7 @@ const launchMail=()=>launch('mailto:'+cmpTo+'?subject='+encodeURIComponent($('mc
 async function doCompose(){
   const b=$('mc_gmail');b.disabled=true;setErr('mc_gmail','');
   try{
-    const mcp=await gm();if(!mcp){setErr('mc_gmail','Collegamento a Gmail non disponibile qui: usa Apri posta.');return}
+    const mcp=await gm();if(!mcp){setErr('mc_gmail',hasClaude()?'Collegamento a Gmail non disponibile qui: usa Apri posta.':gmNo()+' Oppure usa Apri posta.');return}
     if(!autoOk()){setErr('mc_gmail','L’invio automatico non è disponibile per '+PV().nome+': usa Apri posta.');return}
     await PV().send(mcp,{to:cmpTo,subject:$('mc_sub').value.trim(),text:$('mc_body').value,html:mailHtmlBro($('mc_body').value)||undefined,fromName:mitt(),atts:cmpAtt.map(a=>({name:a.name,b64:b64(a.u8),mime:a.mime}))});
     {const cc=clients.find(x=>x.email&&x.email.toLowerCase()===String(cmpTo||'').toLowerCase());if(cc)emSave(cc,null,true)}
@@ -701,7 +704,8 @@ function aliasHint(){const P=selProv(),al=$('st_alias').value.trim()||$('st_az')
   else if(P.alias==='messaggio')t='Questo servizio permette di indicare il nome del mittente a ogni messaggio.';
   else t='Il nome mostrato al destinatario dipende dall’account di posta o dal programma usato. Il nome azienda compare comunque in oggetto, testo e firma.';
   $('st_aliashint').textContent=t}
-function provHint(){const P=selProv(),el=$('st_provhint');
+function gdPaint(){const e=$('st_gds');if(!e)return;const c=($('st_gcid').value||'').trim();GD.setClient(c);e.textContent=GD.ready()?'Gmail è collegato. Il collegamento dura circa un’ora: poi tocca di nuovo Collega Gmail.':c?'Non collegato: tocca Collega Gmail.':'Inserisci l’ID client per collegare Gmail.'}
+function provHint(){const P=selProv(),el=$('st_provhint');const dir=P.id==='gmail'&&!hasClaude();{const b=$('st_gd');if(b)b.hidden=!dir}if(dir){el.textContent='Gmail si collega direttamente al tuo account Google: le email vanno dal tuo dispositivo a Google, senza passare da altri server.';gdPaint();return}
   const T={manuale:'Nessun collegamento automatico: le email si preparano qui e si inviano con Apri posta o Copia. Le risposte si registrano a mano.',server:'Un server IMAP/POP3/SMTP non è raggiungibile da una pagina web: serve il servizio di posta previsto per l’app. Intanto puoi salvare qui i parametri e usare Apri posta o Copia.',prossimo:'Il connettore esiste su claude.ai. Invio e lettura automatici si attivano dopo il collegamento e la verifica dei suoi strumenti. Nel frattempo si usa Apri posta o Copia.'+(P.note?' '+P.note:'')};
   if(P.stato!=='attivo'){el.textContent=T[P.stato]||'';return}
   el.textContent='Verifica del collegamento…';
@@ -719,7 +723,7 @@ async function bounceCheck(mcp,r){
 function remind(r){openCompose(editing);$('mc_sub').value='Promemoria: informativa sulla privacy'+(az()?' – '+az():'');
   $('mc_body').value='Gentile '+cmpName+',\n\nle abbiamo inviato alcuni giorni fa la nostra informativa sulla privacy. Se desidera indicare i consensi facoltativi, può rispondere alla nostra email precedente con il codice '+r.token+' e i numeri delle voci. Non è necessario rispondere se non desidera prestare consensi.\n\n'+firma();
   cmpLog='Promemoria inviato via email (codice '+r.token+')'}
-function openSettings(){setSp(null);try{paintCloud();paintDrive()}catch(e){}paintWaSet();$('st_qv').value=S.qValid;$('st_qc').value=S.qCond;$('st_ls').value=S.lead.scartati;$('st_ln').value=S.lead.nuovi;$('st_lg').value=S.lead.giorni;$('st_linf').checked=S.lead.inf!==false;['st_qv','st_ls','st_ln','st_lg'].forEach(k=>setErr(k,''));try{paintBro()}catch(e){}$('st_piva').value=S.piva||'';$('st_ind').value=S.indirizzo||'';$('st_tel').value=S.telefono||'';$('st_sito').value=S.sito||'';fillProv();$('st_acons').checked=S.autoCons!==false;$('st_az').value=S.azienda;$('st_alias').value=S.alias;$('st_firma').value=S.firma;$('st_prov').value=PV().id;$('st_rt').value=S.replyTo;['contratto','contatti','marketing','profilazione','comunicazioni'].forEach(k=>{$('st_r_'+k).value=S.ret[k];setErr('st_r_'+k,'')});['st_rt','st_az'].forEach(k=>setErr(k,''));detName='';fillSrv();aliasHint();provHint();$('mSet').hidden=false;stTouched=false;stBase=stSig();setTimeout(()=>{if(!stTouched)stBase=stSig()},900)}
+function openSettings(){setSp(null);try{$('st_gcid').value=S.gcid||''}catch(e){}try{paintCloud();paintDrive()}catch(e){}paintWaSet();$('st_qv').value=S.qValid;$('st_qc').value=S.qCond;$('st_ls').value=S.lead.scartati;$('st_ln').value=S.lead.nuovi;$('st_lg').value=S.lead.giorni;$('st_linf').checked=S.lead.inf!==false;['st_qv','st_ls','st_ln','st_lg'].forEach(k=>setErr(k,''));try{paintBro()}catch(e){}$('st_piva').value=S.piva||'';$('st_ind').value=S.indirizzo||'';$('st_tel').value=S.telefono||'';$('st_sito').value=S.sito||'';fillProv();$('st_acons').checked=S.autoCons!==false;$('st_az').value=S.azienda;$('st_alias').value=S.alias;$('st_firma').value=S.firma;$('st_prov').value=PV().id;$('st_rt').value=S.replyTo;['contratto','contatti','marketing','profilazione','comunicazioni'].forEach(k=>{$('st_r_'+k).value=S.ret[k];setErr('st_r_'+k,'')});['st_rt','st_az'].forEach(k=>setErr(k,''));detName='';fillSrv();aliasHint();provHint();$('mSet').hidden=false;stTouched=false;stBase=stSig();setTimeout(()=>{if(!stTouched)stBase=stSig()},900)}
 ['st_az','st_alias'].forEach(id=>$(id).addEventListener('input',aliasHint));
 const SRVD={imap:{ssl:993,starttls:143,none:143},pop3:{ssl:995,starttls:110,none:110}},SMTPD={starttls:587,ssl:465,none:25};let stTouched=false,stBase='';
 const stSig=()=>[...$('mSet').querySelectorAll('input:not([type=file]):not([data-ns]),select:not([data-ns]),textarea')].map(e=>e.type==='checkbox'?(e.checked?1:0):e.value).join('\u0001');
@@ -729,12 +733,18 @@ function fillSrv(){const m=S.mailSrv||{};$('st_sproto').value=m.proto||'imap';$(
 {const ALLIN=[993,143,995,110],ALLOUT=[587,465,25],pi=()=>SRVD[$('st_sproto').value][$('st_ssec').value];
  ['st_sproto','st_ssec'].forEach(id=>$(id).addEventListener('change',()=>{const c=+$('st_sport').value;if(!c||ALLIN.includes(c))$('st_sport').value=pi()}));
  $('st_smtps').addEventListener('change',()=>{const c=+$('st_smtpp').value;if(!c||ALLOUT.includes(c))$('st_smtpp').value=SMTPD[$('st_smtps').value]})}
+$('st_gdb').onclick=async()=>{const b=$('st_gdb'),id=($('st_gcid').value||'').trim();if(!/^[\w.-]+\.apps\.googleusercontent\.com$/.test(id)){$('st_gds').textContent='L’ID client deve finire con .apps.googleusercontent.com.';return}
+  S.gcid=id;GD.setClient(id);b.disabled=true;$('st_gds').textContent='Apro l’accesso Google…';
+  try{await GD.connect();saveS();if(!$('st_rt').value.trim()){try{const w=await detectMe(selProv());if(w.email){$('st_rt').value=w.email;detName=w.name;aliasHint()}}catch(e){}}toast('Gmail collegato.')}
+  catch(e){$('st_gds').textContent=e&&e.code==='server_unavailable'?'Impossibile contattare Google: controlla la connessione.':'Accesso non riuscito o annullato. Controlla l’ID client e che la tua email sia tra gli utenti di prova.';b.disabled=false;return}
+  b.disabled=false;gdPaint()};
+$('st_gcid').addEventListener('input',()=>{try{gdPaint()}catch(e){}});
 $('st_prov').addEventListener('change',()=>{detName='';srvShow();aliasHint();provHint()});
 $('st_x').onclick=()=>{$('mSet').hidden=true};
 $('stBack').onclick=()=>{if(spCur){setSp(null);return}if(stSig()===stBase){$('mSet').hidden=true;return}$('mDirty').hidden=false;$('dC').onclick=()=>{$('mDirty').hidden=true};$('dN').onclick=()=>{$('mDirty').hidden=true;$('mSet').hidden=true};$('dY').onclick=()=>{$('mDirty').hidden=true;$('st_ok').onclick()}};
 $('st_det').onclick=async()=>{const b=$('st_det');b.disabled=true;setErr('st_rt','');try{const w=await detectMe(selProv());if(w.email){$('st_rt').value=w.email;detName=w.name;aliasHint()}else setErr('st_rt','Non sono riuscito a rilevarlo: scrivilo a mano.')}catch(e){setErr('st_rt',gmReadErr(e))}finally{b.disabled=false}};
 $('st_ok').onclick=()=>{const RK=['contratto','contatti','marketing','profilazione','comunicazioni'],nr={};let rok=true;RK.forEach(k=>{const v=parseInt($('st_r_'+k).value,10);if(!(v>=1&&v<=240)){setErr('st_r_'+k,'Inserisci i mesi (da 1 a 240).');rok=false;setSp('pv')}else{setErr('st_r_'+k,'');nr[k]=v}});if(!rok)return;const NV=[['st_qv',1,365,'pr'],['st_ls',1,365,'ld'],['st_ln',1,60,'ld'],['st_lg',1,365,'ld']],nvv={};for(const [k,a,b,pn] of NV){const v=parseInt($(k).value,10);if(!(v>=a&&v<=b)){setSp(pn);setErr(k,'Inserisci un numero da '+a+' a '+b+'.');return}setErr(k,'');nvv[k]=v}{const su=$('st_surl').value.trim();if($('st_smode').value==='api'&&!/^https:\/\//i.test(su)){setSp('wa');toast('Per l’invio automatico inserisci un indirizzo che inizia con https://');return}}
-  S.wa={send:{mode:$('st_smode').value,url:$('st_surl').value.trim(),token:$('st_stok').value.trim()},bus:{on:$('st_rmode').value==='bus',url:$('st_burl').value.trim(),token:$('st_btok').value.trim()},paese:$('st_wpaese').value||'IT',inf:$('st_winf').value,tpl:[...document.querySelectorAll('#st_wtpl .wt')].map(r=>[r.querySelector('input').value.trim(),r.querySelector('textarea').value]).filter(x=>x[0]&&x[1].trim())};if(!S.wa.tpl.length)S.wa.tpl=[['Ciao','Ciao {nome}, ']];S.qValid=nvv.st_qv;S.qCond=$('st_qc').value.trim()||S.qCond;S.lead={scartati:nvv.st_ls,nuovi:nvv.st_ln,giorni:nvv.st_lg,inf:$('st_linf').checked};S.ret=nr;const rt=$('st_rt').value.trim().toLowerCase();if(rt&&!mailRe.test(rt)){setSp('em');setErr('st_rt','Indirizzo email non valido.');return}S.azienda=$('st_az').value.trim();S.piva=$('st_piva').value.trim();S.indirizzo=$('st_ind').value.trim();S.telefono=$('st_tel').value.trim();S.sito=$('st_sito').value.trim();S.alias=$('st_alias').value.trim();S.firma=$('st_firma').value.trim()||'Cordiali saluti\n{azienda}';S.autoCons=$('st_acons').checked;S.provider=$('st_prov').value;S.replyTo=rt;S.mailSrv={proto:$('st_sproto').value,host:$('st_shost').value.trim(),port:parseInt($('st_sport').value,10)||0,sec:$('st_ssec').value,user:$('st_suser').value.trim(),shost:$('st_smtph').value.trim(),sport:parseInt($('st_smtpp').value,10)||0,ssec:$('st_smtps').value};saveS();$('mSet').hidden=true;try{paintReq()}catch(e){}toast('Impostazioni salvate.')};
+  S.gcid=($('st_gcid').value||'').trim();S.wa={send:{mode:$('st_smode').value,url:$('st_surl').value.trim(),token:$('st_stok').value.trim()},bus:{on:$('st_rmode').value==='bus',url:$('st_burl').value.trim(),token:$('st_btok').value.trim()},paese:$('st_wpaese').value||'IT',inf:$('st_winf').value,tpl:[...document.querySelectorAll('#st_wtpl .wt')].map(r=>[r.querySelector('input').value.trim(),r.querySelector('textarea').value]).filter(x=>x[0]&&x[1].trim())};if(!S.wa.tpl.length)S.wa.tpl=[['Ciao','Ciao {nome}, ']];S.qValid=nvv.st_qv;S.qCond=$('st_qc').value.trim()||S.qCond;S.lead={scartati:nvv.st_ls,nuovi:nvv.st_ln,giorni:nvv.st_lg,inf:$('st_linf').checked};S.ret=nr;const rt=$('st_rt').value.trim().toLowerCase();if(rt&&!mailRe.test(rt)){setSp('em');setErr('st_rt','Indirizzo email non valido.');return}S.azienda=$('st_az').value.trim();S.piva=$('st_piva').value.trim();S.indirizzo=$('st_ind').value.trim();S.telefono=$('st_tel').value.trim();S.sito=$('st_sito').value.trim();S.alias=$('st_alias').value.trim();S.firma=$('st_firma').value.trim()||'Cordiali saluti\n{azienda}';S.autoCons=$('st_acons').checked;S.provider=$('st_prov').value;S.replyTo=rt;S.mailSrv={proto:$('st_sproto').value,host:$('st_shost').value.trim(),port:parseInt($('st_sport').value,10)||0,sec:$('st_ssec').value,user:$('st_suser').value.trim(),shost:$('st_smtph').value.trim(),sport:parseInt($('st_smtpp').value,10)||0,ssec:$('st_smtps').value};saveS();$('mSet').hidden=true;try{paintReq()}catch(e){}toast('Impostazioni salvate.')};
 function renderLinked(){
   const f=$('linkedF'),w=$('linked');w.textContent='';
   if(!editing){f.hidden=true;return}
@@ -9288,7 +9298,7 @@ $('l_sync').onclick=()=>{if(lCur&&lCur.email)leadSync(lCur)};
 $('l_regwa').onclick=()=>{if(!lCur)return;wrLead=lCur;wrDir='in';paintWr();const n=new Date();$('wr_dt').value=new Date(n.getTime()-n.getTimezoneOffset()*6e4).toISOString().slice(0,16);$('wr_txt').value='';setErr('wr_dt','');setErr('wr_txt','');$('mWr').hidden=false};
 async function leadSync(l,quiet){const st=$('l_chkh'),em=(l.email||'').toLowerCase();if(!em)return 0;LAST['l'+l.id]=Date.now();
   if(!quiet&&lCur===l)st.textContent='Controllo delle risposte…';
-  try{const mcp=await gm();if(!mcp){if(!quiet&&lCur===l)st.textContent='Collegamento a Gmail non disponibile in questa visualizzazione: si vedono solo i messaggi già registrati.';return 0}
+  try{const mcp=await gm();if(!mcp){if(!quiet&&lCur===l)st.textContent=hasClaude()?'Collegamento a Gmail non disponibile in questa visualizzazione: si vedono solo i messaggi già registrati.':gmNo();return 0}
     const P=PV();if(!P.search)return 0;
     const r=pj(await P.search(mcp,'from:'+em+' OR to:'+em+' newer_than:180d'));let n=0;const have=new Set((l.msgs||[]).map(m=>m.gid).filter(Boolean));
     (r.threads||[]).forEach(t=>(t.messages||[]).forEach(m=>{const id=m.id||m.messageId;if(!id||have.has(id))return;have.add(id);
@@ -9361,7 +9371,7 @@ function doConv(){const d=lRead();if(!lCheck(d))return;const l=lCur||(()=>{const
   clients.push(c);if(inf)logP(c,'Informativa inviata via '+(inf.via==='WhatsApp'?'WhatsApp':'email')+' in risposta al lead',inf.via==='WhatsApp'?'invioWa':'invio');logP(c,'Anagrafica creata (fonte: lead da '+({web:'form web',email:'email',manuale:'inserimento manuale'}[l.fonte]||'lead')+')','creazione');
   l.stato='convertito';l.clienteId=c.id;l.convertito=Date.now();persist();persistL();$('lSheet').hidden=true;renderL();setTab('clienti');render();openSheet(c);toast('Lead convertito in prospect.'+(dupTel?' Telefono non copiato: già presente in un altro cliente.':''))};
 async function leadScan(){if(lBusy)return;LAST.scan=Date.now();lBusy=true;try{if(!localStorage.getItem('crm-lead-reseen-v2')){lSeen=[];localStorage.setItem('crm-lead-reseen-v2','1')}}catch(e){}const st=$('lStatus'),btn=$('lScan');btn.disabled=true;st.textContent='Lettura delle email in corso…';
-  try{const mcp=await gm();if(!mcp){st.textContent='Collegamento alla posta non disponibile in questa visualizzazione.';return}
+  try{const mcp=await gm();if(!mcp){st.textContent=hasClaude()?'Collegamento alla posta non disponibile in questa visualizzazione.':gmNo();return}
     const P=PV();if(!P.search||!P.qInbound){st.textContent='L’analisi delle email non è ancora disponibile per '+P.nome+'.';return}
     const r=pj(await P.search(mcp,P.qInbound.replace(/newer_than:\d+d/,'newer_than:'+S.lead.giorni+'d'))),msgs=[];(r.threads||[]).forEach(t=>(t.messages||[]).forEach(m=>msgs.push(m)));
     msgs.sort((a,b)=>+b.internalDate-+a.internalDate);
