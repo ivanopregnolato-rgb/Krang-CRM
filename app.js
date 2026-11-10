@@ -10368,8 +10368,8 @@ const CARD=(()=>{
  const grp=n=>{const d=n.replace(/\D/g,'');if(!/^3\d{8,9}$/.test(d))return n;return d.length===10?d.replace(/^(\d{3})(\d{3})(\d{4})$/,'$1 $2 $3'):d.replace(/^(\d{3})(\d{3})(\d{3})$/,'$1 $2 $3')};
  const dialIso=n=>{const m=n.replace(/[^\d+]/g,'');if(!m.startsWith('+'))return null;let best=null;COUNTRIES.forEach(c=>{const d=String(c[2]);if(m.startsWith(d)&&(!best||d.length>String(best[2]).length))best=c});return best};
  function parse(raw){
-  const lines=String(raw||'').replace(/\(at\)|\[at\]/gi,'@').replace(/(\w)\s?[©®]\s?(\w)/g,'$1@$2').split(/\r?\n/).map(l=>fixNum(l.replace(/[|¦_•·►▶■□]/g,' ').replace(/\s+/g,' ').trim())).filter(l=>l.length>1);
-  const used=new Set(),out={},extra=[];
+  const lines=String(raw||'').replace(/\(at\)|\[at\]/gi,'@').replace(/(\w)\s?[©®]\s?(\w)/g,'$1@$2').split(/\r?\n/).map(l=>fixNum(l.replace(/[|¦_•·►▶■□]/g,' ').replace(/\s+/g,' ').trim().replace(/^[^\w\u00C0-\u00FF+(@]+/,''))).filter(l=>l.length>1);
+  const used=new Set(),out={},extra=[];let addrSure=false,compSure=false,nameSure=false;
   const text=lines.join('\n');
   // email
   const mails=[...new Set((text.match(/[A-Za-z0-9._%+-]+\s?@\s?[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g)||[]).map(m=>m.replace(/\s+/g,'').toLowerCase()))];
@@ -10400,24 +10400,27 @@ const CARD=(()=>{
   phones.forEach(p=>used.add(p.line));
   // indirizzo
   const ai=lines.findIndex((l,i)=>STREET.test(l)&&!used.has(i));let addr=[];
-  if(ai>=0){addr.push(lines[ai]);used.add(ai);const nx=lines[ai+1];if(nx&&/\b\d{5}\b/.test(nx)&&!used.has(ai+1)){addr.push(nx);used.add(ai+1)}}
+  if(ai>=0){addrSure=true;addr.push(lines[ai]);used.add(ai);const nx=lines[ai+1];if(nx&&/\b\d{5}\b/.test(nx)&&!used.has(ai+1)){addr.push(nx);used.add(ai+1)}}
   else{const ci=lines.findIndex((l,i)=>/\b\d{5}\b/.test(l)&&!/\b\d{11}\b/.test(l)&&!used.has(i)&&!/\d{3}[\s.-]\d{3}/.test(l));if(ci>=0){if(ci>0&&!used.has(ci-1)&&/\d/.test(lines[ci-1])&&!ROLE.test(lines[ci-1])){addr.push(lines[ci-1]);used.add(ci-1)}addr.push(lines[ci]);used.add(ci)}}
   if(addr.length)out.indirizzo=addr.join(', ').replace(/\s+,/g,',');
   // ruolo
   const ri=lines.findIndex((l,i)=>!used.has(i)&&ROLE.test(l)&&!/\d{4}/.test(l)&&l.length<60);if(ri>=0){out.ruolo=lines[ri];used.add(ri)}
   // azienda
-  let ci=lines.findIndex((l,i)=>!used.has(i)&&COMP.test(l)&&l.length<70);
+  let ci=lines.findIndex((l,i)=>!used.has(i)&&COMP.test(l)&&l.length<70);compSure=ci>=0;
   const core=out.email&&!FREE.test(out.email.split('@')[1])?out.email.split('@')[1].split('.')[0].replace(/[^a-z0-9]/g,''):(out.sito&&!FREE.test(out.sito.replace(/^www\./,''))?out.sito.replace(/^www\./,'').split('.')[0].replace(/[^a-z0-9]/g,''):'');
-  if(core.length>=4){const dl=lines.findIndex((l,i)=>{if(used.has(i)||i===ri)return false;const t=l.toLowerCase().replace(/[^a-z0-9]/g,'');return t.length>=4&&(t===core||t.includes(core)||core.includes(t))&&!/@|\d{4}/.test(l)&&!STREET.test(l)});if(dl>=0&&(ci<0||dl!==ci)&&!(out.nome&&lines[dl].toLowerCase().includes(out.nome.toLowerCase())&&lines[dl].toLowerCase().includes((out.cognome||'').toLowerCase())))ci=dl}
+  if(core.length>=4){const dl=lines.findIndex((l,i)=>{if(used.has(i)||i===ri)return false;const t=l.toLowerCase().replace(/[^a-z0-9]/g,'');return t.length>=4&&(t===core||t.includes(core)||core.includes(t))&&!/@|\d{4}/.test(l)&&!STREET.test(l)});if(dl>=0&&(ci<0||dl!==ci)&&!(out.nome&&lines[dl].toLowerCase().includes(out.nome.toLowerCase())&&lines[dl].toLowerCase().includes((out.cognome||'').toLowerCase()))){ci=dl;compSure=true}}
   // nome persona
   const local=(out.email||'').split('@')[0].replace(/[^a-z.\-_]/g,' ').split(/[.\-_ ]+/).filter(x=>x.length>1);
-  const cand=lines.map((l,i)=>({l,i})).filter(({l,i})=>{if(used.has(i)||i===ci)return false;const t=l.replace(TITLES,'');if(/\d|@|www/i.test(t))return false;if(COMP.test(t)||STREET.test(t)||ROLE.test(t))return false;const w=t.split(/\s+/);return w.length>=2&&w.length<=4&&w.every(x=>/^[A-Za-zÀ-ÿ'’.-]+$/.test(x))});
+  const okW=x=>/^[A-Za-zÀ-ÿ'’.,-]+$/.test(x);
+  const cand=lines.map((l,i)=>({l,i})).filter(({l,i})=>{if(used.has(i)||i===ci)return false;const t=l.replace(TITLES,'');if(/\d|@|www/i.test(t))return false;if(COMP.test(t)||STREET.test(t)||ROLE.test(t))return false;const w=t.split(/\s+/);return w.length>=2&&w.length<=4&&w.every(okW)});
+  if(!cand.length){lines.forEach((l,i)=>{if(used.has(i)||i===ci||i===ri)return;const t=l.replace(TITLES,'');if(/@|www|\d{3}/i.test(t)||COMP.test(t)||STREET.test(t)||ROLE.test(t))return;const w=t.split(/\s+/).filter(Boolean),al=t.replace(/[^A-Za-zÀ-ÿ]/g,'').length;if(w.length>=2&&w.length<=4&&al>=t.replace(/\s/g,'').length*.7&&al>=5)cand.push({l:t.replace(/[^A-Za-zÀ-ÿ'’.\s-]/g,' ').replace(/\s+/g,' ').trim(),i})})}
   const score=({l,i})=>{const t=l.replace(TITLES,'').toLowerCase();let s=0;local.forEach(x=>{if(t.includes(x))s+=3});if(ri>=0&&Math.abs(i-ri)<=1)s+=2;if(/^[A-ZÀ-Ý][a-zà-ÿ]+(\s+[A-ZÀ-Ý][a-zà-ÿ]+)+$/.test(l.replace(TITLES,''))||/^[A-ZÀ-Ý' .-]+$/.test(l.replace(TITLES,'')))s+=1;s-=i*.05;return s};
   cand.sort((a,b)=>score(b)-score(a));
-  if(cand[0]){let t=fixCase(cand[0].l.replace(TITLES,'')).replace(/[.]+$/,'');used.add(cand[0].i);let w=t.split(/\s+/);
+  if(cand[0]){nameSure=score(cand[0])>=3||TITLES.test(cand[0].l);const raw0=cand[0].l.replace(TITLES,'').replace(/[.,]+$/,'');const ww=raw0.split(/\s+/),caps=ww.filter(x=>/^[A-ZÀ-Ý'’-]{2,}$/.test(x));let t=fixCase(raw0);used.add(cand[0].i);let w=t.split(/\s+/);
    const lowered=w.map(x=>x.toLowerCase());let k=w.length-1;while(k>1&&PART.includes(lowered[k-1]))k--;
    let nome=w.slice(0,k).join(' '),cogn=w.slice(k).join(' ');
    if(local.length>=2){const a=local[0],b=local[local.length-1],ln=nome.toLowerCase(),lc=cogn.toLowerCase();if(ln.includes(b)&&lc.includes(a)){const x=nome;nome=cogn;cogn=x}}
+   if(caps.length===1&&ww.length>=2&&ww.length<=3&&caps.length<ww.length){cogn=fixCase(caps[0]);nome=fixCase(ww.filter(x=>x!==caps[0]).join(' '))}
    out.nome=nome;out.cognome=cogn}
   if(out.email&&(out.nome||out.cognome)){const [lp,dm]=out.email.split('@'),ref=[out.nome,out.cognome].filter(Boolean).join(' ').toLowerCase().split(/\s+/).map(x=>x.replace(/[^a-zà-ÿ]/g,'')).filter(x=>x.length>=5);
    const toks=lp.split(/([._-])/);let ch=false;const nt=toks.map(t=>{if(t.length<5)return t;const r=ref.find(x=>x!==t&&lev(x,t)===1);if(r){ch=true;return r}return t});if(ch)out.email=nt.join('')+'@'+dm}
@@ -10428,7 +10431,9 @@ const CARD=(()=>{
   const note=['Letto da biglietto da visita il '+new Date().toLocaleDateString('it-IT')+'.'];
   if(extra.length)note.push('Altri recapiti: '+extra.join(' · '));
   if(rest.length)note.push('Testo non assegnato: '+rest.slice(0,6).join(' / '));
-  out.note=note.join('\n');return out}
+  out.note=note.join('\n');
+  out._c=['email','pec','piva','telefono'].filter(k=>out[k]);if(out.sito)out._c.push('sito');if(out.ruolo)out._c.push('ruolo');if(nameSure){out._c.push('nome','cognome')}if(compSure&&out.azienda)out._c.push('azienda');if(addrSure&&out.indirizzo)out._c.push('indirizzo');
+  out._u=lines.filter((l,i)=>used.has(i));out._l=lines;out._x=extra;return out}
  /* immagine: ridimensiona, scala di grigi; mode 'g' = contrasto, 'b' = binarizzazione adattiva (sfondi/luci irregolari) */
  function prep(file,mode){return new Promise((ok,ko)=>{const img=new Image(),u=URL.createObjectURL(file);
   img.onload=()=>{try{const mx=Math.max(img.naturalWidth,img.naturalHeight),s=Math.min(2.5,Math.max(.4,2400/mx)),c=document.createElement('canvas'),W=c.width=Math.round(img.naturalWidth*s),H=c.height=Math.round(img.naturalHeight*s);
@@ -10460,17 +10465,68 @@ const CARD=(()=>{
  const WHY={email:'lo stesso indirizzo email',piva:'la stessa partita IVA',telefono:'lo stesso numero di telefono',nome:'lo stesso nome e cognome',azienda:'lo stesso nome di azienda'};
  function diff(c,d){const ch=[];FL2.forEach(([k,l])=>{const v=d[k];if(!v)return;const o=c[k]||'';if(!o)ch.push({k,l,o:'',v,add:true});else if(!same(k,o,v))ch.push({k,l,o,v})});return ch}
  function fillSheet(d,only){Object.keys(d).forEach(k=>{if(!FIELDS.includes(k)||!d[k]||(only&&!only.includes(k)))return;const e=$(k);if(!e)return;e.value=d[k];e.dispatchEvent(new Event('input',{bubbles:true}));if(k==='paese')e.dispatchEvent(new Event('change',{bubbles:true}))});if(d.tipo&&!only)applyTipo(d.tipo)}
- function startNew(d){if(window.holdDirty)window.holdDirty('sheet');openSheet(null);fillSheet(d);showMsg('Dati letti dal biglietto: controllali e correggi se serve prima di salvare.')}
+ function startNew(d){closeRev();if(window.holdDirty)window.holdDirty('sheet');openSheet(null);fillSheet(d);showMsg('Dati letti dal biglietto: controllali e correggi se serve prima di salvare.')}
  function askDup(m,d){const M=$('mDup'),L=$('dpL'),c=m.c,ch=diff(c,d);L.textContent='';
   $('dpT').textContent='Cliente già presente';
   $('dpS').textContent='«'+fullName(c)+'» ha '+WHY[m.why]+' di questo biglietto.';
   ch.slice(0,8).forEach(x=>{const li=h('li');li.append(h('b','',x.l+': '),document.createTextNode(x.add?'aggiungo '+x.v:x.o+' → '+x.v));L.append(li)});
   $('dpH').textContent=ch.length?(ch.some(x=>!x.add)?'I valori diversi vengono sostituiti con quelli del biglietto. Potrai controllare e salvare.':'Verranno aggiunti solo dati mancanti. Potrai controllare e salvare.'):'Il biglietto non porta dati nuovi rispetto alla scheda.';
   $('dpU').lastChild.textContent=ch.length?' Aggiorna la scheda':' Apri la scheda';
-  $('dpU').onclick=()=>{M.hidden=true;if(ch.length&&window.holdDirty)window.holdDirty('sheet');openSheet(c);if(ch.length){const v={};ch.forEach(x=>{v[x.k]=x.v});if(v.telefono&&d.paese)v.paese=d.paese;const nt=d.note?((c.note?c.note+'\n\n':'')+d.note):'';if(nt)v.note=nt;fillSheet(v);showMsg('Dati del biglietto applicati: controllali e torna indietro per salvare.')}};
+  $('dpU').onclick=()=>{M.hidden=true;closeRev();if(ch.length&&window.holdDirty)window.holdDirty('sheet');openSheet(c);if(ch.length){const v={};ch.forEach(x=>{v[x.k]=x.v});if(v.telefono&&d.paese)v.paese=d.paese;const nt=d.note?((c.note?c.note+'\n\n':'')+d.note):'';if(nt)v.note=nt;fillSheet(v);showMsg('Dati del biglietto applicati: controllali e torna indietro per salvare.')}};
   $('dpN').onclick=()=>{M.hidden=true;startNew(d)};$('dpX').onclick=()=>{M.hidden=true};M.hidden=false}
+ ICONS.cut=svg('<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/>');
+ const CF=[['nome','Nome'],['cognome','Cognome'],['azienda','Azienda'],['ruolo','Ruolo'],['telefono','Telefono'],['email','Email'],['sito','Sito web'],['indirizzo','Indirizzo'],['piva','Partita IVA'],['pec','PEC'],['note','Note']];
+ let R=null,ADD=false;
+ const junk=t=>!/[A-Za-zÀ-ÿ0-9]{4,}/.test(t);
+ function closeRev(){if(R){R.urls.forEach(u=>{try{URL.revokeObjectURL(u)}catch(e){}})}R=null;$('cardRev').hidden=true}
+ function chipsFrom(p,old){const was=new Map((old||[]).map(c=>[c.t,c.used]));return p._l.map(t=>({t,used:p._u.includes(t)||!!was.get(t)}))}
+ function ingest(txt,url){
+  if(R){R.urls.push(url);R.text+='\n'+txt}
+  const p=parse(R?R.text:txt);
+  if(!R){R={urls:[url],text:txt,vals:{},chk:new Set(p._c),sel:-1,paese:'',tel0:'',extra:[],chips:[]};CF.forEach(([k])=>{if(k!=='note')R.vals[k]=p[k]||''});R.vals.note=''}
+  else CF.forEach(([k])=>{if(k==='note')return;if(!R.vals[k]&&p[k]){R.vals[k]=p[k];if(p._c.includes(k))R.chk.add(k)}});
+  R.paese=p.paese||R.paese;R.tel0=p.telefono||R.tel0;R.extra=p._x;R.chips=chipsFrom(p,R.chips);R.sel=-1;renderRev();$('cardRev').hidden=false;$('cardRev').scrollTop=0}
+ function assign(i,k){const c=R.chips[i];if(!c)return;const t=c.t;if(k==='note')R.vals.note=(R.vals.note?R.vals.note+'\n':'')+t;else R.vals[k]=t;R.chk.add(k);c.used=true;R.sel=-1;renderRev(true)}
+ function renderRev(keep){const top=$('cardRev').scrollTop;
+  const ph=$('crPh');ph.textContent='';R.urls.forEach(u=>{const im=h('img','crThumb');im.src=u;im.alt='Biglietto';ph.append(im)});
+  $('crBack').lastChild.textContent=R.urls.length>1?' Altra foto':' Aggiungi il retro';
+  const F=$('crF');F.textContent='';F.classList.toggle('crSel',R.sel>=0);
+  CF.forEach(([k,l])=>{const row=h('div','f crRow'+(R.vals[k]&&!R.chk.has(k)&&k!=='note'?' unk':''));row.dataset.k=k;
+   const lb=h('label','',l);lb.setAttribute('for','cr_'+k);const big=k==='indirizzo'||k==='note';const inp=h(big?'textarea':'input');inp.id='cr_'+k;if(big)inp.rows=2;inp.value=R.vals[k]||'';inp.autocomplete='off';
+   if(k==='email'||k==='pec'){inp.type='email';inp.autocapitalize='off'}if(k==='telefono')inp.inputMode='tel';
+   inp.oninput=()=>{R.vals[k]=inp.value;R.chk.add(k);row.classList.remove('unk')};
+   const put=h('button','crPut','Inserisci qui');put.type='button';put.onclick=()=>assign(R.sel,k);
+   row.append(lb,inp,put);F.append(row)});
+  const P=$('crPool');P.textContent='';
+  R.chips.forEach((c,i)=>{const ch=h('div','crChip'+(c.used?' used':'')+(R.sel===i?' sel':''));ch.append(h('span','',c.t));
+   if(/\s/.test(c.t)){const cut=h('button','crCut');cut.type='button';cut.setAttribute('aria-label','Dividi in parole');cut.title='Dividi in parole';cut.innerHTML=ICONS.cut;cut.onclick=e=>{e.stopPropagation();const w=c.t.split(/\s+/).filter(Boolean).map(t=>({t,used:false}));R.chips.splice(i,1,...w);R.sel=-1;renderRev(true)};ch.append(cut)}
+   dragInit(ch,i);P.append(ch)});
+  $('crHint').textContent=R.sel>=0?'Ora tocca il campo in cui inserirlo.':'Trascina una riga sul campo giusto (tieni premuto, poi muovi) oppure toccala e poi tocca il campo. Con le forbici dividi la riga in parole.';
+  if(keep)$('cardRev').scrollTop=top}
+ function dragInit(chip,i){let drag=false,gh=null,timer=null,sx=0,sy=0,live=false;
+  const rowAt=(x,y)=>{const e=document.elementFromPoint(x,y);return e&&e.closest?e.closest('.crRow'):null};
+  const hi=r=>{document.querySelectorAll('.crRow.hi').forEach(x=>{if(x!==r)x.classList.remove('hi')});if(r)r.classList.add('hi')};
+  let px=0,py=0,au=null;const mv=(x,y)=>{if(!gh)return;px=x;py=y;gh.style.left=x+'px';gh.style.top=y+'px';hi(rowAt(x,y))};
+  const auto=()=>{const S=$('cardRev'),H=innerHeight;if(py<110)S.scrollTop-=14;else if(py>H-110)S.scrollTop+=14;else return;hi(rowAt(px,py))};
+  const begin=(x,y)=>{drag=true;au=setInterval(auto,30);gh=h('div','crGhost',R.chips[i].t);document.body.append(gh);chip.classList.add('drg');mv(x,y)};
+  const end=()=>{live=false;clearTimeout(timer);clearInterval(au);document.removeEventListener('pointermove',onm);document.removeEventListener('pointerup',onu);document.removeEventListener('pointercancel',onc)};
+  const onm=e=>{if(!live)return;if(!drag){const dx=e.clientX-sx,dy=e.clientY-sy,far=Math.hypot(dx,dy);if(e.pointerType==='mouse'){if(far>5)begin(e.clientX,e.clientY)}else if(far>10){clearTimeout(timer)}}else mv(e.clientX,e.clientY)};
+  const fin=(x,y,ok)=>{const was=drag;end();if(gh){gh.remove();gh=null}chip.classList.remove('drg');hi(null);if(was){if(ok){const r=rowAt(x,y);if(r)assign(i,r.dataset.k)}drag=false;return}
+   if(ok&&Math.hypot(x-sx,y-sy)<10){R.sel=R.sel===i?-1:i;renderRev(true)}};
+  const onu=e=>fin(e.clientX,e.clientY,true),onc=e=>fin(e.clientX,e.clientY,false);
+  chip.addEventListener('pointerdown',e=>{if(e.target.closest('.crCut'))return;sx=e.clientX;sy=e.clientY;drag=false;live=true;document.addEventListener('pointermove',onm);document.addEventListener('pointerup',onu);document.addEventListener('pointercancel',onc);if(e.pointerType!=='mouse')timer=setTimeout(()=>begin(sx,sy),260)});
+  chip.addEventListener('touchmove',e=>{if(drag)e.preventDefault()},{passive:false});
+  chip.addEventListener('contextmenu',e=>e.preventDefault())}
+ function finish(){const v=R.vals,d={};['nome','cognome','azienda','ruolo','telefono','email','sito','indirizzo','piva','pec'].forEach(k=>{const x=(v[k]||'').trim();if(x)d[k]=x});
+  if(d.telefono&&R.paese&&d.telefono===R.tel0)d.paese=R.paese;if(!d.nome&&!d.cognome&&d.azienda)d.tipo='azienda';
+  const nt=['Letto da biglietto da visita il '+new Date().toLocaleDateString('it-IT')+'.'];if(R.extra.length)nt.push('Altri recapiti: '+R.extra.join(' · '));
+  const un=R.chips.filter(c=>!c.used&&!junk(c.t)).map(c=>c.t);if($('crNote').checked&&un.length)nt.push('Testo non assegnato: '+un.slice(0,8).join(' / '));if((v.note||'').trim())nt.push(v.note.trim());
+  d.note=nt.join('\n');const m=findDup(d);if(m)askDup(m,d);else startNew(d)}
+ $('crOk').onclick=()=>{if(R)finish()};
+ $('crBack').onclick=()=>{ADD=true;$('cardFile').click()};
+ $('crX').onclick=()=>askConfirm('Scartare i dati letti dal biglietto?','trash','Scarta',()=>closeRev());
  let busy=false,stop=null;
- async function run(file){if(busy)return;busy=true;const M=$('mScan'),T=$('scT'),B=$('scB'),H=$('scH');let worker=null,cancelled=false;
+ async function run(file,add){if(busy)return;if(!add&&R)closeRev();busy=true;const M=$('mScan'),T=$('scT'),B=$('scB'),H=$('scH');let worker=null,cancelled=false;
   stop=()=>{cancelled=true;try{worker&&worker.terminate()}catch(e){}};B.style.width='4%';T.textContent='Preparo l’immagine…';H.textContent='';M.hidden=false;
   try{const cv=await prep(file);if(cancelled)return;T.textContent='Carico il lettore di testo…';H.textContent='Solo la prima volta può richiedere qualche istante.';await load();if(cancelled)return;
    const base=new URL('ocr/',location.href).href;
@@ -10486,10 +10542,10 @@ const CARD=(()=>{
    await worker.terminate();worker=null;if(cancelled)return;
    const txt=best.t,d=best.d;M.hidden=true;
    if(txt.replace(/\W/g,'').length<8){toast('Non riesco a leggere il biglietto: riprova con più luce e il biglietto dritto.');return}
-   const m=findDup(d);if(m)askDup(m,d);else startNew(d)}
+   ingest(txt,URL.createObjectURL(file))}
   catch(e){M.hidden=true;if(!cancelled)toast('Lettura non riuscita'+(navigator.onLine===false?': sei offline e il lettore non è ancora scaricato.':'. Riprova.'))}
   finally{try{worker&&worker.terminate()}catch(e){}busy=false;stop=null;M.hidden=true}}
- return{parse,run,prep,cancel:()=>stop&&stop()}})();
-{const f=$('cardFile');$('cScan').onclick=()=>f.click();f.onchange=()=>{const x=f.files&&f.files[0];f.value='';if(x)CARD.run(x)};$('scX').onclick=()=>CARD.cancel()}
+ return{parse,run,prep,add:v=>{if(v!==undefined)ADD=v;const a=ADD;ADD=false;return a&&!!R},cancel:()=>stop&&stop()}})();
+{const f=$('cardFile');$('cScan').onclick=()=>{CARD.add(false);f.click()};f.onchange=()=>{const x=f.files&&f.files[0],a=CARD.add();f.value='';if(x)CARD.run(x,a)};$('scX').onclick=()=>CARD.cancel()}
 
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
