@@ -117,7 +117,7 @@ function swipeRow(b,c,o){o=o||{};
   return w}
 function showMsg(t){const m=$('msg');m.textContent=t;m.hidden=!t}
 function openSheet(c,data){
-  editing=c||null;try{paintCre('sheet',c,'cl')}catch(e){}const d=data||c||{};
+  newRef=null;editing=c||null;try{paintCre('sheet',c,'cl')}catch(e){}const d=data||c||{};
   FIELDS.forEach(f=>$(f).value=d[f]||'');setErr('nascita','');ageHint();
   if(!$('paese').value)$('paese').value='IT';
   curFav=!!d.fav;paintFav();curFoto=d.foto||'';paintPhoto();applyTipo(d.tipo||'persona');renderLinked();loadPriv(d.privacy);setPane('dati');document.querySelectorAll('#cTabs [data-p=opp],#cTabs [data-p=comm],#cTabs [data-p=tp],#cTabs [data-p=tr]').forEach(b=>{b.hidden=!editing});tpSel=null;tpOff=new Set();mapQ='';updMap();$('p_copy').hidden=!editing;setErr('telefono','');setErr('email','');setErr('piva','');
@@ -136,12 +136,13 @@ $('ml_x').onclick=()=>{$('mLaunch').hidden=true};
 $('cAdd').onclick=()=>openSheet(null);$('lAdd').onclick=()=>openLead(null);$('oAdd').onclick=()=>openOpp(null);{let t1,t2;$('lq').oninput=()=>{clearTimeout(t1);t1=setTimeout(renderL,150)};$('oq').oninput=()=>{clearTimeout(t2);t2=setTimeout(renderO,150)}}$('pAdd').onclick=()=>openProd(null);
 $('addBtn').onclick=()=>tab==='opp'?openOpp(null):tab==='prod'?(window.pSec==='lst'?openLst(null):openProd(null)):tab==='lead'?openLead(null):openSheet(null);
 $('save').onclick=()=>saveClient();
+let newRef=null;/* anagrafica appena creata da questo foglio: va esclusa dai controlli di unicità e aggiornata, non duplicata */
 function saveClient(viaSend){
   const d={};FIELDS.forEach(f=>d[f]=$(f).value.trim());d.indirizzo=addrC(d.indirizzo);if(curTipo!=='azienda')d.pec='';d.foto=curFoto;d.tipo=curTipo;d.fav=curFav;if(!validate(d)){setPane('dati');const el=$('sheet').querySelector('.bad');if(el)el.scrollIntoView({block:'center'});return null}
   if(!viaSend&&!editing&&$('p_fonte').value==='interessato'&&!$('p_inf').checked&&!$('p_later').checked){$('p_det').open=true;setPane('priv');setErr('p_inf','Conferma di aver fornito l’informativa privacy oppure scegli «Invierò l’informativa più tardi».');return null}
   d.privacy=collectPriv(editing&&editing.privacy,!editing);d.agg=new Date().toISOString();
   if(!['nome','cognome','azienda','telefono','email'].some(f=>d[f])){showMsg('Inserisci almeno un dato.');return null}
-  let cl=editing;if(editing)Object.assign(editing,d);else{cl=stampNew({id:Date.now().toString(36),...d});clients.push(cl)}
+  let cl=editing;if(!cl&&newRef&&clients.includes(newRef)&&!$('sheet').hidden)cl=newRef;if(cl)Object.assign(cl,d);else{cl=stampNew({id:Date.now().toString(36),...d});clients.push(cl)}newRef=cl;
   persist();render();if(!viaSend)$('sheet').hidden=true;return cl
 }
 function viaNew(kind){
@@ -184,7 +185,7 @@ function validate(d,only,commit=true){
       else if(!it&&(n.length<6||n.length>12))bad('telefono','Il numero deve avere tra 6 e 12 cifre.');
       else{
         d.telefono=n;if(commit){$('paese').value=d.paese;$('telefono').value=n}
-        const full=dial(d.paese)+n,clash=clients.find(c=>c!==editing&&c.telefono&&dial(c.paese)+c.telefono.replace(/\D/g,'')===full);
+        const full=dial(d.paese)+n,clash=clients.find(c=>c!==editing&&c!==newRef&&c.telefono&&dial(c.paese)+c.telefono.replace(/\D/g,'')===full);
         if(clash)bad('telefono','Numero già registrato per '+fullName(clash)+'.')}}}
   if((!only||only==='piva')&&d.tipo==='azienda'&&d.piva){
     let v=d.piva.replace(/[\s.-]/g,'').toUpperCase();
@@ -192,12 +193,12 @@ function validate(d,only,commit=true){
     let okv=d.paese==='IT'?/^\d{11}$/.test(v):/^[A-Z0-9]{4,15}$/.test(v);
     if(okv&&d.paese==='IT'){let s=0;for(let i=0;i<10;i++){let n=+v[i];if(i%2){n*=2;if(n>9)n-=9}s+=n}okv=(10-s%10)%10===+v[10]}
     if(!okv)bad('piva',d.paese==='IT'?'Partita IVA non valida: servono 11 cifre corrette.':'Partita IVA non valida.');
-    else{d.piva=v;if(commit)$('piva').value=v;const clash=clients.find(c=>c!==editing&&(c.piva||'').toUpperCase()===v);if(clash)bad('piva','Partita IVA già registrata per '+fullName(clash)+'.')}}
+    else{d.piva=v;if(commit)$('piva').value=v;const clash=clients.find(c=>c!==editing&&c!==newRef&&(c.piva||'').toUpperCase()===v);if(clash)bad('piva','Partita IVA già registrata per '+fullName(clash)+'.')}}
   if(!only||only==='nascita'){setErr('nascita','');if(d.nascita){const t=new Date(d.nascita+'T00:00');if(isNaN(t)||t.getFullYear()<1900)bad('nascita','Inserisci una data valida.');else if(d.nascita>ymd())bad('nascita','La data di nascita non può essere nel futuro.')}}
   if((!only||only==='email')&&d.email){
     d.email=d.email.toLowerCase();
     if(!/^[^\s@.][^\s@]*@[^\s@.]+(\.[^\s@.]+)*\.[a-z]{2,}$/.test(d.email)||d.email.includes('..'))bad('email','Inserisci un’email valida, ad esempio nome@azienda.it.');
-    else{const clash=clients.find(c=>c!==editing&&(c.email||'').toLowerCase()===d.email);if(clash)bad('email','Email già registrata per '+fullName(clash)+'.')}}
+    else{const clash=clients.find(c=>c!==editing&&c!==newRef&&(c.email||'').toLowerCase()===d.email);if(clash)bad('email','Email già registrata per '+fullName(clash)+'.')}}
   if(!ok){const el=$('sheet').querySelector('.bad');if(el)el.scrollIntoView({block:'center'})}
   return ok}
 async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.append(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();return ok}}
@@ -218,7 +219,7 @@ function bday(iso){if(!iso)return null;const b=new Date(iso+'T00:00');if(isNaN(b
   return{age:t.getFullYear()-b.getFullYear()-(thisY>t?1:0),days:Math.round((nx-t)/864e5)}}
 function ageHint(){const v=$('nascita').value,r=bday(v);$('nascitaH').textContent=r&&r.age>=0&&v<=ymd()?r.age+' anni · '+(r.days===0?'compleanno oggi':r.days===1?'compleanno domani':'prossimo compleanno tra '+r.days+' giorni'):''}
 $('nascita').addEventListener('change',()=>{live('nascita');ageHint()});
-const live=(w,c=false)=>validate({telefono:$('telefono').value.trim(),paese:$('paese').value,email:$('email').value.trim(),piva:$('piva').value.trim(),nascita:$('nascita').value,tipo:curTipo},w,c);
+const live=(w,c=false)=>$('sheet').hidden?true:validate({telefono:$('telefono').value.trim(),paese:$('paese').value,email:$('email').value.trim(),piva:$('piva').value.trim(),nascita:$('nascita').value,tipo:curTipo},w,c);
 let tm;const later=w=>{clearTimeout(tm);setErr(w,'');tm=setTimeout(()=>live(w),600)};
 $('telefono').addEventListener('input',()=>later('telefono'));
 $('email').addEventListener('input',()=>later('email'));
@@ -480,7 +481,7 @@ $('mr_ok').onclick=()=>{
   else if(dt>new Date(Date.now()+3e5))bad('date','La data non può essere nel futuro.');
   else if(dt>new Date(rr.scade+'Z'))bad('date','Risposta oltre la scadenza del codice: invia una nuova email.');
   if(ev.length<5)bad('ev','Incolla il testo della risposta come prova.');
-  if(!op)bad('op','Indica chi registra la risposta.');setErr('mr_newmail','');if(rrFrom&&$('mr_newmail').checked&&clients.some(c=>c!==editing&&(c.email||'').toLowerCase()===rrFrom))bad('newmail','Questo indirizzo è già usato da un altro cliente.');if(!ok)$('mResp').firstElementChild.classList.remove('compact');
+  if(!op)bad('op','Indica chi registra la risposta.');setErr('mr_newmail','');if(rrFrom&&$('mr_newmail').checked&&clients.some(c=>c!==editing&&c!==newRef&&(c.email||'').toLowerCase()===rrFrom))bad('newmail','Questo indirizzo è già usato da un altro cliente.');if(!ok)$('mResp').firstElementChild.classList.remove('compact');
   if(!ok)return;
   saveOp(op);const p=editing.privacy=editing.privacy||mkPriv(),day=ymd(dt),esito=[];
   if(!p.informativa){p.informativa=true;p.infModo='Email';p.infData=ymd(new Date(rr.creata+'Z'))}
