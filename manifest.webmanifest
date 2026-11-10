@@ -1,1 +1,1 @@
-{"name":"Rubrica clienti","short_name":"CRM","start_url":"./","scope":"./","display":"standalone","background_color":"#f3f6fb","theme_color":"#a6dcc8","lang":"it","icons":[{"src":"icon-180.png","sizes":"180x180","type":"image/png"}]}
+{"name":"K-CRM","short_name":"K-CRM","start_url":"./","scope":"./","display":"standalone","background_color":"#002446","theme_color":"#002446","lang":"it","icons":[{"src":"kcrm-180.png","sizes":"180x180","type":"image/png"},{"src":"kcrm-192.png","sizes":"192x192","type":"image/png"},{"src":"kcrm-512.png","sizes":"512x512","type":"image/png"}]}
