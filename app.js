@@ -10373,7 +10373,7 @@ const SB=(()=>{
   forget(){try{localStorage.removeItem(UK)}catch(e){}}}})();
 { let mode='in',ltok='',lmail='';const $a=id=>document.getElementById(id);
   /* anti-bot (Cloudflare Turnstile): attivo solo se qui c'e' la Site key pubblica */
-  const TS_KEY='';let tsId=null,tsTok='';
+  const TS_KEY='0x4AAAAAAF8yAH6XoMthksqM';let tsId=null,tsTok='';
   const tsSet=t=>{tsTok=t||'';SB.setCap(tsTok)};
   const tsReset=()=>{tsSet('');try{if(window.turnstile&&tsId!==null)turnstile.reset(tsId)}catch(e){}};
   if(TS_KEY){const s=document.createElement('script');s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';s.async=true;s.onload=()=>{try{tsId=turnstile.render('#au_ts',{sitekey:TS_KEY,callback:tsSet,'expired-callback':()=>tsSet(''),'error-callback':()=>tsSet('')})}catch(e){}};document.head.append(s)}
