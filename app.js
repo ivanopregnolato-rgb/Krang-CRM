@@ -10229,7 +10229,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.15.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.16.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10353,10 +10353,11 @@ const SB=(()=>{
  const DVK='crm-did';const did=()=>{let d='';try{d=localStorage.getItem(DVK)||'';if(!/^[0-9a-f]{8,16}$/.test(d)){d=Array.from(crypto.getRandomValues(new Uint8Array(6)),x=>x.toString(16).padStart(2,'0')).join('');localStorage.setItem(DVK,d)}}catch(e){d=d||'0000000000'}return d};
  const dev=()=>{const u=navigator.userAgent||'';const os=/iPhone/.test(u)?'iPhone':/iPad/.test(u)?'iPad':/Android/.test(u)?'Android':/Macintosh/.test(u)?'Mac':/Windows/.test(u)?'Windows':/Linux/.test(u)?'Linux':'Dispositivo';const br=/Edg\//.test(u)?'Edge':/Firefox|FxiOS/.test(u)?'Firefox':/Chrome|CriOS/.test(u)?'Chrome':/Safari/.test(u)?'Safari':'Browser';return os+' · '+br};
  async function alog(kind){try{if(!ses)return;await js('/rest/v1/access_log',{method:'POST',auth:true,headers:{Prefer:'return=minimal'},json:{device_id:did(),device:dev(),kind,app_ver:((document.querySelector('meta[name=app-version]')||{}).content||'').split('|')[0].slice(0,20)}})}catch(e){}}
+ const usage=()=>js('/rest/v1/rpc/my_usage',{method:'POST',auth:true,json:{}});
  const arecent=()=>js('/rest/v1/access_log?select=created_at,device_id,device,kind&order=created_at.desc&limit=20',{auth:true});
  async function logoutAll(){try{if(ses)await raw('/auth/v1/logout?scope=global',{method:'POST',auth:1})}catch(e){}ses=null;save()}
  async function fb(row){await js('/rest/v1/assistant_feedback',{method:'POST',auth:true,headers:{Prefer:'return=minimal'},json:row})}
- return{db,uid,e2e,fb,alog,arecent,logoutAll,did,setCap:t=>{capTok=t||''},email:()=>ses&&ses.user?ses.user.email:'',has:()=>!!ses,msg,wipe,
+ return{db,uid,e2e,fb,usage,alog,arecent,logoutAll,did,setCap:t=>{capTok=t||''},email:()=>ses&&ses.user?ses.user.email:'',has:()=>!!ses,msg,wipe,
   async signIn(email,password){setSes(await js('/auth/v1/token?grant_type=password',{method:'POST',json:Object.assign({email,password},sec())}))},
   async signUp(email,password){const j=await js('/auth/v1/signup',{method:'POST',json:Object.assign({email,password},sec())});if(j&&j.access_token){setSes(j);return true}return false},
   recover:email=>js('/auth/v1/recover',{method:'POST',json:Object.assign({email},sec())}),
@@ -10415,7 +10416,16 @@ const SB=(()=>{
   f1.append(h('label','','Account'),em,st,ce,b3,b1,b2,bl,ll,bx,bo,bd,nt);pg.append(f1);
   document.querySelector('#mSet .sp[data-sp=cl]').after(pg);
   SPG[0][1].push(['ac','user','Account',()=>SB.email()||'Non connesso']);SPN.ac='Account';
-  const em0=setSp;setSp=function(k){if(k==='ac'){em.textContent='Connesso come '+(SB.email()||'—');try{paintE2()}catch(e){}}return em0.apply(this,arguments)};
+  /* pagina Utilizzo: quanto spazio sta usando l'utente e quanto ha a disposizione */
+  const up=h('div','sp');up.dataset.sp='us';up.hidden=true;const uf=h('div','f');const ub=h('div');ub.style.cssText='display:grid;gap:14px;margin-top:8px';
+  const fmt=n=>n>=1048576?(n/1048576).toFixed(n>=104857600?0:1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
+  const bar=(t,txt,v,mx)=>{const p=Math.min(100,Math.round(v*100/mx)),d=h('div');const r=h('div','hint',t+' · '+txt);const tr=h('div');tr.style.cssText='height:8px;border-radius:99px;background:var(--line,#e4e8f2);overflow:hidden;margin-top:4px';const fi=h('div');fi.style.cssText='height:100%;border-radius:99px;width:'+Math.max(2,p)+'%;background:'+(p>=90?'var(--danger,#c0392b)':'var(--accent,#a6dcc8)');tr.append(fi);d.append(r,tr);return d};
+  const paintUs=async()=>{ub.textContent='';ub.append(h('div','hint','Carico…'));try{const r=await SB.usage();ub.textContent='';
+    ub.append(bar('Dati (clienti, lead, preventivi…)',fmt(r.data_bytes)+' di '+fmt(r.data_max),r.data_bytes,r.data_max),bar('Foto e allegati',fmt(r.files_bytes)+' di '+fmt(r.files_max)+' · '+r.files+' file',r.files_bytes,r.files_max),bar('Elementi salvati',r.rows+' di '+r.rows_max,r.rows,r.rows_max));
+    ub.append(h('div','hint','Sono i limiti del tuo account nel cloud. Quando ti avvicini al limite, elimina ciò che non ti serve più: lo spazio si libera subito.'))}catch(e){ub.textContent='';ub.append(h('div','hint',e&&e.code==='offline'?'Non disponibile senza connessione.':'Dati di utilizzo non disponibili: accedi e riprova.'))}};
+  uf.append(h('label','','Utilizzo'),ub);up.append(uf);pg.after(up);
+  SPG[0][1].push(['us','chart','Utilizzo',()=>'Spazio usato e disponibile']);SPN.us='Utilizzo';
+  const em0=setSp;setSp=function(k){if(k==='us')paintUs();if(k==='ac'){em.textContent='Connesso come '+(SB.email()||'—');try{paintE2()}catch(e){}}return em0.apply(this,arguments)};
   bo.onclick=()=>askConfirm('Uscire da questo dispositivo? I dati vengono rimossi da qui ma restano nel tuo account.','user','Esci',async()=>{try{await Promise.all(Object.keys(CSPEC).map(k=>cloudFlush(k)))}catch(e){}cloudStop();await SB.logout();SB.wipe();SB.forget();location.reload()});
   bd.onclick=()=>askConfirm('Eliminare definitivamente il tuo account? Clienti, opportunità, prodotti, foto e tutto il resto vengono cancellati dal cloud e da questo dispositivo. Non si può annullare.','trash','Elimina tutto',async()=>{try{cloudStop();await SB.removeAccount();SB.wipe();SB.forget();location.reload()}catch(e){toast('Eliminazione non riuscita: '+SB.msg(e))}});
   if(SB.has()){setTimeout(()=>{CLOUD.on=true;cloudGate()},600);try{const t=+localStorage.getItem('crm-lal')||0;if(Date.now()-t>432e5){localStorage.setItem('crm-lal',String(Date.now()));SB.alog('avvio')}}catch(e){}}else CLOUD.on=false}
