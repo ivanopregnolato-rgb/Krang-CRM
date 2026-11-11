@@ -32,3 +32,15 @@ create trigger fb_quota before insert on public.assistant_feedback for each row 
 alter table public.assistant_feedback add column if not exists q text check (char_length(q)<=200);
 alter table public.assistant_feedback add column if not exists nores boolean not null default false;
 grant insert (q,nores) on public.assistant_feedback to authenticated;
+
+-- Audit 1.14.1: indurimento (gia' applicato)
+revoke execute on function public.fb_quota() from public, anon, authenticated;
+alter function public.touch_updated_at() set search_path = public;
+alter policy records_delete_own on public.records to authenticated;
+alter policy records_insert_own on public.records to authenticated;
+alter policy records_select_own on public.records to authenticated;
+alter policy records_update_own on public.records to authenticated;
+alter table public.assistant_feedback drop constraint if exists fb_q_pulita;
+alter table public.assistant_feedback add constraint fb_q_pulita check (q is null or q !~ '[\x00-\x08\x0b\x0c\x0e-\x1f]');
+alter table public.assistant_feedback drop constraint if exists fb_kb_pulita;
+alter table public.assistant_feedback add constraint fb_kb_pulita check (kb is null or kb !~ '[\x00-\x08\x0b\x0c\x0e-\x1f]');

@@ -1,5 +1,7 @@
 /* Assistente: risponde nella chat usando solo il manuale, sul telefono.
-   Nessuna domanda e nessun dato dei clienti lascia il dispositivo.
+   I dati dei clienti non lasciano mai il dispositivo. La domanda parte solo se l'utente preme
+   «non utile» o «Segnala», dopo averla vista, ripulita da email/numeri/codici (cleanQ).
+   Tutto il testo in uscita usa textContent: nessun HTML dell'utente viene interpretato.
    ASK.remote (facoltativo) e' il punto di innesto per un'IA: riceve solo il testo della domanda. */
 (function(){
 const KB=[
@@ -142,7 +144,7 @@ function say(res,q){const d=bubble('a');
  if(e.go){const b=h('button','btn lbl ago');b.type='button';b.innerHTML=ICONS.chevR+'<span>'+e.go[0]+'</span>';b.onclick=()=>{close();GO[e.go[1]]&&GO[e.go[1]]()};d.append(b)}
  if(res.more&&res.more.length){d.append(h('span','asee','Vedi anche'));const c=h('div','ach');res.more.forEach(m=>{const b=h('button','chip',m.t);b.type='button';b.onclick=()=>show(m);c.append(b)});d.append(c)}
  fbBar(d,e,q);scroll()}
-function cleanQ(q){return String(q||'').replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g,'[email]').replace(/\+?\d[\d\s().\/-]{4,}\d/g,'[numero]').replace(/\s+/g,' ').trim().slice(0,200)}
+function cleanQ(q){return String(q||'').normalize('NFKC').replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g,' ').replace(/https?:\/\/\S+|www\.\S+/gi,'[link]').replace(/[\w.+-]{1,64}@[\w-]{1,63}(?:\.[\w-]{1,63}){1,5}/g,'[email]').replace(/\b[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]\b/gi,'[codice]').replace(/\b[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b/gi,'[codice]').replace(/\+?\d[\d\s().\/-]{4,}\d/g,'[numero]').replace(/\s+/g,' ').trim().slice(0,200)}
 async function sendFb(row){row.app_ver=((document.querySelector('meta[name=app-version]')||{}).content||'').split('|')[0].slice(0,20);try{if(typeof SB==='undefined'||!SB.has()||!SB.fb)throw 0;await SB.fb(row);return true}catch(x){return false}}
 function qNote(q){return h('p','afn','Verrà inviata anche la tua domanda: «'+cleanQ(q)+'». Numeri ed email sono nascosti; non scrivere nomi di clienti.')}
 function fbBar(d,e,q){const w=h('div','afb');const R=[['off','Non coerente con la domanda'],['err','Guida errata'],['nofunz','Non funziona come descritto'],['inc','Incompleta o poco chiara'],['alt','Altro']];
