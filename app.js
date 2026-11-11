@@ -10229,7 +10229,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.12.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.13.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10349,7 +10349,8 @@ const SB=(()=>{
  const DK=['crm-clienti-v1','crm-opps-v1','crm-prod-v1','crm-mov-v1','crm-lead-v1'];
  function wipe(){try{Object.keys(localStorage).filter(k=>/^crm-/.test(k)&&!/^crm-(lock|sb)-v1$/.test(k)&&k!=='crm-sb-uid').forEach(k=>localStorage.removeItem(k));DK.forEach(k=>{localStorage.setItem(k,'[]');localStorage.setItem(k+'-seeded','1')});localStorage.setItem('crm-lead-seeded','1')}catch(e){}}
  const msg=e=>({badpass:'Passphrase errata.',badkey:'Chiave di recupero non valida.',locked:'Dati cifrati: serve la passphrase.',invalid_credentials:'Email o password non corretti.',email_not_confirmed:'Conferma prima l’indirizzo email dal link che ti abbiamo inviato.',user_already_exists:'Esiste già un account con questa email: accedi.',weak_password:'Password troppo debole: usa almeno 8 caratteri.',over_request_rate_limit:'Troppi tentativi: riprova tra qualche minuto.',over_email_send_rate_limit:'Troppe email inviate: riprova tra qualche minuto.',email_address_invalid:'Indirizzo email non valido.',validation_failed:'Controlla email e password.',offline:'Sei offline: serve la connessione per accedere.',signup_disabled:'Le registrazioni sono disattivate.',otp_expired:'Il link è scaduto o è già stato usato: richiedi una nuova email.',same_password:'La nuova password deve essere diversa dalla precedente.',access_denied:'Il link non è valido: richiedi una nuova email.'})[e&&e.code]||'Operazione non riuscita ('+(e&&(e.code||e.message)||'errore')+').';
- return{db,uid,e2e,email:()=>ses&&ses.user?ses.user.email:'',has:()=>!!ses,msg,wipe,
+ async function fb(row){await js('/rest/v1/assistant_feedback',{method:'POST',auth:true,headers:{Prefer:'return=minimal'},json:row})}
+ return{db,uid,e2e,fb,email:()=>ses&&ses.user?ses.user.email:'',has:()=>!!ses,msg,wipe,
   async signIn(email,password){setSes(await js('/auth/v1/token?grant_type=password',{method:'POST',json:{email,password}}))},
   async signUp(email,password){const j=await js('/auth/v1/signup',{method:'POST',json:{email,password}});if(j&&j.access_token){setSes(j);return true}return false},
   recover:email=>js('/auth/v1/recover',{method:'POST',json:{email}}),
