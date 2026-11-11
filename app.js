@@ -10229,7 +10229,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.19.3';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.19.4';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10427,7 +10427,7 @@ const SB=(()=>{
   SPG[0][1].push(['us','chart','Utilizzo',()=>'Spazio usato e disponibile']);SPN.us='Utilizzo';
   /* pagina Aspetto: modelli di colore */
   const tpg=h('div','sp');tpg.dataset.sp='tp';tpg.hidden=true;const tf=h('div','f');const tl=h('div');tl.style.cssText='display:grid;gap:12px;margin-top:8px';
-  const TPL=[['','Standard','Menta e lilla, evidenziature lilla, segue il tema chiaro o scuro del telefono.',['#f3f6fb','#fff','#a6dcc8','#d9d1f3']],['arancio','Classico arancio','Come Standard, con evidenziature, menu e pulsanti arancioni. Segue il tema del telefono.',['#f3f6fb','#fff','#ffa24d','#ffa24d']],['notte','Notte','Blu del logo con evidenziature ciano, sempre scuro.',['#001330','#0a2a52','#4fc3ff','#4fc3ff']],['neon','Neon','Blu notte con aloni di luce e pulsanti arancioni del logo, sempre scuro.',['#001330','#0a2a52','#ffa24d','#ffa24d']],['giorno','Giorno','Azzurro del logo, sempre chiaro.',['#eef4fb','#fff','#4fc3ff','#aadcff']],['bianco','Blu su bianco','Sfondo bianco con blocchi blu del logo e ciano, sempre chiaro.',['#ffffff','#0a2a52','#00204a','#4fc3ff']]];
+  const TPL=[['','Standard','Menta e lilla, evidenziature lilla, segue il tema chiaro o scuro del telefono.',['#f3f6fb','#fff','#a6dcc8','#d9d1f3']],['arancio','Classico arancio','Come Standard, con l’arancione al posto del lilla. Segue il tema del telefono.',['#f3f6fb','#fff','#ffa24d','#ffa24d']],['notte','Notte','Blu del logo con evidenziature ciano, sempre scuro.',['#001330','#0a2a52','#4fc3ff','#4fc3ff']],['neon','Neon','Blu notte con aloni di luce e pulsanti arancioni del logo, sempre scuro.',['#001330','#0a2a52','#ffa24d','#ffa24d']],['giorno','Giorno','Azzurro del logo, sempre chiaro.',['#eef4fb','#fff','#4fc3ff','#aadcff']],['bianco','Blu su bianco','Sfondo bianco con blocchi blu del logo e ciano, sempre chiaro.',['#ffffff','#0a2a52','#00204a','#4fc3ff']]];
   const TPV=['arancio','notte','neon','giorno','bianco'];
   const curTpl=()=>{try{const v=localStorage.getItem('crm-tpl');return TPV.includes(v)?v:''}catch(e){return ''}};
   const setTpl=v=>{try{v?localStorage.setItem('crm-tpl',v):localStorage.removeItem('crm-tpl')}catch(e){}const d=document.documentElement;v?d.setAttribute('data-tpl',v):d.removeAttribute('data-tpl');const m=document.querySelector('meta[name=theme-color]');if(m)m.content=v==='giorno'?'#eef4fb':v==='bianco'?'#ffffff':v==='notte'||v==='neon'?'#001330':'#a6dcc8';paintTp()};
