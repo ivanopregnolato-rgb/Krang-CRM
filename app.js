@@ -10250,7 +10250,7 @@ function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=
     if(!ready&&can){const g=h('button','btn lbl');g.type='button';g.innerHTML=ICONS.shield+'<span>Attiva ora</span>';g.onclick=()=>{S.cryptoOk=true;saveS();closeWel();CLOUD.started=false;cloudGate()};B.append(g)}
     B.append(back());return}
   const st=wState(),n=st.filter(x=>x.done).length;
-  B.append(h('h3','','Benvenuto in KRANG CRM'),h('p','wsub',n===st.length?'Hai completato i primi passi.':['','','','Tre','Quattro','Cinque','Sei'][st.length]+' passi per iniziare. Puoi saltarli e tornare qui dal menu, voce Primi passi.'));
+  B.append(h('h3','','Benvenuto in KRANG CRM'),h('p','wsub',n===st.length?'Hai completato i primi passi.':['','','','Tre','Quattro','Cinque','Sei'][st.length]+' passi per iniziare. Puoi saltarli e tornare qui dal menu, voce Aiuto.'));
   const g=h('div','shg'),l=h('div','sl');
   st.forEach(x=>{const b=h('button','shr wlr');b.type='button';const i=h('span','ic');i.innerHTML=x.done?ICONS.check:ICONS[x.ic];if(x.done)i.classList.add('ok');const tx=h('div','tx');tx.append(h('b','',x.t),h('span','',x.d));const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(i,tx,c);
     b.onclick=()=>{if(x.k==='az'){closeWel();openSettings();setSp('az')}else if(x.k==='em'){S.mailOk=true;saveS();closeWel();openSettings();setSp('em')}else if(x.k==='sc'){closeWel();openSettings();setSp('sc')}else openWel(x.k)};l.append(b)});
