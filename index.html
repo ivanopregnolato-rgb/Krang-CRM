@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.20.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.20.0|2026-11-11"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.20.1"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.20.1|2026-11-11"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -20,6 +20,8 @@
 :root[data-tpl="neon"] body{background:radial-gradient(70% 45% at 0% 0%,rgba(79,195,255,.55),transparent 72%),radial-gradient(65% 42% at 100% 34%,rgba(255,150,50,.42),transparent 72%),radial-gradient(75% 45% at 25% 100%,rgba(150,100,255,.42),transparent 72%),#001330 fixed}
 :root[data-tpl="giorno"]{color-scheme:light;--ink:#00204a;--muted:#4a5f80;--out:#c6d6ea;--line:#d6e1f0;--warm:#ffd2a6;--pink:#f5cad6;--butter:#f6edb8;--danger:#c4435c;--sh:0 1px 2px rgba(0,32,74,.07),0 6px 16px rgba(0,32,74,.07);--bg:#eef4fb;--surface:#fff;--accent:#4fc3ff;--act:#aadcff;--actb:transparent;--lilac:#aadcff}
 :root[data-tpl="neon"] #menuBtn{background:var(--act)}
+:root[data-tpl="neon"] .tabs button.on .cnt{background:#4fc3ff;color:#001330}
+:root[data-tpl="notte"] .tabs button.on .cnt{background:#ffa24d;color:#001330}
 :root[data-tpl="arancio"] :is([style*="rgb(217, 209, 243)"],[style*="rgb(205, 191, 245)"]){background:#ffcf9e!important}
 :root[data-tpl="arancio"] :is([style*="rgb(181, 235, 192)"],[style*="rgb(185, 230, 211)"],[style*="rgb(166, 220, 200)"],.shr .ic.ok,.clEs button.on){background:#bfe0f8!important}
 :root[data-tpl="arancio"] [style*="rgb(255, 240, 163)"]{background:#a9e8f7!important}
@@ -842,7 +844,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="gmail.js?v=1.20.0"></script>
-<script src="app.js?v=1.20.0"></script>
+<script src="gmail.js?v=1.20.1"></script>
+<script src="app.js?v=1.20.1"></script>
 </body>
 </html>
