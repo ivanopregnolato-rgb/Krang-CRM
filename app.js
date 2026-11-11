@@ -10229,7 +10229,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.14.1';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.15.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10347,13 +10347,19 @@ const SB=(()=>{
    onSnapshot:(cb,eb)=>watch(col,async(rows,first)=>{const ch=[];for(const r of rows){if(r.deleted)ch.push({type:'removed',doc:{id:String(r.id)}});else{let d;try{d=await inflate(r,col)}catch(e){if(e&&e.code==='locked')throw e;continue}ch.push({type:first?'added':'modified',doc:{id:String(r.id),data:()=>Object.assign({},d)}})}}cb({docChanges:()=>ch})},eb)}),
   doc:path=>{const [col,id]=path.split('/');return{set:d=>put(col,id,d),onSnapshot:(cb,eb)=>watch(col,async(rows,first)=>{const r=rows.filter(x=>String(x.id)===id&&!x.deleted).pop();if(r){let d=null;try{d=await inflate(r,col)}catch(e){if(e&&e.code==='locked')throw e}if(d)cb({exists:true,data:()=>Object.assign({},d)});else if(first)cb({exists:false,data:()=>null})}else if(first)cb({exists:false,data:()=>null})},eb)}}}:null;
  const DK=['crm-clienti-v1','crm-opps-v1','crm-prod-v1','crm-mov-v1','crm-lead-v1'];
- function wipe(){try{Object.keys(localStorage).filter(k=>/^crm-/.test(k)&&!/^crm-(lock|sb)-v1$/.test(k)&&k!=='crm-sb-uid').forEach(k=>localStorage.removeItem(k));DK.forEach(k=>{localStorage.setItem(k,'[]');localStorage.setItem(k+'-seeded','1')});localStorage.setItem('crm-lead-seeded','1')}catch(e){}}
- const msg=e=>({badpass:'Passphrase errata.',badkey:'Chiave di recupero non valida.',locked:'Dati cifrati: serve la passphrase.',invalid_credentials:'Email o password non corretti.',email_not_confirmed:'Conferma prima l’indirizzo email dal link che ti abbiamo inviato.',user_already_exists:'Esiste già un account con questa email: accedi.',weak_password:'Password troppo debole: usa almeno 8 caratteri.',over_request_rate_limit:'Troppi tentativi: riprova tra qualche minuto.',over_email_send_rate_limit:'Troppe email inviate: riprova tra qualche minuto.',email_address_invalid:'Indirizzo email non valido.',validation_failed:'Controlla email e password.',offline:'Sei offline: serve la connessione per accedere.',signup_disabled:'Le registrazioni sono disattivate.',otp_expired:'Il link è scaduto o è già stato usato: richiedi una nuova email.',same_password:'La nuova password deve essere diversa dalla precedente.',access_denied:'Il link non è valido: richiedi una nuova email.'})[e&&e.code]||'Operazione non riuscita ('+(e&&(e.code||e.message)||'errore')+').';
+ function wipe(){try{Object.keys(localStorage).filter(k=>/^crm-/.test(k)&&!/^crm-(lock|sb)-v1$/.test(k)&&!['crm-sb-uid','crm-did','crm-lk','crm-lal'].includes(k)).forEach(k=>localStorage.removeItem(k));DK.forEach(k=>{localStorage.setItem(k,'[]');localStorage.setItem(k+'-seeded','1')});localStorage.setItem('crm-lead-seeded','1')}catch(e){}}
+ const msg=e=>({badpass:'Passphrase errata.',badkey:'Chiave di recupero non valida.',locked:'Dati cifrati: serve la passphrase.',invalid_credentials:'Email o password non corretti.',email_not_confirmed:'Conferma prima l’indirizzo email dal link che ti abbiamo inviato.',user_already_exists:'Esiste già un account con questa email: accedi.',weak_password:'Password troppo debole: usa almeno 8 caratteri.',captcha_failed:'Verifica anti-bot non riuscita: riprova.',over_request_rate_limit:'Troppi tentativi: riprova tra qualche minuto.',over_email_send_rate_limit:'Troppe email inviate: riprova tra qualche minuto.',email_address_invalid:'Indirizzo email non valido.',validation_failed:'Controlla email e password.',offline:'Sei offline: serve la connessione per accedere.',signup_disabled:'Le registrazioni sono disattivate.',otp_expired:'Il link è scaduto o è già stato usato: richiedi una nuova email.',same_password:'La nuova password deve essere diversa dalla precedente.',access_denied:'Il link non è valido: richiedi una nuova email.'})[e&&e.code]||'Operazione non riuscita ('+(e&&(e.code||e.message)||'errore')+').';
+ let capTok='';const sec=()=>capTok?{gotrue_meta_security:{captcha_token:capTok}}:{};
+ const DVK='crm-did';const did=()=>{let d='';try{d=localStorage.getItem(DVK)||'';if(!/^[0-9a-f]{8,16}$/.test(d)){d=Array.from(crypto.getRandomValues(new Uint8Array(6)),x=>x.toString(16).padStart(2,'0')).join('');localStorage.setItem(DVK,d)}}catch(e){d=d||'0000000000'}return d};
+ const dev=()=>{const u=navigator.userAgent||'';const os=/iPhone/.test(u)?'iPhone':/iPad/.test(u)?'iPad':/Android/.test(u)?'Android':/Macintosh/.test(u)?'Mac':/Windows/.test(u)?'Windows':/Linux/.test(u)?'Linux':'Dispositivo';const br=/Edg\//.test(u)?'Edge':/Firefox|FxiOS/.test(u)?'Firefox':/Chrome|CriOS/.test(u)?'Chrome':/Safari/.test(u)?'Safari':'Browser';return os+' · '+br};
+ async function alog(kind){try{if(!ses)return;await js('/rest/v1/access_log',{method:'POST',auth:true,headers:{Prefer:'return=minimal'},json:{device_id:did(),device:dev(),kind,app_ver:((document.querySelector('meta[name=app-version]')||{}).content||'').split('|')[0].slice(0,20)}})}catch(e){}}
+ const arecent=()=>js('/rest/v1/access_log?select=created_at,device_id,device,kind&order=created_at.desc&limit=20',{auth:true});
+ async function logoutAll(){try{if(ses)await raw('/auth/v1/logout?scope=global',{method:'POST',auth:1})}catch(e){}ses=null;save()}
  async function fb(row){await js('/rest/v1/assistant_feedback',{method:'POST',auth:true,headers:{Prefer:'return=minimal'},json:row})}
- return{db,uid,e2e,fb,email:()=>ses&&ses.user?ses.user.email:'',has:()=>!!ses,msg,wipe,
-  async signIn(email,password){setSes(await js('/auth/v1/token?grant_type=password',{method:'POST',json:{email,password}}))},
-  async signUp(email,password){const j=await js('/auth/v1/signup',{method:'POST',json:{email,password}});if(j&&j.access_token){setSes(j);return true}return false},
-  recover:email=>js('/auth/v1/recover',{method:'POST',json:{email}}),
+ return{db,uid,e2e,fb,alog,arecent,logoutAll,did,setCap:t=>{capTok=t||''},email:()=>ses&&ses.user?ses.user.email:'',has:()=>!!ses,msg,wipe,
+  async signIn(email,password){setSes(await js('/auth/v1/token?grant_type=password',{method:'POST',json:Object.assign({email,password},sec())}))},
+  async signUp(email,password){const j=await js('/auth/v1/signup',{method:'POST',json:Object.assign({email,password},sec())});if(j&&j.access_token){setSes(j);return true}return false},
+  recover:email=>js('/auth/v1/recover',{method:'POST',json:Object.assign({email},sec())}),
   async logout(){try{if(ses)await raw('/auth/v1/logout?scope=local',{method:'POST',auth:1})}catch(e){}ses=null;save()},
   async removeAccount(){try{for(const c of ['clienti','prodotti','opportunita','lead','movimenti','config']){for(let g=0;g<50;g++){const L=await js('/storage/v1/object/list/media',{method:'POST',auth:1,json:{prefix:uid()+'/'+c,limit:100,offset:0}});if(!L||!L.length)break;await js('/storage/v1/object/media',{method:'DELETE',auth:1,json:{prefixes:L.map(x=>uid()+'/'+c+'/'+x.name)}})}}}catch(e){}
    await js('/rest/v1/rpc/delete_my_account',{method:'POST',auth:1,json:{}});ses=null;save()},
@@ -10366,6 +10372,16 @@ const SB=(()=>{
    document.documentElement.classList.remove('noauth');CLOUD.on=true;cloudGate()},
   forget(){try{localStorage.removeItem(UK)}catch(e){}}}})();
 { let mode='in',ltok='',lmail='';const $a=id=>document.getElementById(id);
+  /* anti-bot (Cloudflare Turnstile): attivo solo se qui c'e' la Site key pubblica */
+  const TS_KEY='';let tsId=null,tsTok='';
+  const tsSet=t=>{tsTok=t||'';SB.setCap(tsTok)};
+  const tsReset=()=>{tsSet('');try{if(window.turnstile&&tsId!==null)turnstile.reset(tsId)}catch(e){}};
+  if(TS_KEY){const s=document.createElement('script');s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';s.async=true;s.onload=()=>{try{tsId=turnstile.render('#au_ts',{sitekey:TS_KEY,callback:tsSet,'expired-callback':()=>tsSet(''),'error-callback':()=>tsSet('')})}catch(e){}};document.head.append(s)}
+  /* limite tentativi: dopo 5 password sbagliate l'attesa raddoppia (30 s, 1 min, 2 min... max 15 min) */
+  const LK='crm-lk',lk=()=>{try{return JSON.parse(localStorage.getItem(LK)||'{}')||{}}catch(e){return{}}};
+  const lkWait=()=>Math.max(0,(lk().until||0)-Date.now());
+  const lkFail=()=>{const n=(lk().n||0)+1,w=n>=5?Math.min(900000,30000*Math.pow(2,n-5)):0;try{localStorage.setItem(LK,JSON.stringify({n,until:w?Date.now()+w:0}))}catch(e){}};
+  const lkOk=()=>{try{localStorage.removeItem(LK)}catch(e){}};
   const paintAu=()=>{if(mode==='new'){$a('au_t').textContent='Nuova password';$a('au_h').textContent='Scegli una nuova password per '+lmail+'.';$a('au_gl').textContent='Salva password';$a('au_sw').textContent='Annulla';$a('au_e').hidden=true;$a('au_ck').hidden=true;$a('au_p').autocomplete='new-password';$a('au_fg').hidden=true;return}$a('au_e').hidden=false;$a('au_ck').hidden=mode!=='up';$a('au_t').textContent=mode==='in'?'Accedi':'Crea il tuo account';$a('au_h').textContent=mode==='in'?'Accedi per ritrovare i tuoi dati su ogni dispositivo.':'Con un account i tuoi dati restano al sicuro e sincronizzati tra i tuoi dispositivi.';$a('au_gl').textContent=mode==='in'?'Accedi':'Crea account';$a('au_sw').textContent=mode==='in'?'Crea un account':'Ho già un account';$a('au_p').autocomplete=mode==='in'?'current-password':'new-password';$a('au_fg').hidden=mode!=='in'};
   const say=(t,ok)=>{const m=$a('au_m');m.textContent=t||'';m.hidden=!t;m.style.color=ok?'#8ff0c4':''};
   $a('au_sw').onclick=()=>{if(mode==='new'){ltok='';mode='in';say('');paintAu();if(SB.has())document.documentElement.classList.remove('noauth');return}mode=mode==='in'?'up':'in';say('');paintAu()};
@@ -10373,12 +10389,14 @@ const SB=(()=>{
    if(mode==='new'){if(p.length<8){say('La password deve avere almeno 8 caratteri.');return}const b=$a('au_go');b.disabled=true;try{await SB.linkPassword(ltok,p);ltok='';$a('au_p').value='';cloudStop();mode='in';paintAu();say('Password aggiornata: ora accedi con la nuova password.',true)}catch(x){say(SB.msg(x))}finally{b.disabled=false}return}
    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)){say('Inserisci un’email valida.');return}
    if(p.length<8){say('La password deve avere almeno 8 caratteri.');return}
+   {const w=lkWait();if(w>0){say('Troppi tentativi: riprova tra '+(w>60000?Math.ceil(w/60000)+' minuti':Math.ceil(w/1000)+' secondi')+'.');return}}
+   if(TS_KEY&&!tsTok){say('Completa la verifica anti-bot qui sopra.');return}
    const b=$a('au_go');b.disabled=true;try{
     if(mode==='up'){if(!$a('au_ok').checked){say('Per creare l’account accetta i Termini d’uso e l’Informativa privacy.');return}const ok=await SB.signUp(e,p);if(!ok){say('Ti abbiamo inviato una email: conferma l’indirizzo dal link, poi accedi.',true);mode='in';paintAu();return}}
     else await SB.signIn(e,p);
-    $a('au_p').value='';SB.enter()}catch(x){say(SB.msg(x))}finally{b.disabled=false}};
+    lkOk();$a('au_p').value='';await SB.alog('login');SB.enter()}catch(x){if(x&&x.code==='invalid_credentials')lkFail();say(SB.msg(x))}finally{b.disabled=false;if(TS_KEY)tsReset()}};
   $a('au_go').onclick=go;$a('au_p').onkeydown=ev=>{if(ev.key==='Enter')go()};
-  $a('au_fg').onclick=async()=>{const e=$a('au_e').value.trim().toLowerCase();if(!e){say('Scrivi qui sopra la tua email, poi tocca di nuovo.');return}try{await SB.recover(e);say('Se l’indirizzo è registrato, riceverai una email per scegliere una nuova password.',true)}catch(x){say(SB.msg(x))}};
+  $a('au_fg').onclick=async()=>{const e=$a('au_e').value.trim().toLowerCase();if(!e){say('Scrivi qui sopra la tua email, poi tocca di nuovo.');return}if(TS_KEY&&!tsTok){say('Completa la verifica anti-bot qui sopra.');return}try{await SB.recover(e);say('Se l’indirizzo è registrato, riceverai una email per scegliere una nuova password.',true)}catch(x){say(SB.msg(x))}finally{if(TS_KEY)tsReset()}};
   paintAu();
   if(SB.link){const L=SB.link;if(L.error)say(SB.msg({code:L.code||'access_denied'}));else if(L.type==='recovery'&&L.token){document.documentElement.classList.add('noauth');SB.linkUser(L.token).then(m=>{ltok=L.token;lmail=m||'il tuo account';mode='new';paintAu()}).catch(x=>say(SB.msg(x)))}else if(L.token)say('Email confermata: ora puoi accedere.',true)}
   /* pagina Account nelle impostazioni */
@@ -10387,15 +10405,20 @@ const SB=(()=>{
   const bo=h('button','btn lbl');bo.type='button';bo.innerHTML=ICONS.user+' Esci da questo dispositivo';bo.style.marginTop='10px';
   const bd=h('button','btn lbl');bd.type='button';bd.innerHTML=ICONS.trash+' Elimina il mio account';bd.style.cssText='margin-top:10px;color:var(--danger)';
   const nt=h('div','hint','I dati sono salvati nel tuo account e restano sui tuoi dispositivi. Uscendo, i dati vengono rimossi da questo dispositivo ma restano nel tuo account. Eliminando l’account vengono cancellati per sempre, sul cloud e qui.');nt.style.marginTop='10px';
+  const bl=h('button','btn lbl');bl.type='button';bl.innerHTML=ICONS.shield+' Accessi recenti';bl.style.marginTop='10px';
+  const ll=h('div','hint');ll.hidden=true;ll.style.cssText='margin-top:8px;display:grid;gap:4px';
+  bl.onclick=async()=>{if(!ll.hidden){ll.hidden=true;return}ll.hidden=false;ll.textContent='Carico…';try{const r=await SB.arecent();ll.textContent='';if(!r.length)ll.textContent='Nessun accesso registrato.';const me=SB.did();r.forEach(x=>{const d=new Date(x.created_at);ll.append(h('div','',d.toLocaleString('it-IT',{dateStyle:'short',timeStyle:'short'})+' · '+(x.device||'Dispositivo')+(x.kind==='login'?' · accesso':'')+(x.device_id===me?' · questo dispositivo':'')))});ll.append(h('div','','Se vedi un accesso che non riconosci, tocca «Esci da tutti i dispositivi» e cambia la password.'))}catch(e){ll.textContent='Non disponibile senza connessione.'}};
+  const bx=h('button','btn lbl');bx.type='button';bx.innerHTML=ICONS.user+' Esci da tutti i dispositivi';bx.style.marginTop='10px';
+  bx.onclick=()=>askConfirm('Uscire da tutti i dispositivi, compreso questo? Ovunque dovrai accedere di nuovo. I dati restano nel tuo account.','user','Esci ovunque',async()=>{try{await Promise.all(Object.keys(CSPEC).map(k=>cloudFlush(k)))}catch(e){}cloudStop();await SB.logoutAll();SB.wipe();SB.forget();location.reload()});
   const ce=h('div','hint');ce.id='ac_ce';ce.style.marginTop='12px';const b1=h('button','btn lbl');b1.type='button';b1.innerHTML=ICONS.shield+' Cambia passphrase';b1.style.marginTop='8px';b1.onclick=()=>E2EUI.show('c1');const b2=h('button','btn lbl');b2.type='button';b2.innerHTML=ICONS.shield+' Nuova chiave di recupero';b2.style.marginTop='8px';b2.onclick=()=>E2EUI.show('c2');const b3=h('button','btn lbl p');b3.type='button';b3.innerHTML=ICONS.shield+' Attiva la cifratura';b3.style.marginTop='8px';b3.onclick=()=>{CLOUD.started=false;cloudGate()};
   window.paintE2=()=>{const r=SB.e2e.state()==='ready';ce.textContent=r?'Cifratura end-to-end attiva: i dati vengono cifrati su questo dispositivo prima di andare nel cloud.':'Cifratura non attiva su questo dispositivo: la sincronizzazione col cloud è in pausa finché non inserisci la passphrase.';b1.hidden=b2.hidden=!r;b3.hidden=r};
-  f1.append(h('label','','Account'),em,st,ce,b3,b1,b2,bo,bd,nt);pg.append(f1);
+  f1.append(h('label','','Account'),em,st,ce,b3,b1,b2,bl,ll,bx,bo,bd,nt);pg.append(f1);
   document.querySelector('#mSet .sp[data-sp=cl]').after(pg);
   SPG[0][1].push(['ac','user','Account',()=>SB.email()||'Non connesso']);SPN.ac='Account';
   const em0=setSp;setSp=function(k){if(k==='ac'){em.textContent='Connesso come '+(SB.email()||'—');try{paintE2()}catch(e){}}return em0.apply(this,arguments)};
   bo.onclick=()=>askConfirm('Uscire da questo dispositivo? I dati vengono rimossi da qui ma restano nel tuo account.','user','Esci',async()=>{try{await Promise.all(Object.keys(CSPEC).map(k=>cloudFlush(k)))}catch(e){}cloudStop();await SB.logout();SB.wipe();SB.forget();location.reload()});
   bd.onclick=()=>askConfirm('Eliminare definitivamente il tuo account? Clienti, opportunità, prodotti, foto e tutto il resto vengono cancellati dal cloud e da questo dispositivo. Non si può annullare.','trash','Elimina tutto',async()=>{try{cloudStop();await SB.removeAccount();SB.wipe();SB.forget();location.reload()}catch(e){toast('Eliminazione non riuscita: '+SB.msg(e))}});
-  if(SB.has())setTimeout(()=>{CLOUD.on=true;cloudGate()},600);else CLOUD.on=false}
+  if(SB.has()){setTimeout(()=>{CLOUD.on=true;cloudGate()},600);try{const t=+localStorage.getItem('crm-lal')||0;if(Date.now()-t>432e5){localStorage.setItem('crm-lal',String(Date.now()));SB.alog('avvio')}}catch(e){}}else CLOUD.on=false}
 
 /* ===== cifratura dei dati: schermate di attivazione e sblocco ===== */
 const E2EUI=(()=>{
