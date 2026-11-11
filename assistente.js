@@ -15,9 +15,9 @@ const KB=[
 {t:'Profilo dell’azienda',k:'profilo azienda nome partita iva sede indirizzo telefono sito dati azienda intestazione pdf',
  a:'Nome, partita IVA, sede, telefono e sito dell’azienda compaiono in firma, nei PDF di preventivi e listino e come titolare nell’informativa privacy.',
  s:['Menu → Impostazioni → Profilo azienda.','Compila i campi e tocca Salva.'],go:['Vai a Profilo azienda','set:az']},
-{t:'Come inviare le email: posta del telefono o Gmail',k:'gmail posta email collegare collegamento google oauth id client account inviare ricevere programma di posta apri posta segna come inviata servizio',
- a:'In Impostazioni → Posta scegli il servizio. Programma di posta del dispositivo (consigliato): scrivi l’email nell’app, la invii dal tuo programma di posta con «Apri posta» (o «Condividi con allegati» se ci sono PDF) e poi tocchi «Segna come inviata»; le risposte si registrano a mano. Gmail (avanzato): l’app invia e legge le email da sola; serve un ID client OAuth di Google, da creare una sola volta (la guida è nella (i) della pagina), e il collegamento dura circa un’ora.',
- s:['Menu → Impostazioni → Posta.','Scegli il servizio di posta.','Compila indirizzo di risposta, nome del mittente e firma.'],go:['Vai a Posta','set:em']},
+{t:'Come inviare le email',k:'posta email mail inviare ricevere programma di posta apri posta segna come inviata servizio configurare impostare',
+ a:'Le email partono dal programma di posta del tuo telefono: scrivi l’email nell’app, la invii con «Apri posta» (o «Condividi con allegati» se ci sono PDF) e poi tocchi «Segna come inviata». Le risposte dei clienti si registrano a mano. In Impostazioni → Posta imposti indirizzo di risposta, nome del mittente e firma.',
+ s:['Menu → Impostazioni → Posta.','Compila indirizzo di risposta, nome del mittente e firma.','Torna indietro e salva.'],go:['Vai a Posta','set:em']},
 {t:'Firma e nome del mittente',k:'firma mittente alias nome mittente segnaposto risposta indirizzo di risposta email firma',
  a:'Nome del mittente, indirizzo di risposta e firma si impostano in Posta. Nella firma puoi usare i segnaposto {azienda} e {mittente}.',go:['Vai a Posta','set:em']},
 {t:'Messaggi rapidi di WhatsApp',k:'whatsapp messaggi rapidi modelli template risposte veloci nome prefisso paese numeri informativa lead',
@@ -36,8 +36,8 @@ const KB=[
  a:'Puoi fotografare un biglietto da visita: l’app ricava i dati e li propone nella scheda, che poi controlli e salvi.',
  s:['Nell’elenco Clienti tocca il tasto con la fotocamera accanto alla ricerca (oppure «Fotografo un biglietto da visita» dai Primi passi).','Scatta o scegli la foto.','Controlla i dati, completa la Privacy e salva.'],go:['Vai a Clienti','clienti']},
 {t:'Informativa privacy e consensi',k:'informativa privacy consensi consenso marketing gdpr base giuridica fonte dati fornita inviare richiesta risposta pulsanti',
- a:'Nella scheda Privacy del cliente registri fonte dei dati, base giuridica, informativa fornita (modalità e data) e i consensi facoltativi. Puoi inviare l’informativa per email: il cliente risponde con i pulsanti dei consensi e, se hai attivato la registrazione automatica in Impostazioni → Privacy, le risposte chiare aggiornano i consensi da sole; quelle dubbie restano da confermare.',
- s:['Apri il cliente → Privacy.','Invia l’informativa per email.','Il cliente risponde con i pulsanti dell’email.','Controlla la risposta e conferma i consensi.'],go:['Vai a Privacy e conservazione','set:pv']},
+ a:'Nella scheda Privacy del cliente registri fonte dei dati, base giuridica, informativa fornita (modalità e data) e i consensi facoltativi. Puoi inviare l’informativa per email o WhatsApp: il cliente risponde con i pulsanti dei consensi e tu registri la risposta nella scheda Privacy.',
+ s:['Apri il cliente → Privacy.','Invia l’informativa per email.','Il cliente risponde con i pulsanti dell’email.','Registra la risposta nella scheda Privacy.'],go:['Vai a Privacy e conservazione','set:pv']},
 {t:'Diritti dell’interessato: copiare o cancellare i dati',k:'diritti interessato copia dati portabilita accesso cancellare eliminare cancellazione cliente cestino registro modifiche',
  a:'Nella scheda Privacy del cliente puoi copiare i suoi dati (accesso e portabilità). Per cancellarlo usa il cestino nella scheda Dati. Le operazioni sulla privacy finiscono nel registro delle modifiche.'},
 {t:'Clienti duplicati',k:'duplicato duplicati duplicata email telefono gia usato esiste univocita errore salvare',
@@ -50,7 +50,7 @@ const KB=[
  a:'Nella scheda Lead tocca «Nuovo lead», incolla l’email o il messaggio del modulo e tocca «Ricava i dati»: nome, email, telefono e richiesta vengono compilati. Poi scegli Persona o Azienda e salva.',
  s:['Lead → Nuovo lead.','Incolla il messaggio e tocca «Ricava i dati».','Controlla e salva.'],go:['Vai a Lead','lead']},
 {t:'Rispondere a un lead',k:'rispondere lead risposta scrivere lead contattare informativa brochure allegati',
- a:'Apri il lead → Contatti e scrivi un’email o un messaggio WhatsApp. Puoi includere l’informativa privacy (testo completo o versione breve) e allegare brochure e listino. Le risposte si agganciano alla scheda quando Gmail è collegato.',go:['Vai a Lead','lead']},
+ a:'Apri il lead → Contatti e scrivi un’email o un messaggio WhatsApp. Puoi includere l’informativa privacy (testo completo o versione breve) e allegare brochure e listino. I messaggi restano nella scheda del lead.',go:['Vai a Lead','lead']},
 {t:'Trasformare un lead in cliente',k:'convertire conversione lead cliente prospect trasformare promuovere',
  a:'Apri il lead e scegli «Converti in prospect», poi indica se è Persona fisica o Azienda. Il lead diventa un’anagrafica in Clienti con la sua storia di contatti.',go:['Vai a Lead','lead']},
 {t:'Pulizia automatica dei lead',k:'lead scartati eliminare automatica pulizia giorni mesi nuovi cancellazione automatica',
@@ -129,14 +129,14 @@ function local(q){const r=rank(q);if(!r.length||r[0].s<2.2)return null;
 const GO={home:()=>setTab('home'),clienti:()=>setTab('clienti'),lead:()=>setTab('lead'),opp:()=>setTab('opp'),mkt:()=>setTab('mkt'),an:()=>openAn(),info:()=>openInfo(),help:()=>openHelp(),
  'prod:cat':()=>{setTab('prod');window.pSec='cat';paintPSec()},'prod:lst':()=>{setTab('prod');window.pSec='lst';paintPSec()},'prod:mag':()=>{setTab('prod');window.pSec='mag';paintPSec()}};
 ['az','cl','em','wa','al','pr','ld','pv','sc','bk'].forEach(k=>GO['set:'+k]=()=>{openSettings();setSp(k)});
-const STARTERS=['Come creo un cliente?','Come mando un preventivo?','Come faccio il backup?','Come collego Gmail?','Come registro una chiamata?'];
+const STARTERS=['Come creo un cliente?','Come mando un preventivo?','Come faccio il backup?','Come invio un’email?','Come registro una chiamata?'];
 let M=null,box=null,inp=null,started=false;
 function bubble(cls){const d=h('div','ab '+cls);box.append(d);return d}
 function scroll(){box.scrollTop=box.scrollHeight}
 function userMsg(t){bubble('u').textContent=t;scroll()}
 function say(res,q){const d=bubble('a');
  if(!res){d.append(h('p','','Non ho trovato una risposta a questa domanda nel manuale. Prova con altre parole, oppure scegli un argomento:'));
-  const c=h('div','ach');['Clienti','Lead','Opportunità','Preventivi','Listini','Backup','Gmail','Sicurezza'].forEach(w=>{const b=h('button','chip',w);b.type='button';b.onclick=()=>ask(w);c.append(b)});d.append(c);scroll();return}
+  const c=h('div','ach');['Clienti','Lead','Opportunità','Preventivi','Listini','Backup','Posta','Sicurezza'].forEach(w=>{const b=h('button','chip',w);b.type='button';b.onclick=()=>ask(w);c.append(b)});d.append(c);scroll();return}
  const e=res.e;d.append(h('b','',e.t),h('p','',e.a));
  if(e.s){const ol=h('ol');e.s.forEach(x=>ol.append(h('li','',x)));d.append(ol)}
  if(e.go){const b=h('button','btn lbl ago');b.type='button';b.innerHTML=ICONS.chevR+'<span>'+e.go[0]+'</span>';b.onclick=()=>{close();GO[e.go[1]]&&GO[e.go[1]]()};d.append(b)}
