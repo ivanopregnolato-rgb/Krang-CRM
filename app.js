@@ -10223,12 +10223,13 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const rows=[
     ['compass','Primi passi',n+' di '+t+' completati',()=>{S.welcomeOff=false;saveS();openWel()}],
     ['doc','Manuale utente','In arrivo: guida interattiva alle funzioni',null],
-    ['chat','Assistente','In arrivo: chiedi come si fa una cosa',null]];
+    ['chat','Assistente','Chiedi come si fa una cosa',()=>{M.hidden=true;openAsk()}]];
   const g=h('div','shg'),l=h('div','sl');
   rows.forEach(([ic,nm,sm,fn])=>{const b=h('button','shr wlr');b.type='button';const i=h('span','ic');i.innerHTML=ICONS[ic]||'';const tx=h('div','tx');tx.append(h('b','',nm),h('span','',sm));b.append(i,tx);
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.12.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
