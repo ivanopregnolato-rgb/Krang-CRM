@@ -1,7 +1,7 @@
 /* avvio: eseguito prima del disegno della pagina */
 (function(){var d=document.documentElement;
  /* modello di colore scelto dall'utente */
- try{var tp=localStorage.getItem('crm-tpl');if(tp==='notte'||tp==='giorno'){d.setAttribute('data-tpl',tp);var tm=document.querySelector('meta[name=theme-color]');if(tm)tm.content=tp==='notte'?'#001330':'#eef4fb'}}catch(e){}
+ try{var tp=localStorage.getItem('crm-tpl');if(tp==='std'||tp==='notte'||tp==='neon'||tp==='giorno'){d.setAttribute('data-tpl',tp);var tm=document.querySelector('meta[name=theme-color]');if(tm)tm.content=tp==='giorno'?'#eef4fb':tp==='std'?'#a6dcc8':'#001330'}}catch(e){}
  /* anti-clickjacking: l'app non deve girare dentro la pagina di qualcun altro */
  try{if(window.top!==window.self){d.style.display='none';return}}catch(e){d.style.display='none';return}
  /* link di conferma/recupero: i token vengono tolti subito dall'indirizzo (cronologia, referrer, schermate) */
