@@ -27,3 +27,8 @@ begin
 end $$;
 drop trigger if exists fb_quota on public.assistant_feedback;
 create trigger fb_quota before insert on public.assistant_feedback for each row execute function public.fb_quota();
+
+-- Aggiunta 1.14.0: domanda dell'utente (ripulita da email/numeri nell'app, max 200 caratteri) solo con pollice giu' o "Segnala"
+alter table public.assistant_feedback add column if not exists q text check (char_length(q)<=200);
+alter table public.assistant_feedback add column if not exists nores boolean not null default false;
+grant insert (q,nores) on public.assistant_feedback to authenticated;
