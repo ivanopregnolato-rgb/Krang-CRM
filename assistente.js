@@ -146,18 +146,20 @@ function userMsg(t){bubble('u').textContent=t;scroll()}
 function say(res,q){const d=bubble('a');
  if(!res){d.append(h('p','','Non ho trovato una risposta a questa domanda nel manuale. Prova con altre parole, oppure scegli un argomento:'));
   const c=h('div','ach');['Clienti','Lead','Opportunità','Preventivi','Listini','Backup','Posta','Sicurezza'].forEach(w=>{const b=h('button','chip',w);b.type='button';b.onclick=()=>ask(w);c.append(b)});d.append(c);const rp=h('button','chip','Segnala questa domanda');rp.type='button';rp.onclick=()=>{const w=h('div','afb');const ok=h('button','btn lbl');ok.type='button';ok.textContent='Invia';ok.onclick=async()=>{ok.disabled=true;const r=await sendFb({kb:'(nessuna risposta)',rating:'down',q:cleanQ(q),nores:true});w.innerHTML='';w.append(h('span','afs',r?'Grazie, preparerò una guida.':'Non inviato: serve connessione e account attivo.'))};w.append(qNote(q),ok);rp.replaceWith(w);scroll()};d.append(rp);scroll();return}
- const e=res.e;d.append(h('b','',e.t),h('p','',e.a));
+ const e=res.e;d.append(h('b','',e.t));{let ol=null;String(e.a).split(/\n+/).map(x=>x.trim()).filter(Boolean).forEach(l=>{const m=l.match(/^\d+[.)]\s+(.*)$/);if(m){if(!ol){ol=h('ol');d.append(ol)}ol.append(h('li','',m[1]))}else{ol=null;d.append(h('p','',l))}})}
  if(e.s){const ol=h('ol');e.s.forEach(x=>ol.append(h('li','',x)));d.append(ol)}
  if(e.i&&e.i.length){const g=h('div','aim');e.i.slice(0,2).forEach(n=>{const im=h('img');im.src='guida/'+n+'.webp';im.alt='Schermata: '+e.t;im.loading='lazy';im.onload=scroll;im.onerror=()=>g.contains(im)&&im.remove();im.onclick=()=>zoom(im.src,im.alt);g.append(im)});d.append(g)}
  if(e.go){const b=h('button','btn lbl ago');b.type='button';b.innerHTML=ICONS.chevR+'<span>'+e.go[0]+'</span>';b.onclick=()=>{close();GO[e.go[1]]&&GO[e.go[1]]()};d.append(b)}
  if(res.more&&res.more.length){d.append(h('span','asee','Vedi anche'));const c=h('div','ach');res.more.forEach(m=>{const b=h('button','chip',m.t);b.type='button';b.onclick=()=>show(m);c.append(b)});d.append(c)}
+ if(e.ai)d.append(h('p','afn','Risposta generata con l’IA dal manuale di KRANG CRM. Se qualcosa non torna, usa il pollice in giù.'));
+ else if(aiNote){d.append(h('p','afn',aiNote));aiNote=''}
  fbBar(d,e,q);scroll()}
 function cleanQ(q){return String(q||'').normalize('NFKC').replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g,' ').replace(/https?:\/\/\S+|www\.\S+/gi,'[link]').replace(/[\w.+-]{1,64}@[\w-]{1,63}(?:\.[\w-]{1,63}){1,5}/g,'[email]').replace(/\b[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]\b/gi,'[codice]').replace(/\b[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b/gi,'[codice]').replace(/\+?\d[\d\s().\/-]{4,}\d/g,'[numero]').replace(/\s+/g,' ').trim().slice(0,200)}
 async function sendFb(row){row.app_ver=((document.querySelector('meta[name=app-version]')||{}).content||'').split('|')[0].slice(0,20);try{if(typeof SB==='undefined'||!SB.has()||!SB.fb)throw 0;await SB.fb(row);return true}catch(x){return false}}
 function qNote(q){return h('p','afn','Verrà inviata anche la tua domanda: «'+cleanQ(q)+'». Numeri ed email sono nascosti; non scrivere nomi di clienti.')}
 function fbBar(d,e,q){const w=h('div','afb');const R=[['off','Non coerente con la domanda'],['err','Guida errata'],['nofunz','Non funziona come descritto'],['inc','Incompleta o poco chiara'],['alt','Altro']];
  const TH='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11v9H4v-9h3zM7 11l4-7c1.5 0 2.5 1 2.2 2.6L12.7 9H19a1.5 1.5 0 0 1 1.5 1.8l-1.3 7A2 2 0 0 1 17.2 19.500H7"/></svg>';
- const send=(r,why)=>{const row={kb:e.t.slice(0,120),rating:r};if(why){row.reason=why;row.q=cleanQ(q)}return sendFb(row)};
+ const send=(r,why)=>{const row={kb:(e.kb||e.t).slice(0,120),rating:r};if(why){row.reason=why;row.q=cleanQ(q)}return sendFb(row)};
  const done=t=>{w.innerHTML='';w.append(h('span','afs',t))};
  const mk=(l,c)=>{const b=h('button','afb1'+(c?' dn':''));b.type='button';b.setAttribute('aria-label',l);b.innerHTML=TH;return b};
  const up=mk('Risposta utile'),dn=mk('Risposta non utile',1);
@@ -167,7 +169,24 @@ function fbBar(d,e,q){const w=h('div','afb');const R=[['off','Non coerente con l
  w.append(up,dn);d.append(w)}
 function zoom(src,alt){const z=h('div','azoom');const im=h('img');im.src=src;im.alt=alt;const x=h('button','btn ic');x.type='button';x.setAttribute('aria-label','Chiudi immagine');x.innerHTML=ICONS.x;z.onclick=()=>z.remove();z.append(im,x);M.append(z)}
 function show(e){userMsg(e.t);say({e:e,more:[]})}
-async function answer(q){if(ASK.remote){try{const r=await ASK.remote(q);if(r&&r.e)return r}catch(x){}}return local(q)}
+let aiOff=false,aiNote='';
+const AIMSG={limit:'Hai usato le domande con IA di oggi: continuo a rispondere dal manuale.'};
+async function viaAI(q){
+ if(aiOff||typeof SB==='undefined'||!SB.has()||!SB.ai||navigator.onLine===false)return null;
+ const c=rank(q).slice(0,4);if(!c.length)return null;
+ try{
+  const r=await SB.ai({q:cleanQ(q),ctx:c.map(x=>({t:x.e.t,a:x.e.a,s:x.e.s||[]}))});
+  if(!r||typeof r.answer!=='string'||!r.answer.trim())return null;
+  const u=Number.isInteger(r.used)&&r.used>=0&&r.used<c.length?c[r.used].e:null;
+  if(!u)return null;
+  const more=c.map(x=>x.e).filter(e=>e!==u).slice(0,2);
+  return{e:{t:u.t,a:r.answer.trim(),i:u.i,go:u.go,ai:true,kb:'IA: '+u.t},more}
+ }catch(x){
+  if(x&&(x.status===429)){aiOff=true;aiNote=AIMSG.limit}
+  else if(x&&(x.status===503||x.status===401||x.status===404||x.code==='offline'))aiOff=true;
+  return null}}
+async function answer(q){if(ASK.remote){try{const r=await ASK.remote(q);if(r&&r.e)return r}catch(x){}}
+ const a=await viaAI(q);if(a)return a;return local(q)}
 async function ask(q){q=String(q||'').trim().slice(0,300);if(!q)return;inp.value='';userMsg(q);const w=bubble('a');w.textContent='…';scroll();const r=await answer(q);w.remove();say(r,q)}
 function close(){if(M)M.hidden=true}
 function open(){
@@ -181,7 +200,7 @@ function open(){
   bx.append(top,box,bar);M.append(bx);document.body.append(M);
   if(!document.getElementById('askCss')){const st=document.createElement('style');st.id='askCss';st.textContent='#mAsk{z-index:26;padding:0;place-items:stretch;grid-template-rows:minmax(0,1fr)}#mAsk .afb{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}#mAsk .afb1{background:none;border:0;color:inherit;opacity:.55;padding:6px;display:grid;place-items:center}#mAsk .afb1.dn svg{transform:rotate(180deg)}#mAsk .afsel{flex:1 1 100%;font:inherit;padding:8px;border-radius:10px;border:1px solid var(--line,#ddd);background:transparent;color:inherit}#mAsk .afta{flex:1 1 100%;font:inherit;padding:8px;border-radius:10px;border:1px solid var(--line,#ddd)}#mAsk .afn{flex:1 1 100%;margin:0;font-size:12px;opacity:.75}#mAsk .aim{display:flex;gap:8px;margin-top:10px;overflow-x:auto}#mAsk .aim img{height:220px;width:auto;border-radius:12px;border:1px solid var(--line,#e4e8f2);flex:none;cursor:zoom-in}#mAsk .azoom{position:fixed;inset:0;z-index:30;background:rgba(0,20,40,.88);overflow:auto;display:grid;place-items:start center;padding:56px 12px 24px}#mAsk .azoom img{width:min(100%,480px);height:auto;border-radius:14px}#mAsk .azoom .btn{position:fixed;top:12px;right:12px}#mAsk .afs{font-size:13px;opacity:.7}#mAsk .askbox{max-width:440px;width:100%;margin:0 auto;height:100%;min-height:0;overflow:hidden;display:flex;flex-direction:column;border-radius:0;padding:12px 14px;background:var(--bg)}#mAsk .atop{display:flex;align-items:center;gap:12px;padding:4px 0 10px;font-size:18px}#mAsk .btn.ic{padding:10px;width:44px;height:44px}#mAsk .achat{flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:4px 0 10px}#mAsk .ab{max-width:88%;padding:10px 13px;border-radius:16px;font-size:15px;line-height:1.4;box-shadow:var(--sh)}#mAsk .ab p{margin:4px 0}#mAsk .ab ol{margin:6px 0 4px;padding-left:20px}#mAsk .ab.u{align-self:flex-end;background:var(--accent)}#mAsk .ab.a{align-self:flex-start;background:var(--surface)}#mAsk .ago{margin-top:8px;display:flex;gap:6px;align-items:center;justify-content:center;padding:10px 14px}#mAsk .ago svg{width:18px;height:18px}#mAsk .asee{display:block;margin:10px 0 4px;font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}#mAsk .ach{display:flex;flex-wrap:wrap;gap:6px}#mAsk .chip{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer}#mAsk .abar{display:flex;gap:8px;padding-top:8px}#mAsk .abar input{flex:1;min-width:0}#mAsk .anote{font-size:12px;color:var(--muted);margin:2px 2px 6px}';document.head.append(st)}}
  M.hidden=false;
- if(!started){started=true;const d=bubble('a');d.append(h('b','','Ciao! Chiedimi come si fa una cosa.'),h('p','','Rispondo dal manuale di KRANG CRM, direttamente sul tuo telefono: non vedo i dati dei tuoi clienti.'));
+ if(!started){started=true;const d=bubble('a');d.append(h('b','','Ciao! Chiedimi come si fa una cosa.'),h('p','','Rispondo dal manuale di KRANG CRM. Le risposte vengono formulate da un’IA che riceve solo la tua domanda (senza numeri ed email) e le guide dell’app: non vede i dati dei tuoi clienti.'));
   const c=h('div','ach');STARTERS.forEach(w=>{const b=h('button','chip',w);b.type='button';b.onclick=()=>ask(w);c.append(b)});d.append(c)}
  setTimeout(()=>{try{inp.focus()}catch(x){}},50)}
 window.ASK={open,answer:local,rank,remote:null,size:KB.length};
