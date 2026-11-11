@@ -10229,7 +10229,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.18.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.19.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10425,6 +10425,20 @@ const SB=(()=>{
     ub.append(h('div','hint','Sono i limiti del tuo account nel cloud. Quando ti avvicini al limite, elimina ciò che non ti serve più: lo spazio si libera subito.'))}catch(e){ub.textContent='';ub.append(h('div','hint',e&&e.code==='offline'?'Non disponibile senza connessione.':'Dati di utilizzo non disponibili: accedi e riprova.'))}};
   uf.append(h('label','','Utilizzo'),ub);up.append(uf);pg.after(up);
   SPG[0][1].push(['us','chart','Utilizzo',()=>'Spazio usato e disponibile']);SPN.us='Utilizzo';
+  /* pagina Aspetto: modelli di colore */
+  const tpg=h('div','sp');tpg.dataset.sp='tp';tpg.hidden=true;const tf=h('div','f');const tl=h('div');tl.style.cssText='display:grid;gap:12px;margin-top:8px';
+  const TPL=[['','Classico','Menta e lilla, segue il tema chiaro o scuro del telefono.',['#f3f6fb','#fff','#a6dcc8','#ffa24d']],['notte','Notte','Blu del logo, sempre scuro.',['#001330','#0a2a52','#4fc3ff','#ffa24d']],['giorno','Giorno','Azzurro del logo, sempre chiaro.',['#eef4fb','#fff','#4fc3ff','#ffa24d']]];
+  const curTpl=()=>{try{const v=localStorage.getItem('crm-tpl');return v==='notte'||v==='giorno'?v:''}catch(e){return ''}};
+  const setTpl=v=>{try{v?localStorage.setItem('crm-tpl',v):localStorage.removeItem('crm-tpl')}catch(e){}const d=document.documentElement;v?d.setAttribute('data-tpl',v):d.removeAttribute('data-tpl');const m=document.querySelector('meta[name=theme-color]');if(m)m.content=v==='notte'?'#001330':v==='giorno'?'#eef4fb':'#a6dcc8';paintTp()};
+  const paintTp=()=>{tl.textContent='';const cur=curTpl();TPL.forEach(t=>{const b=h('button','');b.type='button';b.setAttribute('aria-pressed',String(cur===t[0]));
+    b.style.cssText='display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:12px 14px;border-radius:18px;background:var(--surface);color:var(--ink);cursor:pointer;border:2px solid '+(cur===t[0]?'var(--act)':'var(--line)');
+    const sw=h('span');sw.style.cssText='flex:none;width:64px;height:64px;border-radius:14px;padding:8px;display:grid;gap:5px;grid-template-rows:1fr 1fr;border:1px solid rgba(0,0,0,.12);background:'+t[3][0];
+    const c1=h('span');c1.style.cssText='border-radius:6px;background:'+t[3][1];const c2=h('span');c2.style.cssText='display:flex;gap:5px';const d1=h('span');d1.style.cssText='flex:1;border-radius:6px;background:'+t[3][2];const d2=h('span');d2.style.cssText='flex:1;border-radius:6px;background:'+t[3][3];c2.append(d1,d2);sw.append(c1,c2);
+    const tx=h('span');tx.style.cssText='flex:1;min-width:0;display:grid;gap:2px';const n=h('b','',t[1]);n.style.fontSize='16px';const ds=h('span','',t[2]);ds.style.cssText='font-size:13px;color:var(--muted)';tx.append(n,ds);
+    b.append(sw,tx);if(cur===t[0]){const ck=h('span');ck.innerHTML=ICONS.check;ck.style.cssText='flex:none;width:26px;height:26px;color:var(--ink)';b.append(ck)}
+    b.onclick=()=>setTpl(t[0]);tl.append(b)});tl.append(h('div','hint','La scelta vale solo su questo dispositivo.'))};
+  tf.append(h('label','','Aspetto'),tl);tpg.append(tf);up.after(tpg);paintTp();
+  SPG[0][1].push(['tp','layers','Aspetto','Modello di colore dell’app']);SPN.tp='Aspetto';
   const em0=setSp;setSp=function(k){if(k==='us')paintUs();if(k==='ac'){em.textContent='Connesso come '+(SB.email()||'—');try{paintE2()}catch(e){}}return em0.apply(this,arguments)};
   bo.onclick=()=>askConfirm('Uscire da questo dispositivo? I dati vengono rimossi da qui ma restano nel tuo account.','user','Esci',async()=>{try{await Promise.all(Object.keys(CSPEC).map(k=>cloudFlush(k)))}catch(e){}cloudStop();await SB.logout();SB.wipe();SB.forget();location.reload()});
   bd.onclick=()=>askConfirm('Eliminare definitivamente il tuo account? Clienti, opportunità, prodotti, foto e tutto il resto vengono cancellati dal cloud e da questo dispositivo. Non si può annullare.','trash','Elimina tutto',async()=>{try{cloudStop();await SB.removeAccount();SB.wipe();SB.forget();location.reload()}catch(e){toast('Eliminazione non riuscita: '+SB.msg(e))}});

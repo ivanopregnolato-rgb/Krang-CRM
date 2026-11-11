@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.18.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.18.0|2026-11-11"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.19.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.19.0|2026-11-11"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -13,6 +13,11 @@
 :root{--act:#ffa24d;--bg:#f3f6fb;--surface:#fff;--ink:#263045;--muted:#6b7488;--out:#d3dae8;--line:#dde3ee;--accent:#a6dcc8;--warm:#f7d9bb;--pink:#f5cad6;--lilac:#d9d1f3;--butter:#f6edb8;--danger:#c4435c;--sh:0 1px 2px rgba(20,30,60,.07),0 6px 16px rgba(20,30,60,.06);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--act:#ffa24d;--bg:#161b27;--surface:#202737;--ink:#eef1f8;--muted:#9ba5bb;--out:#34405a;--line:#2c3650;--danger:#ff8fa5;--sh:0 1px 2px rgba(0,0,0,.3),0 6px 16px rgba(0,0,0,.2)}}
 :root[data-theme="dark"]{color-scheme:dark;--act:#ffa24d;--bg:#161b27;--surface:#202737;--ink:#eef1f8;--muted:#9ba5bb;--out:#34405a;--line:#2c3650;--danger:#ff8fa5;--sh:0 1px 2px rgba(0,0,0,.3),0 6px 16px rgba(0,0,0,.2)}
+/* modelli di colore scelti dall'utente (Impostazioni > Aspetto): Classico = nessun attributo */
+:root[data-tpl="notte"]{color-scheme:dark;--bg:#001330;--surface:#0a2a52;--ink:#eef4ff;--muted:#a9bddb;--out:#2a4a78;--line:#183560;--accent:#4fc3ff;--act:#ffa24d;--warm:#ffb878;--pink:#f5a3c4;--lilac:#4fc3ff;--butter:#ffd98a;--danger:#ff8fa5;--sh:0 1px 2px rgba(0,0,0,.3),0 8px 20px rgba(0,0,0,.25)}
+:root[data-tpl="giorno"]{color-scheme:light;--bg:#eef4fb;--surface:#fff;--ink:#00204a;--muted:#4a5f80;--out:#c6d6ea;--line:#d6e1f0;--accent:#4fc3ff;--act:#ffa24d;--warm:#ffd2a6;--pink:#f5cad6;--lilac:#aadcff;--butter:#f6edb8;--danger:#c4435c;--sh:0 1px 2px rgba(0,32,74,.07),0 6px 16px rgba(0,32,74,.07)}
+:root[data-tpl="notte"] :is(.btn.ico.pk,.vt button:not(.on)){color:var(--ink)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-tpl]) :is(.btn.ico.pk,.vt button:not(.on)){color:var(--ink)}}
 html{scroll-padding-top:0}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -828,7 +833,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="gmail.js?v=1.18.0"></script>
-<script src="app.js?v=1.18.0"></script>
+<script src="gmail.js?v=1.19.0"></script>
+<script src="app.js?v=1.19.0"></script>
 </body>
 </html>
