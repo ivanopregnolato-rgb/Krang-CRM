@@ -9427,8 +9427,8 @@ $('l_wa').onclick=()=>{const d=lRead();if(!d.telefono||!d.telefono.replace(/\D/g
   const inf0=!(l&&l.inf)&&S.lead.inf!==false&&S.wa.inf!=='none';
   $('wa_txt').value='Buongiorno '+contactName(ps)+',\ngrazie per averci contattato'+(l&&l.richiesta?' in merito alla sua richiesta':'')+'.\n\nSe desidera un preventivo personalizzato mi indichi prodotti e quantità: le rispondo subito.\n\n'+firma();
   const T=$('wa_tpl');T.textContent='';let cur=inf0?(S.wa.inf==='short'?'short':'full'):'none';
-  let broOn=!!(S.broLink&&S.broLink.url);const paint=()=>{T.textContent='';[['full','Informativa completa'],['short','Informativa breve'],['none','Senza informativa']].forEach(([k,lb])=>{const b=h('button','',(cur===k?'✓ ':'')+lb);b.type='button';b.style.background=cur===k?'var(--lilac)':'';b.onclick=()=>{cur=k;waLeadSet(k);paint()};T.append(b)});
-    const bl=h('button','',(broOn?'✓ ':'')+(S.broLink&&S.broLink.url?'Link brochure':'Brochure (non impostata)'));bl.type='button';bl.style.background=broOn?'var(--lilac)':'';bl.onclick=()=>{if(!(S.broLink&&S.broLink.url)){toast('Incolla il link della brochure in Impostazioni, Allegati.');return}broOn=!broOn;waBroSet(broOn);paint()};T.append(bl)};
+  let broOn=!!(S.broLink&&S.broLink.url);const paint=()=>{T.textContent='';[['full','Informativa completa'],['short','Informativa breve'],['none','Senza informativa']].forEach(([k,lb])=>{const b=h('button','',(cur===k?'✓ ':'')+lb);b.type='button';b.style.background=cur===k?'var(--act)':'';b.onclick=()=>{cur=k;waLeadSet(k);paint()};T.append(b)});
+    const bl=h('button','',(broOn?'✓ ':'')+(S.broLink&&S.broLink.url?'Link brochure':'Brochure (non impostata)'));bl.type='button';bl.style.background=broOn?'var(--act)':'';bl.onclick=()=>{if(!(S.broLink&&S.broLink.url)){toast('Incolla il link della brochure in Impostazioni, Allegati.');return}broOn=!broOn;waBroSet(broOn);paint()};T.append(bl)};
   if(broOn)waBroSet(true);paint();waLeadSet(cur)};
 $('l_conv').onclick=()=>{const d=lRead();if(!lCheck(d))return;$('mConv').hidden=false;$('cv_p').classList.toggle('p',lTipo==='persona');$('cv_a').classList.toggle('p',lTipo==='azienda')};
 $('cv_x').onclick=()=>{$('mConv').hidden=true};
@@ -10229,7 +10229,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.17.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.18.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
