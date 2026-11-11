@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.19.6"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.19.6|2026-11-11"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.19.7"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.19.7|2026-11-11"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -14,7 +14,7 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--act:var(--lilac);--actb:#9b8fe0;--bg:#161b27;--surface:#202737;--ink:#eef1f8;--muted:#9ba5bb;--out:#34405a;--line:#2c3650;--danger:#ff8fa5;--sh:0 1px 2px rgba(0,0,0,.3),0 6px 16px rgba(0,0,0,.2)}}
 :root[data-theme="dark"]{color-scheme:dark;--act:var(--lilac);--actb:#9b8fe0;--bg:#161b27;--surface:#202737;--ink:#eef1f8;--muted:#9ba5bb;--out:#34405a;--line:#2c3650;--danger:#ff8fa5;--sh:0 1px 2px rgba(0,0,0,.3),0 6px 16px rgba(0,0,0,.2)}
 /* modelli di colore scelti dall'utente (Impostazioni > Aspetto). Nessun attributo = Standard */
-:root[data-tpl="arancio"]{--lilac:#ffcf9e;--act:#ffcf9e;--actb:#e8a768}
+:root[data-tpl="arancio"]{--lilac:#ffcf9e;--act:#ffcf9e;--actb:#e8a768;--accent:#bfe0f8}
 :root[data-tpl="notte"]{color-scheme:dark;--bg:#001330;--surface:#0a2a52;--ink:#eef4ff;--muted:#a9bddb;--out:#2a4a78;--line:#183560;--warm:#ffb878;--pink:#f5a3c4;--lilac:#4fc3ff;--butter:#ffd98a;--danger:#ff8fa5;--sh:0 1px 2px rgba(0,0,0,.3),0 8px 20px rgba(0,0,0,.25);--accent:#4fc3ff;--act:#4fc3ff;--actb:transparent}
 :root[data-tpl="neon"]{color-scheme:dark;--bg:#001330;--surface:#0a2a52;--ink:#eef4ff;--muted:#a9bddb;--out:#2a4a78;--line:#183560;--warm:#ffb878;--pink:#f5a3c4;--lilac:#4fc3ff;--butter:#ffd98a;--danger:#ff8fa5;--sh:0 1px 2px rgba(0,0,0,.3),0 8px 20px rgba(0,0,0,.25);--accent:#ffa24d;--act:#ffa24d;--actb:transparent}
 :root[data-tpl="neon"] body{background:radial-gradient(70% 45% at 0% 0%,rgba(79,195,255,.55),transparent 72%),radial-gradient(65% 42% at 100% 34%,rgba(255,150,50,.42),transparent 72%),radial-gradient(75% 45% at 25% 100%,rgba(150,100,255,.42),transparent 72%),#001330 fixed}
@@ -25,6 +25,7 @@
 :root[data-tpl="bianco"] :is(.btn.ico.pk,.vt button:not(.on)){color:#eef4ff}
 :root[data-tpl="neon"] #menuBtn{background:var(--act)}
 :root[data-tpl="arancio"] :is([style*="rgb(217, 209, 243)"],[style*="rgb(205, 191, 245)"]){background:#ffcf9e!important}
+:root[data-tpl="arancio"] :is([style*="rgb(181, 235, 192)"],[style*="rgb(185, 230, 211)"],[style*="rgb(166, 220, 200)"],.shr .ic.ok,.clEs button.on){background:#bfe0f8!important}
 :root:is([data-tpl="notte"],[data-tpl="neon"]) :is(.btn.ico.pk,.vt button:not(.on)){color:var(--ink)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-tpl]) :is(.btn.ico.pk,.vt button:not(.on)){color:var(--ink)},:root[data-tpl="arancio"]:not([data-theme="light"]) :is(.btn.ico.pk,.vt button:not(.on)){color:var(--ink)}}
 html{scroll-padding-top:0}
@@ -842,7 +843,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="gmail.js?v=1.19.6"></script>
-<script src="app.js?v=1.19.6"></script>
+<script src="gmail.js?v=1.19.7"></script>
+<script src="app.js?v=1.19.7"></script>
 </body>
 </html>
