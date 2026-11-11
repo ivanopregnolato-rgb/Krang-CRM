@@ -1,0 +1,6 @@
+Modelli email di KRANG CRM per Supabase
+In Supabase: Authentication -> Emails -> Templates. Per ogni modello incolla l'oggetto e il contenuto HTML.
+conferma-registrazione.html  ->  Oggetto: Conferma il tuo account KRANG CRM
+reimposta-password.html  ->  Oggetto: Reimposta la password di KRANG CRM
+cambio-email.html  ->  Oggetto: Conferma il nuovo indirizzo email di KRANG CRM
+Nota: l'indirizzo mittente ("Supabase Auth") si cambia solo con un server SMTP proprio (Authentication -> SMTP Settings).
