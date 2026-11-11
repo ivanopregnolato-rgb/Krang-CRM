@@ -6,17 +6,15 @@ create table if not exists public.assistant_feedback(
   created_at timestamptz not null default now(),
   app_ver text check (char_length(app_ver)<=20),
   kb text check (char_length(kb)<=120),
-  q text check (char_length(q)<=300),
   rating text not null check (rating in ('up','down')),
   reason text check (reason in ('off','err','nofunz','inc','alt')),
-  note text check (char_length(note)<=500),
   handled boolean not null default false,
   handled_at timestamptz,
   handled_note text
 );
 alter table public.assistant_feedback enable row level security;
 revoke all on public.assistant_feedback from anon, authenticated;
-grant insert (app_ver,kb,q,rating,reason,note) on public.assistant_feedback to authenticated;
+grant insert (app_ver,kb,rating,reason) on public.assistant_feedback to authenticated;
 drop policy if exists fb_insert on public.assistant_feedback;
 create policy fb_insert on public.assistant_feedback for insert to authenticated with check (user_id=auth.uid());
 -- Limite: massimo 100 feedback al giorno per utente

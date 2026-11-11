@@ -144,13 +144,13 @@ function say(res,q){const d=bubble('a');
  fbBar(d,e,q);scroll()}
 function fbBar(d,e,q){const w=h('div','afb');const R=[['off','Non coerente con la domanda'],['err','Guida errata'],['nofunz','Non funziona come descritto'],['inc','Incompleta o poco chiara'],['alt','Altro']];
  const TH='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11v9H4v-9h3zM7 11l4-7c1.5 0 2.5 1 2.2 2.6L12.7 9H19a1.5 1.5 0 0 1 1.5 1.8l-1.3 7A2 2 0 0 1 17.2 19.500H7"/></svg>';
- const send=async(r,why,note)=>{const row={app_ver:((document.querySelector('meta[name=app-version]')||{}).content||'').split('|')[0].slice(0,20),kb:e.t.slice(0,120),q:String(q||'').slice(0,300),rating:r};if(why)row.reason=why;if(note)row.note=note.slice(0,500);try{if(typeof SB==='undefined'||!SB.has()||!SB.fb)throw 0;await SB.fb(row);return true}catch(x){return false}};
+ const send=async(r,why)=>{const row={app_ver:((document.querySelector('meta[name=app-version]')||{}).content||'').split('|')[0].slice(0,20),kb:e.t.slice(0,120),rating:r};if(why)row.reason=why;try{if(typeof SB==='undefined'||!SB.has()||!SB.fb)throw 0;await SB.fb(row);return true}catch(x){return false}};
  const done=t=>{w.innerHTML='';w.append(h('span','afs',t))};
  const mk=(l,c)=>{const b=h('button','afb1'+(c?' dn':''));b.type='button';b.setAttribute('aria-label',l);b.innerHTML=TH;return b};
  const up=mk('Risposta utile'),dn=mk('Risposta non utile',1);
  up.onclick=()=>{done('Grazie!');send('up')};
  dn.onclick=()=>{w.innerHTML='';const sel=h('select','afsel');const o0=h('option','','Cosa non va? (facoltativo)');o0.value='';sel.append(o0);R.forEach(r=>{const o=h('option','',r[1]);o.value=r[0];sel.append(o)});
-  const t=h('textarea','afta');t.maxLength=500;t.rows=2;t.placeholder='Dettagli (facoltativo, non scrivere dati di clienti)';const b=h('button','btn lbl');b.type='button';b.textContent='Invia';b.onclick=async()=>{b.disabled=true;const ok=await send('down',sel.value,t.value.trim());done(ok?'Grazie, miglioreremo la guida.':'Non inviato: serve connessione e account attivo.')};w.append(sel,t,b)};
+  const b=h('button','btn lbl');b.type='button';b.textContent='Invia';b.onclick=async()=>{b.disabled=true;const ok=await send('down',sel.value);done(ok?'Grazie, miglioreremo la guida.':'Non inviato: serve connessione e account attivo.')};w.append(sel,b)};
  w.append(up,dn);d.append(w)}
 function show(e){userMsg(e.t);say({e:e,more:[]})}
 async function answer(q){if(ASK.remote){try{const r=await ASK.remote(q);if(r&&r.e)return r}catch(x){}}return local(q)}
