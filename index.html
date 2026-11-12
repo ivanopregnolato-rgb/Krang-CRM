@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.21.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.21.0|2026-11-12"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.22.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.22.0|2026-11-12"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -93,7 +93,7 @@ h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em}
 .fstat{display:flex;align-items:center;gap:8px;margin:0 0 6px}.fstat b{flex:1}
 #menuBtn{flex:none;background:var(--lilac);border-color:transparent;color:#2d2b55;box-shadow:none;transition:transform .12s}#menuBtn svg{width:24px;height:24px;stroke-width:2.6}#menuBtn:active{transform:scale(.93)}#menuBtn[aria-expanded=true]{background:#2d2b55;color:#fff}.hrow{justify-content:flex-start;gap:12px}
 #amBack{position:fixed;inset:0;z-index:4}.amenu{position:fixed;left:16px;top:64px;z-index:6;min-width:220px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px rgba(20,24,40,.22);padding:6px}.amenu[hidden],#amBack[hidden]{display:none}.amenu button{display:flex;align-items:center;gap:12px;width:100%;height:48px;border:0;background:none;padding:0 12px;border-radius:10px;font:inherit;font-size:15px;font-weight:600;color:var(--ink);cursor:pointer;text-align:left}.amenu .amsep{border:0;border-top:1px solid var(--line);margin:6px 8px}.amenu button{position:relative}.amenu .cnt{margin-left:auto;position:static;font-size:11px;line-height:18px;min-width:18px;padding:0 6px}.amenu .cnt:empty,#menuBtn .cnt:empty{display:none}#menuBtn{position:relative}#menuBtn .cnt{position:absolute;top:-5px;right:-5px;font-size:10px;line-height:16px;min-width:16px;padding:0 4px}
-.amenu button:hover,.amenu button:focus-visible{background:var(--lilac);outline:none}.amenu svg{width:22px;height:22px}.inl{display:flex;flex-wrap:wrap;gap:6px 14px;margin:4px 0 12px;font-size:14px}.inl a,.inl .link{color:var(--ink);font-weight:600;text-decoration:underline;background:none;border:0;padding:0;font:inherit;font-weight:600;cursor:pointer}.beta{display:inline-block;vertical-align:middle;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--warm);color:#2d2b55;font-size:10px;font-weight:700;line-height:16px;letter-spacing:.04em;text-transform:uppercase}
+.amenu button:hover,.amenu button:focus-visible{background:var(--lilac);outline:none}.amenu svg{width:22px;height:22px}.inl{display:flex;flex-wrap:wrap;gap:6px 14px;margin:4px 0 12px;font-size:14px}.inl a,.inl .link{color:var(--ink);font-weight:600;text-decoration:underline;background:none;border:0;padding:0;font:inherit;font-weight:600;cursor:pointer}.vies{margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}.vies .chk{display:flex;gap:8px;align-items:flex-start;margin:8px 0;font-size:14px}.vies .chk input{margin-top:3px}.vies .vrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}#viesBtn{margin-top:8px}.beta{display:inline-block;vertical-align:middle;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--warm);color:#2d2b55;font-size:10px;font-weight:700;line-height:16px;letter-spacing:.04em;text-transform:uppercase}
 .swp .row{margin:0;position:relative;z-index:1;touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .swa{position:absolute;top:0;bottom:0;display:flex}.swa.l{left:0}.swa.r{right:0}
 .swa button{width:72px;border:0;display:grid;place-items:center;color:#2d2b55;cursor:pointer}
@@ -844,7 +844,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="gmail.js?v=1.21.0"></script>
-<script src="app.js?v=1.21.0"></script>
+<script src="gmail.js?v=1.22.0"></script>
+<script src="app.js?v=1.22.0"></script>
 </body>
 </html>

@@ -225,6 +225,36 @@ let tm;const later=w=>{clearTimeout(tm);setErr(w,'');tm=setTimeout(()=>live(w),6
 $('telefono').addEventListener('input',()=>later('telefono'));
 $('email').addEventListener('input',()=>later('email'));
 $('piva').addEventListener('input',()=>later('piva'));
+/* ricerca della partita IVA (VIES): propone ragione sociale e indirizzo, l'utente conferma */
+{const tc=s=>String(s||'').toLowerCase().replace(/(^|[\s'’\-\/.(])([a-zà-ÿ])/g,(m,p,c)=>p+c.toUpperCase()).replace(/\b(Di|Del|Della|Dei|Delle|Degli|Dello|Da|De|E|Ed|Il|La|Le|Lo|Al|Alla|In|Con|Per|Su|Sul|Sulla|Dal|Dalla)\b(?!$)/g,m=>m.toLowerCase()).replace(/\b(Srl|Spa|Sas|Snc|Srls|Sapa|Scarl|Ltd|Gmbh|Ag|Sa|Bv|Nv)\b/gi,m=>({srl:'Srl',spa:'SpA',sas:'Sas',snc:'Snc',srls:'Srls',sapa:'Sapa',scarl:'Scarl',ltd:'Ltd',gmbh:'GmbH',ag:'AG',sa:'SA',bv:'BV',nv:'NV'})[m.toLowerCase()]);
+  window.viesAddr=(s,iso)=>{const L=String(s||'').split(/\n/).map(x=>x.trim()).filter(Boolean);if(!L.length)return '';if(iso==='IT'&&L.length>=2){const m=L[L.length-1].match(/^(\d{5})\s+(.+?)(?:\s+([A-Z]{2}))?$/);const via=tc(L.slice(0,-1).join(' '));if(m)return via+', '+m[1]+' '+tc(m[2])+(m[3]?' '+m[3]:'')}return L.map(tc).join(', ')};
+  window.viesName=tc;
+  const box=document.createElement('div');box.id='viesBox';box.className='vies';box.hidden=true;
+  const btn=document.createElement('button');btn.type='button';btn.id='viesBtn';btn.className='btn lbl';btn.innerHTML=ICONS.search+'Cerca dati online';btn.hidden=true;
+  const pf=$('pivaF');pf.append(btn,box);
+  const upd=()=>{const t=curTipo==='azienda',v=($('piva').value||'').replace(/[\s.-]/g,'').toUpperCase();btn.hidden=!(t&&v.length>=4&&navigator.onLine!==false&&typeof SB!=='undefined'&&SB.has&&SB.has());if(btn.hidden)box.hidden=true};
+  $('piva').addEventListener('input',upd);$('paese').addEventListener('change',upd);$('seg').addEventListener('click',()=>setTimeout(upd,0));window.addEventListener('online',upd);window.addEventListener('offline',upd);
+  window.viesUpd=upd;
+  const say=(t,warn)=>{box.hidden=false;box.replaceChildren();const p=document.createElement('div');p.className=warn?'warn':'hint';p.textContent=t;box.append(p);return box};
+  btn.onclick=async()=>{
+    const d={tipo:'azienda',paese:$('paese').value,piva:$('piva').value.trim()};
+    if(!validate(d,'piva',false)){say('Controlla prima la partita IVA.',true);return}
+    let v=d.piva.replace(/[\s.-]/g,'').toUpperCase();if(d.paese==='IT'&&v.startsWith('IT'))v=v.slice(2);
+    btn.disabled=true;say('Ricerca in corso…');
+    try{const r=await SB.vies({paese:d.paese,piva:v});
+      if(!r||r.valid!==true){say('Questa partita IVA non risulta registrata in VIES. Controlla le cifre.',true);return}
+      const nm=r.name?tc(r.name):'',ad=r.address?viesAddr(r.address,d.paese):'';
+      if(!nm&&!ad){say('Partita IVA valida. Questo paese non fornisce nome e indirizzo: compilali a mano.');return}
+      box.replaceChildren();box.hidden=false;
+      const t=document.createElement('div');t.className='hint';t.textContent='Trovato in VIES (registro europeo delle partite IVA). Controlla prima di usarli:';box.append(t);
+      const rows=[];[['azienda','Ragione sociale',nm],['indirizzo','Indirizzo',ad]].forEach(([f,l,x])=>{if(!x)return;const lab=document.createElement('label');lab.className='chk';const cb=document.createElement('input');cb.type='checkbox';cb.checked=!$(f).value.trim()||$(f).value.trim().toLowerCase()===x.toLowerCase();const s=document.createElement('span');s.textContent=l+': '+x+($(f).value.trim()&&!cb.checked?' (sostituisce «'+$(f).value.trim()+'»)':'');lab.append(cb,s);box.append(lab);rows.push([f,x,cb])});
+      const go=document.createElement('button');go.type='button';go.className='btn p lbl';go.textContent='Usa i dati selezionati';
+      go.onclick=()=>{let n=0;rows.forEach(([f,x,cb])=>{if(cb.checked){$(f).value=x;$(f).dispatchEvent(new Event('input',{bubbles:true}));n++}});box.hidden=true;if(n)toast('Dati compilati da VIES: controllali prima di salvare.')};
+      const no=document.createElement('button');no.type='button';no.className='btn lbl';no.textContent='Annulla';no.onclick=()=>{box.hidden=true};
+      const bar=document.createElement('div');bar.className='vrow';bar.append(go,no);box.append(bar)
+    }catch(e){const st=e&&e.status;say(st===429?'Hai raggiunto il limite di ricerche di oggi: riprova domani o compila a mano.':'Ricerca non disponibile ora: compila a mano.',true);try{window.logErr&&st!==429&&window.logErr('rete','Ricerca VIES: '+(st||'errore'),'vies-lookup')}catch(x){}}
+    finally{btn.disabled=false}}}
+
 $('paese').addEventListener('change',()=>{live('telefono');live('piva')});
 ['telefono','email','piva'].forEach(id=>$(id).addEventListener('blur',()=>{clearTimeout(tm);live(id,true)}));
 function paintPhoto(){const b=$('photoBtn');if(curFoto){b.style.background="url('"+okImg(curFoto)+"') center/cover";b.innerHTML=''}else{b.style.background='';b.innerHTML=ICONS.camera}$('photoDel').hidden=!curFoto}
@@ -10231,7 +10261,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.21.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.22.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10356,6 +10386,9 @@ const SB=(()=>{
  const dev=()=>{const u=navigator.userAgent||'';const os=/iPhone/.test(u)?'iPhone':/iPad/.test(u)?'iPad':/Android/.test(u)?'Android':/Macintosh/.test(u)?'Mac':/Windows/.test(u)?'Windows':/Linux/.test(u)?'Linux':'Dispositivo';const br=/Edg\//.test(u)?'Edge':/Firefox|FxiOS/.test(u)?'Firefox':/Chrome|CriOS/.test(u)?'Chrome':/Safari/.test(u)?'Safari':'Browser';return os+' · '+br};
  async function alog(kind){try{if(!ses)return;await js('/rest/v1/access_log',{method:'POST',auth:true,headers:{Prefer:'return=minimal'},json:{device_id:did(),device:dev(),kind,app_ver:((document.querySelector('meta[name=app-version]')||{}).content||'').split('|')[0].slice(0,20)}})}catch(e){}}
  const usage=()=>js('/rest/v1/rpc/my_usage',{method:'POST',auth:true,json:{}});
+ /* presenza: ultimo istante in cui l'app era aperta (solo per il monitor del gestore) */
+ {const ping=()=>{try{if(!ses||document.hidden||navigator.onLine===false)return;js('/rest/v1/rpc/ping',{method:'POST',auth:true,headers:{Prefer:'return=minimal'},json:{v:((document.querySelector('meta[name=app-version]')||{}).content||'').split('|')[0].slice(0,20)}}).catch(()=>{})}catch(e){}};
+  setInterval(ping,12e4);document.addEventListener('visibilitychange',()=>{if(!document.hidden)ping()});setTimeout(ping,6000)}
  /* errori applicativi -> console di audit (solo testo tecnico ripulito, niente dati dei clienti) */
  {const seen=new Map();let sent=0,t0=Date.now();
   const clean=s=>String(s==null?'':s).replace(/[\x00-\x1f]+/g,' ').replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g,'[email]').replace(/https?:\/\/[^\s)'"]+/g,u=>{try{const x=new URL(u);return x.origin+x.pathname.replace(/[0-9a-f-]{16,}/gi,'…')}catch(e){return '[url]'}}).replace(/\+?\d[\d\s().-]{6,}\d/g,'[num]').replace(/\s+/g,' ').trim();
@@ -10366,8 +10399,9 @@ const SB=(()=>{
  const arecent=()=>js('/rest/v1/access_log?select=created_at,device_id,device,kind&order=created_at.desc&limit=20',{auth:true});
  async function logoutAll(){try{if(ses)await raw('/auth/v1/logout?scope=global',{method:'POST',auth:1})}catch(e){}ses=null;save()}
  const ai=body=>js('/functions/v1/assistant-ai',{method:'POST',auth:true,json:body});
+ const vies=body=>js('/functions/v1/vies-lookup',{method:'POST',auth:true,json:body});
  async function fb(row){await js('/rest/v1/assistant_feedback',{method:'POST',auth:true,headers:{Prefer:'return=minimal'},json:row})}
- return{db,uid,e2e,fb,ai,usage,alog,arecent,logoutAll,did,setCap:t=>{capTok=t||''},email:()=>ses&&ses.user?ses.user.email:'',has:()=>!!ses,msg,wipe,
+ return{db,uid,e2e,fb,ai,vies,usage,alog,arecent,logoutAll,did,setCap:t=>{capTok=t||''},email:()=>ses&&ses.user?ses.user.email:'',has:()=>!!ses,msg,wipe,
   async signIn(email,password){setSes(await js('/auth/v1/token?grant_type=password',{method:'POST',json:Object.assign({email,password},sec())}))},
   async signUp(email,password){const j=await js('/auth/v1/signup',{method:'POST',json:Object.assign({email,password},sec())});if(j&&j.access_token){setSes(j);return true}return false},
   recover:email=>js('/auth/v1/recover',{method:'POST',json:Object.assign({email},sec())}),
@@ -10533,7 +10567,8 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.18','Elementi attivi evidenziati con l’arancione del logo.'],
 ['1.19','Modelli di colore in Impostazioni › Aspetto: Standard (predefinito), Classico arancio (chiaro con colori pastello del logo), Notte, Neon e Giorno.'],
 ['1.20','Assistente con intelligenza artificiale gratuita (Google Gemini): risponde in base alle guide dell’app, senza vedere i tuoi dati; se non è disponibile usa le guide locali. Badge delle schede attive più leggibili; etichetta Beta su Analytics e Marketing.'],
-['1.21','Registro degli errori applicativi per il gestore (solo testo tecnico ripulito, mai dati dei clienti); Privacy e Termini dentro Info; note di rilascio.']
+['1.21','Registro degli errori applicativi per il gestore (solo testo tecnico ripulito, mai dati dei clienti); Privacy e Termini dentro Info; note di rilascio.'],
+['1.22','Ricerca online della partita IVA (VIES, servizio gratuito dell’Unione Europea): compila ragione sociale e indirizzo dopo la tua conferma; contatore degli utenti online nel monitor del gestore.']
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
