@@ -10356,6 +10356,13 @@ const SB=(()=>{
  const dev=()=>{const u=navigator.userAgent||'';const os=/iPhone/.test(u)?'iPhone':/iPad/.test(u)?'iPad':/Android/.test(u)?'Android':/Macintosh/.test(u)?'Mac':/Windows/.test(u)?'Windows':/Linux/.test(u)?'Linux':'Dispositivo';const br=/Edg\//.test(u)?'Edge':/Firefox|FxiOS/.test(u)?'Firefox':/Chrome|CriOS/.test(u)?'Chrome':/Safari/.test(u)?'Safari':'Browser';return os+' · '+br};
  async function alog(kind){try{if(!ses)return;await js('/rest/v1/access_log',{method:'POST',auth:true,headers:{Prefer:'return=minimal'},json:{device_id:did(),device:dev(),kind,app_ver:((document.querySelector('meta[name=app-version]')||{}).content||'').split('|')[0].slice(0,20)}})}catch(e){}}
  const usage=()=>js('/rest/v1/rpc/my_usage',{method:'POST',auth:true,json:{}});
+ /* errori applicativi -> console di audit (solo testo tecnico ripulito, niente dati dei clienti) */
+ {const seen=new Map();let sent=0,t0=Date.now();
+  const clean=s=>String(s==null?'':s).replace(/[\x00-\x1f]+/g,' ').replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g,'[email]').replace(/https?:\/\/[^\s)'"]+/g,u=>{try{const x=new URL(u);return x.origin+x.pathname.replace(/[0-9a-f-]{16,}/gi,'…')}catch(e){return '[url]'}}).replace(/\+?\d[\d\s().-]{6,}\d/g,'[num]').replace(/\s+/g,' ').trim();
+  window.logErr=async(kind,msg,src,stack)=>{try{if(!ses)return;const m=clean(msg).slice(0,300);if(!m)return;const key=kind+m;const n=(seen.get(key)||0)+1;seen.set(key,n);if(n>2)return;if(Date.now()-t0>6e5){t0=Date.now();sent=0}if(++sent>8)return;
+   await js('/rest/v1/app_errors',{method:'POST',auth:true,headers:{Prefer:'return=minimal'},json:{kind,msg:m,src:clean(src).slice(0,120)||null,stack:clean(stack).slice(0,800)||null,tab:String((document.getElementById('title')||{}).textContent||'').trim().slice(0,30)||null,app_ver:((document.querySelector('meta[name=app-version]')||{}).content||'').split('|')[0].slice(0,20),device:dev()}})}catch(e){}};
+  window.addEventListener('error',e=>{if(e.target&&e.target!==window&&(e.target.src||e.target.href))return;logErr('js',e.message,(e.filename||'').split('/').pop()+':'+(e.lineno||0)+':'+(e.colno||0),e.error&&e.error.stack)});
+  window.addEventListener('unhandledrejection',e=>{const r=e.reason;const m=r&&r.message?r.message:String(r);logErr(/fetch|network|rete/i.test(m)?'rete':'promise',m,'',r&&r.stack)})}
  const arecent=()=>js('/rest/v1/access_log?select=created_at,device_id,device,kind&order=created_at.desc&limit=20',{auth:true});
  async function logoutAll(){try{if(ses)await raw('/auth/v1/logout?scope=global',{method:'POST',auth:1})}catch(e){}ses=null;save()}
  const ai=body=>js('/functions/v1/assistant-ai',{method:'POST',auth:true,json:body});

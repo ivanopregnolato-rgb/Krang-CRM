@@ -184,6 +184,7 @@ async function viaAI(q){
  }catch(x){
   if(x&&(x.status===429)){aiOff=true;aiNote=AIMSG.limit}
   else if(x&&(x.status===503||x.status===401||x.status===404||x.code==='offline'))aiOff=true;
+  if(!(x&&(x.status===429||x.code==='offline')))try{window.logErr&&window.logErr('ai','Assistente IA: '+((x&&(x.status||x.code||x.message))||'errore'),'assistant-ai')}catch(e){}
   return null}}
 async function answer(q){if(ASK.remote){try{const r=await ASK.remote(q);if(r&&r.e)return r}catch(x){}}
  const a=await viaAI(q);if(a)return a;return local(q)}
