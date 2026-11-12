@@ -10231,7 +10231,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.20.3';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.21.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10532,7 +10532,8 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.17','Assistente con screenshot dei passaggi e istruzioni per gli Acquisti del cliente.'],
 ['1.18','Elementi attivi evidenziati con l’arancione del logo.'],
 ['1.19','Modelli di colore in Impostazioni › Aspetto: Standard (predefinito), Classico arancio (chiaro con colori pastello del logo), Notte, Neon e Giorno.'],
-['1.20','Assistente con intelligenza artificiale gratuita (Google Gemini): risponde in base alle guide dell’app, senza vedere i tuoi dati; se non è disponibile usa le guide locali. Badge delle schede attive più leggibili; etichetta Beta su Analytics e Marketing.']
+['1.20','Assistente con intelligenza artificiale gratuita (Google Gemini): risponde in base alle guide dell’app, senza vedere i tuoi dati; se non è disponibile usa le guide locali. Badge delle schede attive più leggibili; etichetta Beta su Analytics e Marketing.'],
+['1.21','Registro degli errori applicativi per il gestore (solo testo tecnico ripulito, mai dati dei clienti); Privacy e Termini dentro Info; note di rilascio.']
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
