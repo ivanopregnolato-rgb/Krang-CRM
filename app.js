@@ -9973,10 +9973,10 @@ function stops(){const out=[];clients.forEach(c=>{const p=c.privacy&&c.privacy.c
   const old=S.camps.filter(c=>c.id!=='k_bday'&&c.id!=='k_cons');if(old.length){const hh=h('div','hh');hh.append(h('span','','Concluse ('+old.length+')'));H.append(hh);old.forEach(cp=>{const v=viewOf({k:'old',cp}),r=h('button','row'),tx=h('div','tx');tx.append(h('b','',cp.nome),h('span','',(cp.canale==='wa'?'WhatsApp':'Email')+' · '+fmtD(cp.data.slice(0,10))),h('em','',v.steps[0].st.ok+' inviati · '+v.steps[0].st.rep+' risposte'));r.append(tx);r.onclick=()=>openJrD({k:'old',cp});H.append(r)})}}
 let asub='fun';try{const u=localStorage.getItem('crm-asub');if(u==='fun'||u==='eng')asub=u}catch(e){}
  function renderAn(){const sh=$('anSh');if(!sh||sh.hidden)return;let H=$('anBody');if(!H){H=h('div');H.id='anBody';sh.firstChild.append(H)}H.textContent='';const sg=h('div','seg');sg.style.marginBottom='10px';[['fun','Funnel'],['eng','Engagement']].forEach(([k,l])=>{const b=h('button','',l);b.type='button';b.classList.toggle('on',asub===k);b.onclick=()=>{asub=k;try{localStorage.setItem('crm-asub',k)}catch(e){}renderAn()};sg.append(b)});H.append(sg);(asub==='fun'?paneFun:paneEng)(H)}
- window.openAn=()=>{const w=shell('anSh','Analytics'),sh=$('anSh');w.firstChild.hidden=true;$('tabs').style.display='none';$('title').textContent='Analytics';const q=document.querySelector('.bar');if(q)q.hidden=true;sh.style.zIndex=3;sh.style.top=document.querySelector('.stk').getBoundingClientRect().bottom+'px';renderAn()};
+ window.openAn=()=>{const w=shell('anSh','Analytics'),sh=$('anSh');w.firstChild.hidden=true;$('tabs').style.display='none';$('title').innerHTML='Analytics '+'<span class="beta">Beta</span>';const q=document.querySelector('.bar');if(q)q.hidden=true;sh.style.zIndex=3;sh.style.top=document.querySelector('.stk').getBoundingClientRect().bottom+'px';renderAn()};
  window.renderM=function(){const H=$('mktBody');if(!H)return;try{applyStops()}catch(e){}H.textContent='';const sg=h('div','seg');sg.style.marginBottom='10px';[['seg','Segmenti'],['cam','Campagne']].forEach(([k,l])=>{const b=h('button','',l);b.style.cssText='font-size:13px;padding:0 4px;white-space:nowrap';b.type='button';b.classList.toggle('on',sub===k);b.onclick=()=>{sub=k;try{localStorage.setItem('crm-msub',k)}catch(e){}renderM()};sg.append(b)});H.append(sg);
   ({seg:paneSeg,fun:paneFun,eng:paneEng,cam:paneCamp})[sub](H)};
- const _st=setTab;setTab=function(v){_st(v);{const a=$('anSh');if(a)a.hidden=true}$('tabs').style.display=['home','clienti','lead','opp'].includes(v)?'':'none';$('mktView').hidden=v!=='mkt';if(v==='mkt'){document.querySelector('.bar').hidden=true;$('title').textContent='Marketing';renderM()}};
+ const _st=setTab;setTab=function(v){_st(v);{const a=$('anSh');if(a)a.hidden=true}$('tabs').style.display=['home','clienti','lead','opp'].includes(v)?'':'none';$('mktView').hidden=v!=='mkt';if(v==='mkt'){document.querySelector('.bar').hidden=true;$('title').innerHTML='Marketing '+'<span class="beta">Beta</span>';renderM()}};
 }
 /* ===== Transazioni del cliente: acquisti, prodotti e KPI ===== */
 {const DAY=864e5,sum=(a,f)=>a.reduce((x,o)=>x+(+f(o)||0),0),dOf=o=>o.chiusa||o.data||o.creata||'',tt=o=>tsOf(dOf(o));
@@ -10070,7 +10070,7 @@ let asub='fun';try{const u=localStorage.getItem('crm-asub');if(u==='fun'||u==='e
    persistP();$('mMov').hidden=true;renderMag();renderP();toast(mvT==='attiva'?'Prodotto aggiunto al magazzino.':'Scorta minima salvata.')};
   $('mv_off').onclick=()=>{const p=pEd;askConfirm('Smettere di gestire “'+p.nome+'” a magazzino? I movimenti già registrati restano.','trash','Non gestire',()=>{p.mag=false;persistP();$('mMov').hidden=true;renderMag();renderP()})}}
  window.renderMag=()=>{const w=$('pMag');w.textContent='';window.magV=window.magV||'g';
-  {const sg=h('div','seg');[['g','Giacenze','box'],['m','Movimenti','layers']].forEach(([k,l,ic])=>{const b=h('button',window.magV===k?'on':'');b.type='button';const si=h('span');si.innerHTML=ICONS[ic];b.append(si,l);b.onclick=()=>{window.magV=k;renderMag()};sg.append(b)});sg.style.marginTop='0';w.append(sg);}
+  {const sg=h('div','seg');[['g','Giacenze','box'],['m','Movimenti','layers']].forEach(([k,l,ic])=>{const b=h('button',window.magV===k?'on':'');b.type='button';const si=h('span');si.innerHTML=ICONS[ic];b.append(si,h('span','lb',l));b.title=b.ariaLabel=l;b.onclick=()=>{window.magV=k;renderMag()};sg.append(b)});sg.style.marginTop='0';w.append(sg);}
   if(window.magV==='m')return renderMov(w);
   const M=prods.filter(p=>p.mag),val=M.reduce((t,p)=>t+Math.max(0,giac(p.id))*(known(p)?+p.costo:0),0),ex=M.filter(p=>disp(p.id)<=0),lo=M.filter(p=>lowOf(p)&&disp(p.id)>0);
   const sm=h('div','sum');[['Valore magazzino (al costo)',eur(val)],['Prodotti gestiti',String(M.length)],['Sotto scorta',String(lo.length)],['Esauriti',String(ex.length)]].forEach(([k,v])=>{const d=h('div','stat');d.append(h('span','',k),h('b','',v));sm.append(d)});w.append(sm);
@@ -10148,7 +10148,7 @@ setTimeout(()=>{try{if(applyStops())render()}catch(e){}try{runBday()}catch(e){}t
 {const mb=$('menuBtn'),mn=$('appMenu'),bk=$('amBack');const close=()=>{mn.hidden=true;bk.hidden=true;mb.setAttribute('aria-expanded','false')};
  mb.onclick=()=>{const o=mn.hidden;mn.hidden=!o;bk.hidden=!o;mb.setAttribute('aria-expanded',String(o));if(o)mn.querySelector('button').focus()};bk.onclick=close;
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!mn.hidden){close();mb.focus()}});
- mn.onclick=e=>{const b=e.target.closest('button');if(!b)return;close();({home:()=>setTab('home'),an:()=>openAn(),prod:()=>setTab('prod'),mkt:()=>setTab('mkt'),set:()=>{openSettings();paintBro()},info:()=>openInfo(),legal:()=>{location.href='privacy.html'},help:()=>openHelp()})[b.dataset.m]()}}
+ mn.onclick=e=>{const b=e.target.closest('button');if(!b)return;close();({home:()=>setTab('home'),an:()=>openAn(),prod:()=>setTab('prod'),mkt:()=>setTab('mkt'),set:()=>{openSettings();paintBro()},info:()=>openInfo(),help:()=>openHelp()})[b.dataset.m]()}}
 
 
 /* ===== password dei backup (cifratura dei file esportati) ===== */
@@ -10231,7 +10231,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.20.2';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.20.3';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10503,6 +10503,35 @@ const E2EUI=(()=>{
   try{const r=await fetch(location.href.split('#')[0].split('?')[0]+'?c='+Date.now(),{cache:'no-store'});const n=rd(await r.text());
    if(!n)st.textContent='Non riesco a leggere la versione online.';else if(n.v!==cur.v||n.d!==cur.d){st.textContent='Disponibile la versione '+n.v+' del '+dl(n.d)+'. Tocca Aggiorna per installarla.';u.hidden=false}else st.textContent='Hai l’ultima versione.'}
   catch(e){st.textContent='Controllo non riuscito: sei offline?'}}}
+
+/* ===== note di rilascio (una per ogni major, con le novità di ogni minor) ===== */
+window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (1.0) a oggi. Ad ogni nuova major questo elenco viene affiancato da uno nuovo.',minor:[
+['1.1','Revisione di sicurezza: protezione dei contenuti, link di accesso, PIN e immagini; nuova icona, nome KRANG CRM e schermata di blocco nello stile dell’accesso.'],
+['1.2','Scansione gratuita del biglietto da visita (lettura del testo sul telefono), riconoscimento del cliente già presente, app vergine al primo avvio e dati di esempio più ricchi.'],
+['1.3','Biglietto da visita: avviso di salvataggio, lettura in due passaggi, assegnazione dei campi migliorata.'],
+['1.4','Biglietto da visita: revisione guidata con trascinamento, due lati e nome più affidabile.'],
+['1.5','Pagine Informativa privacy e Termini d’uso, consenso alla registrazione.'],
+['1.6','Cifratura end-to-end dei dati (passphrase e chiave di recupero, foto cifrate); invio e lettura Gmail direttamente dal telefono, senza permessi aggiuntivi.'],
+['1.7','Posta senza permessi, guida di benvenuto e impostazioni più pulite.'],
+['1.8','Registro chiamate per clienti e lead (elenco, registra, richiama), scheda Contatti e menu a icone senza sovrapposizioni.'],
+['1.9','Data e utente di creazione e di ultimo aggiornamento di ogni record, inclusi nel backup.'],
+['1.10','Brochure e listino nelle email, listino per cliente, salvataggio per voce, guide con icona (i), icona bussola per i Primi passi.'],
+['1.11','Sezione Aiuto nel menu con Primi passi e manuale.'],
+['1.12','Assistente in chat dentro Aiuto, con risposte dal manuale.'],
+['1.13','Pollice su/giù sulle risposte dell’Assistente.'],
+['1.14','Feedback dell’Assistente con domanda ripulita da email e numeri.'],
+['1.15','Accessi più sicuri: anti-bot, blocco dei tentativi, registro accessi, esci da tutti i dispositivi.'],
+['1.16','Sezione Utilizzo con il consumo per utente e tetto di 100 MB sui file.'],
+['1.17','Assistente con screenshot dei passaggi e istruzioni per gli Acquisti del cliente.'],
+['1.18','Elementi attivi evidenziati con l’arancione del logo.'],
+['1.19','Modelli di colore in Impostazioni › Aspetto: Standard (predefinito), Classico arancio (chiaro con colori pastello del logo), Notte, Neon e Giorno.'],
+['1.20','Assistente con intelligenza artificiale gratuita (Google Gemini): risponde in base alle guide dell’app, senza vedere i tuoi dati; se non è disponibile usa le guide locali. Badge delle schede attive più leggibili; etichetta Beta su Analytics e Marketing.']
+]}];
+{let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
+ M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
+ RELEASES.slice().reverse().forEach(r=>{bx.append(h('h4','',r.titolo));bx.append(h('p','hint',r.intro));const ul=h('ul');ul.style.cssText='padding-left:18px;margin:6px 0 12px';r.minor.slice().reverse().forEach(([v,t])=>{const li=h('li');li.style.margin='6px 0';li.append(h('b','',v+' '),document.createTextNode(t));ul.append(li)});bx.append(ul)});
+ const c=h('button','btn');c.type='button';c.textContent='Chiudi';c.onclick=()=>{M.hidden=true};bx.append(c);M.append(bx);M.hidden=false}
+ const n=$('inN');if(n)n.onclick=()=>{$('mInfo').hidden=true;openRel()}}
 /* ===== scansione del biglietto da visita (lettura del testo sul telefono, gratuita) ===== */
 const CARD=(()=>{
  const TITLES=/^(dott\.?ssa|dott\.?|dr\.?|ing\.?|avv\.?|arch\.?|geom\.?|rag\.?|prof\.?ssa|prof\.?|sig\.?ra|sig\.?|mr\.?|mrs\.?|ms\.?)\s+/i;
