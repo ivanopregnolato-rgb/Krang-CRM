@@ -121,7 +121,7 @@ function openSheet(c,data){
   newRef=null;editing=c||null;try{paintCre('sheet',c,'cl')}catch(e){}const d=data||c||{};
   FIELDS.forEach(f=>$(f).value=d[f]||'');setErr('nascita','');ageHint();
   if(!$('paese').value)$('paese').value='IT';
-  curFav=!!d.fav;paintFav();curFoto=d.foto||'';paintPhoto();applyTipo(d.tipo||'persona');renderLinked();loadPriv(d.privacy);setPane('dati');document.querySelectorAll('#cTabs [data-p=opp],#cTabs [data-p=comm],#cTabs [data-p=tp],#cTabs [data-p=tr]').forEach(b=>{b.hidden=!editing});tpSel=null;tpOff=new Set();mapQ='';updMap();$('p_copy').hidden=!editing;setErr('telefono','');setErr('email','');setErr('piva','');
+  curFav=!!d.fav;paintFav();curFoto=d.foto||'';paintPhoto();applyTipo(d.tipo||'persona');try{['csBox','viesBox'].forEach(i=>{const e=$(i);if(e)e.hidden=true});window.csUpd&&csUpd();window.viesUpd&&viesUpd()}catch(e){}renderLinked();loadPriv(d.privacy);setPane('dati');document.querySelectorAll('#cTabs [data-p=opp],#cTabs [data-p=comm],#cTabs [data-p=tp],#cTabs [data-p=tr]').forEach(b=>{b.hidden=!editing});tpSel=null;tpOff=new Set();mapQ='';updMap();$('p_copy').hidden=!editing;setErr('telefono','');setErr('email','');setErr('piva','');
   $('sheetTitle').textContent=c?fullName(c):'Nuovo cliente';if(c)$('sheetTitle').append(stChip(c));
   $('del').hidden=!c;
   const a=$('acts');a.textContent='';a.hidden=!c;
@@ -254,6 +254,37 @@ $('piva').addEventListener('input',()=>later('piva'));
       const bar=document.createElement('div');bar.className='vrow';bar.append(go,no);box.append(bar)
     }catch(e){const st=e&&e.status;say(st===429?'Hai raggiunto il limite di ricerche di oggi: riprova domani o compila a mano.':'Ricerca non disponibile ora: compila a mano.',true);try{window.logErr&&st!==429&&window.logErr('rete','Ricerca VIES: '+(st||'errore'),'vies-lookup')}catch(x){}}
     finally{btn.disabled=false}}}
+
+/* suggerimenti azienda dal nome (Wikidata, OpenStreetMap; se vuote, ricerca Google): l'utente sceglie e conferma */
+{const cb=document.createElement('button');cb.type='button';cb.id='csBtn';cb.className='btn lbl';cb.innerHTML=ICONS.search+'Cerca azienda online';cb.hidden=true;
+  const cx=document.createElement('div');cx.id='csBox';cx.className='vies';cx.hidden=true;
+  $('azienda').parentNode.append(cb,cx);
+  const upd=()=>{const t=curTipo==='azienda',n=($('azienda').value||'').trim();cb.hidden=!(t&&n.length>=3&&navigator.onLine!==false&&typeof SB!=='undefined'&&SB.has&&SB.has());if(cb.hidden)cx.hidden=true};
+  $('azienda').addEventListener('input',upd);$('seg').addEventListener('click',()=>setTimeout(upd,0));window.addEventListener('online',upd);window.addEventListener('offline',upd);window.csUpd=upd;
+  const say=(t,warn)=>{cx.hidden=false;cx.replaceChildren();const p=document.createElement('div');p.className=warn?'warn':'hint';p.textContent=t;cx.append(p)};
+  const SRC={wikidata:'Wikidata',osm:'OpenStreetMap',google:'Ricerca Google'};
+  const pick=(it,via)=>{
+    cx.replaceChildren();const t=document.createElement('div');t.className='hint';t.textContent=(it.src==='google'?'Dati trovati con una ricerca Google: possono essere imprecisi, da verificare. ':'Fonte: '+SRC[it.src]+'. ')+'Scegli cosa compilare:';cx.append(t);
+    let piva=it.piva;if(piva){const m=piva.match(/^([A-Z]{2})(.+)$/);if(m&&m[1]===$('paese').value)piva=m[2]}
+    const rows=[];[['azienda','Ragione sociale',it.name],['indirizzo','Indirizzo',it.address],['sito','Sito web',it.website],['telefono','Telefono',it.phone],['email','Email',it.email],['piva','Partita IVA',piva]].forEach(([f,l,x])=>{if(!x||!$(f))return;const cur=$(f).value.trim();const lab=document.createElement('label');lab.className='chk';const c=document.createElement('input');c.type='checkbox';c.checked=f==='azienda'||!cur||cur.toLowerCase()===x.toLowerCase();const sp=document.createElement('span');sp.textContent=l+': '+x+(cur&&!c.checked?' (sostituisce «'+cur+'»)':'');lab.append(c,sp);cx.append(lab);rows.push([f,x,c])});
+    const go=document.createElement('button');go.type='button';go.className='btn p lbl';go.textContent='Usa i dati selezionati';
+    go.onclick=()=>{let n=0;rows.forEach(([f,x,c])=>{if(c.checked){$(f).value=x;$(f).dispatchEvent(new Event('input',{bubbles:true}));n++}});cx.hidden=true;if(n)toast('Dati compilati: controllali prima di salvare.')};
+    const back=document.createElement('button');back.type='button';back.className='btn lbl';back.textContent='Indietro';back.onclick=()=>list(via,window._csItems);
+    const bar=document.createElement('div');bar.className='vrow';bar.append(go,back);cx.append(bar)};
+  const list=(via,items)=>{
+    window._csItems=items;cx.replaceChildren();cx.hidden=false;
+    const t=document.createElement('div');t.className='hint';t.textContent=via==='google'?'Nessun risultato in Wikidata e OpenStreetMap: ecco cosa risulta da una ricerca Google (da verificare).':'Trovati in Wikidata e OpenStreetMap. Tocca quello giusto:';cx.append(t);
+    items.forEach(it=>{const b=document.createElement('button');b.type='button';b.className='csr';const a=document.createElement('b');a.textContent=it.name;const d=document.createElement('span');d.textContent=[it.address||it.note,SRC[it.src]].filter(Boolean).join(' · ');b.append(a,d);b.onclick=()=>pick(it,via);cx.append(b)});
+    const no=document.createElement('button');no.type='button';no.className='btn lbl';no.textContent='Chiudi';no.onclick=()=>{cx.hidden=true};cx.append(no)};
+  cb.onclick=async()=>{
+    const q=($('azienda').value||'').trim();if(q.length<3)return;
+    cb.disabled=true;say('Ricerca in corso…');
+    try{const r=await SB.csearch({q});
+      if(r&&r.limit){say('Ricerca Google non disponibile oggi per il limite raggiunto: compila a mano.',true);return}
+      if(!r||!Array.isArray(r.items)||!r.items.length){say('Nessun risultato per «'+q+'». Prova un nome più preciso o compila a mano.');return}
+      list(r.via,r.items)
+    }catch(e){const st=e&&e.status;say(st===429?'Hai raggiunto il limite di ricerche di oggi: riprova domani o compila a mano.':'Ricerca non disponibile ora: compila a mano.',true);try{window.logErr&&st!==429&&window.logErr('rete','Ricerca azienda: '+(st||'errore'),'company-search')}catch(x){}}
+    finally{cb.disabled=false}}}
 
 $('paese').addEventListener('change',()=>{live('telefono');live('piva')});
 ['telefono','email','piva'].forEach(id=>$(id).addEventListener('blur',()=>{clearTimeout(tm);live(id,true)}));
@@ -10261,7 +10292,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.22.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.23.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10400,8 +10431,9 @@ const SB=(()=>{
  async function logoutAll(){try{if(ses)await raw('/auth/v1/logout?scope=global',{method:'POST',auth:1})}catch(e){}ses=null;save()}
  const ai=body=>js('/functions/v1/assistant-ai',{method:'POST',auth:true,json:body});
  const vies=body=>js('/functions/v1/vies-lookup',{method:'POST',auth:true,json:body});
+ const csearch=body=>js('/functions/v1/company-search',{method:'POST',auth:true,json:body});
  async function fb(row){await js('/rest/v1/assistant_feedback',{method:'POST',auth:true,headers:{Prefer:'return=minimal'},json:row})}
- return{db,uid,e2e,fb,ai,vies,usage,alog,arecent,logoutAll,did,setCap:t=>{capTok=t||''},email:()=>ses&&ses.user?ses.user.email:'',has:()=>!!ses,msg,wipe,
+ return{db,uid,e2e,fb,ai,vies,csearch,usage,alog,arecent,logoutAll,did,setCap:t=>{capTok=t||''},email:()=>ses&&ses.user?ses.user.email:'',has:()=>!!ses,msg,wipe,
   async signIn(email,password){setSes(await js('/auth/v1/token?grant_type=password',{method:'POST',json:Object.assign({email,password},sec())}))},
   async signUp(email,password){const j=await js('/auth/v1/signup',{method:'POST',json:Object.assign({email,password},sec())});if(j&&j.access_token){setSes(j);return true}return false},
   recover:email=>js('/auth/v1/recover',{method:'POST',json:Object.assign({email},sec())}),
@@ -10568,7 +10600,8 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.19','Modelli di colore in Impostazioni › Aspetto: Standard (predefinito), Classico arancio (chiaro con colori pastello del logo), Notte, Neon e Giorno.'],
 ['1.20','Assistente con intelligenza artificiale gratuita (Google Gemini): risponde in base alle guide dell’app, senza vedere i tuoi dati; se non è disponibile usa le guide locali. Badge delle schede attive più leggibili; etichetta Beta su Analytics e Marketing.'],
 ['1.21','Registro degli errori applicativi per il gestore (solo testo tecnico ripulito, mai dati dei clienti); Privacy e Termini dentro Info; note di rilascio.'],
-['1.22','Ricerca online della partita IVA (VIES, servizio gratuito dell’Unione Europea): compila ragione sociale e indirizzo dopo la tua conferma; contatore degli utenti online nel monitor del gestore.']
+['1.22','Ricerca online della partita IVA (VIES, servizio gratuito dell’Unione Europea): compila ragione sociale e indirizzo dopo la tua conferma; contatore degli utenti online nel monitor del gestore.'],
+['1.23','Suggerimenti per le aziende dal nome: Wikidata e OpenStreetMap e, se non trovano nulla, una ricerca Google. Scegli il risultato e compili sito, telefono, email, indirizzo e partita IVA dopo la tua conferma.']
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
