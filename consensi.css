@@ -1,0 +1,7 @@
+.chk{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--out);border-radius:14px;padding:14px;margin:10px 0;cursor:pointer}
+.chk input{width:22px;height:22px;margin-top:2px;flex:none;accent-color:var(--ac)}
+.go{display:block;width:100%;padding:14px;margin:18px 0;border:0;border-radius:14px;background:var(--ac);color:#fff;font-weight:600;font-size:17px;font-family:inherit;cursor:pointer}
+.go:disabled{opacity:.6}
+@media(prefers-color-scheme:dark){.go{color:#06241c}}
+details{margin:16px 0}summary{cursor:pointer;font-weight:600}.inf p{margin:10px 0;white-space:pre-wrap}
+.err{color:#b3261e}.done{color:var(--ac);font-weight:600}

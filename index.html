@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.32.5"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.32.5|2026-11-13"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.33.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.33.0|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -205,7 +205,6 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 .box p{margin:0 0 16px;font-weight:600}
 .box.info{max-height:80vh;overflow:auto}
 .box.compact .tech{display:none}
-.box:not(.compact) #mr_more{display:none}
 .toast{position:fixed;left:16px;right:16px;bottom:calc(100px + env(safe-area-inset-bottom,0px));max-width:528px;margin:0 auto;background:var(--ink);color:var(--bg);padding:12px 14px;border-radius:12px;z-index:30;font-size:14px}
 .toast button{margin-left:10px;background:var(--bg);color:var(--ink);border:0;border-radius:8px;padding:6px 12px;font-weight:600;cursor:pointer}
 .itx{font-size:14px;line-height:1.5;font-weight:400;margin-bottom:14px}
@@ -597,15 +596,6 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="hint">Con Gmail l’invio è immediato.</div><button class="btn p lbl" id="ms_gmail" type="button" hidden><span data-i="Scrivi"></span>Invia con Gmail</button><div class="err" id="err-ms_gmail" hidden></div>
   <button class="btn lbl" id="ms_ok" type="button"><span data-i="check"></span>Ho inviato l’email</button>
   <button class="btn lbl" id="ms_x" type="button"><span data-i="x"></span>Annulla</button></div></div>
-<div class="modal" id="mResp" hidden><div class="box info" role="dialog"><p>Registra la risposta del cliente</p><div class="hint" id="mr_hint"></div><button class="link" id="mr_more" type="button">Mostra dettagli</button>
-  <div class="f tech"><label for="mr_code">Codice indicato dal cliente</label><input id="mr_code" autocomplete="off" autocapitalize="characters"><div class="err" id="err-mr_code" hidden></div></div>
-  <div class="f tech"><label for="mr_date">Data e ora di ricezione</label><input id="mr_date" type="datetime-local"><div class="err" id="err-mr_date" hidden></div></div>
-  <div class="f"><label>Consensi indicati nella risposta</label><div id="mr_cons"></div></div>
-  <div class="f tech"><label for="mr_ev">Testo della risposta (prova)</label><textarea id="mr_ev" rows="4"></textarea><div class="err" id="err-mr_ev" hidden></div></div>
-  <div class="f" id="mr_mailF" hidden><label class="chk"><input type="checkbox" id="mr_newmail"><span id="mr_newmail_t"></span></label><div class="err" id="err-mr_newmail" hidden></div></div>
-  <div class="f"><label for="mr_op">Operatore (chi registra)</label><input id="mr_op" autocomplete="off"><div class="err" id="err-mr_op" hidden></div></div>
-  <button class="btn p lbl" id="mr_ok" type="button"><span data-i="check"></span>Registra e aggiorna anagrafica</button>
-  <button class="btn lbl" id="mr_x" type="button"><span data-i="x"></span>Annulla</button></div></div>
 <div class="modal" id="mCompose" hidden><div class="box info" role="dialog"><p>Email</p>
   <div class="f"><label for="mc_to">Destinatario</label><input id="mc_to" readonly></div>
   <div class="hint warn" id="mc_hint"></div>
@@ -646,7 +636,6 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="st_firma">Firma delle email</label><textarea id="st_firma" rows="3"></textarea><div class="hint">Segnaposto: {azienda}, {mittente}.</div></div>
 </div>
 <div class="sp" data-sp="pv" hidden>
-  <div class="f"><label class="chk"><input type="checkbox" id="st_acons"><span>Registra in automatico le risposte chiare<em>Quando il cliente risponde con i pulsanti dell’email (codice corretto, stesso indirizzo), i consensi si aggiornano da soli. Le risposte dubbie restano da confermare.</em></span></label></div>
   <div class="f"><label>Conservazione dei dati (mesi)</label><div class="hint" style="margin:0 0 8px">Valori indicativi da far verificare a un consulente o al DPO. Le stesse durate compaiono nell’informativa.</div>
     <div class="two" style="align-items:center;margin:6px 0"><div><div style="font-size:14px">Dati contrattuali e fiscali</div><div class="hint" style="margin:0">Dalla fine del rapporto. 120 mesi sono 10 anni (art. 2220 c.c.).</div></div><div><input id="st_r_contratto" inputmode="numeric" autocomplete="off" aria-label="Dati contrattuali e fiscali"><div class="err" id="err-st_r_contratto" hidden></div></div></div>
     <div class="two" style="align-items:center;margin:6px 0"><div><div style="font-size:14px">Contatti senza contratto</div><div class="hint" style="margin:0">Dall’ultimo contatto.</div></div><div><input id="st_r_contatti" inputmode="numeric" autocomplete="off" aria-label="Contatti senza contratto"><div class="err" id="err-st_r_contatti" hidden></div></div></div>
@@ -860,7 +849,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="gmail.js?v=1.32.5"></script>
-<script src="app.js?v=1.32.5"></script>
+<script src="gmail.js?v=1.33.0"></script>
+<script src="app.js?v=1.33.0"></script>
 </body>
 </html>

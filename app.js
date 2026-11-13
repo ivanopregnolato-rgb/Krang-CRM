@@ -468,7 +468,7 @@ function loadPriv(p){p=p||mkPriv();$('p_later').checked=false;
   privUI();paintReq();$('p_det').open=false}
 function collectPriv(prev,isNew){
   prev=prev||mkPriv();const now=new Date().toISOString().slice(0,16),today=ymd(),log=(prev.log||[]).slice();
-  const p={base:$('p_base').value,fonteDati:$('p_fonte').value,informativa:$('p_inf').checked,infData:$('p_infdata').value,infModo:$('p_infmodo').value,infVer:'1.0',cons:{},conserva:($('p_cons').value&&$('p_cons').value!==$('p_cons').dataset.auto)?$('p_cons').value:'',anon:prev.anon,log,richieste:prev.richieste||[]};
+  const p={base:$('p_base').value,fonteDati:$('p_fonte').value,informativa:$('p_inf').checked,infData:$('p_infdata').value,infModo:$('p_infmodo').value,infVer:'1.0',cons:{},conserva:($('p_cons').value&&$('p_cons').value!==$('p_cons').dataset.auto)?$('p_cons').value:'',anon:prev.anon,log,richieste:prev.richieste||[],lk:prev.lk,lkH:prev.lkH,lkOk:prev.lkOk};
   if(isNew)log.push({d:now,t:'Anagrafica creata (fonte: '+$('p_fonte').selectedOptions[0].textContent+')'});
   if(p.informativa&&!p.infData)p.infData=today;if(!p.informativa)p.infData='';
   if(p.informativa&&(!prev.informativa||prev.infData!==p.infData))log.push({d:now,t:'Informativa fornita ('+p.infModo+', v1.0) il '+fmtD(p.infData)});
@@ -511,11 +511,20 @@ function creLine(r,kind){const t=creOf(r,kind),m=r.mod?new Date(r.mod).getTime()
 function paintCre(sheetId,r,kind){const box=$(sheetId).firstElementChild;if(!box)return;let e=box.querySelector(':scope > .creL');
   if(!e){e=document.createElement('div');e.className='hint creL';e.style.whiteSpace='pre-line';const b=box.querySelector(':scope > .btns');b?box.insertBefore(e,b):box.append(e)}
   const t=r?creLine(r,kind):'';e.textContent=t;e.hidden=!t}
-const effSt=r=>r.stato==='inviata'&&Date.now()>new Date(r.scade+'Z').getTime()?'scaduta':r.stato;
+const effSt=r=>r.stato;
 function logP(c,t,ev){const p=c.privacy=c.privacy||mkPriv();p.log=p.log||[];p.log.push({d:new Date().toISOString().slice(0,16),t,op:opName,ev})}
 function saveOp(op){opName=op;try{localStorage.setItem('crm-op',op)}catch(e){}}
-function mailText(c,r){const nome=contactName(c);
-  return ['Gentile '+nome+',','','la informiamo che '+(az()||'il titolare')+' tratta i suoi dati personali per gestire il rapporto commerciale. Di seguito l’informativa sintetica ai sensi dell’art. 13 del Regolamento (UE) 2016/679.','',infoTxt(),'','CONSENSI FACOLTATIVI','Per autorizzare i trattamenti facoltativi, risponda a questa email indicando il codice '+r.token+' e i numeri delle voci a cui acconsente:','1) '+CLABEL.mkEmail,'2) '+CLABEL.mkTel,'3) '+CLABEL.profilazione,'4) '+CLABEL.terzi,'','Se non desidera prestare alcun consenso non è necessario rispondere: il rifiuto non incide sul servizio. Può revocare un consenso in qualsiasi momento rispondendo a questa email.','Il codice è valido fino al '+fmtD(r.scade.slice(0,10))+'.','',firma()].join('\n')}
+function mailText(c,r){const nome=contactName(c);r.url=conUrl(c);r.sig=firma();
+  return ['Gentile '+nome+',','','la informiamo che '+(az()||'il titolare')+' tratta i suoi dati personali per gestire il rapporto commerciale. Di seguito l’informativa sintetica ai sensi dell’art. 13 del Regolamento (UE) 2016/679.','',infoTxt(),'','CONSENSI FACOLTATIVI','Per scegliere a quali trattamenti facoltativi acconsente ('+CONS.map(k=>CLABEL[k].toLowerCase()).join(', ')+') apra questa pagina personale, valida solo per lei:','',r.url,'','Se non desidera prestare alcun consenso non è necessario fare nulla: il rifiuto non incide sul servizio. Può cambiare o revocare le sue scelte in qualsiasi momento riaprendo lo stesso link.','',r.sig].join('\n')}
+/* link personale per i consensi: codice casuale (resta nella scheda cifrata), sul server solo la sua impronta SHA-256 */
+const CON_PAGE='https://ivanopregnolato-rgb.github.io/Krang-CRM/consensi.html';
+function conUrl(c){const pv=c.privacy=c.privacy||mkPriv();if(!pv.lk||!/^[A-Za-z0-9_-]{20,64}$/.test(pv.lk)){const a=crypto.getRandomValues(new Uint8Array(24));pv.lk=btoa(String.fromCharCode(...a)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');pv.lkH='';pv.lkOk=false}return CON_PAGE+'#'+pv.lk}
+const sha256hex=async t=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)))].map(x=>x.toString(16).padStart(2,'0')).join('');
+async function lkEnsure(c){const pv=c.privacy=c.privacy||mkPriv();conUrl(c);if(!pv.lkH)pv.lkH=await sha256hex(pv.lk);
+  await SB.consent.reg(pv.lkOk?'':pv.lkH,{az:S.azienda||'',info:infoTxt(),ver:'1.0',cons:CONS.map(k=>({k,label:CLABEL[k]}))});if(!pv.lkOk){pv.lkOk=true;persist()}}
+let lkP=null,lkD=false;
+function lkStart(c){lkD=false;lkP=lkEnsure(c).then(()=>{lkD=true;return true},()=>false);return lkP}
+async function lkReady(){const ok=lkD||await lkP;if(!ok)toast('Non riesco a creare il link dei consensi: controlla la connessione e riprova.');return ok}
 
 /* stato attuale della privacy, in sola lettura: informativa, consensi e conservazione */
 function paintPrivSum(){
@@ -539,66 +548,43 @@ function paintReq(){
   if(!editing){const pb=$('p_prep');pb.disabled=false;pb.innerHTML=ICONS.Scrivi+'Invia informativa';pb.onclick=()=>viaNew('email');return}
   const p=editing.privacy||mkPriv(),R=p.richieste||[],pend=R.find(r=>effSt(r)==='inviata'),ok=!!editing.email,given=CONS.filter(k=>p.cons[k]&&p.cons[k].v).map(k=>CLABEL[k]);
 
-  const pb=$('p_prep');pb.disabled=!ok;if(pend&&ok)autoReq(pend);
-  if(pend){const fr=AUTOREP[pend.token];pb.innerHTML=(fr?ICONS.check+'Risposta trovata: esamina':ICONS.search+'Controlla risposta in '+PV().nome);pb.onclick=()=>fr?showFound(pend,fr.best,fr.P):checkReplies(pend,pb)}else{pb.innerHTML=ICONS.Scrivi+(p.informativa?'Reinvia informativa':'Invia informativa');pb.onclick=openSend}
+  const pb=$('p_prep');pb.disabled=!ok;if(pend&&ok)autoReq(pend);else pullConsents();
+  if(pend){pb.innerHTML=ICONS.search+'Controlla se ha risposto';pb.onclick=async()=>{pb.disabled=true;const n=await pullConsents(true);pb.disabled=false;toast(n?'Consensi aggiornati dalla risposta del cliente.':'Nessuna risposta dal cliente per ora.')}}else{pb.innerHTML=ICONS.Scrivi+(p.informativa?'Reinvia informativa':'Invia informativa');pb.onclick=openSend}
   $('p_mailhint').textContent=!ok?'Aggiungi e salva un’email del cliente nella scheda Dati.':(!S.azienda?'Imposta il nome azienda in Menu → Impostazioni: è il titolare indicato nell’informativa.':'');
   ((editing.privacy&&editing.privacy.richieste)||[]).slice().reverse().forEach(r=>{
     const st=effSt(r),C={inviata:['In attesa di risposta','#f6edb8'],completata:['Completata','#b5ebc0'],scaduta:['Scaduta','#f5cad6'],annullata:['Annullata','#dde3ee']}[st];
     const d=h('div','req'),ch=h('i','chip',C[0]);ch.style.background=C[1];
-    d.append(ch,h('div','','Inviata il '+fmtDT(r.creata+'Z')+' a '+r.email+(r.via&&r.via!=='mailto'?' (da '+provName(r.via)+')':'')),h('div','','Codice '+r.token+', valido fino al '+fmtD(r.scade.slice(0,10))+(r.stato==='completata'?'. Risposta ricevuta il '+fmtDT(r.ricevuta+'Z')+'.':'')));
+    d.append(ch,h('div','','Inviata il '+fmtDT(r.creata+'Z')+' a '+r.email+(r.via&&r.via!=='mailto'?' (da '+provName(r.via)+')':'')),h('div','','Codice '+r.token+(r.stato==='completata'?'. Risposta ricevuta il '+fmtDT(r.ricevuta+'Z')+'.':'. Il link resta valido: il cliente può rispondere quando vuole.')));
     if(r.consegna){d.append(h('div',r.consegna.stato==='respinta'?'warn':'','Consegna: '+(r.consegna.stato==='respinta'?'email respinta, controlla l’indirizzo':'nessun errore rilevato')+' (verificata il '+fmtDT(r.consegna.verificata+'Z')+')'))}
     if(st==='inviata'){const dd=Math.floor((Date.now()-new Date(r.creata+'Z'))/864e5);if(dd>=7)d.append(h('div','warn','Nessuna risposta da '+dd+' giorni.'));
-      const b=h('button','btn lbl');b.type='button';b.innerHTML=ICONS.check+'Registra risposta';b.onclick=()=>openResp(r);
-      const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'Annulla richiesta';x.onclick=()=>askConfirm('Annullare la richiesta con codice '+r.token+'? Il codice non potrà più essere usato.','x','Annulla richiesta',()=>{r.stato='annullata';logP(editing,'Richiesta di consenso annullata (codice '+r.token+')','annullo');persist();loadPriv(editing.privacy)});
-      const fr=AUTOREP[r.token];if(fr){const fb=h('button','btn p lbl');fb.type='button';fb.innerHTML=ICONS.check+'Risposta trovata: esamina';fb.onclick=()=>showFound(r,fr.best,fr.P);d.append(fb)}else d.append(h('div','hint','Controllo automatico delle risposte in '+PV().nome+' attivo.'));if(dd>=7){const rb=h('button','btn lbl');rb.type='button';rb.innerHTML=ICONS.Scrivi+'Invia promemoria';rb.onclick=()=>remind(r);d.append(rb)}d.append(b,x)}
+            const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'Annulla richiesta';x.onclick=()=>askConfirm('Annullare la richiesta con codice '+r.token+'? Resta nel registro come annullata.','x','Annulla richiesta',()=>{r.stato='annullata';logP(editing,'Richiesta di consenso annullata (codice '+r.token+')','annullo');persist();loadPriv(editing.privacy)});
+      if(dd>=7){const rb=h('button','btn lbl');rb.type='button';rb.innerHTML=ICONS.Scrivi+'Invia promemoria';rb.onclick=()=>remind(r);d.append(rb)}d.append(x)}
     w.append(d)})}
 function openSend(){
   if(!editing||!editing.email)return;
   if(!S.azienda){toast('Imposta prima il nome azienda: è il titolare indicato nell’informativa.');openSettings();setErr('st_az','Inserisci il nome dell’azienda.');return}
   const now=new Date();
-  rq={id:'r'+Date.now().toString(36),token:tok(),creata:now.toISOString().slice(0,16),scade:new Date(now.getTime()+14*864e5).toISOString().slice(0,16),email:editing.email,stato:'inviata'};
-  $('ms_to').value=rq.email;$('ms_sub').value=INFO_SUBJ();$('ms_body').value=mailText(editing,rq);$('ms_op').value=opName;setErr('ms_op','');setErr('ms_gmail','');$('ms_gmail').hidden=true;gm().then(m=>{$('ms_gmail').hidden=!(m&&autoOk());$('ms_gmail').lastChild.textContent='Invia con '+PV().nome}).catch(()=>{});$('mSend').hidden=false}
+  rq={id:'r'+Date.now().toString(36),token:tok(),creata:now.toISOString().slice(0,16),email:editing.email,stato:'inviata'};
+  $('ms_to').value=rq.email;$('ms_sub').value=INFO_SUBJ();$('ms_body').value=mailText(editing,rq);lkStart(editing);$('ms_op').value=opName;setErr('ms_op','');setErr('ms_gmail','');$('ms_gmail').hidden=true;gm().then(m=>{$('ms_gmail').hidden=!(m&&autoOk());$('ms_gmail').lastChild.textContent='Invia con '+PV().nome}).catch(()=>{});$('mSend').hidden=false}
 $('p_prep').onclick=openSend;
 $('ms_x').onclick=()=>{$('mSend').hidden=true};
-$('ms_copy').onclick=async()=>toast(await copyText('Oggetto: '+$('ms_sub').value+'\n\n'+$('ms_body').value)?'Testo copiato.':'Copia non riuscita.');
-$('ms_open').onclick=()=>launch('mailto:'+rq.email+'?subject='+encodeURIComponent($('ms_sub').value)+'&body='+encodeURIComponent($('ms_body').value),$('ms_body').value);
-$('ms_ok').onclick=()=>{
-  const op=$('ms_op').value.trim();if(!op){setErr('ms_op','Indica chi registra l’invio.');return}
+$('ms_copy').onclick=async()=>{if(!await lkReady())return;toast(await copyText('Oggetto: '+$('ms_sub').value+'\n\n'+$('ms_body').value)?'Testo copiato.':'Copia non riuscita.')};
+$('ms_open').onclick=async()=>{if(!await lkReady())return;launch('mailto:'+rq.email+'?subject='+encodeURIComponent($('ms_sub').value)+'&body='+encodeURIComponent($('ms_body').value),$('ms_body').value)};
+$('ms_ok').onclick=async()=>{
+  if(!await lkReady())return;const op=$('ms_op').value.trim();if(!op){setErr('ms_op','Indica chi registra l’invio.');return}
   saveOp(op);const p=editing.privacy=editing.privacy||mkPriv();p.richieste=p.richieste||[];p.richieste.push(rq);
-  logP(editing,'Informativa inviata via email a '+rq.email+' (codice '+rq.token+', valido fino al '+fmtD(rq.scade.slice(0,10))+')','invio');
+  logP(editing,'Informativa inviata via email a '+rq.email+' (codice '+rq.token+', con link ai consensi)','invio');
   persist();$('mSend').hidden=true;loadPriv(p);render();toast('Invio registrato nel registro.')};
-CONS.forEach(k=>{const r=h('div','mrrow');r.append(h('span','',CLABEL[k]));const s=h('select');s.id='mr_'+k;[['','Nessuna modifica'],['dato','Consenso dato'],['revoca','Consenso revocato']].forEach(([v,t])=>{const o=h('option','',t);o.value=v;s.append(o)});r.append(s);$('mr_cons').append(r)});
-function openResp(r){rr=r;rrMsg=null;rrFrom='';$('mr_mailF').hidden=true;$('mr_newmail').checked=false;setErr('mr_newmail','');$('mResp').firstElementChild.classList.remove('compact');$('mr_hint').textContent='Richiesta inviata il '+fmtDT(r.creata+'Z')+'. Il codice indicato dal cliente deve coincidere con quello inviato.';
-  $('mr_code').value='';$('mr_date').value=new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,16);$('mr_ev').value='';$('mr_op').value=opName;
-  CONS.forEach(k=>{$('mr_'+k).value=''});['code','date','ev','op'].forEach(x=>setErr('mr_'+x,''));$('mResp').hidden=false}
-$('mr_x').onclick=()=>{$('mResp').hidden=true};
-$('mr_ok').onclick=()=>{
-  let ok=true;const bad=(k,t)=>{setErr('mr_'+k,t);ok=false};['code','date','ev','op'].forEach(k=>setErr('mr_'+k,''));
-  const code=$('mr_code').value.trim().toUpperCase(),dt=new Date($('mr_date').value),ev=$('mr_ev').value.trim(),op=$('mr_op').value.trim();
-  if(code!==rr.token)bad('code','Il codice non corrisponde a quello inviato.');
-  if(isNaN(dt))bad('date','Indica data e ora di ricezione.');
-  else if(dt<new Date(rr.creata+'Z'))bad('date','La risposta non può precedere l’invio.');
-  else if(dt>new Date(Date.now()+3e5))bad('date','La data non può essere nel futuro.');
-  else if(dt>new Date(rr.scade+'Z'))bad('date','Risposta oltre la scadenza del codice: invia una nuova email.');
-  if(ev.length<5)bad('ev','Incolla il testo della risposta come prova.');
-  if(!op)bad('op','Indica chi registra la risposta.');setErr('mr_newmail','');if(rrFrom&&$('mr_newmail').checked&&clients.some(c=>c!==editing&&c!==newRef&&(c.email||'').toLowerCase()===rrFrom))bad('newmail','Questo indirizzo è già usato da un altro cliente.');if(!ok)$('mResp').firstElementChild.classList.remove('compact');
-  if(!ok)return;
-  saveOp(op);const p=editing.privacy=editing.privacy||mkPriv(),day=ymd(dt),esito=[];
-  if(!p.informativa){p.informativa=true;p.infModo='Email';p.infData=ymd(new Date(rr.creata+'Z'))}
-  CONS.forEach(k=>{const v=$('mr_'+k).value;if(v){const on=v==='dato';p.cons[k]={v:on,d:day};esito.push(CLABEL[k]+': '+(on?'prestato':'revocato'));logP(editing,CLABEL[k]+': '+(on?'prestato':'revocato')+' via email (codice '+rr.token+')',on?'consenso':'revoca')}});
-  rr.stato='completata';if(rrMsg)rr.gmailMsgId=rrMsg;if(rrFrom)rr.mittente=rrFrom;
-  if(rrFrom&&$('mr_newmail').checked){const old=editing.email;editing.email=rrFrom;$('email').value=rrFrom;logP(editing,'Email del cliente aggiornata da '+old+' a '+rrFrom+' (risposta con codice '+rr.token+')','email')}rr.ricevuta=dt.toISOString().slice(0,16);rr.evidenza=ev;rr.esito=esito;rr.op=op;
-  logP(editing,'Risposta registrata (codice '+rr.token+', ricevuta il '+fmtDT(rr.ricevuta+'Z')+'): '+(esito.join('; ')||'nessuna modifica ai consensi'),'risposta');
-  persist();$('mResp').hidden=true;loadPriv(p);render();toast('Anagrafica aggiornata.')};
 function finishSend(via,res){
   const p=editing.privacy=editing.privacy||mkPriv();p.richieste=p.richieste||[];
   rq.via=via==='auto'?PV().id:via;const pl=res&&res.payload;if(pl&&typeof pl==='object'){if(pl.id)rq.msgId=String(pl.id);if(pl.threadId)rq.threadId=String(pl.threadId)}
   p.richieste.push(rq);
-  logP(editing,'Informativa inviata '+(via==='auto'?'da '+PV().nome+' ':'via email ')+'a '+rq.email+' (codice '+rq.token+', valido fino al '+fmtD(rq.scade.slice(0,10))+')','invio');
+  logP(editing,'Informativa inviata '+(via==='auto'?'da '+PV().nome+' ':'via email ')+'a '+rq.email+' (codice '+rq.token+', con link ai consensi)','invio');
   persist();$('mSend').hidden=true;loadPriv(p);render();toast(via==='auto'?'Email inviata e registrata nel registro.':'Invio registrato nel registro.')}
 async function doGmailSend(){
   const b=$('ms_gmail');b.disabled=true;setErr('ms_gmail','');
   try{
+    if(!await lkReady())return;
     const mcp=await gm();
     if(!mcp||!autoOk()){setErr('ms_gmail',hasClaude()?pn('Collegamento a Gmail non disponibile qui: usa Apri posta o invia l’email a mano.'):gmNo()+' Oppure usa Apri posta.');return}
     if(!S.replyTo){try{const w=await detectMe();if(w.email){S.replyTo=w.email;saveS()}}catch(e){}}
@@ -613,63 +599,10 @@ async function doGmailSend(){
   }finally{b.disabled=false}}
 $('ms_gmail').onclick=()=>{const op=$('ms_op').value.trim();if(!op){setErr('ms_op','Indica chi registra l’invio.');return}saveOp(op);
   doGmailSend()};
-let rrMsg=null,rrFrom='';
 const pj=r=>{let p=r&&r.payload;if(typeof p==='string'){try{p=JSON.parse(p)}catch(e){}}return(p&&typeof p==='object')?p:{}};
 function gmReadErr(e){return pn(gmReadErr0(e))}
 function gmReadErr0(e){const c=e&&e.code;if(e&&e.gd&&GDM[c])return GDM[c];return({server_not_connected:'Gmail non è collegato: collegalo da Impostazioni, Connettori, su claude.ai.',needs_reauth:'La connessione a Gmail è scaduta: ricollegala da Impostazioni, Connettori.',not_in_manifest:'Autorizzazione negata: riprova e consenti la lettura di Gmail.',approval_required:'Serve la tua approvazione per leggere Gmail: riprova.',blocked_by_policy:'Il tuo amministratore blocca l’accesso a Gmail.',server_unavailable:'Gmail non risponde: riprova tra poco.'})[c]||'Lettura di Gmail non riuscita. Riprova.'}
-function newText(body){const out=[];for(const l of String(body||'').split('\n')){const t=l.trim();if(t.startsWith('>')||/^(Il giorno|On)\s.*(scritto|wrote|alle ore|<.+@.+>)/i.test(t)||/^-{2,}\s*(Messaggio inoltrato|Original Message)/i.test(t))break;out.push(l)}return out.join('\n').replace(/Inviato da .*/i,'').trim()}
-function parseCons(txt,token){
-  const low=txt.toLowerCase(),t=txt.toUpperCase().split(token).join(' '),map={},rev=/revoc|annull|ritir|non acconsent/.test(low),v=rev?'revoca':'dato';
-  if(rev&&/acconsent|autorizz/.test(low.replace(/non acconsent\w*/g,'')))return{map,none:false,amb:true};
-  (t.match(/\b[1-4]\b/g)||[]).forEach(n=>{map[CONS[+n-1]]=v});
-  if(/\btutt[ie]\b|\btutto\b/.test(low))CONS.forEach(k=>{map[k]=v});
-  return{map,none:!Object.keys(map).length&&/\bnessun[oa]?\b/.test(low)}}
-async function checkReplies(r,btn,silent){
-  if(btn)btn.disabled=true;
-  try{
-    const mcp=await gm(),P=PV();
-    if(!mcp||!P.search){if(!silent)toast('La lettura automatica non è disponibile per '+P.nome+': registra la risposta a mano.');return}
-    const s=await P.search(mcp,P.qCode(r.token));
-    const since=new Date(r.creata+'Z').getTime(),mail=r.email.toLowerCase();let best=null;
-    for(const th of (pj(s).threads||[]).slice(0,5)){
-      const g=pj(await P.thread(mcp,th.id));
-      for(const m of (g.messages||[])){
-        const from=(String(m.sender||'').toLowerCase().match(/[^\s<>"]+@[^\s<>"]+/)||[''])[0],same=from===mail||String(m.sender||'').toLowerCase().includes(mail),me=(S.replyTo||'').toLowerCase();
-        if(!/^\s*(re|r|risposta)\s*:/i.test(m.subject||'')||+m.internalDate<since)continue;
-        if(!same){if(me&&from===me)continue;if(!newText(m.plaintextBody||m.snippet||'').toUpperCase().includes(r.token))continue}
-        m._from=from;m._same=same;
-        if(!best||(m._same&&!best._same)||(m._same===best._same&&+m.internalDate>+best.internalDate))best=m}}
-    if(!best){if(silent){if(!r.consegna&&editing&&editing.privacy&&editing.privacy.richieste.includes(r))await bounceCheck(mcp,r);return}const bn=await bounceCheck(mcp,r);toast('Nessuna risposta trovata. '+(bn?'Attenzione: l’email risulta respinta dal server del destinatario: controlla l’indirizzo.':'Nessun errore di consegna rilevato.'));return}
-    if(silent){if(S.autoCons!==false&&applyReply(r,best,P)){return}
-      AUTOREP[r.token]={best,P,r};if(editing&&editing.privacy&&(editing.privacy.richieste||[]).includes(r))try{loadPriv(editing.privacy)}catch(e){}return}
-    showFound(r,best,P)
-  }catch(e){if(!silent)toast(gmReadErr(e))}
-  finally{if(btn)btn.disabled=false}}
-function applyReply(r,best,P){
-  try{const c=clients.find(x=>(x.privacy&&x.privacy.richieste||[]).includes(r));if(!c)return false;
-    const txt=newText(best.plaintextBody||best.snippet||''),pc=parseCons(txt,r.token),hasCode=txt.toUpperCase().includes(r.token),dt=new Date(+best.internalDate);
-    const vals=Object.values(pc.map);
-    if(!hasCode||pc.amb||!best._same||effSt(r)!=='inviata'||isNaN(dt)||dt<new Date(r.creata+'Z')||dt>new Date(Date.now()+3e5)||dt>new Date(r.scade+'Z'))return false;
-    if(!(vals.length&&vals.every(v=>v==='dato'))&&!pc.none)return false;
-    const p=c.privacy=c.privacy||mkPriv(),day=ymd(dt),esito=[],opx=opName;opName='Registrazione automatica';
-    if(!p.informativa){p.informativa=true;p.infModo='Email';p.infData=ymd(new Date(r.creata+'Z'))}
-    CONS.forEach(k=>{if(pc.map[k]){p.cons[k]={v:true,d:day};esito.push(CLABEL[k]+': prestato');logP(c,CLABEL[k]+': prestato via email (codice '+r.token+')','consenso')}});
-    r.stato='completata';r.gmailMsgId=String(best.id||'');r.mittente=best._from;r.ricevuta=dt.toISOString().slice(0,16);r.evidenza=txt+'\n\n[Messaggio '+P.nome+' '+best.id+', da '+best.sender+']';r.esito=esito;r.op='Registrazione automatica';
-    logP(c,'Risposta registrata automaticamente (codice '+r.token+', ricevuta il '+fmtDT(r.ricevuta+'Z')+'): '+(esito.join('; ')||'nessun consenso facoltativo'),'risposta');opName=opx;
-    persist();delete AUTOREP[r.token];if(editing===c)try{loadPriv(p)}catch(e){}try{render()}catch(e){}toast('Consensi di '+fullName(c)+' aggiornati dalla risposta.');return true}catch(e){return false}}
-function showFound(r,best,P){
-  {
-    const txt=newText(best.plaintextBody||best.snippet||''),pc=parseCons(txt,r.token),hasCode=txt.toUpperCase().includes(r.token);
-    openResp(r);rrMsg=String(best.id||'');
-    $('mr_code').value=hasCode?r.token:'';
-    $('mr_date').value=new Date(+best.internalDate-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,16);
-    $('mr_ev').value=txt+'\n\n[Messaggio '+P.nome+' '+best.id+', da '+best.sender+']';
-    CONS.forEach(k=>{$('mr_'+k).value=pc.map[k]||''});
-    $('mr_hint').textContent='Compilato dalla risposta trovata in '+P.nome+'. Controlla e conferma.'+(hasCode?'':' Il cliente non ha indicato il codice: verifica la sua identità.')+(pc.none?' Il cliente non ha dato consensi.':'')+(pc.amb?' La risposta mescola consensi e revoche: seleziona le voci a mano.':'');
-    if(hasCode&&!pc.amb){$('mr_hint').textContent='Risposta trovata in '+P.nome+' ('+fmtDT(+best.internalDate)+'). Consensi indicati: '+(Object.keys(pc.map).map(k=>CLABEL[k]+' ('+(pc.map[k]==='dato'?'prestato':'revocato')+')').join(', ')||'nessuno')+'. Controlla e conferma.';$('mResp').firstElementChild.classList.add('compact')}
-    if(!best._same){$('mResp').firstElementChild.classList.remove('compact');rrFrom=best._from;$('mr_hint').textContent='Attenzione: la risposta arriva da '+best._from+', diverso dall’indirizzo registrato ('+r.email+'). Verifica l’identità del cliente. '+$('mr_hint').textContent;$('mr_mailF').hidden=false;$('mr_newmail').checked=false;$('mr_newmail_t').textContent='Aggiorna l’email del cliente con '+best._from}
-  }}
-const AUTOREP={},LAST={};
+const LAST={};
 let tr='',cmpTo='';
 const gm=async()=>{if(typeof claude!=='undefined'){const m=await claude.use('mcp');if(m)return m}if(window.GD){GD.setClient(S.gcid||'');if(GD.ready())return GD}return null};
 const hasClaude=()=>typeof claude!=='undefined';
@@ -731,7 +664,6 @@ function openCompose(c){cmpLeadRef=null;cmpInfC=null;cmpAtt=[];cmpQ=null;cmpOpts
   $('mc_gmail').hidden=true;
   const T=$('mc_tpl');T.textContent='';TEMPLATES.forEach(([l,s,t])=>{const b=h('button','',l);b.type='button';b.style.background='var(--lilac)';b.onclick=()=>{$('mc_sub').value=subj(s);$('mc_body').value=tpl('Gentile {nome},\n\n'+t+'\n\n',{nome})+firma()};T.append(b)});
   gm().then(m=>{$('mc_gmail').hidden=!((m||(!hasClaude()&&S.gcid&&PV().id==='gmail'))&&autoOk());$('mc_gmail').lastChild.textContent='Invia con '+PV().nome}).catch(()=>{});mcActs();$('mCompose').hidden=false}
-$('mr_more').onclick=()=>$('mResp').firstElementChild.classList.remove('compact');
 $('mc_x').onclick=()=>{$('mCompose').hidden=true};
 const mcFiles=()=>cmpAtt.map(a=>new File([a.u8],a.name,{type:a.mime||'application/pdf'}));
 const canShareF=()=>{try{return !!(cmpAtt.length&&navigator.share&&navigator.canShare&&navigator.canShare({files:mcFiles()}))}catch(e){return false}};
@@ -817,9 +749,9 @@ function provHint(){const P=selProv(),el=$('st_provhint');{const dt=$('st_det');
   el.textContent='Verifica del collegamento…';
   provStatus(P).then(s=>{if(selProv()!==P)return;el.textContent=s==='connected'?P.nome+' è collegato.':s==='needs_reauth'?'La connessione a '+P.nome+' è scaduta: ricollegala da claude.ai, Impostazioni, Connettori.':s==='assente'?P.nome+' non risulta collegato: collegalo da claude.ai, Impostazioni, Connettori.':''})}
 function mailHtml(txt,r,rt,sj){
-  const i=txt.indexOf('\nCONSENSI FACOLTATIVI\n'),a=i<0?txt:txt.slice(0,i),b=i<0?'':txt.slice(i+22),sub='Re: '+(sj||INFO_SUBJ());
-  const lk=(l,body,bg)=>'<a href="mailto:'+esc(rt)+'?subject='+encodeURIComponent(sub)+'&amp;body='+encodeURIComponent(body)+'" style="display:block;margin:8px 0;padding:12px 16px;background:'+bg+';color:#263045;text-decoration:none;border-radius:10px;font-weight:bold;text-align:center">'+l+'</a>';
-  return '<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#263045;max-width:560px">'+esc(a).replace(/\n/g,'<br>')+'<p><b>CONSENSI FACOLTATIVI</b><br>Tocca un pulsante: si aprirà una risposta già compilata, ti basterà premere Invia.</p>'+lk('Acconsento a tutto',r.token+' 1 2 3 4','#b5ebc0')+lk('Solo marketing via email',r.token+' 1','#d9d1f3')+lk('Nessun consenso',r.token+' nessuno','#f5cad6')+lk('Scelgo io le voci',r.token+'\nAcconsento alle voci n.: ','#f6edb8')+'<p>'+esc(b).replace(/\n/g,'<br>')+'</p><p style="font-size:12px;color:#6b7488">Questa email non contiene strumenti di tracciamento.</p></div>'}
+  const i=txt.indexOf('\nCONSENSI FACOLTATIVI\n'),a=i<0?txt:txt.slice(0,i),u=r.url||'';
+  if(!u)return '<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#263045;max-width:560px">'+esc(txt).replace(/\n/g,'<br>')+'</div>';
+  return '<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#263045;max-width:560px">'+esc(a).replace(/\n/g,'<br>')+'<p><b>CONSENSI FACOLTATIVI</b><br>Per scegliere a quali trattamenti facoltativi acconsente, apra la sua pagina personale e confermi.</p><a href="'+esc(u)+'" style="display:block;margin:8px 0;padding:14px 16px;background:#b5ebc0;color:#263045;text-decoration:none;border-radius:10px;font-weight:bold;text-align:center">Scegli i miei consensi</a><p style="font-size:13px">Se il pulsante non si apre, copi questo indirizzo nel browser:<br>'+esc(u)+'</p><p>Se non desidera prestare alcun consenso non è necessario fare nulla: il rifiuto non incide sul servizio. Può cambiare o revocare le sue scelte in qualsiasi momento riaprendo lo stesso link.</p><p>'+esc(r.sig||'').replace(/\n/g,'<br>')+'</p><p style="font-size:12px;color:#6b7488">Questa email non contiene strumenti di tracciamento.</p></div>'}
 async function bounceCheck(mcp,r){
   const P=PV();if(!P.search)return false;const s=await P.search(mcp,P.qBounce(r.email,r.creata.slice(0,10)));
   const since=new Date(r.creata+'Z').getTime();let hit=null;
@@ -827,9 +759,9 @@ async function bounceCheck(mcp,r){
   r.consegna={stato:hit?'respinta':'ok',verificata:new Date().toISOString().slice(0,16)};
   logP(editing,'Verifica consegna: '+(hit?'email respinta dal server del destinatario':'nessun errore di consegna rilevato')+' (codice '+r.token+')','consegna');persist();loadPriv(editing.privacy);return!!hit}
 function remind(r){openCompose(editing);$('mc_sub').value='Promemoria: informativa sulla privacy'+(az()?' – '+az():'');
-  $('mc_body').value='Gentile '+cmpName+',\n\nle abbiamo inviato alcuni giorni fa la nostra informativa sulla privacy. Se desidera indicare i consensi facoltativi, può rispondere alla nostra email precedente con il codice '+r.token+' e i numeri delle voci. Non è necessario rispondere se non desidera prestare consensi.\n\n'+firma();
+  const u=conUrl(editing);lkStart(editing);$('mc_body').value='Gentile '+cmpName+',\n\nle abbiamo inviato alcuni giorni fa la nostra informativa sulla privacy. Se desidera indicare i consensi facoltativi, può farlo da questa pagina personale:\n\n'+u+'\n\nNon è necessario se non desidera prestare consensi; può cambiare le sue scelte quando vuole riaprendo lo stesso link.\n\n'+firma();
   cmpLog='Promemoria inviato via email (codice '+r.token+')'}
-function openSettings(){setSp(null);try{$('st_gcid').value=S.gcid||''}catch(e){}try{paintCloud();paintDrive()}catch(e){}paintWaSet();$('st_qv').value=S.qValid;$('st_qc').value=S.qCond;$('st_ls').value=S.lead.scartati;$('st_ln').value=S.lead.nuovi;$('st_lg').value=S.lead.giorni;$('st_linf').checked=S.lead.inf!==false;['st_qv','st_ls','st_ln','st_lg'].forEach(k=>setErr(k,''));try{paintBro()}catch(e){}$('st_piva').value=S.piva||'';$('st_ind').value=S.indirizzo||'';$('st_tel').value=S.telefono||'';$('st_sito').value=S.sito||'';fillProv();$('st_acons').checked=S.autoCons!==false;$('st_az').value=S.azienda;$('st_alias').value=S.alias;$('st_firma').value=S.firma;$('st_prov').value=PV().id;$('st_rt').value=S.replyTo;['contratto','contatti','marketing','profilazione','comunicazioni'].forEach(k=>{$('st_r_'+k).value=S.ret[k];setErr('st_r_'+k,'')});['st_rt','st_az'].forEach(k=>setErr(k,''));detName='';aliasHint();provHint();$('mSet').hidden=false;stTouched=false;stBase=stSig();setTimeout(()=>{if(!stTouched)stBase=stSig()},900)}
+function openSettings(){setSp(null);try{$('st_gcid').value=S.gcid||''}catch(e){}try{paintCloud();paintDrive()}catch(e){}paintWaSet();$('st_qv').value=S.qValid;$('st_qc').value=S.qCond;$('st_ls').value=S.lead.scartati;$('st_ln').value=S.lead.nuovi;$('st_lg').value=S.lead.giorni;$('st_linf').checked=S.lead.inf!==false;['st_qv','st_ls','st_ln','st_lg'].forEach(k=>setErr(k,''));try{paintBro()}catch(e){}$('st_piva').value=S.piva||'';$('st_ind').value=S.indirizzo||'';$('st_tel').value=S.telefono||'';$('st_sito').value=S.sito||'';fillProv();$('st_az').value=S.azienda;$('st_alias').value=S.alias;$('st_firma').value=S.firma;$('st_prov').value=PV().id;$('st_rt').value=S.replyTo;['contratto','contatti','marketing','profilazione','comunicazioni'].forEach(k=>{$('st_r_'+k).value=S.ret[k];setErr('st_r_'+k,'')});['st_rt','st_az'].forEach(k=>setErr(k,''));detName='';aliasHint();provHint();$('mSet').hidden=false;stTouched=false;stBase=stSig();setTimeout(()=>{if(!stTouched)stBase=stSig()},900)}
 ['st_az','st_alias'].forEach(id=>$(id).addEventListener('input',aliasHint));
 let stTouched=false,stBase='';
 const stSig=()=>[...$('mSet').querySelectorAll('input:not([type=file]):not([data-ns]),select:not([data-ns]),textarea')].map(e=>e.type==='checkbox'?(e.checked?1:0):e.value).join('\u0001');
@@ -847,7 +779,7 @@ let stStay=false;
 $('stBack').onclick=()=>{if(spCur){if(stSig()===stBase){setSp(null);return}$('mDirty').hidden=false;$('dC').onclick=()=>{$('mDirty').hidden=true};$('dN').onclick=()=>{$('mDirty').hidden=true;openSettings()};$('dY').onclick=()=>{$('mDirty').hidden=true;stStay=true;try{$('st_ok').onclick()}finally{stStay=false}};return}if(stSig()===stBase){$('mSet').hidden=true;return}$('mDirty').hidden=false;$('dC').onclick=()=>{$('mDirty').hidden=true};$('dN').onclick=()=>{$('mDirty').hidden=true;$('mSet').hidden=true};$('dY').onclick=()=>{$('mDirty').hidden=true;$('st_ok').onclick()}};
 $('st_det').onclick=async()=>{const b=$('st_det');b.disabled=true;setErr('st_rt','');try{const w=await detectMe(selProv());if(w.email){$('st_rt').value=w.email;detName=w.name;aliasHint()}else setErr('st_rt','Non sono riuscito a rilevarlo: scrivilo a mano.')}catch(e){setErr('st_rt',gmReadErr(e))}finally{b.disabled=false}};
 $('st_ok').onclick=()=>{const RK=['contratto','contatti','marketing','profilazione','comunicazioni'],nr={};let rok=true;RK.forEach(k=>{const v=parseInt($('st_r_'+k).value,10);if(!(v>=1&&v<=240)){setErr('st_r_'+k,'Inserisci i mesi (da 1 a 240).');rok=false;setSp('pv')}else{setErr('st_r_'+k,'');nr[k]=v}});if(!rok)return;const NV=[['st_qv',1,365,'pr'],['st_ls',1,365,'ld'],['st_ln',1,60,'ld'],['st_lg',1,365,'ld']],nvv={};for(const [k,a,b,pn] of NV){const v=parseInt($(k).value,10);if(!(v>=a&&v<=b)){setSp(pn);setErr(k,'Inserisci un numero da '+a+' a '+b+'.');return}setErr(k,'');nvv[k]=v}
-  S.gcid=($('st_gcid').value||'').trim();S.wa={paese:$('st_wpaese').value||'IT',inf:$('st_winf').value,tpl:[...document.querySelectorAll('#st_wtpl .wt')].map(r=>[r.querySelector('input').value.trim(),r.querySelector('textarea').value]).filter(x=>x[0]&&x[1].trim())};if(!S.wa.tpl.length)S.wa.tpl=[['Ciao','Ciao {nome}, ']];S.qValid=nvv.st_qv;S.qCond=$('st_qc').value.trim()||S.qCond;S.lead={scartati:nvv.st_ls,nuovi:nvv.st_ln,giorni:nvv.st_lg,inf:$('st_linf').checked};S.ret=nr;const rt=$('st_rt').value.trim().toLowerCase();if(rt&&!mailRe.test(rt)){setSp('em');setErr('st_rt','Indirizzo email non valido.');return}S.azienda=$('st_az').value.trim();S.piva=$('st_piva').value.trim();S.indirizzo=$('st_ind').value.trim();S.telefono=$('st_tel').value.trim();S.sito=$('st_sito').value.trim();S.alias=$('st_alias').value.trim();S.firma=$('st_firma').value.trim()||'Cordiali saluti\n{azienda}';S.autoCons=$('st_acons').checked;S.provider=$('st_prov').value;S.replyTo=rt;saveS();if(stStay){stStay=false;setSp(null);stBase=stSig()}else $('mSet').hidden=true;try{paintReq()}catch(e){}toast('Impostazioni salvate.')};
+  S.gcid=($('st_gcid').value||'').trim();S.wa={paese:$('st_wpaese').value||'IT',inf:$('st_winf').value,tpl:[...document.querySelectorAll('#st_wtpl .wt')].map(r=>[r.querySelector('input').value.trim(),r.querySelector('textarea').value]).filter(x=>x[0]&&x[1].trim())};if(!S.wa.tpl.length)S.wa.tpl=[['Ciao','Ciao {nome}, ']];S.qValid=nvv.st_qv;S.qCond=$('st_qc').value.trim()||S.qCond;S.lead={scartati:nvv.st_ls,nuovi:nvv.st_ln,giorni:nvv.st_lg,inf:$('st_linf').checked};S.ret=nr;const rt=$('st_rt').value.trim().toLowerCase();if(rt&&!mailRe.test(rt)){setSp('em');setErr('st_rt','Indirizzo email non valido.');return}S.azienda=$('st_az').value.trim();S.piva=$('st_piva').value.trim();S.indirizzo=$('st_ind').value.trim();S.telefono=$('st_tel').value.trim();S.sito=$('st_sito').value.trim();S.alias=$('st_alias').value.trim();S.firma=$('st_firma').value.trim()||'Cordiali saluti\n{azienda}';S.provider=$('st_prov').value;S.replyTo=rt;saveS();if(stStay){stStay=false;setSp(null);stBase=stSig()}else $('mSet').hidden=true;try{paintReq()}catch(e){}toast('Impostazioni salvate.')};
 function renderLinked(){
   const f=$('linkedF'),w=$('linked');w.textContent='';
   if(!editing){f.hidden=true;return}
@@ -9063,7 +8995,6 @@ function actions(){const A=[],noInf=[],td=ymd(),add=(pri,ic,title,sub,go)=>A.pus
     if(o.fase==='vinta'&&!o.scaricato&&(o.prodotti||[]).some(r=>mprod(r.prodId)))add(85,'scarico','Scarica il magazzino',o.titolo+' · '+cn,()=>openOpp(o))});
   if(noInf.length===1)add(55,'alert','Informativa privacy da inviare',fullName(noInf[0]),()=>openSheet(noInf[0]));else if(noInf.length>1)add(55,'alert',noInf.length+' clienti senza informativa privacy',noInf.slice(0,3).map(fullName).join(', ')+(noInf.length>3?'…':''),()=>setTab('clienti'));
   (typeof leads!=='undefined'?leads:[]).filter(l=>l.stato==='nuovo').forEach(l=>{const m=lMsgs(l)[0];if(m&&lUnread(l,14))add(76,m.via==='WhatsApp'?'WhatsApp':'Scrivi','Il lead ha risposto',([l.nome,l.cognome].filter(Boolean).join(' ')||l.email||'Lead')+' · '+String(m.testo||'').slice(0,50),()=>{setTab('lead');openLead(l)})});
-  clients.forEach(c=>{((c.privacy&&c.privacy.richieste)||[]).forEach(r=>{if(AUTOREP[r.token]&&effSt(r)==='inviata')add(77,'check','Risposta ai consensi ricevuta',fullName(c)+' · da confermare',()=>{openSheet(c);setPane('priv')})})});
   {const nli=(typeof leads!=='undefined'?leads:[]).filter(l=>l.stato==='nuovo'&&!l.inf);if(nli.length===1){const l=nli[0];add(54,'alert','Informativa privacy da inviare al lead',[l.nome,l.cognome].filter(Boolean).join(' ')||l.email||'Lead',()=>{setTab('lead');openLead(l)})}else if(nli.length>1)add(54,'alert',nli.length+' lead senza informativa privacy',nli.slice(0,3).map(l=>[l.nome,l.cognome].filter(Boolean).join(' ')||l.email||'Lead').join(', ')+(nli.length>3?'…':''),()=>setTab('lead'))}
   clients.forEach(c=>{const a=waLast(c);if(waUnread(c))add(78,'WhatsApp','Rispondi su WhatsApp',fullName(c)+' · '+a.testo.slice(0,50),()=>{openSheet(c);setPane('comm');setCm('wa');loadComm()})});
   {const I=reviewItems();I.anon.forEach(c=>{const a=c.privacy.anon,n=daysTo(a.scade);add(n<0?96:n<=10?92:72,'shield','Richiesta di anonimizzazione',fullName(c)+' · '+(n<0?'scaduta da '+(-n)+' gg':'entro '+fmtD(a.scade)),()=>{openSheet(c);setPane('priv')})})}
@@ -9175,10 +9106,10 @@ function paintWa(){const c=editing,L=$('waList');L.textContent='';try{paintAllC(
     d.append(x,ch,h('div','',fmtDT(m.data)+(m.fonte==='app'?' · aperto da app':m.fonte==='import'?' · importato':m.fonte==='business'?' · da WhatsApp Business':m.fonte==='api'?' · inviato dal CRM':'')),tx);L.append(d)});
   if(a.length>waShow){const b=h('button','btn lbl','');b.type='button';b.innerHTML=ICONS.chevR+'Mostra altri';b.onclick=()=>{waShow+=30;paintWa()};L.append(b)}}
 let waInf=false,waLead=null,wrLead=null;
-function waInfText(c){const sec=infoSections().filter(x=>/^(Titolare|Finalit|Diritti)/.test(x[0])).map(x=>x[0]+': '+x[1]).join('\n\n');return 'Buongiorno '+contactName(c)+',\necco l’informativa privacy di '+S.azienda+' (artt. 13-14 GDPR).\n\n'+sec+'\n\nIl testo completo è disponibile su richiesta. Per i consensi facoltativi risponda a questo messaggio.'}
+function waInfText(c){const sec=infoSections().filter(x=>/^(Titolare|Finalit|Diritti)/.test(x[0])).map(x=>x[0]+': '+x[1]).join('\n\n');return 'Buongiorno '+contactName(c)+',\necco l’informativa privacy di '+S.azienda+' (artt. 13-14 GDPR).\n\n'+sec+'\n\nIl testo completo è disponibile su richiesta. Per scegliere i consensi facoltativi apra questa pagina personale: '+conUrl(c)}
 function sendWaInfo(){if(!editing){viaNew('wa');return}const c=editing;if(!c.telefono){toast('Aggiungi un numero di telefono al cliente.');return}
   if(!S.azienda){toast('Imposta prima il nome azienda: è il titolare indicato nell’informativa.');openSettings();setErr('st_az','Inserisci il nome dell’azienda.');return}
-  openWa(c);$('wa_txt').value=waInfText(c);waInf=true}
+  lkEnsure(c).then(()=>{openWa(c);$('wa_txt').value=waInfText(c);waInf=true},()=>toast('Non riesco a creare il link dei consensi: controlla la connessione e riprova.'))}
 function openWa(c){waInf=false;waLead=null;if(!c.telefono){toast('Aggiungi un numero di telefono al cliente.');return}waC=c;$('wa_title').textContent='WhatsApp a '+fullName(c);$('wa_txt').value='';setErr('wa_txt','');
   const T=$('wa_tpl');T.textContent='';(S.wa.tpl||WA_TPL0).forEach(([l,t])=>{const b=h('button','',l);b.type='button';b.style.background='var(--lilac)';b.onclick=()=>{$('wa_txt').value=t.replace('{nome}',c.nome||fullName(c));$('wa_txt').focus()};T.append(b)});$('mWa').hidden=false}
 $('wa_new').onclick=()=>openWa(editing);$('wa_x').onclick=()=>{$('mWa').hidden=true};
@@ -9646,7 +9577,7 @@ const rsScore=rs=>rs.reduce((t,x)=>t+(x[1]>=2?10:3),0);
 function rsRow(rs){if(!rs||!rs.length)return null;const d=document.createElement('div');d.className='rs';rs.slice(0,3).forEach(x=>{const i=document.createElement('i');i.className='rchip'+(x[1]>=2?' al':'');i.textContent=x[0];d.append(i)});if(rs.length>3){const i=document.createElement('i');i.className='rchip';i.textContent='+'+(rs.length-3);d.append(i)}return d}
 function cReasons(c){const r=[];try{const pv=c.privacy,R=(pv&&pv.richieste)||[];
   if(!pv||!pv.informativa){if(R.some(x=>effSt(x)==='inviata'))r.push(['Attesa risposta privacy',1]);else r.push(['Informativa da inviare',1,true])}
-  R.forEach(x=>{if(effSt(x)==='scaduta')r.push(['Consensi scaduti',2]);if(AUTOREP[x.token]&&effSt(x)==='inviata')r.push(['Risposta consensi',2])});
+  R.forEach(x=>{if(effSt(x)==='scaduta')r.push(['Consensi scaduti',2]);});
   if(waUnread(c))r.push(['WhatsApp da leggere',2]);
   try{if(retention(c).expired)r.push(['Dati scaduti',2]);else if(staleConsents(c).length)r.push(['Consensi da rivedere',1])}catch(e){}
   if(opps.some(o=>o.clienteId===c.id&&oReasons(o).length))r.push(['Opportunità da seguire',1])}catch(e){}
@@ -9664,7 +9595,7 @@ function waUnread(c){const a=waLast(c);return !!(a&&a.dir==='in'&&Date.now()-new
 function setBadge(btn,n,al){if(!btn)return;let c=btn.querySelector(':scope>.cnt.bd');if(!c){c=document.createElement('span');c.className='cnt bd';btn.append(c)}c.textContent=n?(n>99?'99+':String(n)):'';c.classList.toggle('al',!!al&&!!n)}
 function paintBadges(){try{
   const td=ymd(),inc=waUnread,
-   privNeed=c=>{const pv=c.privacy;if(!pv||!pv.informativa)return true;return (pv.richieste||[]).some(r=>effSt(r)==='scaduta'||(AUTOREP[r.token]&&effSt(r)==='inviata'))};
+   privNeed=c=>{const pv=c.privacy;if(!pv||!pv.informativa)return true;return (pv.richieste||[]).some(r=>effSt(r)==='scaduta')};
   let cl=0,clAl=false;clients.forEach(c=>{if(privNeed(c)||inc(c))cl++;if(inc(c)||((c.privacy&&c.privacy.richieste)||[]).some(r=>effSt(r)==='scaduta'))clAl=true});
   try{const I=reviewItems();const n=I.exp.length+I.cons.length+(I.msg.n?1:0);cl+=n;if(n)clAl=true}catch(e){}
   const L=leads.filter(l=>l.stato==='nuovo'),lRep=L.some(l=>{const m=lMsgs(l)[0];return m&&lUnread(l,14)});
@@ -10052,10 +9983,10 @@ function stops(){const out=[];clients.forEach(c=>{const p=c.privacy&&c.privacy.c
  window.runCons=async function(){const C=S.auto.cons;if(!C.on||cBusy||!S.azienda)return 0;cBusy=true;let n=0;try{const todo=clients.filter(needCons).slice(0,C.max||10);if(!todo.length)return 0;
   let mcp;try{mcp=await gm()}catch(e){}if(!mcp||!autoOk())return 0;if(!S.replyTo){try{const me=await detectMe();if(me.email){S.replyTo=me.email;saveS()}}catch(e){}}
   const k=consCamp();
-  for(const c of todo){const now=new Date(),rq0={id:'r'+Date.now().toString(36)+n,token:tok(),creata:now.toISOString().slice(0,16),scade:new Date(now.getTime()+14*DAY).toISOString().slice(0,16),email:c.email,stato:'inviata',auto:1};
-   try{const text=mailText(c,rq0),sj=INFO_SUBJ(),a={to:c.email,subject:sj,text,fromName:mitt()};if(S.replyTo&&mailRe.test(S.replyTo))a.html=mailHtml(text,rq0,S.replyTo,sj);
+  for(const c of todo){const now=new Date(),rq0={id:'r'+Date.now().toString(36)+n,token:tok(),creata:now.toISOString().slice(0,16),email:c.email,stato:'inviata',auto:1};
+   try{await lkEnsure(c);const text=mailText(c,rq0),sj=INFO_SUBJ(),a={to:c.email,subject:sj,text,fromName:mitt()};if(S.replyTo&&mailRe.test(S.replyTo))a.html=mailHtml(text,rq0,S.replyTo,sj);
     const res=await PV().send(mcp,a);rq0.via=PV().id;const pl=res&&res.payload;if(pl&&typeof pl==='object'){if(pl.id)rq0.msgId=String(pl.id);if(pl.threadId)rq0.threadId=String(pl.threadId)}
-    const p=c.privacy=c.privacy||mkPriv();p.richieste=p.richieste||[];p.richieste.push(rq0);logP(c,'Richiesta di consensi inviata automaticamente a '+c.email+' (codice '+rq0.token+', valido fino al '+fmtD(rq0.scade.slice(0,10))+')','invio');
+    const p=c.privacy=c.privacy||mkPriv();p.richieste=p.richieste||[];p.richieste.push(rq0);logP(c,'Richiesta di consensi inviata automaticamente a '+c.email+' (codice '+rq0.token+', con link ai consensi)','invio');
     k.dest.push({id:c.id,st:'ok',d:new Date().toISOString()});emSave(c,null,true);persist();n++}catch(e){break}}
   if(k.dest.length>400)k.dest=k.dest.slice(-400);saveS();return n}finally{cBusy=false;try{if(n){render();if(tab==='mkt')renderM()}}catch(e){}}};
  /* ----- percorsi di campagna (passi, attese, ripetizioni) ----- */
@@ -10383,16 +10314,30 @@ $('sc_test').onclick=async()=>{try{await lkVerify();toast('Biometria riconosciut
 $('sc_dis').onclick=()=>askConfirm('Disattivare il blocco? L’app si aprirà senza biometria.','trash','Disattiva',()=>{LOCK={};lkSave();document.documentElement.classList.remove('locked');paintLock();toast('Blocco disattivato.')});
 function paintDrive(){}
 
-const autoReq=r=>{if(Date.now()-(LAST['r'+r.token]||0)<6e4)return;LAST['r'+r.token]=Date.now();checkReplies(r,null,true)};
+const autoReq=r=>{pullConsents();if(Date.now()-(LAST['r'+r.token]||0)<6e4)return;LAST['r'+r.token]=Date.now();(async()=>{try{const mcp=await gm();if(mcp&&PV().search&&!r.consegna&&editing&&editing.privacy&&(editing.privacy.richieste||[]).includes(r))await bounceCheck(mcp,r)}catch(e){}})()};
 let autoBusy=false;
 async function autoSync(){if(autoBusy||document.hidden)return;autoBusy=true;
   try{const mcp=await gm();if(!mcp||!PV().search)return;
     if(Date.now()-(LAST.scan||0)>6e5)await leadScan();
     for(const l of leads.filter(x=>x.stato==='nuovo'&&x.email&&((x.msgs&&x.msgs.length)||x.inf)).slice(0,8)){if(Date.now()-(LAST['l'+l.id]||0)>6e5)await leadSync(l,true)}
-    let k=0;for(const c of clients){for(const r of((c.privacy&&c.privacy.richieste)||[])){if(k>=8)break;if(effSt(r)!=='inviata'||AUTOREP[r.token]||Date.now()-(LAST['r'+r.token]||0)<2e5)continue;LAST['r'+r.token]=Date.now();k++;
-      await checkReplies(r,null,true)}}
     renderH();try{renderL()}catch(e){}
   }catch(e){}finally{autoBusy=false}}
+/* risposte dei clienti dalla pagina dei consensi: si applicano da sole alla scheda e poi si cancellano dal server */
+function applyConsent(c,r){const p=c.privacy=c.privacy||mkPriv(),dt=new Date(r.at),ok=!isNaN(dt),day=ymd(ok?dt:new Date()),ch=r.choices||{},esito=[],opx=opName;opName='Pagina consensi';
+  const when=(ok?dt:new Date()).toISOString().slice(0,16),pend=(p.richieste||[]).filter(x=>x.stato==='inviata');
+  if(!p.informativa){const f=(p.richieste||[]).find(x=>x.stato!=='annullata');p.informativa=true;p.infModo='Email';p.infData=f?ymd(new Date(f.creata+'Z')):day}
+  CONS.forEach(k=>{if(typeof ch[k]!=='boolean')return;const old=p.cons[k]||{v:false,d:''};if(!!old.v===ch[k]&&old.d)return;p.cons[k]={v:ch[k],d:day};esito.push(CLABEL[k]+': '+(ch[k]?'prestato':'revocato'));logP(c,CLABEL[k]+': '+(ch[k]?'prestato':'revocato')+' dal cliente con il link (versione informativa '+(r.ver||'1.0')+')',ch[k]?'consenso':'revoca')});
+  pend.forEach(x=>{x.stato='completata';x.ricevuta=when;x.esito=esito;x.op='Pagina consensi';x.evidenza='Pagina consensi, informativa v'+(r.ver||'1.0')+': '+CONS.filter(k=>typeof ch[k]==='boolean').map(k=>CLABEL[k]+' '+(ch[k]?'sì':'no')).join(', ')});
+  logP(c,'Risposta ricevuta dalla pagina dei consensi ('+(esito.join('; ')||'nessuna modifica ai consensi')+')','risposta');opName=opx}
+let pcBusy=null;
+function pullConsents(force){if(pcBusy)return pcBusy;if(!SB.has()||!CLOUD.started||document.hidden&&!force)return Promise.resolve(0);if(!force&&Date.now()-(LAST.pc||0)<3e4)return Promise.resolve(0);LAST.pc=Date.now();
+  return pcBusy=(async()=>{let n=0;try{const rows=await SB.consent.pull();if(!rows.length)return 0;
+    const byH={};clients.forEach(c=>{const h=c.privacy&&c.privacy.lkH;if(h)byH[h]=c});const done=[],orph=new Set(),upd=new Set();
+    for(const r of rows){const c=byH[r.h];if(!c){orph.add(r.h);done.push(r.id);continue}applyConsent(c,r);upd.add(c);n++;done.push(r.id)}
+    if(upd.size)persist();await SB.consent.del(done);orph.forEach(h=>SB.consent.unlink(h).catch(()=>{}));
+    if(upd.size){const c0=[...upd][0];toast(upd.size===1?'Consensi di '+fullName(c0)+' aggiornati dal cliente.':'Consensi aggiornati da '+upd.size+' clienti.');if(editing&&upd.has(editing))try{loadPriv(editing.privacy)}catch(e){}try{render()}catch(e){}}
+  }catch(e){}finally{pcBusy=null}return n})()}
+window.pullConsents=pullConsents;setInterval(()=>pullConsents(),24e4);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>pullConsents(),1500)});setTimeout(()=>pullConsents(),6000);
 setTimeout(autoSync,2500);setInterval(autoSync,24e4);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(autoSync,800)});
 const _setTab=setTab;setTab=function(v){_setTab(v);paintBadges();if(v==='lead'&&Date.now()-(LAST.scan||0)>12e4)leadScan()};
 /* in tutte le pagine tranne la Home compare, accanto al menu, la freccia indietro che riporta alla Home */
@@ -10427,7 +10372,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(!S.askSeen){S.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.32.5';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(!S.askSeen){S.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.33.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10566,6 +10511,14 @@ const SB=(()=>{
  const dev=()=>{const u=navigator.userAgent||'';const os=/iPhone/.test(u)?'iPhone':/iPad/.test(u)?'iPad':/Android/.test(u)?'Android':/Macintosh/.test(u)?'Mac':/Windows/.test(u)?'Windows':/Linux/.test(u)?'Linux':'Dispositivo';const br=/Edg\//.test(u)?'Edge':/Firefox|FxiOS/.test(u)?'Firefox':/Chrome|CriOS/.test(u)?'Chrome':/Safari/.test(u)?'Safari':'Browser';return os+' · '+br};
  async function alog(kind){try{if(!ses)return;await js('/rest/v1/access_log',{method:'POST',auth:true,headers:{Prefer:'return=minimal'},json:{device_id:did(),device:dev(),kind,app_ver:((document.querySelector('meta[name=app-version]')||{}).content||'').split('|')[0].slice(0,20)}})}catch(e){}}
  const usage=()=>js('/rest/v1/rpc/my_usage',{method:'POST',auth:true,json:{}});
+ /* consensi dei clienti: pagina pubblica del titolare, impronta dei link e risposte da ritirare */
+ const consent={
+  async reg(h,pub){const owner=uid();if(!owner)throw new Error('nessuna sessione');
+   await js('/rest/v1/consent_pub?on_conflict=owner',{method:'POST',auth:true,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},json:Object.assign({owner,upd:new Date().toISOString()},pub)});
+   if(h)await js('/rest/v1/consent_links?on_conflict=h',{method:'POST',auth:true,headers:{Prefer:'resolution=ignore-duplicates,return=minimal'},json:{h}})},
+  async pull(){return (await js('/rest/v1/consent_resp?select=id,h,choices,ver,at&order=id.asc&limit=100',{auth:true}))||[]},
+  del:ids=>ids.length?js('/rest/v1/consent_resp?id=in.('+ids.map(Number).join(',')+')',{method:'DELETE',auth:true,headers:{Prefer:'return=minimal'}}):Promise.resolve(),
+  unlink:h=>js('/rest/v1/consent_links?h=eq.'+encodeURIComponent(h),{method:'DELETE',auth:true,headers:{Prefer:'return=minimal'}})};
  /* presenza: ultimo istante in cui l'app era aperta (solo per il monitor del gestore) */
  {const ping=()=>{try{if(!ses||document.hidden||navigator.onLine===false)return;js('/rest/v1/rpc/ping',{method:'POST',auth:true,headers:{Prefer:'return=minimal'},json:{v:((document.querySelector('meta[name=app-version]')||{}).content||'').split('|')[0].slice(0,20)}}).catch(()=>{})}catch(e){}};
   setInterval(ping,12e4);document.addEventListener('visibilitychange',()=>{if(!document.hidden)ping()});setTimeout(ping,6000)}
@@ -10582,7 +10535,7 @@ const SB=(()=>{
  const vies=body=>js('/functions/v1/vies-lookup',{method:'POST',auth:true,json:body});
  const csearch=body=>js('/functions/v1/company-search',{method:'POST',auth:true,json:body});
  async function fb(row){await js('/rest/v1/assistant_feedback',{method:'POST',auth:true,headers:{Prefer:'return=minimal'},json:row})}
- return{db,uid,e2e,fb,ai,vies,csearch,usage,alog,arecent,logoutAll,did,setCap:t=>{capTok=t||''},email:()=>ses&&ses.user?ses.user.email:'',has:()=>!!ses,msg,wipe,
+ return{db,uid,e2e,fb,ai,vies,csearch,usage,consent,alog,arecent,logoutAll,did,setCap:t=>{capTok=t||''},email:()=>ses&&ses.user?ses.user.email:'',has:()=>!!ses,msg,wipe,
   async signIn(email,password){setSes(await js('/auth/v1/token?grant_type=password',{method:'POST',json:Object.assign({email,password},sec())}))},
   async signUp(email,password){const j=await js('/auth/v1/signup',{method:'POST',json:Object.assign({email,password},sec())});if(j&&j.access_token){setSes(j);return true}return false},
   recover:email=>js('/auth/v1/recover',{method:'POST',json:Object.assign({email},sec())}),
@@ -10806,6 +10759,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.32.3','Chiave di recupero: su iPhone il pulsante «Condividi o salva in…» apre il foglio di condivisione (gestore di password, Note, file) al posto del salvataggio automatico, che Safari non supporta. «Fatto» si sblocca solo dopo una condivisione, una copia o un download riusciti.'],
 ['1.32.4','Conferma dell’indirizzo email alla registrazione: dopo aver creato l’account ricevi una email con un link e puoi accedere solo dopo averlo aperto. Se la email non arriva c’è il pulsante «Rinvia email di conferma».'],
 ['1.32.5','Guida dei primi passi rinnovata: ora sono cinque e in ordine cifratura dei dati, accesso con biometria, profilo dell’azienda, primo cliente e assistente. Tolto il passo sulla posta.'],
+['1.33.0','Consensi con un link personale. Quando invii l’informativa per email o WhatsApp, il messaggio contiene un link: il cliente lo apre dal telefono, senza account, sceglie i consensi facoltativi e conferma. La risposta arriva da sola nella scheda Privacy del cliente. Il link resta sempre valido, così il cliente può cambiare o revocare i consensi quando vuole. Non serve più rispondere alla email: sono state tolte la lettura delle risposte dalla posta, la registrazione a mano e le scadenze dei codici. Sul server restano solo le scelte sì/no, la data e un’impronta del link: mai nome o email del cliente.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
