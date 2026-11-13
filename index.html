@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.26.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.26.0|2026-11-12"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.27.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.27.0|2026-11-12"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -710,6 +710,11 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 </div>
   <div class="delw" id="stSv"></div>
   <div hidden><button id="st_ok" type="button"></button><button id="st_x" type="button"></button></div></div></div>
+<div class="modal" id="mAnon" hidden><div class="box info" role="dialog" aria-labelledby="an_t"><p id="an_t"></p>
+  <div class="f" id="an_dF"><label for="an_d">Data di ricezione</label><input id="an_d" type="date"></div>
+  <div class="f" id="an_cF"><label for="an_c">Come è arrivata</label><select id="an_c"><option>Email</option><option>WhatsApp</option><option>Di persona</option><option>Lettera o PEC</option><option>Altro</option></select></div>
+  <div class="f"><label for="an_n" id="an_nl">Note</label><textarea id="an_n" rows="3"></textarea><div class="err" id="err-an_n" hidden></div></div>
+  <div class="two"><button class="btn lbl" id="an_x" type="button">Annulla</button><button class="btn p lbl" id="an_ok" type="button">Registra</button></div></div></div>
 <div class="modal" id="mConv" hidden><div class="box info" role="dialog"><p>Converti in prospect</p><div class="hint" style="margin:0 0 10px">Scegli come registrare l’anagrafica. Potrai cambiarlo dopo dalla scheda.</div>
   <div class="two"><button class="btn lbl" id="cv_p" type="button"><span data-i="user"></span>Persona fisica</button><button class="btn lbl" id="cv_a" type="button"><span data-i="building"></span>Azienda</button></div>
   <button class="btn lbl" id="cv_x" type="button" style="margin-top:8px"><span data-i="x"></span>Annulla</button></div></div>
@@ -764,6 +769,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="req" id="p_sum"></div>
   <div class="f" id="p_laterW" hidden><label class="chk"><input type="checkbox" id="p_later"><span>Invierò l’informativa più tardi<em>Salvi il cliente ora: l’informativa resterà da inviare e comparirà tra le cose da fare.</em></span></label></div>
   <div class="f" id="p_mailF"><button class="btn p lbl" id="p_prep" type="button"><span data-i="Scrivi"></span>Invia informativa</button> <button class="btn lbl" id="p_wa" type="button"><span data-i="WhatsApp"></span>Invia informativa su WhatsApp</button><div class="hint" id="p_mailhint"></div><div id="p_req" style="margin-top:10px"></div></div>
+  <div class="f" id="p_anonF" hidden></div>
   <details id="p_det"><summary>Dettagli e modifica manuale</summary>
   <div class="f"><label for="p_fonte">Fonte dei dati</label><select id="p_fonte"><option value="interessato">Fornito dall’interessato</option><option value="biglietto">Biglietto da visita</option><option value="fiera">Fiera o evento</option><option value="pubblica">Fonte pubblica (sito, registro imprese)</option><option value="terzi">Segnalazione di terzi</option></select></div>
   <div class="f"><label for="p_base">Base giuridica del trattamento</label><select id="p_base"><option value="contratto">Contratto o misure precontrattuali</option><option value="legittimo">Legittimo interesse</option><option value="consenso">Consenso</option><option value="legale">Obbligo legale</option></select></div>
@@ -853,7 +859,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="gmail.js?v=1.26.0"></script>
-<script src="app.js?v=1.26.0"></script>
+<script src="gmail.js?v=1.27.0"></script>
+<script src="app.js?v=1.27.0"></script>
 </body>
 </html>

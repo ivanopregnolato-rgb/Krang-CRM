@@ -449,14 +449,14 @@ function privUI(){const on=$('p_inf').checked;$('p_infx').hidden=!on;if(on&&!$('
   $('p_infhint').textContent=on?'':($('p_fonte').value==='interessato'?'Da fornire al momento della raccolta dei dati (art. 13).':'Dati non raccolti dall’interessato: invia l’informativa entro 30 giorni dalla raccolta (art. 14).');setErr('p_inf','')}
 ['p_inf','p_fonte'].forEach(id=>$(id).addEventListener('change',privUI));
 function loadPriv(p){p=p||mkPriv();$('p_later').checked=false;
-  $('p_fonte').value=p.fonteDati;$('p_base').value=p.base;$('p_inf').checked=!!p.informativa;$('p_infmodo').value=p.infModo||'Di persona';$('p_infdata').value=p.infData||'';$('p_cons').value=p.conserva||'';
+  $('p_fonte').value=p.fonteDati;$('p_base').value=p.base;$('p_inf').checked=!!p.informativa;$('p_infmodo').value=p.infModo||'Di persona';$('p_infdata').value=p.infData||'';$('p_cons').value=p.conserva||'';{const a=autoRet(),ad=a.until?ymd(new Date(a.until)):'';$('p_cons').dataset.auto=ad;if(!p.conserva)$('p_cons').value=ad}
   CONS.forEach(k=>{const c=p.cons[k]||{v:false,d:''};$('c_'+k).checked=!!c.v;$('s_'+k).textContent=c.v?'Prestato il '+fmtD(c.d):(c.d?'Revocato il '+fmtD(c.d):'')});
   const L=$('p_log');L.textContent='';(p.log||[]).slice(-6).reverse().forEach(x=>L.append(h('div','logi',fmtDT(x.d+'Z')+' – '+x.t+(x.op?' ('+x.op+')':''))));
   if(!(p.log||[]).length)L.append(h('div','hint','Nessuna modifica registrata.'));
   privUI();paintReq();$('p_det').open=false}
 function collectPriv(prev,isNew){
   prev=prev||mkPriv();const now=new Date().toISOString().slice(0,16),today=ymd(),log=(prev.log||[]).slice();
-  const p={base:$('p_base').value,fonteDati:$('p_fonte').value,informativa:$('p_inf').checked,infData:$('p_infdata').value,infModo:$('p_infmodo').value,infVer:'1.0',cons:{},conserva:$('p_cons').value,log,richieste:prev.richieste||[]};
+  const p={base:$('p_base').value,fonteDati:$('p_fonte').value,informativa:$('p_inf').checked,infData:$('p_infdata').value,infModo:$('p_infmodo').value,infVer:'1.0',cons:{},conserva:($('p_cons').value&&$('p_cons').value!==$('p_cons').dataset.auto)?$('p_cons').value:'',anon:prev.anon,log,richieste:prev.richieste||[]};
   if(isNew)log.push({d:now,t:'Anagrafica creata (fonte: '+$('p_fonte').selectedOptions[0].textContent+')'});
   if(p.informativa&&!p.infData)p.infData=today;if(!p.informativa)p.infData='';
   if(p.informativa&&(!prev.informativa||prev.infData!==p.infData))log.push({d:now,t:'Informativa fornita ('+p.infModo+', v1.0) il '+fmtD(p.infData)});
@@ -516,12 +516,13 @@ function paintPrivSum(){
   CONS.forEach(k=>{const on=$('c_'+k).checked,c=p.cons[k]||{v:false,d:''},same=!!c.v===on;
     sm.append(row(1,CLABEL[k],on?'Consenso prestato'+(same&&c.d?' il '+fmtD(c.d):''):(c.d&&same?'Revocato il '+fmtD(c.d):'Non prestato'),on?'ok':'no'))});
   const cv=$('p_cons').value;if(cv)sm.append(row(1,'Conservazione dei dati','Fino al '+fmtD(cv),'ok'));
+  {const a=editing&&editing.privacy&&editing.privacy.anon;if(a&&a.stato==='aperta')sm.append(row(1,'Richiesta di anonimizzazione','Da evadere entro '+fmtD(a.scade),'wait'))}
 }
 ['change','input'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('#p_det'))try{paintPrivSum()}catch(x){}}));
 let rq=null,rr=null;
 function paintReq(){
   retHint();
-  const w=$('p_req');w.textContent='';$('p_mailF').hidden=false;$('p_sum').hidden=false;paintPrivSum();$('p_wa').onclick=sendWaInfo;
+  const w=$('p_req');w.textContent='';$('p_mailF').hidden=false;$('p_sum').hidden=false;paintPrivSum();try{paintAnon()}catch(e){}$('p_wa').onclick=sendWaInfo;
   $('p_laterW').hidden=!!editing;if(editing||$('p_inf').checked)$('p_later').checked=false;if(!$('p_laterW').dataset.w){$('p_laterW').dataset.w=1;$('p_inf').addEventListener('change',()=>{if($('p_inf').checked)$('p_later').checked=false})}
   if(!editing){const pb=$('p_prep');pb.disabled=false;pb.innerHTML=ICONS.Scrivi+'Invia informativa';pb.onclick=()=>viaNew('email');return}
   const p=editing.privacy||mkPriv(),R=p.richieste||[],pend=R.find(r=>effSt(r)==='inviata'),ok=!!editing.email,given=CONS.filter(k=>p.cons[k]&&p.cons[k].v).map(k=>CLABEL[k]);
@@ -9053,6 +9054,7 @@ function actions(){const A=[],noInf=[],td=ymd(),add=(pri,ic,title,sub,go)=>A.pus
   clients.forEach(c=>{((c.privacy&&c.privacy.richieste)||[]).forEach(r=>{if(AUTOREP[r.token]&&effSt(r)==='inviata')add(77,'check','Risposta ai consensi ricevuta',fullName(c)+' · da confermare',()=>{openSheet(c);setPane('priv')})})});
   {const nli=(typeof leads!=='undefined'?leads:[]).filter(l=>l.stato==='nuovo'&&!l.inf);if(nli.length===1){const l=nli[0];add(54,'alert','Informativa privacy da inviare al lead',[l.nome,l.cognome].filter(Boolean).join(' ')||l.email||'Lead',()=>{setTab('lead');openLead(l)})}else if(nli.length>1)add(54,'alert',nli.length+' lead senza informativa privacy',nli.slice(0,3).map(l=>[l.nome,l.cognome].filter(Boolean).join(' ')||l.email||'Lead').join(', ')+(nli.length>3?'…':''),()=>setTab('lead'))}
   clients.forEach(c=>{const a=waLast(c);if(waUnread(c))add(78,'WhatsApp','Rispondi su WhatsApp',fullName(c)+' · '+a.testo.slice(0,50),()=>{openSheet(c);setPane('comm');setCm('wa');loadComm()})});
+  {const I=reviewItems();I.anon.forEach(c=>{const a=c.privacy.anon,n=daysTo(a.scade);add(n<0?96:n<=10?92:72,'shield','Richiesta di anonimizzazione',fullName(c)+' · '+(n<0?'scaduta da '+(-n)+' gg':'entro '+fmtD(a.scade)),()=>{openSheet(c);setPane('priv')})})}
   {const I=reviewItems(),n=I.exp.length+I.cons.length+(I.msg.n?1:0);if(n)add(58,'shield','Revisione conservazione dati',(I.exp.length?I.exp.length+' dati scaduti':'')+(I.cons.length?(I.exp.length?' · ':'')+I.cons.length+' consensi da rivedere':'')+(I.msg.n?((I.exp.length||I.cons.length)?' · ':'')+I.msg.n+' messaggi scaduti':''),openReview)}
   const low=prods.filter(lowOf);if(low.length)add(65,'box',low.length===1?'Prodotto da riordinare':low.length+' prodotti da riordinare',low.slice(0,3).map(x=>x.nome).join(', ')+(low.length>3?'…':''),()=>{window.pSec='mag';window.magFilter('sc');setTab('prod')});
   return A.sort((a,b)=>b.pri-a.pri)}
@@ -9223,15 +9225,47 @@ function retention(c){const R=S.ret,pv=c.privacy||{},re=rapportoEnd(c),lt=lastTo
   return{until,why,open,expired:!c.anon&&!open&&until>0&&until<Date.now()}}
 function staleConsents(c){const pv=c.privacy;if(!pv||c.anon)return[];const lt=lastTouch(c);if(!lt)return[];return CONS.filter(k=>pv.cons&&pv.cons[k]&&pv.cons[k].v&&addM(lt,k==='profilazione'?S.ret.profilazione:S.ret.marketing)<Date.now())}
 const oldMsgs=()=>{const cut=addM(Date.now(),-S.ret.comunicazioni);let n=0,cl=0;clients.forEach(c=>{const k=(c.wa||[]).filter(m=>new Date(m.data).getTime()<cut).length;if(k){n+=k;cl++}});return{n,cl,cut}};
-function reviewItems(){return{exp:clients.filter(c=>retention(c).expired),cons:clients.map(c=>[c,staleConsents(c)]).filter(x=>x[1].length),msg:oldMsgs()}}
-function retHint(){const e=$('p_consH');if(!e)return;if(!editing){e.textContent='';return}const r=retention(editing);e.textContent=r.until?'Secondo le regole impostate: '+fmtD(ymd(new Date(r.until)))+' ('+r.why+').'+(r.open?' Ci sono opportunità aperte: i dati restano in uso.':''):'Scadenza non determinabile: mancano date di riferimento.'}
+function reviewItems(){return{anon:clients.filter(anonOpen).sort((a,b)=>a.privacy.anon.scade<b.privacy.anon.scade?-1:1),exp:clients.filter(c=>retention(c).expired),cons:clients.map(c=>[c,staleConsents(c)]).filter(x=>x[1].length),msg:oldMsgs()}}
+function autoRet(){if(editing){const c={...editing,privacy:{...(editing.privacy||{}),conserva:''}};return retention(c)}return{until:addM(Date.now(),S.ret.contatti),why:'contatto senza contratto: '+mesi(S.ret.contatti)+' dall’ultimo contatto',open:false}}
+function retHint(){const e=$('p_consH');if(!e)return;const a=autoRet(),v=$('p_cons').value,ad=a.until?ymd(new Date(a.until)):'';$('p_cons').dataset.auto=ad;e.textContent='';
+  if(!ad){e.textContent='Scadenza non determinabile: mancano date di riferimento.';return}
+  if(!v||v===ad){e.textContent='Calcolata in automatico: '+a.why+'.'+(a.open?' Ci sono opportunità aperte: i dati restano in uso.':'')}
+  else{e.append('Impostata a mano. Con le regole sarebbe il '+fmtD(ad)+'. ');const b=h('button','link','Torna all’automatico');b.type='button';b.onclick=()=>{$('p_cons').value=ad;$('p_cons').dispatchEvent(new Event('input',{bubbles:true}));retHint()};e.append(b)}}
+$('p_cons').addEventListener('input',()=>{try{retHint();paintPrivSum()}catch(e){}});
 function anonymize(c,motivo){const id=c.id,tipo=c.tipo||'persona',pv=c.privacy||mkPriv(),log=(pv.log||[]).concat({d:new Date().toISOString().slice(0,16),t:'Dati personali anonimizzati ('+motivo+')'});
   Object.keys(c).forEach(k=>delete c[k]);Object.assign(c,{id,tipo,anon:true,nome:'Anonimo',cognome:'#'+id.slice(-4),azienda:'',paese:'IT',agg:new Date().toISOString(),privacy:mkPriv({base:'legittimo',fonteDati:'altro',log,richieste:[]})});purgeLog('anonimizzazione',motivo,id)}
+
+/* ===== richiesta di anonimizzazione (diritto alla cancellazione, art. 17 GDPR): registrazione, scadenza di 30 giorni, conferma ed esecuzione ===== */
+const daysTo=d=>Math.round((new Date(d+'T00:00')-new Date(ymd()+'T00:00'))/864e5);
+const anonOpen=c=>!!(c&&!c.anon&&c.privacy&&c.privacy.anon&&c.privacy.anon.stato==='aperta');
+function anonChip(a){const n=daysTo(a.scade),t=n<0?'Scaduta da '+(-n)+(n===-1?' giorno':' giorni'):n===0?'Scade oggi':'Entro '+fmtD(a.scade)+' · '+n+(n===1?' giorno':' giorni'),i=h('i','chip',t);i.style.background=n<0?'#f5cad6':n<=10?'#f6edb8':'#b5ebc0';return i}
+function anonLog(c,t){const pv=c.privacy=c.privacy||mkPriv();pv.log=(pv.log||[]).concat({d:new Date().toISOString().slice(0,16),t})}
+let anonCb=null;
+function anonAsk(o){$('an_t').textContent=o.title;$('an_dF').hidden=!o.date;$('an_cF').hidden=!o.date;$('an_nl').textContent=o.nl;$('an_n').value='';$('an_d').value=ymd();setErr('an_n','');$('an_ok').textContent=o.ok;anonCb=o.fn;$('mAnon').hidden=false}
+$('an_x').onclick=()=>{$('mAnon').hidden=true};
+$('an_ok').onclick=()=>{const f=anonCb;if(f&&f({d:$('an_d').value||ymd(),c:$('an_c').value,n:$('an_n').value.trim()})===false)return;$('mAnon').hidden=true};
+function anonMail(c){const a=c.privacy.anon;openCompose(c);if($('mCompose').hidden)return;$('mc_sub').value='Conferma della richiesta di anonimizzazione dei dati';
+  $('mc_body').value='Gentile '+contactName(c)+',\n\nabbiamo ricevuto la sua richiesta del '+fmtD(a.ric)+' di anonimizzazione dei suoi dati personali e la prendiamo in carico. Provvederemo entro il '+fmtD(a.scade)+' (un mese dalla richiesta).\n\nPotremo conservare solo i dati che la legge ci impone di trattenere (ad esempio quelli fiscali e contabili), per il tempo previsto. Dopo l’anonimizzazione non saremo più in grado di riconoscerla né di scriverle a questo indirizzo.\n\nPer qualsiasi dubbio può rispondere a questa email.\n\n'+firma()}
+function anonRun(c,after){const op=oppsOf(c.id),open=op.filter(o=>o.fase!=='vinta'&&o.fase!=='persa').length,won=op.filter(o=>o.fase==='vinta').length;
+  const w=[];if(open)w.push(open+(open===1?' opportunità aperta':' opportunità aperte')+': i dati sono ancora in uso');if(won)w.push(won+(won===1?' opportunità vinta':' opportunità vinte')+': verifica gli obblighi fiscali e contabili (di norma 10 anni) prima di procedere');
+  askConfirm('Anonimizzare '+fullName(c)+'? Nome, contatti, foto, note e messaggi vengono cancellati e non si può annullare. L’email viene cancellata: se vuoi confermare l’interessato, invia prima l’email di conferma.'+(w.length?'\n\nAttenzione: '+w.join('; ')+'.':''),'edit','Anonimizza',()=>{
+    const ric=c.privacy&&c.privacy.anon?c.privacy.anon.ric:'';anonymize(c,ric?'richiesta dell’interessato del '+fmtD(ric):'richiesta dell’interessato');c.privacy.anon={stato:'evasa',ric,evasa:ymd()};persist();try{render();renderO()}catch(e){}if(after)after();toast('Cliente anonimizzato.')})}
+function paintAnon(){const w=$('p_anonF');if(!w)return;w.textContent='';
+  if(!editing||editing.anon){w.hidden=true;return}
+  const c=editing,a=c.privacy&&c.privacy.anon;w.hidden=false;
+  const btn=(ic,l,f,cl)=>{const b=h('button','btn lbl'+(cl?' '+cl:''));b.type='button';b.innerHTML=ICONS[ic]+l;b.onclick=f;return b};
+  if(a&&a.stato==='aperta'){const d=h('div','req');d.append(h('b','','Richiesta di anonimizzazione'),h('div','','Ricevuta il '+fmtD(a.ric)+(a.canale?' · '+a.canale:'')+(a.nota?' · '+a.nota:'')),anonChip(a));
+    const bt=h('div','mact');bt.style.marginTop='8px';
+    bt.append(btn('Scrivi','Conferma',()=>anonMail(c)),btn('edit','Anonimizza',()=>anonRun(c,()=>{$('sheet').hidden=true})),btn('x','Rifiuta',()=>anonAsk({title:'Rifiuta la richiesta',nl:'Motivo del rifiuto (obbligatorio: va comunicato all’interessato)',ok:'Rifiuta',fn:v=>{if(!v.n){setErr('an_n','Indica il motivo.');return false}c.privacy.anon={...a,stato:'rifiutata',motivo:v.n,chiusa:ymd()};anonLog(c,'Richiesta di anonimizzazione rifiutata: '+v.n);persist();paintAnon();paintPrivSum();toast('Richiesta rifiutata e registrata.')}})));
+    d.append(bt);w.append(d)}
+  else{if(a&&a.stato==='rifiutata'){const d=h('div','hint','Richiesta di anonimizzazione del '+fmtD(a.ric)+' rifiutata il '+fmtD(a.chiusa)+': '+a.motivo);d.style.marginBottom='8px';w.append(d)}
+    w.append(btn('shield','Registra una richiesta di anonimizzazione',()=>anonAsk({title:'Richiesta di anonimizzazione',date:1,nl:'Note (facoltative)',ok:'Registra',fn:v=>{if(v.d>ymd()){setErr('an_n','La data non può essere nel futuro.');return false}const sc=new Date(v.d+'T00:00');sc.setMonth(sc.getMonth()+1);c.privacy=c.privacy||mkPriv();c.privacy.anon={stato:'aperta',ric:v.d,canale:v.c,nota:v.n,scade:ymd(sc)};anonLog(c,'Richiesta di anonimizzazione ricevuta ('+v.c+') il '+fmtD(v.d));persist();paintAnon();paintPrivSum();toast('Richiesta registrata: hai tempo fino al '+fmtD(ymd(sc))+'.')}})))}}
 function paintReview(){const I=reviewItems(),B=$('rvBody'),R=S.ret;B.textContent='';
   $('rvRules').textContent='Regole attive (modificabili dalle impostazioni): dati contrattuali '+mesi(R.contratto)+' dalla fine del rapporto; contatti senza contratto '+mesi(R.contatti)+'; consensi marketing '+mesi(R.marketing)+' e profilazione '+mesi(R.profilazione)+' dall’ultima interazione; messaggi registrati '+mesi(R.comunicazioni)+'.';
-  const sm=$('rvSum');sm.textContent='';[['Dati scaduti',I.exp.length],['Consensi da rivedere',I.cons.length],['Messaggi scaduti',I.msg.n]].forEach(([k,v])=>{const e=h('div','stat');e.append(h('span','',k),h('b',v?'warn':'',String(v)));sm.append(e)});
+  const sm=$('rvSum');sm.textContent='';[['Richieste di anonimizzazione',I.anon.length],['Dati scaduti',I.exp.length],['Consensi da rivedere',I.cons.length],['Messaggi scaduti',I.msg.n]].forEach(([k,v])=>{const e=h('div','stat');e.append(h('span','',k),h('b',v?'warn':'',String(v)));sm.append(e)});
   const sec=t=>{const d=h('div','hh');d.append(h('span','',t));B.append(d)};
-  if(!I.exp.length&&!I.cons.length&&!I.msg.n)B.append(h('div','empty','Tutto in regola: nessun dato da rivedere.'));
+  if(!I.anon.length&&!I.exp.length&&!I.cons.length&&!I.msg.n)B.append(h('div','empty','Tutto in regola: nessun dato da rivedere.'));
+  if(I.anon.length){sec('Richieste di anonimizzazione');I.anon.forEach(c=>{const a=c.privacy.anon,d=h('div','req');d.append(h('b','',fullName(c)),h('div','','Ricevuta il '+fmtD(a.ric)+(a.canale?' · '+a.canale:'')),anonChip(a));const bt=h('div','dual');bt.style.marginTop='8px';[['user','Apri',()=>{$('rvSheet').hidden=true;openSheet(c);setPane('priv')}],['edit','Anonimizza',()=>anonRun(c,paintReview)]].forEach(([i,l,f])=>{const b=h('button','btn lbl');b.type='button';b.innerHTML=ICONS[i]+l;b.onclick=f;bt.append(b)});d.append(bt);B.append(d)})}
   if(I.exp.length){sec('Clienti con conservazione scaduta');I.exp.forEach(c=>{const r=retention(c),d=h('div','req');d.append(h('b','',fullName(c)),h('div','','Scaduta il '+fmtD(ymd(new Date(r.until)))+' · '+r.why));
     const bt=h('div','mact');bt.style.marginTop='8px';
     [['Anonimizza','edit',()=>askConfirm('Anonimizzare '+fullName(c)+'? Nome, contatti, foto, note e messaggi vengono cancellati; le opportunità restano senza riferimenti al cliente. Non si può annullare.','edit','Anonimizza',()=>{anonymize(c,'conservazione scaduta');persist();render();renderO();paintReview();toast('Cliente anonimizzato.')})],
@@ -10324,7 +10358,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.26.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.27.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10636,7 +10670,8 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.23','Suggerimenti per le aziende dal nome: Wikidata e OpenStreetMap e, se non trovano nulla, una ricerca Google. Scegli il risultato e compili sito, telefono, email, indirizzo e partita IVA dopo la tua conferma.'],
 ['1.24','Tasto Salva in fondo alle schede: compare solo quando il record è nuovo o modificato (clienti, lead, opportunità, prodotti, preventivi, impostazioni e editor di marketing e listini).'],
 ['1.25','La scheda lead ha gli stessi campi della scheda cliente (partita IVA e PEC per le aziende, ruolo, data di nascita, sito, indirizzo, note) e li porta nel cliente alla conversione.'],
-['1.26','Scheda Privacy: in alto lo stato attuale in sola lettura (informativa, consensi, conservazione) e «Dettagli e modifica manuale» sempre chiuso all’apertura.']
+['1.26','Scheda Privacy: in alto lo stato attuale in sola lettura (informativa, consensi, conservazione) e «Dettagli e modifica manuale» sempre chiuso all’apertura.'],
+['1.27','«Conserva i dati fino al» si compila da solo con la scadenza delle regole di conservazione (modificabile a mano). Nuova gestione delle richieste di anonimizzazione: registrazione con scadenza di un mese, email di conferma, anonimizzazione con avvisi su opportunità e dati contabili, promemoria e elenco nella Revisione conservazione.']
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
