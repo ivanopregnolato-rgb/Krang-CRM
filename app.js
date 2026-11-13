@@ -440,8 +440,8 @@ function saveOpp(keep){
 $('oDel').onclick=()=>{if(!oEd)return;askConfirm('Eliminare l’opportunità “'+oEd.titolo+'”? L’operazione non si può annullare.','trash','Elimina',()=>{opps=opps.filter(x=>x!==oEd);persistO();$('oSheet').hidden=true;renderO();toast('Opportunità eliminata.')})};
 function setPane(p){if(p==='priv'){try{$('p_det').open=false}catch(e){}}
  if(p==='comm'&&editing&&editing.id&&waUnread(editing)){const a=waLast(editing);editing.waSeen=a.data;try{persist()}catch(e){}setTimeout(()=>{try{paintBadges()}catch(e){}},0)}
-document.querySelectorAll('#cTabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
-  [...$('sheet').firstElementChild.children].forEach(el=>{if(el.classList.contains('top')||el.id==='cTabs')return;const k=el.id==='linkedF'?'opp':el.id==='privF'?'priv':el.id==='commF'?'comm':el.id==='tpF'?'tp':el.id==='trF'?'tr':el.id==='msg'?'*':el.classList.contains('btns')?'dati,priv':'dati';el.classList.toggle('pane-hide',k!=='*'&&!k.split(',').includes(p))})}
+document.querySelectorAll('#cTabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));$('sheet').classList.toggle('np-dati',p!=='dati');
+  [...$('sheet').firstElementChild.children].forEach(el=>{if(el.classList.contains('top')||el.id==='cTabs')return;const k=el.id==='linkedF'?'opp':el.id==='privF'?'priv':el.id==='commF'?'comm':el.id==='tpF'?'tp':el.id==='trF'?'tr':el.id==='msg'?'*':el.classList.contains('btns')?'dati,priv':el.classList.contains('delw')?'*':'dati';el.classList.toggle('pane-hide',k!=='*'&&!k.split(',').includes(p))})}
 $('cTabs').onclick=e=>{const b=e.target.closest('button');if(b){setPane(b.dataset.p);if(b.dataset.p==='comm')loadComm();if(b.dataset.p==='tp')paintTouch();if(b.dataset.p==='tr')paintTr()}};
 const CONS=['mkEmail','mkTel','profilazione','terzi'];
 const CLABEL={mkEmail:'Marketing via email',mkTel:'Marketing telefonico e WhatsApp',profilazione:'Profilazione commerciale',terzi:'Comunicazione a partner terzi'};
@@ -515,7 +515,7 @@ function paintPrivSum(){
   sm.append(inf?row(1,'Informativa privacy','Fornita'+(infD?' il '+fmtD(infD):'')+(infM?' · '+infM:''),'ok'):pend?row(1,'Informativa privacy','Inviata, in attesa di risposta','wait'):row(1,'Informativa privacy','Da inviare','no'));
   CONS.forEach(k=>{const on=$('c_'+k).checked,c=p.cons[k]||{v:false,d:''},same=!!c.v===on;
     sm.append(row(1,CLABEL[k],on?'Consenso prestato'+(same&&c.d?' il '+fmtD(c.d):''):(c.d&&same?'Revocato il '+fmtD(c.d):'Non prestato'),on?'ok':'no'))});
-  const cv=$('p_cons').value;if(cv)sm.append(row(1,'Conservazione dei dati','Fino al '+fmtD(cv),'ok'));
+  const cv=$('p_cons').value;if(cv){const au=cv===$('p_cons').dataset.auto;sm.append(row(1,'Conservazione dei dati',au?'Scadenza calcolata in automatico: '+fmtD(cv):'Fino al '+fmtD(cv)+' (impostata a mano)',au?'no':'ok'))}
   {const a=editing&&editing.privacy&&editing.privacy.anon;if(a&&a.stato==='aperta')sm.append(row(1,'Richiesta di anonimizzazione','Da evadere entro '+fmtD(a.scade),'wait'))}
 }
 ['change','input'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('#p_det'))try{paintPrivSum()}catch(x){}}));
@@ -10358,7 +10358,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.27.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.27.1';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10671,6 +10671,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.24','Tasto Salva in fondo alle schede: compare solo quando il record è nuovo o modificato (clienti, lead, opportunità, prodotti, preventivi, impostazioni e editor di marketing e listini).'],
 ['1.25','La scheda lead ha gli stessi campi della scheda cliente (partita IVA e PEC per le aziende, ruolo, data di nascita, sito, indirizzo, note) e li porta nel cliente alla conversione.'],
 ['1.26','Scheda Privacy: in alto lo stato attuale in sola lettura (informativa, consensi, conservazione) e «Dettagli e modifica manuale» sempre chiuso all’apertura.'],
+['1.27.1','Il tasto Salva in fondo ora compare anche nel tab Privacy (e negli altri tab della scheda cliente) quando modifichi qualcosa. La scadenza di conservazione calcolata in automatico non mostra più la spunta verde: è solo una proposta, non un’azione già svolta.'],
 ['1.27','«Conserva i dati fino al» si compila da solo con la scadenza delle regole di conservazione (modificabile a mano). Nuova gestione delle richieste di anonimizzazione: registrazione con scadenza di un mese, email di conferma, anonimizzazione con avvisi su opportunità e dati contabili, promemoria e elenco nella Revisione conservazione.']
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
