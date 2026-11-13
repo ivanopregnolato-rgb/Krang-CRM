@@ -9782,30 +9782,83 @@ $('st_bkf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f
 /* estensioni alla scheda WhatsApp ed email */
 {const _ow=openWa;openWa=function(){const r=_ow.apply(this,arguments);{const c=arguments[0];if(c&&c.id&&!$('mWa').hidden)waExtra(c)}return r};
  {const _oi=offerInf;offerInf=function(c){const r=_oi.apply(this,arguments);if(!$('mCompose').hidden&&c&&c.id&&!cmpQ&&!cmpLeadRef)cmpExtras(c);return r}}}
-/* ===== dati di esempio per provare i periodi ===== */
-{const NM=['Laura','Marco','Elena','Paolo','Chiara','Andrea','Sara','Davide','Marta','Luca','Francesca','Matteo','Giulia','Stefano','Valentina','Alberto','Silvia','Federico','Elisa','Roberto','Anna','Simone','Claudia','Fabio'];
- const CG=['Conti','Ferri','Riva','Serra','Moretti','Gallo','Costa','Fontana','Greco','Bruno','Marino','Rinaldi','Caruso','Ferrara','Bianco','Villa','Lombardi','Barbieri','Testa','Longo','Pace','Monti','Orlando','Sala'];
- const AZ=['Enoteca','Ristorante','Hotel','Eventi','Trattoria','Cantina','Osteria','Catering','Boutique','Pasticceria','Bistrot','Agriturismo','Wine Bar','Gastronomia','Resort','Pizzeria'];
- const yp=(n,c)=>(n+'.'+c).toLowerCase().replace(/[^a-z.]/g,'')+'@yopmail.com';
- const XC=Array.from({length:16},(_,i)=>['xd'+(i+1),NM[i],CG[i],AZ[i]+' '+CG[i]]);
- const PR=[['Primatus',22,10],['Idealis',7.5,3.2],['Selezione Riserva',38,17],['Bollicine Brut',16,6.8],['Rosso Superiore',14,6],['Bianco Fermo',9.5,4],['Cassa degustazione',85,40],['Spumante Rosé',18,8]];
+/* ===== dati di esempio per provare i periodi e fare stress test: clienti, lead, opportunità, catalogo, listini e magazzino ===== */
+{const NM=['Laura','Marco','Elena','Paolo','Chiara','Andrea','Sara','Davide','Marta','Luca','Francesca','Matteo','Giulia','Stefano','Valentina','Alberto','Silvia','Federico','Elisa','Roberto','Anna','Simone','Claudia','Fabio','Alessia','Giorgio','Ilaria','Nicola','Monica','Riccardo','Veronica','Daniele','Barbara','Massimo','Cristina','Enrico','Serena','Gabriele','Paola','Tommaso','Martina','Michele','Roberta','Antonio','Federica','Giacomo','Lucia','Pietro','Beatrice','Emanuele','Irene','Vincenzo','Camilla','Sergio','Noemi','Gianluca','Arianna','Carlo','Daniela','Filippo'];
+ const CG=['Conti','Ferri','Riva','Serra','Moretti','Gallo','Costa','Fontana','Greco','Bruno','Marino','Rinaldi','Caruso','Ferrara','Bianco','Villa','Lombardi','Barbieri','Testa','Longo','Pace','Monti','Orlando','Sala','Colombo','De Luca','Mancini','Giordano','Rizzo','Parisi','Silvestri','Vitale','Leone','Martini','Bianchi','Santoro','Palmieri','Valentini','Piras','Neri','Basile','Cattaneo','Gentile','Ruggeri','Fabbri','Amato','Mariani','Sanna','Benedetti','Pellegrini','Grasso','Messina','Donati','Guerra','Bellini','Zanini','Farina','Coppola','Cirillo'];
+ const AZ=['Enoteca','Ristorante','Hotel','Eventi','Trattoria','Cantina','Osteria','Catering','Boutique','Pasticceria','Bistrot','Agriturismo','Wine Bar','Gastronomia','Resort','Pizzeria','Salumeria','Caffè','Locanda','Banqueting'];
+ const RUOLI=['Titolare','Responsabile acquisti','Direttore','Sommelier','Chef','Amministratore','Event manager','Responsabile F&B'];
+ const CITTA=[['IT','Milano','MI','20121','Via Roma'],['IT','Torino','TO','10138','Corso Francia'],['IT','Bologna','BO','40121','Via Indipendenza'],['IT','Firenze','FI','50123','Via dei Servi'],['IT','Roma','RM','00184','Via Nazionale'],['IT','Napoli','NA','80132','Via Chiaia'],['IT','Verona','VR','37121','Via Mazzini'],['IT','Trento','TN','38122','Via Brennero'],['IT','Pescara','PE','65121','Corso Umberto'],['IT','Padova','PD','35121','Via Roma'],['IT','Bari','BA','70121','Corso Cavour'],['IT','Palermo','PA','90133','Via Maqueda'],['IT','Genova','GE','16121','Via XX Settembre'],['FR','Lyon','','69002','Rue de la République'],['FR','Paris','','75004','Rue de Rivoli'],['DE','München','','80331','Marienplatz'],['DE','Berlin','','10117','Friedrichstraße'],['CH','Zürich','','8001','Bahnhofstrasse'],['CH','Lugano','','6900','Via Nassa'],['AT','Wien','','1010','Graben'],['ES','Barcelona','','08002','Carrer de Ferran']];
+ const slug=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'');
+ const mailSeen=new Set();
+ /* email sempre su yopmail.com; se il nome si ripete si aggiunge un numero */
+ const yp=(n,c)=>{const b=slug(n)+'.'+slug(c);let e=b,k=1;while(mailSeen.has(e))e=b+(++k);mailSeen.add(e);return e+'@yopmail.com'};
+ const vatIT=n=>{const b=String(1000000+n*7919%8999999).padStart(7,'0')+String(1+n%120).padStart(3,'0');let s=0;for(let i=0;i<10;i++){let d=+b[i];if(i%2){d*=2;if(d>9)d-=9}s+=d}return b+((10-s%10)%10)};
+ /* catalogo: prodotti con giacenza e soglia di scorta (alcuni volutamente sotto scorta) */
+ const CAT=[
+ ['DB-BOL','Dalibrà Bollicine','Spumante','Pecorino Brut Nature · 12,5% vol · 6–8 °C','bt',14,6.5,1,60,900],['DB-ROS','Spumante Rosé','Spumante','Montepulciano rosato Brut · 12% vol · 6–8 °C','bt',18,8,1,50,500],['DB-MCR','Metodo Classico Riserva','Spumante','Pecorino, 36 mesi sui lieviti · 12,5% vol','bt',28,13,1,40,60],['DB-BNM','Brut Nature Magnum','Spumante','Magnum 1,5 l · 12,5% vol','bt',34,16,1,20,45],
+ ['DB-PRI','Primatus','Rosso','Appassito Rosso · Montepulciano 100% · 14,5% vol','bt',22,10,1,50,400],['DB-IDE','Idealis','Rosso','Montepulciano d’Abruzzo DOP · 14% vol','bt',7.5,3.2,1,150,3000],['DB-EMR','EmmeErre','Rosso','Montepulciano d’Abruzzo DOP Riserva · 14,5% vol','bt',12,5.5,1,80,1200],['DB-ORI','Origine','Rosso','Primitivo IGP · 14% vol','bt',6.5,3,1,50,900],['DB-SEL','Selezione Riserva','Rosso','Montepulciano, 24 mesi in barrique · 14,5% vol','bt',38,17,1,30,90],['DB-RSU','Rosso Superiore','Rosso','Blend rosso · 14% vol','bt',14,6,1,60,700],['DB-CAB','Cabernet Barrique','Rosso','Cabernet Sauvignon IGP · 13,5% vol','bt',19,8.5,1,40,35],
+ ['DB-MAM','Mammarosa','Rosato','Cerasuolo d’Abruzzo DOP · 13,5% vol','bt',6.5,2.8,1,100,1500],['DB-RBR','Rosato Brut','Rosato','Rosato frizzante · 11,5% vol','bt',9,4,1,50,300],
+ ['DB-MAG','Magnalia','Bianco','Pinot Grigio IGP · 13,5% vol','bt',7,3,1,80,1400],['DB-ARG','Argello','Bianco','Pecorino IGP · 13,5% vol','bt',7,3.2,1,80,1300],['DB-RIA','Riamò','Bianco','Trebbiano d’Abruzzo DOP · 12,5% vol','bt',5.5,2.3,1,80,1500],['DB-BFE','Bianco Fermo','Bianco','Bianco secco da tavola · 12% vol','bt',9.5,4,1,60,800],['DB-PAS','Passerina','Bianco','Passerina IGP · 13% vol','bt',8,3.5,1,60,700],['DB-CHR','Chardonnay Riserva','Bianco','Chardonnay in legno · 13,5% vol','bt',16,7,1,30,150],
+ ['DB-PAD','Passito Dolce 0,5 l','Dolci','Passito da uve appassite · 14% vol','bt',18,8.5,1,30,200],['DB-VSA','Vin Santo','Dolci','Vin Santo invecchiato 4 anni · 15% vol','bt',24,11,1,20,120],
+ ['DB-GRA','Grappa Invecchiata 0,5 l','Distillati','Grappa di Montepulciano · 40% vol','bt',26,12,1,20,150],['DB-AMA','Amaro alle Erbe','Distillati','Amaro artigianale · 28% vol','bt',22,9,1,20,25],
+ ['DB-OLI','Olio EVO 0,75 l','Olio','Olio extravergine, cultivar Intosso','bt',12,6,1,40,600],['DB-OL5','Olio EVO lattina 5 l','Olio','Olio extravergine in lattina','pz',42,26,1,10,80],
+ ['DB-CDG','Cassa degustazione 6 bottiglie','Confezioni','Selezione di 6 etichette','confezione',85,40,1,15,200],['DB-CRG','Cassa regalo 2 bottiglie','Confezioni','Confezione regalo in legno','confezione',34,15,1,30,300],['DB-C6I','Cartone 6 Idealis','Confezioni','6 bottiglie Idealis','cartone',40,17,1,40,500],
+ ['SV-DEG','Degustazione guidata in cantina','Servizi','Fino a 10 persone, 2 ore','forfait',180,60,0,'',0],['SV-CON','Consulenza carta dei vini','Servizi','Consulenza per ristoranti e hotel','ore',90,30,0,'',0],['SV-VIS','Visita in cantina','Servizi','Visita guidata con assaggio','pz',25,8,0,'',0],['SV-SPE','Spedizione espressa','Servizi','Consegna in 24/48 ore','forfait',12,7,0,'',0],['SV-WCL','Abbonamento Wine Club annuale','Servizi','4 spedizioni all’anno','anno',240,110,0,'',0],['SV-NOL','Noleggio calici per eventi','Servizi','Fino a 100 calici, lavaggio incluso','forfait',60,20,0,'',0],
+ ['AC-CAL','Calici ISO (6 pezzi)','Accessori','Calici da degustazione','confezione',18,7,1,40,260],['AC-CAV','Cavatappi sommelier','Accessori','Doppia leva, logo inciso','pz',9,3.5,1,50,400],['AC-POR','Portabottiglie in legno','Accessori','Per 3 bottiglie','pz',15,6,1,30,150],['AC-GRE','Grembiule con logo','Accessori','Cotone, regolabile','pz',14,5,1,20,60]];
+ const LST=[
+ ['lx1','Ristorazione Italia',['IT'],-8,[[12,3],[60,6],[120,9]],{}],
+ ['lx2','Francia',['FR'],6,[[24,4]],{}],
+ ['lx3','Germania e Austria',['DE','AT'],4,[[24,3],[96,6]],{}],
+ ['lx4','Svizzera',['CH'],12,[],{'DB-PRI':26,'DB-SEL':44,'DB-CDG':98}],
+ ['lx5','Distributori (tutti gli altri)',[],-15,[[48,4],[240,8]],{'DB-IDE':6.2,'DB-MAM':5.4,'DB-RIA':4.6}],
+ ['lx6','Promo Natale',['IT'],-5,[],{},false]];
+ const LR=[['Richiesta preventivo','Buongiorno, vorremmo un preventivo per alcune casse per un evento.'],['Listino ristorazione','Salve, è possibile avere il listino per la ristorazione?'],['Degustazione','Vorremmo organizzare una degustazione per i nostri ospiti: quali date avete?'],['Regali aziendali','Cerchiamo una selezione di vini per i regali ai clienti.'],['Fornitura locale','Siamo interessati a una fornitura mensile per il nostro locale.'],['Informazioni prodotti','Potete inviarmi le schede dei vostri prodotti?'],['Wine Club','Vorrei informazioni sull’abbonamento annuale al Wine Club.'],['Visita in cantina','Siamo un gruppo di 12 persone: è possibile una visita a fine mese?']];
+ const WAT=[['out','Buongiorno, le confermo la consegna per giovedì.'],['in','Perfetto, grazie!'],['out','Le ho inviato il preventivo: mi dica se va bene.'],['in','Lo guardo e le faccio sapere entro domani.'],['out','Ricordo l’appuntamento di venerdì per la degustazione.'],['in','Confermato, a venerdì.']];
  const TIT=['Cena aziendale','Riserva per ristorante','Fornitura mensile','Offerta per hotel','Aperitivi estate','Regali clienti','Riordino cantina','Evento privato','Selezione matrimoni','Brindisi di fine anno','Fornitura stagionale','Regalistica Natale','Gara hotel','Carta vini nuova','Contratto annuale','Evento aziendale','Degustazione guidata','Menù di primavera'];
- let sd=7;const rnd=n=>{sd=(sd*1103515245+12345)&0x7fffffff;return sd%n};
- const DEF=Array.from({length:44},(_,i)=>[Math.round(2+i*9.4+rnd(5)),rnd(100)<78?'vinta':'persa',[rnd(PR.length),6+rnd(90)],TIT[i%TIT.length]]);
- const FS=['nuova','qualificata','proposta'];
- const OPEN=Array.from({length:12},(_,j)=>[FS[j%3===0?0:j%3===1?1:2],[rnd(PR.length),8+rnd(70)],TIT[(j*5+3)%TIT.length]]);
- const LR=[['Richiesta preventivo','Buongiorno, vorremmo un preventivo per alcune casse per un evento.'],['Listino ristorazione','Salve, è possibile avere il listino per la ristorazione?'],['Degustazione','Vorremmo organizzare una degustazione per i nostri ospiti: quali date avete?'],['Regali aziendali','Cerchiamo una selezione di vini per i regali ai clienti.'],['Fornitura locale','Siamo interessati a una fornitura mensile per il nostro locale.'],['Informazioni prodotti','Potete inviarmi le schede dei vostri prodotti?']];
  const LS=['web','email','manuale','web'];
- $('st_exAdd').onclick=()=>{if(opps.some(o=>o.demo)){toast('Gli esempi sono già presenti: rimuovili prima di aggiungerli di nuovo.');return}
+ const SIZES={p:{c:16,l:10,k:44,o:12,t:'16 clienti, 10 lead e 56 opportunità'},m:{c:150,l:60,k:240,o:60,t:'150 clienti, 60 lead e 300 opportunità'},s:{c:1000,l:300,k:1200,o:300,t:'1.000 clienti, 300 lead e 1.500 opportunità'}};
+ const sizeNow=()=>{const e=$('st_exSize');return SIZES[e&&e.value]||SIZES.p};
+ const upH=()=>{const e=$('st_exH');if(e)e.textContent='Aggiunge '+sizeNow().t+' vinte, perse e aperte distribuite negli ultimi 14 mesi, più un catalogo di '+CAT.length+' prodotti con magazzino e '+LST.length+' listini. Le email sono tutte su yopmail.com e non ci sono numeri di telefono. “Rimuovi esempi” toglie solo quanto è stato aggiunto da qui.'};
+ {const e=$('st_exSize');if(e)e.addEventListener('change',upH);upH()}
+ $('st_exAdd').onclick=()=>{if(opps.some(o=>o.demo)||clients.some(c=>c.demo)){toast('Gli esempi sono già presenti: rimuovili prima di aggiungerli di nuovo.');return}
+  const Z=sizeNow();let sd=7;const rnd=n=>{sd=(sd*1103515245+12345)&0x7fffffff;return sd%n};
   const dAgo=n=>ymd(new Date(Date.now()-n*864e5)),fut=n=>ymd(new Date(Date.now()+n*864e5));
-  XC.forEach(([id,n,c,az],i)=>{if(!clients.some(x=>x.id===id))clients.push({id,tipo:'azienda',nome:n,cognome:c,azienda:az,ruolo:'Titolare',paese:'IT',telefono:'333'+String(1000100+i*37),email:yp(n,c),wa:[],agg:ymd(),demo:true,privacy:mkPriv({fonteDati:'interessato',base:'contratto'})})});
-  const mk=(i,fase,pr,tit,chiusa,creata,data)=>{const [pi,q]=pr,P=PR[pi];const o={id:'ox'+i,demo:true,creata,titolo:tit,clienteId:XC[i%XC.length][0],fase,prob:(FASI.find(f=>f[0]===fase)||[])[2],fonte:FONTI[i%FONTI.length],data:data||chiusa||'',prodotti:[{prodId:'x'+pi,nome:P[0],unita:'bt',qta:q,prezzo:P[1],costo:P[2],iva:22,sconto:i%4===0?5:0}],allegati:[],note:'Opportunità di esempio.'};if(chiusa)o.chiusa=chiusa;o.valore=total(o);return o};
-  DEF.forEach((d,i)=>opps.push(mk(i,d[1],d[2],d[3],dAgo(d[0]),dAgo(d[0]+25+(i%5)*6))));
-  OPEN.forEach((d,j)=>opps.push(mk(100+j,d[0],d[1],d[2],'',dAgo(5+j*4),fut(10+j*6))));
-  const now=Date.now();let nl=0;for(let i=0;i<10;i++){const id='lx'+(i+1);if(leads.some(l=>l.id===id))continue;const n=NM[(i*3+5)%NM.length],c=CG[(i*5+2)%CG.length],r=LR[i%LR.length],t=now-(i*7+2)*36e5;leads.push({id,demo:true,nome:n,cognome:c,email:yp(n,c),telefono:'320'+String(5550200+i*41),azienda:i%3?'':AZ[(i+7)%AZ.length]+' '+c,richiesta:r[1],oggetto:r[0],fonte:LS[i%LS.length],data:t,creato:t,stato:'nuovo'});nl++}
-  persist();persistO();persistL();render();renderO();try{renderL()}catch(e){}try{renderH()}catch(e){}toast('Esempi aggiunti: '+XC.length+' clienti, '+(DEF.length+OPEN.length)+' opportunità, '+nl+' lead.')};
-$('st_exDel').onclick=()=>{const n=opps.filter(o=>o.demo).length;if(!n&&!clients.some(c=>c.demo)&&!leads.some(l=>l.demo)){toast('Non ci sono esempi da rimuovere.');return}
-  askConfirm('Rimuovere clienti, lead e opportunità di esempio aggiunti da qui? I tuoi dati non vengono toccati.','trash','Rimuovi',()=>{opps=opps.filter(o=>!o.demo);clients=clients.filter(c=>!c.demo);leads=leads.filter(l=>!l.demo);persist();persistO();persistL();render();renderO();try{renderL()}catch(e){}try{renderH()}catch(e){}toast('Esempi rimossi.')})}}
+  mailSeen.clear();clients.forEach(c=>{if(c.email)mailSeen.add(String(c.email).split('@')[0])});
+  /* catalogo e magazzino */
+  const P=CAT.map((r,i)=>({id:'xp'+(i+1),codice:r[0],nome:r[1],categoria:r[2],caratt:r[3],descr:'',unita:r[4],prezzo:r[5],costo:r[6],mag:!!r[7],scorta:r[8],iva:r[2]==='Olio'?4:22,attivo:true,demo:true}));
+  const have=new Set(prods.map(p=>p.codice));let np=0;P.forEach((p,i)=>{if(have.has(p.codice))return;prods.push(p);np++;if(p.mag)movs.push({id:'xm'+(i+1),prodId:p.id,data:new Date(Date.now()-430*864e5).toISOString(),tipo:'carico',qta:CAT[i][9],nota:'Giacenza iniziale',demo:true})});
+  const goods=P.filter(p=>p.mag);
+  /* listini */
+  S.cpq=S.cpq&&Array.isArray(S.cpq.listini)?S.cpq:{listini:[],maxSconto:0};let nl2=0;
+  LST.forEach(l=>{if(S.cpq.listini.some(x=>x.id===l[0]))return;const pr={};Object.keys(l[5]).forEach(cod=>{const p=P.find(x=>x.codice===cod);if(p)pr[p.id]=l[5][cod]});S.cpq.listini.push({id:l[0],nome:l[1],paesi:l[2].slice(),mod:l[3],scaglioni:l[4].map(s=>({da:s[0],pct:s[1]})),prezzi:pr,attivo:l.length>6?l[6]:true,demo:true});nl2++});
+  /* clienti */
+  const XC=[];
+  for(let i=0;i<Z.c;i++){const n=NM[i%NM.length],c=CG[(i*7+((i/NM.length)|0)*13)%CG.length],az=i%9===8?'':AZ[(i*3+((i/AZ.length)|0))%AZ.length]+' '+c,k=CITTA[(i*5+rnd(3))%CITTA.length],est=k[0]!=='IT';
+   const ind=k[4]+' '+(1+(i*13)%97)+', '+k[3]+' '+k[1]+(k[2]?' '+k[2]:'');const id='xd'+(i+1);
+   const o={id,tipo:az?'azienda':'persona',nome:n,cognome:c,azienda:az,ruolo:az?RUOLI[i%RUOLI.length]:'',paese:k[0],telefono:'',email:yp(n,c),sito:az?'www.'+slug(az)+(est?'.'+k[0].toLowerCase():'.it'):'',indirizzo:ind,note:i%7===0?'Cliente di esempio per prove e stress test.':'',wa:[],agg:ymd(),demo:true};
+   if(az&&k[0]==='IT')o.piva=vatIT(i+1);
+   if(i%5===0){const d=new Date(Date.now()+((i/5)%14)*864e5);o.nascita=(1960+(i%36))+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+   const q=i%4,idt=dAgo(40+rnd(500)),lg=[{d:idt+'T10:00',t:'Informativa fornita (Email, v1.0)'}];
+   o.privacy=q===2?mkPriv({fonteDati:'interessato',base:'contratto'}):q===0?mkPriv({informativa:true,infData:idt,infModo:'Email',cons:{mkEmail:{v:true,d:idt},mkTel:{v:false,d:''},profilazione:{v:false,d:''},terzi:{v:false,d:''}},log:lg}):q===1?mkPriv({informativa:true,infData:idt,infModo:'Firmata',base:'contratto',log:lg}):mkPriv({informativa:true,infData:idt,infModo:'Email',base:'consenso',cons:{mkEmail:{v:true,d:idt},mkTel:{v:false,d:''},profilazione:{v:true,d:idt},terzi:{v:false,d:''}},log:lg});
+   if(i%8===3){const nm=2+i%4;for(let j=0;j<nm;j++){const w=WAT[j%WAT.length];o.wa.push({id:'xw'+i+'_'+j,dir:w[0],data:new Date(Date.now()-(30-j*3-i%5)*864e5).toISOString(),testo:w[1],fonte:'manuale'})}}
+   XC.push(o);clients.push(o)}
+  /* opportunità: chiuse (vinte 78%, perse 22%) e aperte, con prezzi e sconti dai listini; le vinte scaricano il magazzino */
+  const span=420/Math.max(1,Z.k);let nmv=0;
+  const mk=(id,i,fase,chiusa,creata,data)=>{const cl=XC[i%XC.length],nr=1+rnd(3),pr=[];for(let j=0;j<nr;j++){const p=goods[rnd(goods.length)],q=6+rnd(90),r=window.prezzoCPQ?prezzoCPQ(p,cl,q):{prezzo:p.prezzo,sconto:0};if(!pr.some(x=>x.prodId===p.id))pr.push({prodId:p.id,nome:p.nome,unita:p.unita,qta:q,prezzo:r.prezzo,costo:p.costo,iva:p.iva,sconto:r.sconto,auto:true})}
+   const o={id,demo:true,creata,titolo:TIT[i%TIT.length],clienteId:cl.id,fase,prob:(FASI.find(f=>f[0]===fase)||[])[2],fonte:FONTI[i%FONTI.length],data:data||chiusa||'',prodotti:pr,allegati:[],note:'Opportunità di esempio.'};
+   if(chiusa)o.chiusa=chiusa;if(fase==='vinta'){o.scaricato=true;pr.forEach((x,j)=>{movs.push({id:'xs'+id+'_'+j,prodId:x.prodId,data:chiusa+'T10:00:00.000Z',tipo:'scarico',qta:-x.qta,nota:'Opportunità '+o.titolo,oppId:id,demo:true});nmv++})}
+   o.valore=total(o);return o};
+  for(let i=0;i<Z.k;i++){const d=Math.round(2+i*span+rnd(5));opps.push(mk('oxc'+i,i,rnd(100)<78?'vinta':'persa',dAgo(d),dAgo(d+25+(i%5)*6)))}
+  const FS=['nuova','qualificata','proposta'];
+  for(let j=0;j<Z.o;j++)opps.push(mk('oxo'+j,j*3+1,FS[j%3],'',dAgo(5+j%60),fut(10+(j*6)%120)));
+  /* la giacenza iniziale copre quanto venduto e quanto è impegnato nelle proposte, così a fine esempio resta la giacenza progettata (alcuni prodotti restano volutamente sotto scorta) */
+  {const sold={};movs.forEach(m=>{if(m.demo&&m.tipo==='scarico')sold[m.prodId]=(sold[m.prodId]||0)-m.qta});opps.forEach(o=>{if(o.demo&&RES_FASI.includes(o.fase))o.prodotti.forEach(x=>{sold[x.prodId]=(sold[x.prodId]||0)+x.qta})});movs.forEach(m=>{if(m.demo&&m.tipo==='carico'&&sold[m.prodId])m.qta+=sold[m.prodId]})}
+  /* lead */
+  const now=Date.now();let nl=0;for(let i=0;i<Z.l;i++){const id='lx'+(i+1);if(leads.some(l=>l.id===id))continue;const n=NM[(i*3+5)%NM.length],c=CG[(i*5+2+((i/NM.length)|0))%CG.length],r=LR[i%LR.length],t=now-(i*5%1400+2)*36e5;leads.push({id,demo:true,nome:n,cognome:c,email:yp(n,c),telefono:'',azienda:i%3?'':AZ[(i+7)%AZ.length]+' '+c,richiesta:r[1],oggetto:r[0],fonte:LS[i%LS.length],data:t,creato:t,stato:i%9===8?'scartato':'nuovo'});nl++}
+  persist();persistO();persistL();persistP();persistM();try{saveS()}catch(e){}render();renderO();try{renderL()}catch(e){}try{renderH()}catch(e){}try{if(typeof renderP==='function')renderP();if(typeof renderMag==='function')renderMag();if(typeof renderCpq==='function')renderCpq()}catch(e){}
+  toast('Esempi aggiunti: '+XC.length+' clienti, '+(Z.k+Z.o)+' opportunità, '+nl+' lead, '+np+' prodotti, '+nl2+' listini.')};
+$('st_exDel').onclick=()=>{const has=opps.some(o=>o.demo)||clients.some(c=>c.demo)||leads.some(l=>l.demo)||prods.some(p=>p.demo)||((S.cpq&&S.cpq.listini)||[]).some(l=>l.demo);if(!has){toast('Non ci sono esempi da rimuovere.');return}
+  askConfirm('Rimuovere clienti, lead, opportunità, prodotti, magazzino e listini di esempio aggiunti da qui? I tuoi dati non vengono toccati.','trash','Rimuovi',()=>{opps=opps.filter(o=>!o.demo);clients=clients.filter(c=>!c.demo);leads=leads.filter(l=>!l.demo);prods=prods.filter(p=>!p.demo);movs=movs.filter(m=>!m.demo);if(S.cpq&&S.cpq.listini)S.cpq.listini=S.cpq.listini.filter(l=>!l.demo);persist();persistO();persistL();persistP();persistM();try{saveS()}catch(e){}render();renderO();try{renderL()}catch(e){}try{renderH()}catch(e){}try{if(typeof renderP==='function')renderP();if(typeof renderMag==='function')renderMag();if(typeof renderCpq==='function')renderCpq()}catch(e){}toast('Esempi rimossi.')})}}
 /* ===== Marketing: segmenti, funnel, engagement ===== */
 {const sm=(a,f)=>a.reduce((x,o)=>x+(+f(o)||0),0),DAY=864e5,PERM=[[30,'30 giorni'],[90,'90 giorni'],[365,'12 mesi'],[0,'Sempre']];
  let sub='seg',mp=90;try{const v=localStorage.getItem('crm-mper');if(v!==null&&PERM.some(x=>x[0]===+v))mp=+v;const u=localStorage.getItem('crm-msub');if(['seg','cam'].includes(u))sub=u}catch(e){}
@@ -10367,7 +10420,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.28.2';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.29.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10685,6 +10738,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.28','Cerca azienda online: se il risultato scelto ha un sito web, l’app cerca la partita IVA nelle pagine del sito (home, contatti, privacy) e la controlla con VIES prima di proporla. Se la ragione sociale ufficiale è diversa da quella scelta, ti avvisa.'],
 ['1.28.1','Cerca azienda online: quando non trova nulla, il messaggio spiega perché (le piccole aziende spesso non sono nelle fonti gratuite) e suggerisce di aggiungere la città.'],
 ['1.28.2','Ottimizzazioni interne: il controllo del tasto Salva non lascia più timer attivi quando una scheda si chiude, l’aggiornamento dei badge è meno frequente (più leggero con molti clienti) ed è stato tolto del codice non usato.'],
+['1.29','Dati di esempio molto più ricchi: tre dimensioni (piccolo, medio e stress test fino a 1.000 clienti e 1.500 opportunità), catalogo di 38 prodotti con magazzino e giacenze, 6 listini per nazione con sconti a scaglioni, lead e messaggi. Le email sono tutte su yopmail.com e non ci sono numeri di telefono.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
