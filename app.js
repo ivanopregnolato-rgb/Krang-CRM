@@ -140,7 +140,7 @@ $('save').onclick=()=>saveClient();
 let newRef=null;/* anagrafica appena creata da questo foglio: va esclusa dai controlli di unicità e aggiornata, non duplicata */
 function saveClient(viaSend){
   const d={};FIELDS.forEach(f=>d[f]=$(f).value.trim());d.indirizzo=addrC(d.indirizzo);if(curTipo!=='azienda')d.pec='';d.foto=curFoto;d.tipo=curTipo;d.fav=curFav;if(!validate(d)){setPane('dati');const el=$('sheet').querySelector('.bad');if(el)el.scrollIntoView({block:'center'});return null}
-  if(!viaSend&&!editing&&$('p_fonte').value==='interessato'&&!$('p_inf').checked&&!$('p_later').checked){$('p_det').open=true;setPane('priv');setErr('p_inf','Conferma di aver fornito l’informativa privacy oppure scegli «Invierò l’informativa più tardi».');return null}
+  if(!viaSend&&!editing&&$('p_fonte').value==='interessato'&&!$('p_inf').checked&&!$('p_later').checked){setPane('priv');$('p_det').open=true;setErr('p_inf','Conferma di aver fornito l’informativa privacy oppure scegli «Invierò l’informativa più tardi».');return null}
   d.privacy=collectPriv(editing&&editing.privacy,!editing);d.agg=new Date().toISOString();
   if(!['nome','cognome','azienda','telefono','email'].some(f=>d[f])){showMsg('Inserisci almeno un dato.');return null}
   let cl=editing;if(!cl&&newRef&&clients.includes(newRef)&&!$('sheet').hidden)cl=newRef;if(cl)Object.assign(cl,d);else{cl=stampNew({id:Date.now().toString(36),...d});clients.push(cl)}newRef=cl;
@@ -438,7 +438,8 @@ function saveOpp(keep){
   if(oEd){if(oEd.fase!==rec.fase&&(rec.fase==='vinta'||rec.fase==='persa'))rec.chiusa=ymd();Object.assign(oEd,rec)}else{oEd=stampNew({id:'o'+Date.now().toString(36),creata:ymd(),...rec});opps.push(oEd)}
   const o=oEd;paintCl();persistO();renderO();renderP();if(!keep){$('oSheet').hidden=true;afterOppSave(o)}return o}
 $('oDel').onclick=()=>{if(!oEd)return;askConfirm('Eliminare l’opportunità “'+oEd.titolo+'”? L’operazione non si può annullare.','trash','Elimina',()=>{opps=opps.filter(x=>x!==oEd);persistO();$('oSheet').hidden=true;renderO();toast('Opportunità eliminata.')})};
-function setPane(p){if(p==='comm'&&editing&&editing.id&&waUnread(editing)){const a=waLast(editing);editing.waSeen=a.data;try{persist()}catch(e){}setTimeout(()=>{try{paintBadges()}catch(e){}},0)}
+function setPane(p){if(p==='priv'){try{$('p_det').open=false}catch(e){}}
+ if(p==='comm'&&editing&&editing.id&&waUnread(editing)){const a=waLast(editing);editing.waSeen=a.data;try{persist()}catch(e){}setTimeout(()=>{try{paintBadges()}catch(e){}},0)}
 document.querySelectorAll('#cTabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
   [...$('sheet').firstElementChild.children].forEach(el=>{if(el.classList.contains('top')||el.id==='cTabs')return;const k=el.id==='linkedF'?'opp':el.id==='privF'?'priv':el.id==='commF'?'comm':el.id==='tpF'?'tp':el.id==='trF'?'tr':el.id==='msg'?'*':el.classList.contains('btns')?'dati,priv':'dati';el.classList.toggle('pane-hide',k!=='*'&&!k.split(',').includes(p))})}
 $('cTabs').onclick=e=>{const b=e.target.closest('button');if(b){setPane(b.dataset.p);if(b.dataset.p==='comm')loadComm();if(b.dataset.p==='tp')paintTouch();if(b.dataset.p==='tr')paintTr()}};
@@ -452,7 +453,7 @@ function loadPriv(p){p=p||mkPriv();$('p_later').checked=false;
   CONS.forEach(k=>{const c=p.cons[k]||{v:false,d:''};$('c_'+k).checked=!!c.v;$('s_'+k).textContent=c.v?'Prestato il '+fmtD(c.d):(c.d?'Revocato il '+fmtD(c.d):'')});
   const L=$('p_log');L.textContent='';(p.log||[]).slice(-6).reverse().forEach(x=>L.append(h('div','logi',fmtDT(x.d+'Z')+' – '+x.t+(x.op?' ('+x.op+')':''))));
   if(!(p.log||[]).length)L.append(h('div','hint','Nessuna modifica registrata.'));
-  privUI();paintReq();$('p_det').open=!editing}
+  privUI();paintReq();$('p_det').open=false}
 function collectPriv(prev,isNew){
   prev=prev||mkPriv();const now=new Date().toISOString().slice(0,16),today=ymd(),log=(prev.log||[]).slice();
   const p={base:$('p_base').value,fonteDati:$('p_fonte').value,informativa:$('p_inf').checked,infData:$('p_infdata').value,infModo:$('p_infmodo').value,infVer:'1.0',cons:{},conserva:$('p_cons').value,log,richieste:prev.richieste||[]};
@@ -503,15 +504,28 @@ function logP(c,t,ev){const p=c.privacy=c.privacy||mkPriv();p.log=p.log||[];p.lo
 function saveOp(op){opName=op;try{localStorage.setItem('crm-op',op)}catch(e){}}
 function mailText(c,r){const nome=contactName(c);
   return ['Gentile '+nome+',','','la informiamo che '+(az()||'il titolare')+' tratta i suoi dati personali per gestire il rapporto commerciale. Di seguito l’informativa sintetica ai sensi dell’art. 13 del Regolamento (UE) 2016/679.','',infoTxt(),'','CONSENSI FACOLTATIVI','Per autorizzare i trattamenti facoltativi, risponda a questa email indicando il codice '+r.token+' e i numeri delle voci a cui acconsente:','1) '+CLABEL.mkEmail,'2) '+CLABEL.mkTel,'3) '+CLABEL.profilazione,'4) '+CLABEL.terzi,'','Se non desidera prestare alcun consenso non è necessario rispondere: il rifiuto non incide sul servizio. Può revocare un consenso in qualsiasi momento rispondendo a questa email.','Il codice è valido fino al '+fmtD(r.scade.slice(0,10))+'.','',firma()].join('\n')}
+
+/* stato attuale della privacy, in sola lettura: informativa, consensi e conservazione */
+function paintPrivSum(){
+  const sm=$('p_sum');if(!sm)return;sm.textContent='';sm.className='psum';
+  const p=(editing&&editing.privacy)||mkPriv(),pend=editing&&(p.richieste||[]).find(r=>effSt(r)==='inviata');
+  const inf=$('p_inf').checked,infD=$('p_infdata').value,infM=$('p_infmodo').value;
+  const row=(ok,title,sub,tone)=>{const r=document.createElement('div');r.className='ps-r';const ic=document.createElement('span');ic.className='ps-i '+tone;ic.textContent=tone==='ok'?'✓':tone==='wait'?'…':'–';const t=document.createElement('div');t.className='ps-t';const b=document.createElement('b');b.textContent=title;t.append(b);if(sub){const e=document.createElement('span');e.textContent=sub;t.append(e)}r.append(ic,t);return r};
+  const hd=document.createElement('div');hd.className='ps-h';hd.textContent='Stato attuale';sm.append(hd);
+  sm.append(inf?row(1,'Informativa privacy','Fornita'+(infD?' il '+fmtD(infD):'')+(infM?' · '+infM:''),'ok'):pend?row(1,'Informativa privacy','Inviata, in attesa di risposta','wait'):row(1,'Informativa privacy','Da inviare','no'));
+  CONS.forEach(k=>{const on=$('c_'+k).checked,c=p.cons[k]||{v:false,d:''},same=!!c.v===on;
+    sm.append(row(1,CLABEL[k],on?'Consenso prestato'+(same&&c.d?' il '+fmtD(c.d):''):(c.d&&same?'Revocato il '+fmtD(c.d):'Non prestato'),on?'ok':'no'))});
+  const cv=$('p_cons').value;if(cv)sm.append(row(1,'Conservazione dei dati','Fino al '+fmtD(cv),'ok'));
+}
+['change','input'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('#p_det'))try{paintPrivSum()}catch(x){}}));
 let rq=null,rr=null;
 function paintReq(){
   retHint();
-  const w=$('p_req');w.textContent='';$('p_mailF').hidden=false;$('p_sum').hidden=!editing;$('p_wa').onclick=sendWaInfo;
+  const w=$('p_req');w.textContent='';$('p_mailF').hidden=false;$('p_sum').hidden=false;paintPrivSum();$('p_wa').onclick=sendWaInfo;
   $('p_laterW').hidden=!!editing;if(editing||$('p_inf').checked)$('p_later').checked=false;if(!$('p_laterW').dataset.w){$('p_laterW').dataset.w=1;$('p_inf').addEventListener('change',()=>{if($('p_inf').checked)$('p_later').checked=false})}
   if(!editing){const pb=$('p_prep');pb.disabled=false;pb.innerHTML=ICONS.Scrivi+'Invia informativa';pb.onclick=()=>viaNew('email');return}
   const p=editing.privacy||mkPriv(),R=p.richieste||[],pend=R.find(r=>effSt(r)==='inviata'),ok=!!editing.email,given=CONS.filter(k=>p.cons[k]&&p.cons[k].v).map(k=>CLABEL[k]);
-  const sm=$('p_sum');sm.textContent='';const st=p.informativa?['Informativa fornita il '+fmtD(p.infData),'#b5ebc0']:pend?['Informativa inviata, in attesa di risposta','#f6edb8']:['Informativa da inviare','#f5cad6'];
-  const chp=h('i','chip',st[0]);chp.style.background=st[1];sm.append(chp,h('div','','Consensi: '+(given.length?given.join(', '):'nessuno')+'.'));
+
   const pb=$('p_prep');pb.disabled=!ok;if(pend&&ok)autoReq(pend);
   if(pend){const fr=AUTOREP[pend.token];pb.innerHTML=(fr?ICONS.check+'Risposta trovata: esamina':ICONS.search+'Controlla risposta in '+PV().nome);pb.onclick=()=>fr?showFound(pend,fr.best,fr.P):checkReplies(pend,pb)}else{pb.innerHTML=ICONS.Scrivi+(p.informativa?'Reinvia informativa':'Invia informativa');pb.onclick=openSend}
   $('p_mailhint').textContent=!ok?'Aggiungi e salva un’email del cliente nella scheda Dati.':(!S.azienda?'Imposta il nome azienda nelle impostazioni (ingranaggio in alto): è il titolare indicato nell’informativa.':'');
@@ -10310,7 +10324,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.25.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.26.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10621,7 +10635,8 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.22','Ricerca online della partita IVA (VIES, servizio gratuito dell’Unione Europea): compila ragione sociale e indirizzo dopo la tua conferma; contatore degli utenti online nel monitor del gestore.'],
 ['1.23','Suggerimenti per le aziende dal nome: Wikidata e OpenStreetMap e, se non trovano nulla, una ricerca Google. Scegli il risultato e compili sito, telefono, email, indirizzo e partita IVA dopo la tua conferma.'],
 ['1.24','Tasto Salva in fondo alle schede: compare solo quando il record è nuovo o modificato (clienti, lead, opportunità, prodotti, preventivi, impostazioni e editor di marketing e listini).'],
-['1.25','La scheda lead ha gli stessi campi della scheda cliente (partita IVA e PEC per le aziende, ruolo, data di nascita, sito, indirizzo, note) e li porta nel cliente alla conversione.']
+['1.25','La scheda lead ha gli stessi campi della scheda cliente (partita IVA e PEC per le aziende, ruolo, data di nascita, sito, indirizzo, note) e li porta nel cliente alla conversione.'],
+['1.26','Scheda Privacy: in alto lo stato attuale in sola lettura (informativa, consensi, conservazione) e «Dettagli e modifica manuale» sempre chiuso all’apertura.']
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
