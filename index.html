@@ -643,6 +643,8 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
     <div class="two" style="align-items:center;margin:6px 0"><div><div style="font-size:14px">Profilazione</div><div class="hint" style="margin:0">Dall’ultima interazione.</div></div><div><input id="st_r_profilazione" inputmode="numeric" autocomplete="off" aria-label="Profilazione"><div class="err" id="err-st_r_profilazione" hidden></div></div></div>
     <div class="two" style="align-items:center;margin:6px 0"><div><div style="font-size:14px">Messaggi registrati</div><div class="hint" style="margin:0">Messaggi WhatsApp registrati nell’app.</div></div><div><input id="st_r_comunicazioni" inputmode="numeric" autocomplete="off" aria-label="Messaggi registrati"><div class="err" id="err-st_r_comunicazioni" hidden></div></div></div>
   </div>
+  <div class="f"><label>Informativa privacy</label><div class="hint" id="st_infh"></div>
+    <div class="two"><button class="btn lbl" id="st_infv" type="button"><span data-i="Scrivi"></span>Leggi e modifica</button><button class="btn lbl" id="st_infs" type="button"><span data-i="clock"></span>Storico versioni</button></div></div>
   <button class="btn lbl" id="st_rev" type="button"><span data-i="shield"></span>Revisione conservazione dati</button>
 </div>
 <div class="sp" data-sp="pr" hidden>
@@ -729,7 +731,16 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <button class="btn lbl" id="mt_copy" type="button"><span data-i="copy"></span>Copia trascrizione</button>
   <button class="btn lbl" id="mt_x" type="button"><span data-i="x"></span>Chiudi</button></div></div>
 <div class="modal" id="info" hidden><div class="box info" role="dialog"><div class="itx" id="infoBody"></div>
+
   <button class="btn lbl" id="infoClose" type="button"><span data-i="x"></span>Chiudi</button></div></div>
+<div class="modal" id="mInfEd" hidden><div class="box info" role="dialog" aria-modal="true" aria-labelledby="ie_t" style="max-height:92vh;overflow:auto"><p id="ie_t">Informativa privacy</p><div class="hint" id="ie_h"></div>
+  <div class="f"><label for="ie_tx">Testo dell’informativa</label><textarea id="ie_tx" rows="16"></textarea><div class="err" id="err-ie_tx" hidden></div></div>
+  <button class="btn p lbl" id="ie_ok" type="button"><span data-i="check"></span>Salva come nuova versione</button>
+  <button class="btn lbl" id="ie_rs" type="button" hidden><span data-i="reset"></span>Ripristina il testo proposto</button>
+  <button class="btn lbl" id="ie_x" type="button"><span data-i="x"></span>Chiudi</button></div></div>
+<div class="modal" id="mInfH" hidden><div class="box info" role="dialog" aria-modal="true" aria-labelledby="ih_t" style="max-height:92vh;overflow:auto"><p id="ih_t">Storico delle informative</p><div class="hint">Ogni versione con il periodo in cui è stata in vigore e il numero di clienti a cui è stata fornita. Utile in caso di richiesta del Garante.</div><div id="ih_l"></div>
+  <button class="btn lbl" id="ih_all" type="button"><span data-i="copy"></span>Copia tutto lo storico</button>
+  <button class="btn lbl" id="ih_x" type="button"><span data-i="x"></span>Chiudi</button></div></div>
 
 <div class="sheet" id="sheet" hidden>
 <div>
