@@ -9749,10 +9749,11 @@ function paintCloud(){const e=$('st_cstat');if(!e)return;
  const _sv=saveS;saveS=function(){const r=_sv.apply(this,arguments);try{cloudPushS()}catch(e){}return r}}
 /* backup JSON */
 $('st_bkx').onclick=async()=>{try{backfillCre()}catch(e){}const o={v:1,exp:new Date().toISOString(),clienti:clients,opportunita:opps,prodotti:prods,movimenti:movs,lead:leads,impostazioni:Object.assign({},S,{brochure:undefined})};
-  if(!DRV.pw){setErr('st_bk','Imposta prima la password dei backup (Impostazioni → Backup, accessi ed esempi): il backup viene cifrato con quella.');return}setErr('st_bk','');const ok=await savePdf(new TextEncoder().encode(JSON.stringify(await encBytes(new TextEncoder().encode(JSON.stringify(o))))),'crm-backup-'+ymd()+'.json');toast(ok?'Backup salvato.':'Salvataggio non disponibile qui.')};
+  if(SB.e2e.state()!=='ready'){setErr('st_bk','I dati sono cifrati e bloccati su questo dispositivo: esci e accedi di nuovo con la tua password, poi riprova.');return}setErr('st_bk','');let env;try{env=await SB.e2e.seal(new TextEncoder().encode(JSON.stringify(o)))}catch(e){setErr('st_bk','Backup non riuscito: controlla la connessione e riprova.');return}const ok=await savePdf(new TextEncoder().encode(JSON.stringify(env)),'crm-backup-'+ymd()+'.json');toast(ok?'Backup salvato.':'Salvataggio non disponibile qui.')};
 $('st_bki').onclick=()=>$('st_bkf').click();
 $('st_bkf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;setErr('st_bk','');
-  let o;try{o=JSON.parse(await f.text());if(o&&o.enc===1){if(!DRV.pw){setErr('st_bk','Backup cifrato: imposta prima la password dei backup (Impostazioni → Backup, accessi ed esempi).');return}try{o=JSON.parse(new TextDecoder().decode(await decEnv(o)))}catch(x){setErr('st_bk','Password errata o file danneggiato.');return}}if(!o||o.v!==1||!Array.isArray(o.clienti))throw 0;
+  let o;try{o=JSON.parse(await f.text());if(o&&o.enc===2){try{o=JSON.parse(new TextDecoder().decode(await SB.e2e.open(o,()=>E2EUI.ask({bt:'Backup cifrato',bx:'Inserisci la password dell’account con cui è stato creato il backup (oppure la sua chiave di recupero).',bl:'Password o chiave di recupero'}))))}catch(x){if(!(x&&x.code==='cancel'))setErr('st_bk','Password errata o file danneggiato.');return}}
+  else if(o&&o.enc===1){const pw=await E2EUI.ask({bt:'Backup di una versione precedente',bx:'Questo file è stato cifrato con la vecchia password dei backup. Inseriscila per riaprirlo.',bl:'Vecchia password dei backup'});if(pw==null)return;DRV.pw=pw;try{o=JSON.parse(new TextDecoder().decode(await decEnv(o)))}catch(x){DRV.pw='';setErr('st_bk','Password errata o file danneggiato.');return}DRV.pw=''}if(!o||o.v!==1||!Array.isArray(o.clienti))throw 0;
     askConfirm('Importare il backup? Clienti ('+o.clienti.length+'), opportunità ('+(o.opportunita||[]).length+'), prodotti ('+(o.prodotti||[]).length+') e lead ('+(o.lead||[]).length+') vengono uniti ai dati attuali; i record con lo stesso identificativo vengono sostituiti.','clip','Importa',()=>{
       const mg=(cur,inc)=>{const m=new Map(cur.map(r=>[String(r.id),r]));(inc||[]).forEach(r=>{if(r&&r.id)m.set(String(r.id),r)});return [...m.values()]};
       clients=mg(clients,o.clienti);opps=mg(opps,o.opportunita);prods=mg(prods,o.prodotti);movs=mg(movs,o.movimenti);leads=mg(leads,o.lead);baselineMods();
@@ -10345,7 +10346,7 @@ setTimeout(()=>{try{if(applyStops())render()}catch(e){}try{runBday()}catch(e){}t
 /* ===== password dei backup (cifratura dei file esportati) ===== */
 const DKEY='crm-drive-v1';
 const DRV={pw:'',rem:false};
-try{const o=JSON.parse(localStorage.getItem(DKEY)||'{}');DRV.rem=!!o.rem;DRV.pw=localStorage.getItem(DKEY+'-pw')||''}catch(e){}
+try{localStorage.removeItem(DKEY+'-pw')}catch(e){}
 const dSave=()=>{try{localStorage.setItem(DKEY,JSON.stringify({rem:DRV.rem}))}catch(e){}};
 async function ckey(pw,salt){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
 async function encBytes(u8){if(!DRV.pw)throw {code:'nopw'};const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},await ckey(DRV.pw,salt),u8));return {enc:1,alg:'AES-256-GCM/PBKDF2',salt:b64(salt),iv:b64(iv),data:b64(ct)}}
@@ -10380,9 +10381,7 @@ $('sc_delay').onchange=()=>{LOCK.delay=+$('sc_delay').value;lkSave();toast('Impo
 $('sc_pinok').onclick=async()=>{const v=$('sc_pin2').value.trim();if(!pinOk(v)){setErr('sc_pin2','Scegli un PIN di 4–8 cifre.');return}setErr('sc_pin2','');LOCK.salt=b64(rnd(16));LOCK.pin=await pinHash(v,LOCK.salt,'p2');LOCK.kdf='p2';lkSave();$('sc_pin2').value='';toast('PIN aggiornato.')};
 $('sc_test').onclick=async()=>{try{await lkVerify();toast('Biometria riconosciuta.')}catch(e){toast('Riconoscimento non riuscito.')}};
 $('sc_dis').onclick=()=>askConfirm('Disattivare il blocco? L’app si aprirà senza biometria.','trash','Disattiva',()=>{LOCK={};lkSave();document.documentElement.classList.remove('locked');paintLock();toast('Blocco disattivato.')});
-function paintDrive(){if(!$('st_pw'))return;$('st_pwrem').checked=DRV.rem;if(document.activeElement!==$('st_pw'))$('st_pw').value=DRV.pw}
-$('st_pw').onchange=()=>{DRV.pw=$('st_pw').value;try{if(DRV.rem)localStorage.setItem(DKEY+'-pw',DRV.pw)}catch(e){}dSave()};
-$('st_pwrem').onchange=()=>{DRV.rem=$('st_pwrem').checked;try{if(DRV.rem)localStorage.setItem(DKEY+'-pw',DRV.pw);else localStorage.removeItem(DKEY+'-pw')}catch(e){}dSave()};
+function paintDrive(){}
 
 const autoReq=r=>{if(Date.now()-(LAST['r'+r.token]||0)<6e4)return;LAST['r'+r.token]=Date.now();checkReplies(r,null,true)};
 let autoBusy=false;
@@ -10428,7 +10427,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.31.1';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.32.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10443,8 +10442,8 @@ function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=
     B.append(h('h3','','La cifratura dei dati'));
     const p=(t)=>{const d=h('p','wtx');d.innerHTML=t;B.append(d)};
     p('<b>Cosa fa.</b> I tuoi clienti, lead e preventivi vengono cifrati sul tuo telefono prima di essere salvati nel cloud. Nemmeno io posso leggerli.');
-    p('<b>Cosa devi fare.</b> Scegli una passphrase di almeno 10 caratteri e salva la <b>chiave di recupero</b> fuori dal telefono: in un gestore di password o su carta.');
-    p('<b>Attenzione.</b> Se perdi sia la passphrase sia la chiave di recupero, i dati nel cloud non si possono recuperare da nessuno.');
+    p('<b>Cosa devi fare.</b> Niente: la cifratura usa la password del tuo account e si attiva da sola al primo accesso. Ti verrà mostrata una <b>chiave di recupero</b>: salvala fuori dal telefono, in un gestore di password o su carta.');
+    p('<b>Attenzione.</b> Se reimposti la password da un dispositivo nuovo senza la chiave di recupero, i dati nel cloud non si possono recuperare da nessuno.');
     if(ready){const d=h('p','wtx');d.innerHTML='<b>Stato:</b> la cifratura è attiva su questo dispositivo.';B.append(d)}
     const ok=h('button','btn p lbl');ok.type='button';ok.innerHTML=ICONS.check+'<span>Ho capito</span>';ok.onclick=()=>{S.cryptoOk=true;saveS();openWel()};B.append(ok);
     if(!ready&&can){const g=h('button','btn lbl');g.type='button';g.innerHTML=ICONS.shield+'<span>Attiva ora</span>';g.onclick=()=>{S.cryptoOk=true;saveS();closeWel();CLOUD.started=false;cloudGate()};B.append(g)}
@@ -10515,7 +10514,21 @@ const SB=(()=>{
   async unlockRecovery(rk){const b=E.bundle||await fetchBundle();if(!b)throw Object.assign(new Error('nessuna chiave'),{code:'nokey'});let raw;try{raw=await unwrap(b.rw,await kek(rkNorm(rk),unb64(b.rs),b.ri))}catch(e){throw Object.assign(new Error('chiave errata'),{code:'badkey'})}await setDK(raw,true)},
   async setPass(pass){if(!E.raw)throw lockErr();const b=E.bundle||await fetchBundle(),s=rnd(16);await putBundle(Object.assign({},b,{it:IT,s:b64(s),w:await wrap(E.raw,await kek(pass,s,IT))}))},
   async changePass(cur,nw){await rawByPass(cur);await e2e.setPass(nw)},
-  async newRecovery(cur){await rawByPass(cur);const rk=rkNew(),rs=rnd(16),b=E.bundle;await putBundle(Object.assign({},b,{ri:RIT,rs:b64(rs),rw:await wrap(E.raw,await kek(rkNorm(rk),rs,RIT))}));return rk},
+  /* a ogni accesso con password: la chiave dei dati è protetta dalla password dell'account, senza che l'utente scelga nulla */
+  async auto(pass){const st=await e2e.init();
+   if(st==='none'){const rk=await e2e.setupPrepare(pass);await e2e.setupCommit();return{rk}}
+   if(st==='ready'){try{await rawByPass(pass)}catch(e){if(e&&e.code==='badpass')await e2e.setPass(pass);else if(e&&e.code!=='nokey')throw e}return{}}
+   if(st==='locked'){try{await e2e.unlock(pass);return{}}catch(e){if(e&&e.code==='badpass')return{locked:true};throw e}}
+   return{}},
+  /* backup: i dati sono cifrati con la chiave dei dati; nel file c'è la chiave avvolta (password dell'account e chiave di recupero) */
+  async seal(u8){if(!E.dk)throw lockErr();const b=E.bundle||await fetchBundle();if(!b)throw lockErr();const iv=rnd(12),ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},E.dk,u8));return{enc:2,alg:'AES-256-GCM',b,iv:b64(iv),data:b64(ct)}},
+  async open(env,ask){const dec=k=>crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(env.iv)},k,unb64(env.data)).then(x=>new Uint8Array(x));
+   if(E.dk){try{return await dec(E.dk)}catch(e){}}
+   const sec=await ask();if(sec==null)throw Object.assign(new Error('annullato'),{code:'cancel'});const b=env.b||{};let raw=null;
+   try{raw=await unwrap(b.w,await kek(sec,unb64(b.s),b.it))}catch(e){try{raw=await unwrap(b.rw,await kek(rkNorm(sec),unb64(b.rs),b.ri))}catch(x){}}
+   if(!raw)throw Object.assign(new Error('password errata'),{code:'badpw'});
+   try{return await dec(await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']))}catch(e){throw Object.assign(new Error('file danneggiato'),{code:'badpw'})}},
+  async newRecovery(cur){if(!E.raw)await rawByPass(cur);const rk=rkNew(),rs=rnd(16),b=E.bundle;await putBundle(Object.assign({},b,{ri:RIT,rs:b64(rs),rw:await wrap(E.raw,await kek(rkNorm(rk),rs,RIT))}));return rk},
   async reset(){await js('/rest/v1/records?user_id=eq.'+uid(),{method:'DELETE',auth:1,headers:{Prefer:'return=minimal'}});try{await listDel(()=>true)}catch(e){}await putBundle(null);E.dk=null;E.raw=null;E.bundle=null;try{localStorage.removeItem(LK)}catch(e){}},
   needMig:()=>{try{return localStorage.getItem(MG)!=='1'}catch(e){return false}},
   setMig:()=>{try{localStorage.setItem(MG,'1')}catch(e){}},
@@ -10581,8 +10594,13 @@ const SB=(()=>{
   async linkUser(tok){const r=await fetch(U+'/auth/v1/user',{headers:{apikey:K,Authorization:'Bearer '+tok}});if(!r.ok)throw Object.assign(new Error('link'),{code:'otp_expired'});return (await r.json()).email||''},
   async linkPassword(tok,password){const hd={apikey:K,Authorization:'Bearer '+tok,'Content-Type':'application/json'};const r=await fetch(U+'/auth/v1/user',{method:'PUT',headers:hd,body:JSON.stringify({password})});let j=null;try{j=await r.json()}catch(e){}if(!r.ok)throw mkErr(r,j);try{await fetch(U+'/auth/v1/logout?scope=global',{method:'POST',headers:hd})}catch(e){}ses=null;save()},
   /* dopo l'accesso: se cambia utente (o primo accesso) il dispositivo riparte vuoto, poi arriva tutto dal cloud */
-  enter(){const id=uid();let prev='';try{prev=localStorage.getItem(UK)||''}catch(e){}if(prev!==id){wipe();try{localStorage.setItem(UK,id)}catch(e){}location.reload();return}
-   document.documentElement.classList.remove('noauth');CLOUD.on=true;cloudGate()},
+  enter(pw){const id=uid();let prev='';try{prev=localStorage.getItem(UK)||''}catch(e){}const fresh=prev!==id;if(fresh){wipe();try{localStorage.setItem(UK,id)}catch(e){}}
+   const fin=()=>{if(fresh){location.reload();return}document.documentElement.classList.remove('noauth');CLOUD.on=true;cloudGate()};
+   if(!pw){fin();return}
+   e2e.auto(pw).then(r=>{r=r||{};
+    if(r.locked){E2EUI.open('locked',{pw,done:fin});return}
+    if(r.rk){E2EUI.showRk(r.rk,fin);return}
+    fin()}).catch(()=>fin())},
   forget(){try{localStorage.removeItem(UK)}catch(e){}}}})();
 { let mode='in',ltok='',lmail='';const $a=id=>document.getElementById(id);
   /* anti-bot (Cloudflare Turnstile): attivo solo se qui c'e' la Site key pubblica */
@@ -10607,7 +10625,7 @@ const SB=(()=>{
    const b=$a('au_go');b.disabled=true;try{
     if(mode==='up'){if(!$a('au_ok').checked){say('Per creare l’account accetta i Termini d’uso e l’Informativa privacy.');return}const ok=await SB.signUp(e,p);if(!ok){say('Ti abbiamo inviato una email: conferma l’indirizzo dal link, poi accedi.',true);mode='in';paintAu();return}}
     else await SB.signIn(e,p);
-    lkOk();$a('au_p').value='';await SB.alog('login');SB.enter()}catch(x){if(x&&x.code==='invalid_credentials')lkFail();say(SB.msg(x))}finally{b.disabled=false;if(TS_KEY)tsReset()}};
+    lkOk();$a('au_p').value='';await SB.alog('login');SB.enter(p)}catch(x){if(x&&x.code==='invalid_credentials')lkFail();say(SB.msg(x))}finally{b.disabled=false;if(TS_KEY)tsReset()}};
   $a('au_go').onclick=go;$a('au_p').onkeydown=ev=>{if(ev.key==='Enter')go()};
   $a('au_fg').onclick=async()=>{const e=$a('au_e').value.trim().toLowerCase();if(!e){say('Scrivi qui sopra la tua email, poi tocca di nuovo.');return}if(TS_KEY&&!tsTok){say('Completa la verifica anti-bot qui sopra.');return}try{await SB.recover(e);say('Se l’indirizzo è registrato, riceverai una email per scegliere una nuova password.',true)}catch(x){say(SB.msg(x))}finally{if(TS_KEY)tsReset()}};
   paintAu();
@@ -10623,8 +10641,8 @@ const SB=(()=>{
   bl.onclick=async()=>{if(!ll.hidden){ll.hidden=true;return}ll.hidden=false;ll.textContent='Carico…';try{const r=await SB.arecent();ll.textContent='';if(!r.length)ll.textContent='Nessun accesso registrato.';const me=SB.did();r.forEach(x=>{const d=new Date(x.created_at);ll.append(h('div','',d.toLocaleString('it-IT',{dateStyle:'short',timeStyle:'short'})+' · '+(x.device||'Dispositivo')+(x.kind==='login'?' · accesso':'')+(x.device_id===me?' · questo dispositivo':'')))});ll.append(h('div','','Se vedi un accesso che non riconosci, tocca «Esci da tutti i dispositivi» e cambia la password.'))}catch(e){ll.textContent='Non disponibile senza connessione.'}};
   const bx=h('button','btn lbl');bx.type='button';bx.innerHTML=ICONS.user+' Esci da tutti i dispositivi';bx.style.marginTop='10px';
   bx.onclick=()=>askConfirm('Uscire da tutti i dispositivi, compreso questo? Ovunque dovrai accedere di nuovo. I dati restano nel tuo account.','user','Esci ovunque',async()=>{try{await Promise.all(Object.keys(CSPEC).map(k=>cloudFlush(k)))}catch(e){}cloudStop();await SB.logoutAll();SB.wipe();SB.forget();location.reload()});
-  const ce=h('div','hint');ce.id='ac_ce';ce.style.marginTop='12px';const b1=h('button','btn lbl');b1.type='button';b1.innerHTML=ICONS.shield+' Cambia passphrase';b1.style.marginTop='8px';b1.onclick=()=>E2EUI.show('c1');const b2=h('button','btn lbl');b2.type='button';b2.innerHTML=ICONS.shield+' Nuova chiave di recupero';b2.style.marginTop='8px';b2.onclick=()=>E2EUI.show('c2');const b3=h('button','btn lbl p');b3.type='button';b3.innerHTML=ICONS.shield+' Attiva la cifratura';b3.style.marginTop='8px';b3.onclick=()=>{CLOUD.started=false;cloudGate()};
-  window.paintE2=()=>{const r=SB.e2e.state()==='ready';ce.textContent=r?'Cifratura end-to-end attiva: i dati vengono cifrati su questo dispositivo prima di andare nel cloud.':'Cifratura non attiva su questo dispositivo: la sincronizzazione col cloud è in pausa finché non inserisci la passphrase.';b1.hidden=b2.hidden=!r;b3.hidden=r};
+  const ce=h('div','hint');ce.id='ac_ce';ce.style.marginTop='12px';const b1=h('button','btn lbl');b1.type='button';b1.innerHTML=ICONS.shield+' Cambia passphrase';b1.style.marginTop='8px';b1.onclick=()=>E2EUI.show('c1');b1.hidden=true;const b2=h('button','btn lbl');b2.type='button';b2.innerHTML=ICONS.shield+' Nuova chiave di recupero';b2.style.marginTop='8px';b2.onclick=()=>askConfirm('Generare una nuova chiave di recupero? Quella attuale smette di funzionare.','shield','Genera',async()=>{try{E2EUI.showRk(await SB.e2e.newRecovery(),null)}catch(e){toast(SB.msg(e)||'Operazione non riuscita.')}});const b3=h('button','btn lbl p');b3.type='button';b3.innerHTML=ICONS.shield+' Attiva la cifratura';b3.style.marginTop='8px';b3.onclick=()=>{CLOUD.started=false;cloudGate()};
+  window.paintE2=()=>{const r=SB.e2e.state()==='ready';ce.textContent=r?'Cifratura end-to-end attiva: i dati vengono cifrati su questo dispositivo con la tua password prima di andare nel cloud. Se la reimposti da un dispositivo nuovo ti serve la chiave di recupero.':'Cifratura non attiva su questo dispositivo: la sincronizzazione col cloud è in pausa. Esci e accedi di nuovo con la tua password per attivarla.';b1.hidden=true;b2.hidden=!r;b3.hidden=r};
   f1.append(h('label','','Account'),em,st,ce,b3,b1,b2,bl,ll,bx,bo,bd,nt);pg.append(f1);
   document.querySelector('#mSet .sp[data-sp=cl]').after(pg);
   SPG[0][1].push(['ac','user','Account',()=>SB.email()||'Non connesso']);SPN.ac='Account';
@@ -10659,7 +10677,7 @@ const SB=(()=>{
 
 /* ===== cifratura dei dati: schermate di attivazione e sblocco ===== */
 const E2EUI=(()=>{
- const M=$('mE2E'),B=$('e2Box');let keys=new Set(),view='',rk='';
+ const M=$('mE2E'),B=$('e2Box');let keys=new Set(),view='',rk='',ctx={},askRes=null;
  const MIN=10;
  const fld=(id,lab,type,ac)=>{const f=h('div','f'),l=h('label','',lab);l.setAttribute('for',id);const i=h('input');i.id=id;i.type=type||'password';i.autocomplete=ac||'off';i.autocapitalize='off';i.spellcheck=false;f.append(l,i);return f};
  const msg=()=>{const m=h('div','hint');m.id='e2m';m.style.cssText='min-height:20px;color:var(--danger);margin:6px 0';return m};
@@ -10669,8 +10687,21 @@ const E2EUI=(()=>{
  const busy=async(b,fn)=>{b.disabled=true;try{await fn()}catch(e){say(SB.msg(e)||'Operazione non riuscita.')}finally{b.disabled=false}};
  const okPass=(p,q)=>{if(p.length<MIN){say('La passphrase deve avere almeno '+MIN+' caratteri.');return false}if(p!==q){say('Le due passphrase non coincidono.');return false}return true};
  function frame(title,txt){B.textContent='';const t=h('h3','',title);t.style.margin='0 0 8px';B.append(t);if(txt){const p=h('p','hint',txt);p.style.margin='0 0 10px';B.append(p)}}
+ const fin2=async()=>{if(ctx.pw)await SB.e2e.setPass(ctx.pw);M.hidden=true;const d=ctx.done;ctx={};if(d)d();else{CLOUD.started=false;cloudGate()}};
+ function recKey(soft){const k=h('div','');k.id='e2k';k.textContent=rk.slice(0,19)+'\n'+rk.slice(20);k.style.cssText='white-space:pre;font:600 17px/1.6 ui-monospace,Menlo,monospace;letter-spacing:.04em;text-align:center;padding:14px 8px;border:1px dashed var(--out);border-radius:12px;word-break:break-all;user-select:all;-webkit-user-select:all';B.append(k);
+  const row=h('div','two');row.style.marginTop='6px';
+  const cp=btn('Copia','clip','',async()=>{try{await navigator.clipboard.writeText(rk);toast('Chiave copiata.')}catch(e){toast('Copia non riuscita: seleziona e copia a mano.')}}),dl=btn('Scarica','download','',()=>{try{const a=h('a');a.href=URL.createObjectURL(new Blob(['KRANG CRM - chiave di recupero\n'+SB.email()+'\n\n'+rk+'\n\nConservala in un posto sicuro: se reimposti la password da un dispositivo nuovo, serve per riaprire i dati cifrati.\n'],{type:'text/plain'}));a.download='krang-crm-chiave-recupero.txt';document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}catch(e){toast('Download non disponibile.')}});
+  row.append(cp,dl);B.append(row);
+  const go=btn('Fatto, l’ho salvata','check','p',()=>{rk='';M.hidden=true;const d=ctx.done;ctx={};if(d)d();else toast('Chiave di recupero salvata.')});
+  B.append(go,lnk('Più tardi (la trovi in Impostazioni → Account)',()=>{rk='';M.hidden=true;const d=ctx.done;ctx={};if(d)d()}))}
  function show(v){view=v;M.hidden=false;
-  if(v==='s1'){frame('Proteggi i tuoi dati','I tuoi dati vengono cifrati sul tuo dispositivo prima di andare nel cloud: nessuno, nemmeno chi gestisce l’app, può leggerli. Scegli una passphrase: ti servirà per aprire i dati su un nuovo dispositivo. Se la perdi e non hai la chiave di recupero, i dati nel cloud non si possono recuperare.');
+  if(v==='s0'){frame('Proteggi i tuoi dati','Per proteggere i tuoi dati con la cifratura serve la tua password. Esci e accedi di nuovo: la protezione si attiva da sola e non devi scegliere nient’altro. Finché non lo fai, il cloud resta in pausa.');
+   const go=btn('Esci e accedi di nuovo','user','p',async()=>{M.hidden=true;cloudStop();try{await SB.logout()}catch(e){}location.reload()});B.append(go,lnk('Più tardi',()=>{M.hidden=true}))}
+  else if(v==='r3'){frame('Chiave di recupero','I tuoi dati sono cifrati con la tua password. Se un giorno la reimposti da un dispositivo nuovo, questa chiave ti permette di riaprirli. Salvala ora in un posto sicuro (gestore password o foglio stampato): non verrà mostrata di nuovo.');recKey(true)}
+  else if(v==='b1'){frame(ctx.bt||'Backup cifrato',ctx.bx||'');B.append(fld('e2p',ctx.bl||'Password','password','current-password'),msg());
+   const fin=v=>{M.hidden=true;const r=askRes;askRes=null;if(r)r(v)};
+   const go=btn('Apri','check','p',()=>{const v=$('e2p').value;if(!v){say('Scrivi la password.');return}fin(v)});B.append(go,lnk('Annulla',()=>fin(null)));$('e2p').onkeydown=e=>{if(e.key==='Enter')go.click()}}
+  else if(v==='s1'){frame('Proteggi i tuoi dati','I tuoi dati vengono cifrati sul tuo dispositivo prima di andare nel cloud: nessuno, nemmeno chi gestisce l’app, può leggerli. Scegli una passphrase: ti servirà per aprire i dati su un nuovo dispositivo. Se la perdi e non hai la chiave di recupero, i dati nel cloud non si possono recuperare.');
    B.append(fld('e2p','Passphrase (almeno '+MIN+' caratteri)','password','new-password'),fld('e2q','Ripeti la passphrase','password','new-password'),msg());
    const go=btn('Continua','check','p',()=>busy(go,async()=>{const p=$('e2p').value;if(!okPass(p,$('e2q').value))return;say('');rk=await SB.e2e.setupPrepare(p);show('s2')}));B.append(go,lnk('Non ora',()=>{M.hidden=true;toast('Il cloud resta in pausa finché non attivi la cifratura (Impostazioni → Account).')}))}
   else if(v==='s2'||v==='r2'){frame('Chiave di recupero','Salvala in un posto sicuro (gestore password, foglio stampato). È l’unico modo per riavere i dati se dimentichi la passphrase. Non verrà mostrata di nuovo.');
@@ -10681,12 +10712,12 @@ const E2EUI=(()=>{
    const lb=h('label','chk');const ck=h('input');ck.type='checkbox';ck.id='e2ck';lb.append(ck,h('span','','Ho salvato la chiave di recupero in un posto sicuro'));lb.style.cssText='display:flex;gap:10px;align-items:flex-start;margin:12px 0 4px;font-size:14px';B.append(lb,msg());
    const go=btn(v==='s2'?'Attiva la cifratura':'Fatto','check','p',()=>busy(go,async()=>{if(!ck.checked){say('Conferma di aver salvato la chiave.');return}
     if(v==='s2'){try{await SB.e2e.setupCommit()}catch(e){if(e.code==='exists'){rk='';M.hidden=true;CLOUD.started=false;cloudGate();return}throw e}rk='';M.hidden=true;toast('Cifratura attivata: sto cifrando i tuoi dati…');CLOUD.started=false;cloudGate()}else{rk='';M.hidden=true;toast('Nuova chiave di recupero salvata.')}}));B.append(go)}
-  else if(v==='u1'){frame('Sblocca i tuoi dati','I dati di questo account sono cifrati. Inserisci la passphrase per aprirli su questo dispositivo.');
-   B.append(fld('e2p','Passphrase','password','current-password'),msg());
-   const go=btn('Sblocca','check','p',()=>busy(go,async()=>{await SB.e2e.unlock($('e2p').value);M.hidden=true;CLOUD.started=false;cloudGate()}));B.append(go,lnk('Ho la chiave di recupero',()=>show('u2')),lnk('Non ricordo né passphrase né chiave',()=>show('u3')));$('e2p').onkeydown=e=>{if(e.key==='Enter')go.click()}}
-  else if(v==='u2'){frame('Chiave di recupero','Inserisci la chiave di recupero (32 caratteri a gruppi di 4). Dopo ti farò scegliere una nuova passphrase.');
+  else if(v==='u1'){frame('Sblocca i tuoi dati','I dati di questo account sono cifrati con la password che avevi quando li hai creati. Se l’hai reimpostata, inserisci quella di prima oppure usa la chiave di recupero.');
+   B.append(fld('e2p','Password precedente','password','current-password'),msg());
+   const go=btn('Sblocca','check','p',()=>busy(go,async()=>{await SB.e2e.unlock($('e2p').value);await fin2()}));B.append(go,lnk('Ho la chiave di recupero',()=>show('u2')),lnk('Non ricordo né la password né la chiave',()=>show('u3')));$('e2p').onkeydown=e=>{if(e.key==='Enter')go.click()}}
+  else if(v==='u2'){frame('Chiave di recupero','Inserisci la chiave di recupero (32 caratteri a gruppi di 4). Dopo ti farò scegliere una nuova password.');
    B.append(fld('e2p','Chiave di recupero','text','off'),msg());
-   const go=btn('Continua','check','p',()=>busy(go,async()=>{await SB.e2e.unlockRecovery($('e2p').value);show('u4')}));B.append(go,lnk('Indietro',()=>show('u1')))}
+   const go=btn('Continua','check','p',()=>busy(go,async()=>{await SB.e2e.unlockRecovery($('e2p').value);if(ctx.pw)await fin2();else show('u4')}));B.append(go,lnk('Indietro',()=>show('u1')))}
   else if(v==='u4'){frame('Nuova passphrase','Scegli una nuova passphrase per questo account.');
    B.append(fld('e2p','Nuova passphrase (almeno '+MIN+' caratteri)','password','new-password'),fld('e2q','Ripeti la passphrase','password','new-password'),msg());
    const go=btn('Salva','check','p',()=>busy(go,async()=>{const p=$('e2p').value;if(!okPass(p,$('e2q').value))return;await SB.e2e.setPass(p);M.hidden=true;toast('Passphrase aggiornata.');CLOUD.started=false;cloudGate()}));B.append(go)}
@@ -10700,7 +10731,7 @@ const E2EUI=(()=>{
    B.append(fld('e2c','Passphrase','password','current-password'),msg());
    const go=btn('Genera','check','p',()=>busy(go,async()=>{rk=await SB.e2e.newRecovery($('e2c').value);show('r2')}));B.append(go,lnk('Annulla',()=>{M.hidden=true}))}
   setTimeout(()=>{const f=$('e2p')||$('e2c');if(f&&view!=='s2'&&view!=='r2')try{f.focus()}catch(e){}},50)}
- return{open:st=>show(st==='none'?'s1':'u1'),close:()=>{if(view==='s1'||view==='u1'||view==='u2'||view==='u3'||view==='u4')M.hidden=true},show,reset:()=>{keys=new Set()},
+ return{open:(st,c)=>{ctx=c||{};show(st==='none'?'s0':'u1')},showRk:(k,done)=>{rk=k;ctx={done};show('r3')},ask:o=>new Promise(r=>{askRes=r;ctx=o||{};show('b1')}),close:()=>{if(view==='s1'||view==='u1'||view==='u2'||view==='u3'||view==='u4')M.hidden=true},show,reset:()=>{keys=new Set()},
   done:k=>{keys.add(k);if(['cl','op','pr','mv','ld','s'].every(x=>keys.has(x))){if(CLOUD.err)return;SB.e2e.setMig();SB.e2e.cleanup().catch(()=>{});toast('I tuoi dati sono cifrati.')}}}})();
 /* ===== info e versione ===== */
 {const rd=t=>{const m=/name="app-version" content="([^"|]+)\|([^"]+)"/.exec(t);return m?{v:m[1],d:m[2]}:null},cur=rd('<meta name="app-version" content="'+(document.querySelector('meta[name=app-version]')||{content:''}).content+'">')||{v:'?',d:''};
@@ -10753,6 +10784,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.30.2','Scorrere verso destra in qualsiasi scheda (prodotto, opportunità, listino, impostazioni, ecc.) equivale alla freccia indietro, con la richiesta di salvare se ci sono modifiche.'],
 ['1.31','Assistente: la freccia per inviare il messaggio è allineata al campo di testo. In tutte le pagine tranne la Home (Clienti, Lead, Opportunità, Prodotti, Marketing, Analytics) compare, accanto al menu, la freccia indietro che riporta alla Home. Anche scorrere verso destra dalla prima sezione di Prodotti, da Marketing e da Analytics riporta alla Home.'],
 ['1.31.1','Correzioni dopo la revisione. Scorrere una riga di Clienti o Lead per mostrarne le azioni non cambia più scheda. In Marketing scorrere passa tra Segmenti e Campagne. Dopo “Cerca dati online” e Annulla la scheda non risulta più modificata, e i risultati di una ricerca non finiscono su un altro cliente. La finestra “modifiche non salvate” porta il focus sul pulsante e si chiude con Esc. Privacy: testi corretti e avviso se la scadenza di conservazione è già passata. Pulsanti dell’intestazione più grandi. In tutti i campi password e PIN (accesso, passphrase, backup, PIN di emergenza) c’è l’occhietto per mostrare o nascondere quanto scritto. A ogni accesso l’app controlla se esiste una versione più recente e ti avvisa, così puoi aggiornare con un tocco. “Rimuovi esempi” toglie anche le opportunità (e i movimenti di magazzino) che hai creato sui clienti di esempio, e il numero di lead di esempio resta quello annunciato.'],
+['1.32','Cifratura dei dati trasparente. I dati nel cloud sono cifrati in automatico con la password del tuo account: niente passphrase da scegliere. Alla creazione dell’account ti viene mostrata una chiave di recupero da conservare (puoi saltarla e generarne una nuova da Impostazioni → Account). Se reimposti la password da un dispositivo già collegato, la protezione si aggiorna da sola; da un dispositivo nuovo serve la chiave di recupero. Chi non aveva la cifratura la attiva al prossimo accesso con la password. I backup sono cifrati con la stessa password dell’account: sparisce la password dei backup dedicata. I vecchi backup si riaprono chiedendo la vecchia password.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
