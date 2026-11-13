@@ -163,13 +163,18 @@ const ICONS={chat:svg('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.5A8 8 0 1 1 2
 ICONS.info=svg('<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.6v.1"/>');
 document.querySelectorAll('[data-i]').forEach(e=>e.innerHTML=ICONS[e.dataset.i]);
 /* tasto Salva in fondo alla scheda: compare solo se il record e' nuovo o modificato */
+const SVREG=new WeakMap();
 window.saveBtn=(host,sigFn,saveFn,baseFn)=>{
   const b=document.createElement('button');b.type='button';b.className='btn p lbl svb';b.innerHTML=ICONS.check+'Salva';b.hidden=true;
   let s0;try{s0=sigFn()}catch(e){}
-  const chk=()=>{if(!b.isConnected||b.offsetParent===null&&b.hidden&&!host.offsetParent)return;try{b.hidden=sigFn()===(baseFn?baseFn():s0)}catch(e){}};
+  let seen=false,miss=0,iv=0;const box=(host.closest&&host.closest('.sheet,.modal'))||host;
+  const stop=()=>{clearInterval(iv);const s=SVREG.get(box);if(s)s.delete(chk)};
+  /* il controllo si ferma da solo quando il tasto sparisce dalla pagina (schede ricreate a ogni apertura) */
+  const chk=()=>{if(!b.isConnected){if(seen||++miss>5)stop();return}seen=true;if(document.hidden||(b.hidden&&!host.offsetParent))return;try{b.hidden=sigFn()===(baseFn?baseFn():s0)}catch(e){}};
   b.onclick=()=>saveFn();
   host.insertBefore(b,host.firstChild);
-  setInterval(chk,400);host.addEventListener('input',()=>setTimeout(chk,0));host.closest&&(host.closest('.sheet,.modal')||host).addEventListener('input',()=>setTimeout(chk,0));
+  iv=setInterval(chk,400);
+  let s=SVREG.get(box);if(!s){s=new Set();SVREG.set(box,s);box.addEventListener('input',()=>setTimeout(()=>s.forEach(f=>f()),0))}s.add(chk);
   b.rebase=()=>{try{s0=sigFn()}catch(e){}b.hidden=true};return b};
 let curTipo='persona';
 function applyTipo(t){curTipo=t;document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
@@ -9677,7 +9682,7 @@ function paintBadges(){try{
   if(lCur&&!$('lSheet').hidden){const l=lCur,m=lMsgs(l)[0],bt=k=>document.querySelector('#lTabs [data-lp='+k+']');
     setBadge(bt('priv'),l.inf?0:1,true);setBadge(bt('msg'),lUnread(l)?1:0,true);const old=$('l_bdg');if(old)old.hidden=true}
  }catch(e){}}
-setInterval(()=>{if(!document.hidden)paintBadges()},3000);setTimeout(paintBadges,300);
+setInterval(()=>{if(!document.hidden)paintBadges()},5000);setTimeout(paintBadges,300);
 
 /* ===== Cloud: database condiviso (capability db) ===== */
 const CKEY='crm-cloud-v1';
@@ -9949,9 +9954,6 @@ $('st_exDel').onclick=()=>{const n=opps.filter(o=>o.demo).length;if(!n&&!clients
    d.forEach(x=>{const c=clients.find(z=>z.id===x.id);if(!c)return;const r=h('div','row'),t=h('div','tx');r.style.cursor='default';t.style.cssText='flex:1;min-width:0';t.append(h('b','',fullName(c)),h('em','',x.st==='ok'?'Inviato':x.st==='err'?'Errore':'Da inviare'));r.append(t);
     if(x.st!=='ok'){const b=h('button','btn lbl');b.type='button';b.style.cssText='flex:none;white-space:nowrap;width:auto';b.innerHTML='<span>'+ICONS.WhatsApp+'</span> Apri';b.onclick=async()=>{const txt=fillT(cp.txt,c);const log=()=>{(c.wa=c.wa||[]).push({id:waId(),dir:'out',data:new Date().toISOString(),testo:txt,fonte:'campagna'});x.st='ok';c.agg=new Date().toISOString();persist();saveS();paintQ()};
      log();launch('https://wa.me/'+waNum(c)+'?text='+encodeURIComponent(txt),txt)};r.append(b)}L.append(r)})};paintQ()}
- function openCampInfo(cp){if(cp.canale==='wa'&&cp.dest.some(x=>x.st!=='ok'))return openQueue(cp);const w=shell('campD',cp.nome),d=cdesc(cp);w.append(h('div','hint',(cp.canale==='wa'?'WhatsApp':'Email')+' · '+fmtD(cp.data.slice(0,10))+' · segmento “'+cp.segNome+'”'));
-  const t=new Set;cp.dest.forEach(x=>{const c=clients.find(z=>z.id===x.id);if(!c)return;const r=h('div','row'),tx=h('div','tx'),rp=[...(c.em||[]),...(c.wa||[])].some(m=>m.dir==='in'&&tsOf(m.data)>tsOf(x.d||cp.data));tx.append(h('b','',fullName(c)),h('em','',({ok:'Inviato',err:'Errore di invio',att:'Da inviare',skip:'Saltato'})[x.st]+(rp?' · ha risposto':'')));r.append(tx);r.onclick=()=>openSheet(c);w.append(r)});
-  const dl=h('button','btn lbl');dl.type='button';dl.innerHTML='<span>'+ICONS.trash+'</span> Elimina campagna';dl.onclick=()=>askConfirm('Eliminare la campagna dallo storico? I messaggi già inviati restano.','trash','Elimina',()=>{S.camps=S.camps.filter(z=>z!==cp);saveS();$('campD').hidden=true;renderM()});w.append(dl)}
 function stops(){const out=[];clients.forEach(c=>{const p=c.privacy&&c.privacy.cons;if(!p||!((p.mkEmail&&p.mkEmail.v)||(p.mkTel&&p.mkTel.v)))return;let t=0;S.camps.forEach(cp=>{if(cp.dest.some(x=>x.id===c.id&&x.st==='ok')){const v=tsOf(cp.data);if(!t||v<t)t=v}});if(!t)return;const ig=c.stopOk?tsOf(c.stopOk):0;
    const hit=[...(c.em||[]).filter(m=>m.stop),...(c.wa||[]).filter(m=>/^\s*stop\b|annull\w*\s+iscrizione|disiscri|non voglio pi/i.test(m.testo||''))].filter(m=>m.dir==='in'&&tsOf(m.data)>t&&tsOf(m.data)>ig).sort((a,b)=>tsOf(b.data)-tsOf(a.data))[0];if(hit)out.push([c,hit])});return out}
  const revoke=(c,auto)=>{const pv=c.privacy=c.privacy||mkPriv(),d=ymd(),prev={};['mkEmail','mkTel'].forEach(k=>{if(pv.cons[k]&&pv.cons[k].v){prev[k]=pv.cons[k].d;pv.cons[k]={v:false,d};logP(c,CLABEL[k]+': revocato '+(auto?'automaticamente':'')+' su richiesta (STOP a una campagna)','revoca')}});c.stopOk=new Date().toISOString();if(auto)c.stopAuto={d:c.stopOk,prev};c.agg=c.stopOk;persist()};
@@ -10365,7 +10367,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.28.1';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.28.2';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10682,6 +10684,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.27.1','Il tasto Salva in fondo ora compare anche nel tab Privacy (e negli altri tab della scheda cliente) quando modifichi qualcosa. La scadenza di conservazione calcolata in automatico non mostra più la spunta verde: è solo una proposta, non un’azione già svolta.'],
 ['1.28','Cerca azienda online: se il risultato scelto ha un sito web, l’app cerca la partita IVA nelle pagine del sito (home, contatti, privacy) e la controlla con VIES prima di proporla. Se la ragione sociale ufficiale è diversa da quella scelta, ti avvisa.'],
 ['1.28.1','Cerca azienda online: quando non trova nulla, il messaggio spiega perché (le piccole aziende spesso non sono nelle fonti gratuite) e suggerisce di aggiungere la città.'],
+['1.28.2','Ottimizzazioni interne: il controllo del tasto Salva non lascia più timer attivi quando una scheda si chiude, l’aggiornamento dei badge è meno frequente (più leggero con molti clienti) ed è stato tolto del codice non usato.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
