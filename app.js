@@ -271,9 +271,9 @@ $('piva').addEventListener('input',()=>later('piva'));
   const upd=()=>{const t=curTipo==='azienda',n=($('azienda').value||'').trim();cb.hidden=!(t&&n.length>=3&&navigator.onLine!==false&&typeof SB!=='undefined'&&SB.has&&SB.has());if(cb.hidden)cx.hidden=true};
   $('azienda').addEventListener('input',upd);$('seg').addEventListener('click',()=>setTimeout(upd,0));window.addEventListener('online',upd);window.addEventListener('offline',upd);window.csUpd=upd;
   const say=(t,warn)=>{cx.hidden=false;cx.replaceChildren();const p=document.createElement('div');p.className=warn?'warn':'hint';p.textContent=t;cx.append(p)};
-  const SRC={wikidata:'Wikidata',osm:'OpenStreetMap',google:'Ricerca Google'};
+  const SRC={wikidata:'Wikidata',osm:'OpenStreetMap',google:'Ricerca Google',web:'Ricerca web'};
   const pick=(it,via)=>{
-    cx.replaceChildren();const t=document.createElement('div');t.className='hint';t.textContent=(it.src==='google'?'Dati trovati con una ricerca Google: possono essere imprecisi, da verificare. ':'Fonte: '+SRC[it.src]+'. ')+'Scegli cosa compilare:';cx.append(t);
+    cx.replaceChildren();const t=document.createElement('div');t.className='hint';t.textContent=(it.src==='google'||it.src==='web'?'Dati trovati con una ricerca sul web: possono essere imprecisi, da verificare. ':'Fonte: '+SRC[it.src]+'. ')+'Scegli cosa compilare:';cx.append(t);
     let piva=it.piva;if(piva){const m=piva.match(/^([A-Z]{2})(.+)$/);if(m&&m[1]===$('paese').value)piva=m[2]}
     const rows=[];[['azienda','Ragione sociale',it.name],['indirizzo','Indirizzo',it.address],['sito','Sito web',it.website],['telefono','Telefono',it.phone],['email','Email',it.email],['piva','Partita IVA',piva]].forEach(([f,l,x])=>{if(!x||!$(f))return;const cur=$(f).value.trim();const lab=document.createElement('label');lab.className='chk';const c=document.createElement('input');c.type='checkbox';c.checked=f==='azienda'||!cur||cur.toLowerCase()===x.toLowerCase();const sp=document.createElement('span');sp.textContent=l+': '+x+(cur&&!c.checked?' (sostituisce «'+cur+'»)':'');lab.append(c,sp);cx.append(lab);rows.push([f,x,c])});
     const go=document.createElement('button');go.type='button';go.className='btn p lbl';go.textContent='Usa i dati selezionati';
@@ -289,14 +289,14 @@ $('piva').addEventListener('input',()=>later('piva'));
       }).catch(()=>{if(st.isConnected)st.textContent='Ricerca della partita IVA dal sito non disponibile: inseriscila a mano.'})}};
   const list=(via,items)=>{
     window._csItems=items;cx.replaceChildren();cx.hidden=false;
-    const t=document.createElement('div');t.className='hint';t.textContent=via==='google'?'Nessun risultato in Wikidata e OpenStreetMap: ecco cosa risulta da una ricerca Google (da verificare).':'Trovati in Wikidata e OpenStreetMap. Tocca quello giusto:';cx.append(t);
+    const t=document.createElement('div');t.className='hint';t.textContent=via==='google'||via==='web'?'Nessun risultato in Wikidata e OpenStreetMap: ecco cosa risulta da una ricerca sul web (da verificare).':'Trovati in Wikidata e OpenStreetMap. Tocca quello giusto:';cx.append(t);
     items.forEach(it=>{const b=document.createElement('button');b.type='button';b.className='csr';const a=document.createElement('b');a.textContent=it.name;const d=document.createElement('span');d.textContent=[it.address||it.note,SRC[it.src]].filter(Boolean).join(' · ');b.append(a,d);b.onclick=()=>pick(it,via);cx.append(b)});
     const no=document.createElement('button');no.type='button';no.className='btn lbl';no.textContent='Chiudi';no.onclick=()=>{cx.hidden=true};cx.append(no)};
   cb.onclick=async()=>{
     const q=($('azienda').value||'').trim();if(q.length<3)return;
     cb.disabled=true;say('Ricerca in corso…');
     try{const r=await SB.csearch({q});
-      if(r&&r.limit){say('Ricerca Google non disponibile oggi per il limite raggiunto: compila a mano.',true);return}
+      if(r&&r.limit){say('Ricerca sul web non disponibile oggi per il limite raggiunto: compila a mano.',true);return}
       if(!r||!Array.isArray(r.items)||!r.items.length){say('Nessun risultato per «'+q+'». Prova un nome più preciso o compila a mano.');return}
       list(r.via,r.items)
     }catch(e){const st=e&&e.status;say(st===429?'Hai raggiunto il limite di ricerche di oggi: riprova domani o compila a mano.':'Ricerca non disponibile ora: compila a mano.',true);try{window.logErr&&st!==429&&window.logErr('rete','Ricerca azienda: '+(st||'errore'),'company-search')}catch(x){}}
@@ -10365,7 +10365,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.28.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.29.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10681,6 +10681,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.27','«Conserva i dati fino al» si compila da solo con la scadenza delle regole di conservazione (modificabile a mano). Nuova gestione delle richieste di anonimizzazione: registrazione con scadenza di un mese, email di conferma, anonimizzazione con avvisi su opportunità e dati contabili, promemoria e elenco nella Revisione conservazione.']
 ['1.27.1','Il tasto Salva in fondo ora compare anche nel tab Privacy (e negli altri tab della scheda cliente) quando modifichi qualcosa. La scadenza di conservazione calcolata in automatico non mostra più la spunta verde: è solo una proposta, non un’azione già svolta.'],
 ['1.28','Cerca azienda online: se il risultato scelto ha un sito web, l’app cerca la partita IVA nelle pagine del sito (home, contatti, privacy) e la controlla con VIES prima di proporla. Se la ragione sociale ufficiale è diversa da quella scelta, ti avvisa.'],
+['1.29','Cerca azienda online: se Wikidata e OpenStreetMap non trovano nulla, ora cerca sul web (anche le piccole aziende) e propone sito, indirizzo, contatti e, quando c’è, la partita IVA. I dati vanno sempre controllati.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));

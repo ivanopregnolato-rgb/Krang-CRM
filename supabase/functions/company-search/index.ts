@@ -4,7 +4,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const ORIGINS = ["https://ivanopregnolato-rgb.github.io"];
-const USER_LIM = 30, AI_USER_LIM = 15, AI_GLOBAL_LIM = 400;
+const USER_LIM = 30, AI_USER_LIM = 15, AI_GLOBAL_LIM = 400, WEB_GLOBAL_LIM = 30; // Tavily gratuito: 1000 ricerche al mese
 const MODEL = Deno.env.get("AI_MODEL") || "gemini-3.5-flash-lite";
 const UA = "KRANG-CRM/1.0 (+https://github.com/ivanopregnolato-rgb/Krang-CRM)";
 
@@ -208,6 +208,38 @@ async function viesCheck(vat: string) {
   } catch { return null; }
 }
 
+// Ricerca web con Tavily (piano gratuito mensile): sostituisce Gemini quando TAVILY_API_KEY e' impostata.
+const SKIP = /(^|\.)(facebook|instagram|linkedin|twitter|x|youtube|tiktok|wikipedia|amazon|ebay|tripadvisor|paginegialle|paginebianche|google|yelp|trustpilot|pinterest|reddit)\./i;
+async function tavily(q: string, key: string): Promise<Item[]> {
+  const r = await fetch("https://api.tavily.com/search", {
+    method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ query: `${q} azienda sito ufficiale`, search_depth: "basic", max_results: 6, include_answer: false, country: "italy" }),
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!r.ok) { console.error("tavily", r.status, (await r.text()).slice(0, 200)); throw new Error("web" + r.status); }
+  const j = await r.json();
+  const words = q.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+  const res: Item[] = [], seen = new Set<string>();
+  for (const x of Array.isArray(j?.results) ? j.results : []) {
+    let host = ""; try { host = new URL(x.url).hostname.replace(/^www\./, ""); } catch { continue; }
+    if (SKIP.test(host + ".") || seen.has(host)) continue;
+    const txt = clean(`${x.title || ""} ${x.content || ""}`, 700), tl = (txt + " " + host).toLowerCase();
+    if (words.length && !words.some((w) => tl.includes(w))) continue;
+    seen.add(host);
+    const title = clean(String(x.title || "").split(/\s[-|\u2013\u2014]\s/)[0], 120);
+    const addr = txt.match(/(?:via|viale|piazza|corso|strada|localit[a\u00e0]|loc\.|vicolo|largo)\s[^,;|]{2,50},?\s*\d{0,4}[^|;]{0,12}\b\d{5}\b[^|;.]{0,40}/i);
+    const ph = txt.match(/(?:\+39\s?)?\b0\d{1,3}[\s./-]?\d{5,8}\b|(?:\+39\s?)?\b3\d{2}[\s./-]?\d{6,7}\b/);
+    const em = txt.match(/[\w.+-]+@[\w-]+\.[\w.-]{2,}/);
+    const vat = txt.match(/(?:p\.?\s*iva|partita\s+iva)\W{0,6}(?:IT\s*)?(\d{11})/i);
+    res.push({
+      src: "web", name: title || host, address: clean(addr ? addr[0] : "", 160), website: url_(x.url), phone: tel_(ph ? ph[0] : ""),
+      email: mail_(em ? em[0] : ""), piva: vat && itVat(vat[1]) ? "IT" + vat[1] : "", note: host,
+    });
+    if (res.length >= 4) break;
+  }
+  return res;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(req) });
   if (req.method !== "POST") return out(req, { err: "method" }, 405);
@@ -238,6 +270,16 @@ Deno.serve(async (req) => {
   console.log("sources", w.status === "fulfilled" ? w.value.length : "ERR", o.status === "fulfilled" ? o.value.length : "ERR");
   if (items.length) return out(req, { items: items.slice(0, 7), via: "open" });
 
+  const tk = Deno.env.get("TAVILY_API_KEY");
+  if (tk) {
+    const t = await rpc(req, "web_take", { user_lim: 10, global_lim: WEB_GLOBAL_LIM });
+    if (t === "ok") {
+      try { return out(req, { items: await tavily(q, tk), via: "web" }); } catch (e) { console.error("web", String(e)); }
+    } else if (t === "global" || t === "user") {
+      return out(req, { items: [], via: "web", limit: true });
+    }
+    return out(req, { err: "fonti" }, 502);
+  }
   const key = Deno.env.get("GEMINI_API_KEY");
   if (key) {
     const t = await rpc(req, "ai_take", { user_lim: AI_USER_LIM, global_lim: AI_GLOBAL_LIM });
