@@ -10752,7 +10752,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.30.1','Nella scheda cliente e nella scheda lead, scorrere verso destra dal primo tab equivale alla freccia indietro: se ci sono modifiche l’app chiede se salvarle, scartarle o restare.'],
 ['1.30.2','Scorrere verso destra in qualsiasi scheda (prodotto, opportunità, listino, impostazioni, ecc.) equivale alla freccia indietro, con la richiesta di salvare se ci sono modifiche.'],
 ['1.31','Assistente: la freccia per inviare il messaggio è allineata al campo di testo. In tutte le pagine tranne la Home (Clienti, Lead, Opportunità, Prodotti, Marketing, Analytics) compare, accanto al menu, la freccia indietro che riporta alla Home. Anche scorrere verso destra dalla prima sezione di Prodotti, da Marketing e da Analytics riporta alla Home.'],
-['1.31.1','Correzioni dopo la revisione. Scorrere una riga di Clienti o Lead per mostrarne le azioni non cambia più scheda. In Marketing scorrere passa tra Segmenti e Campagne. Dopo “Cerca dati online” e Annulla la scheda non risulta più modificata, e i risultati di una ricerca non finiscono su un altro cliente. La finestra “modifiche non salvate” porta il focus sul pulsante e si chiude con Esc. Privacy: testi corretti e avviso se la scadenza di conservazione è già passata. Pulsanti dell’intestazione più grandi. In tutti i campi password e PIN (accesso, passphrase, backup, PIN di emergenza) c’è l’occhietto per mostrare o nascondere quanto scritto. “Rimuovi esempi” toglie anche le opportunità (e i movimenti di magazzino) che hai creato sui clienti di esempio, e il numero di lead di esempio resta quello annunciato.'],
+['1.31.1','Correzioni dopo la revisione. Scorrere una riga di Clienti o Lead per mostrarne le azioni non cambia più scheda. In Marketing scorrere passa tra Segmenti e Campagne. Dopo “Cerca dati online” e Annulla la scheda non risulta più modificata, e i risultati di una ricerca non finiscono su un altro cliente. La finestra “modifiche non salvate” porta il focus sul pulsante e si chiude con Esc. Privacy: testi corretti e avviso se la scadenza di conservazione è già passata. Pulsanti dell’intestazione più grandi. In tutti i campi password e PIN (accesso, passphrase, backup, PIN di emergenza) c’è l’occhietto per mostrare o nascondere quanto scritto. A ogni accesso l’app controlla se esiste una versione più recente e ti avvisa, così puoi aggiornare con un tocco. “Rimuovi esempi” toglie anche le opportunità (e i movimenti di magazzino) che hai creato sui clienti di esempio, e il numero di lead di esempio resta quello annunciato.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -11023,3 +11023,16 @@ function guideify(root){
     w.append(b)};
   const scan=r=>{try{(r.querySelectorAll?r.querySelectorAll('input[type=password]'):[]).forEach(wrap)}catch(e){}};
   scan(document);new MutationObserver(m=>{for(const x of m)for(const n of x.addedNodes)if(n.nodeType===1){if(n.matches&&n.matches('input[type=password]'))wrap(n);else scan(n)}}).observe(document.body,{childList:true,subtree:true})}
+
+/* ===== nuova versione: controllo a ogni accesso, con avviso per aggiornare ===== */
+{const rd=t=>{const m=/name="app-version" content="([^"|]+)\|([^"]+)"/.exec(t);return m?{v:m[1],d:m[2]}:null};
+  const cur=rd('<meta name="app-version" content="'+((document.querySelector('meta[name=app-version]')||{}).content||'')+'">');
+  let busy=false;
+  window.checkUpdate=async()=>{if(busy||!cur||navigator.onLine===false)return;busy=true;
+    try{const r=await fetch(location.href.split('#')[0].split('?')[0]+'?c='+Date.now(),{cache:'no-store'});if(!r.ok)return;const n=rd(await r.text());
+      if(!n||(n.v===cur.v&&n.d===cur.d))return;
+      if(!$('mE2E').hidden||!$('confirm').hidden)return;
+      askConfirm('È disponibile la versione '+n.v+' di KRANG CRM. Vuoi aggiornare ora?','reset','Aggiorna',()=>{const u=$('inU');if(u)u.onclick();else location.reload()})
+    }catch(e){}finally{busy=false}};
+  try{if(typeof SB!=='undefined'&&SB.alog){const a=SB.alog;SB.alog=function(kind){const r=a.apply(this,arguments);if(kind==='login')setTimeout(()=>window.checkUpdate(),2500);return r}}}catch(e){}
+  setTimeout(()=>{if(!document.documentElement.classList.contains('noauth'))window.checkUpdate()},4000)}
