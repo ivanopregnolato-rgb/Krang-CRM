@@ -10427,7 +10427,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.32.3';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.32.4';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10586,6 +10586,7 @@ const SB=(()=>{
   async signIn(email,password){setSes(await js('/auth/v1/token?grant_type=password',{method:'POST',json:Object.assign({email,password},sec())}))},
   async signUp(email,password){const j=await js('/auth/v1/signup',{method:'POST',json:Object.assign({email,password},sec())});if(j&&j.access_token){setSes(j);return true}return false},
   recover:email=>js('/auth/v1/recover',{method:'POST',json:Object.assign({email},sec())}),
+  resend:email=>js('/auth/v1/resend',{method:'POST',json:Object.assign({type:'signup',email},sec())}),
   async logout(){try{if(ses)await raw('/auth/v1/logout?scope=local',{method:'POST',auth:1})}catch(e){}ses=null;save()},
   async removeAccount(){try{for(const c of ['clienti','prodotti','opportunita','lead','movimenti','config']){for(let g=0;g<50;g++){const L=await js('/storage/v1/object/list/media',{method:'POST',auth:1,json:{prefix:uid()+'/'+c,limit:100,offset:0}});if(!L||!L.length)break;await js('/storage/v1/object/media',{method:'DELETE',auth:1,json:{prefixes:L.map(x=>uid()+'/'+c+'/'+x.name)}})}}}catch(e){}
    await js('/rest/v1/rpc/delete_my_account',{method:'POST',auth:1,json:{}});ses=null;save()},
@@ -10616,20 +10617,24 @@ const SB=(()=>{
   const paintAu=()=>{if(mode==='new'){$a('au_t').textContent='Nuova password';$a('au_h').textContent='Scegli una nuova password per '+lmail+'.';$a('au_gl').textContent='Salva password';$a('au_sw').textContent='Annulla';$a('au_e').hidden=true;$a('au_ck').hidden=true;$a('au_p').autocomplete='new-password';$a('au_fg').hidden=true;return}$a('au_e').hidden=false;$a('au_ck').hidden=mode!=='up';$a('au_t').textContent=mode==='in'?'Accedi':'Crea il tuo account';$a('au_h').textContent=mode==='in'?'Accedi per ritrovare i tuoi dati su ogni dispositivo.':'Con un account i tuoi dati restano al sicuro e sincronizzati tra i tuoi dispositivi.';$a('au_gl').textContent=mode==='in'?'Accedi':'Crea account';$a('au_sw').textContent=mode==='in'?'Crea un account':'Ho già un account';$a('au_p').autocomplete=mode==='in'?'current-password':'new-password';$a('au_fg').hidden=mode!=='in'};
   const say=(t,ok)=>{const m=$a('au_m');m.textContent=t||'';m.hidden=!t;m.style.color=ok?'#8ff0c4':''};
   $a('au_sw').onclick=()=>{if(mode==='new'){ltok='';mode='in';say('');paintAu();if(SB.has())document.documentElement.classList.remove('noauth');return}mode=mode==='in'?'up':'in';say('');paintAu()};
-  const go=async()=>{const e=$a('au_e').value.trim().toLowerCase(),p=$a('au_p').value;say('');
+  let rsT=0;const rsShow=on=>{$a('au_rs').hidden=!on};
+  $a('au_rs').onclick=async()=>{const e=$a('au_e').value.trim().toLowerCase(),b=$a('au_rs');if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)){say('Scrivi qui sopra la tua email.');return}
+   if(TS_KEY&&!tsTok){say('Verifica di sicurezza in corso: riprova tra un istante. Se compare una casella, toccala.');return}
+   b.disabled=true;try{await SB.resend(e);say('Email di conferma inviata di nuovo: controlla anche la posta indesiderata.',true);let n=60;const t=setInterval(()=>{b.textContent='Rinvia tra '+n+' s';if(--n<0){clearInterval(t);b.textContent='Rinvia email di conferma';b.disabled=false}},1000)}catch(x){say(SB.msg(x));b.disabled=false}finally{if(TS_KEY)tsReset()}};
+  const go=async()=>{const e=$a('au_e').value.trim().toLowerCase(),p=$a('au_p').value;say('');rsShow(false);
    if(mode==='new'){if(p.length<8){say('La password deve avere almeno 8 caratteri.');return}const b=$a('au_go');b.disabled=true;try{await SB.linkPassword(ltok,p);ltok='';$a('au_p').value='';cloudStop();mode='in';paintAu();say('Password aggiornata: ora accedi con la nuova password.',true)}catch(x){say(SB.msg(x))}finally{b.disabled=false}return}
    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)){say('Inserisci un’email valida.');return}
    if(p.length<8){say('La password deve avere almeno 8 caratteri.');return}
    {const w=lkWait();if(w>0){say('Troppi tentativi: riprova tra '+(w>60000?Math.ceil(w/60000)+' minuti':Math.ceil(w/1000)+' secondi')+'.');return}}
    if(TS_KEY&&!tsTok){say('Verifica di sicurezza in corso: riprova tra un istante. Se compare una casella, toccala.');return}
    const b=$a('au_go');b.disabled=true;try{
-    if(mode==='up'){if(!$a('au_ok').checked){say('Per creare l’account accetta i Termini d’uso e l’Informativa privacy.');return}const ok=await SB.signUp(e,p);if(!ok){say('Ti abbiamo inviato una email: conferma l’indirizzo dal link, poi accedi.',true);mode='in';paintAu();return}}
+    if(mode==='up'){if(!$a('au_ok').checked){say('Per creare l’account accetta i Termini d’uso e l’Informativa privacy.');return}const ok=await SB.signUp(e,p);if(!ok){mode='in';paintAu();say('Ti abbiamo inviato una email a '+e+': apri il link per confermare l’indirizzo, poi accedi. Controlla anche nella posta indesiderata.',true);rsShow(true);return}}
     else await SB.signIn(e,p);
-    lkOk();$a('au_p').value='';await SB.alog('login');SB.enter(p)}catch(x){if(x&&x.code==='invalid_credentials')lkFail();say(SB.msg(x))}finally{b.disabled=false;if(TS_KEY)tsReset()}};
+    lkOk();$a('au_p').value='';await SB.alog('login');SB.enter(p)}catch(x){if(x&&x.code==='invalid_credentials')lkFail();say(SB.msg(x));if(x&&x.code==='email_not_confirmed')rsShow(true)}finally{b.disabled=false;if(TS_KEY)tsReset()}};
   $a('au_go').onclick=go;$a('au_p').onkeydown=ev=>{if(ev.key==='Enter')go()};
   $a('au_fg').onclick=async()=>{const e=$a('au_e').value.trim().toLowerCase();if(!e){say('Scrivi qui sopra la tua email, poi tocca di nuovo.');return}if(TS_KEY&&!tsTok){say('Verifica di sicurezza in corso: riprova tra un istante. Se compare una casella, toccala.');return}try{await SB.recover(e);say('Se l’indirizzo è registrato, riceverai una email per scegliere una nuova password.',true)}catch(x){say(SB.msg(x))}finally{if(TS_KEY)tsReset()}};
   paintAu();
-  if(SB.link){const L=SB.link;if(L.error)say(SB.msg({code:L.code||'access_denied'}));else if(L.type==='recovery'&&L.token){document.documentElement.classList.add('noauth');SB.linkUser(L.token).then(m=>{ltok=L.token;lmail=m||'il tuo account';mode='new';paintAu()}).catch(x=>say(SB.msg(x)))}else if(L.token)say('Email confermata: ora puoi accedere.',true)}
+  if(SB.link){const L=SB.link;if(L.error)say(SB.msg({code:L.code||'access_denied'}));else if(L.type==='recovery'&&L.token){document.documentElement.classList.add('noauth');SB.linkUser(L.token).then(m=>{ltok=L.token;lmail=m||'il tuo account';mode='new';paintAu()}).catch(x=>say(SB.msg(x)))}else if(L.token)say('Indirizzo email confermato: ora puoi accedere con la tua password.',true)}
   /* pagina Account nelle impostazioni */
   const pg=h('div','sp');pg.dataset.sp='ac';pg.hidden=true;
   const f1=h('div','f');const em=h('div','hint');em.id='ac_em';const st=$('st_cstat');
@@ -10799,6 +10804,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.32.1','La verifica anti-bot dell’accesso è più discreta: compare solo se serve davvero, e non occupa più spazio nella pagina.'],
 ['1.32.2','Eliminando l’account viene tolto anche il blocco con Face ID o impronta di questo dispositivo: la volta dopo l’app si apre direttamente sulla schermata di accesso.'],
 ['1.32.3','Chiave di recupero: su iPhone il pulsante «Condividi o salva in…» apre il foglio di condivisione (gestore di password, Note, file) al posto del salvataggio automatico, che Safari non supporta. «Fatto» si sblocca solo dopo una condivisione, una copia o un download riusciti.'],
+['1.32.4','Conferma dell’indirizzo email alla registrazione: dopo aver creato l’account ricevi una email con un link e puoi accedere solo dopo averlo aperto. Se la email non arriva c’è il pulsante «Rinvia email di conferma».'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
