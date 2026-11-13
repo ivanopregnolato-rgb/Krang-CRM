@@ -10427,7 +10427,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.32.2';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.32.3';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10697,14 +10697,14 @@ const E2EUI=(()=>{
   const cp=btn('Copia','clip','',async()=>{try{await navigator.clipboard.writeText(rk);ok('Chiave copiata: incollala in un posto sicuro prima di chiudere.');toast('Chiave copiata.')}catch(e){toast('Copia non riuscita: seleziona e copia a mano, oppure scaricala.')}}),
    dl=btn('Scarica','download','',()=>{try{const a=h('a');a.href=URL.createObjectURL(new Blob(['KRANG CRM - chiave di recupero\n'+SB.email()+'\n\n'+rk+'\n\nConservala in un posto sicuro: se reimposti la password da un dispositivo nuovo, serve per riaprire i dati cifrati.\n'],{type:'text/plain'}));a.download='krang-crm-chiave-recupero.txt';document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);ok('File scaricato: conservalo fuori dal telefono.')}catch(e){toast('Download non disponibile: copia la chiave.')}});
   row.style.marginTop='10px';row.append(cp,dl);B.append(row);
-  const pm=btn('Salva nel gestore di password','shield','',async()=>{let done=false;
-   try{if(window.PasswordCredential&&navigator.credentials&&navigator.credentials.store){await navigator.credentials.store(new PasswordCredential({id:SB.email()||'krang-crm',password:rk,name:'KRANG CRM · chiave di recupero'}));done=true}}catch(e){}
-   if(!done){try{/* altri browser: un modulo nascosto che il gestore di password propone di salvare */
-    const f=h('form');f.method='post';f.action='about:blank';f.target='e2pmf';f.style.cssText='position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden';
-    let fr=document.getElementById('e2pmf');if(!fr){fr=h('iframe');fr.name=fr.id='e2pmf';fr.style.display='none';document.body.append(fr)}
-    const u=h('input');u.type='text';u.name='username';u.autocomplete='username';u.value=(SB.email()||'krang-crm')+' · chiave di recupero KRANG CRM';const p=h('input');p.type='password';p.name='password';p.autocomplete='new-password';p.value=rk;f.append(u,p,Object.assign(h('button'),{type:'submit'}));document.body.append(f);f.requestSubmit?f.requestSubmit():f.submit();setTimeout(()=>f.remove(),1500);done=true}catch(e){}}
-   if(done)ok('Se il telefono te lo propone, conferma il salvataggio. Controlla poi di averla trovata nel gestore: altrimenti copiala o scaricala.');else toast('Non disponibile qui: copia o scarica la chiave.')});
-  B.append(pm,hint,go)}
+  const cred=!!(window.PasswordCredential&&navigator.credentials&&navigator.credentials.store),sh=!!navigator.share;
+  const pm=btn(cred?'Salva nel gestore di password':'Condividi o salva in…',cred?'shield':'download','',async()=>{
+   try{if(cred){await navigator.credentials.store(new PasswordCredential({id:SB.email()||'krang-crm',password:rk,name:'KRANG CRM · chiave di recupero'}));ok('Salvata nel gestore di password. Controlla di averla trovata, altrimenti copiala o scaricala.')}
+    else{await navigator.share({title:'KRANG CRM · chiave di recupero',text:'KRANG CRM - chiave di recupero ('+(SB.email()||'')+'): '+rk});ok('Chiave condivisa: controlla di averla salvata nell’app scelta (gestore di password, Note, file).')}
+   }catch(e){if(!e||e.name!=='AbortError')toast('Non disponibile qui: copia o scarica la chiave.')}});
+  const tip=h('div','hint','Su iPhone: tocca «Condividi o salva in…» e scegli il tuo gestore di password o Note, oppure Copia e incolla la chiave in Impostazioni → Password.');tip.style.cssText='font-size:12px;margin-top:6px;text-align:center';
+  if(cred||sh)B.append(pm);if(!cred&&sh)B.append(tip);
+  B.append(hint,go)}
  function show(v){view=v;M.hidden=false;
   if(v==='s0'){frame('Proteggi i tuoi dati','Per proteggere i tuoi dati con la cifratura serve la tua password. Esci e accedi di nuovo: la protezione si attiva da sola e non devi scegliere nient’altro. Finché non lo fai, il cloud resta in pausa.');
    const go=btn('Esci e accedi di nuovo','user','p',async()=>{M.hidden=true;cloudStop();try{await SB.logout()}catch(e){}location.reload()});B.append(go,lnk('Più tardi',()=>{M.hidden=true}))}
@@ -10798,6 +10798,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.32','Cifratura dei dati trasparente. I dati nel cloud sono cifrati in automatico con la password del tuo account: niente passphrase da scegliere. Alla creazione dell’account ti viene mostrata una chiave di recupero personale, da conservare subito (copia, scarica o salva nel gestore di password); se chiudi l’app prima, ne viene generata una nuova al prossimo avvio. Puoi rigenerarla da Impostazioni → Account. Se reimposti la password da un dispositivo già collegato, la protezione si aggiorna da sola; da un dispositivo nuovo serve la chiave di recupero. Chi non aveva la cifratura la attiva al prossimo accesso con la password. I backup sono cifrati con la stessa password dell’account: sparisce la password dei backup dedicata. I vecchi backup si riaprono chiedendo la vecchia password.'],
 ['1.32.1','La verifica anti-bot dell’accesso è più discreta: compare solo se serve davvero, e non occupa più spazio nella pagina.'],
 ['1.32.2','Eliminando l’account viene tolto anche il blocco con Face ID o impronta di questo dispositivo: la volta dopo l’app si apre direttamente sulla schermata di accesso.'],
+['1.32.3','Chiave di recupero: su iPhone il pulsante «Condividi o salva in…» apre il foglio di condivisione (gestore di password, Note, file) al posto del salvataggio automatico, che Safari non supporta. «Fatto» si sblocca solo dopo una condivisione, una copia o un download riusciti.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
