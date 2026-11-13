@@ -155,11 +155,76 @@ async function rpc(req: Request, fn: string, args: Record<string, unknown>) {
   } catch { return "user"; }
 }
 
+// --- Partita IVA dal sito dell'azienda: legge home e pagine legali, estrae l'11 cifre e la verifica con VIES ---
+const okHost = (h: string) => !!h && h.includes(".") && !/^(localhost|.*\.(local|internal|localhost))$/i.test(h) && !/^[\d.]+$/.test(h) && !h.includes(":") && !h.startsWith("[");
+const itVat = (v: string) => { // controllo formale della partita IVA italiana (11 cifre, cifra di controllo)
+  if (!/^\d{11}$/.test(v) || /^0{7}/.test(v)) return false;
+  let s = 0; for (let i = 0; i < 10; i++) { let d = +v[i]; if (i % 2) { d *= 2; if (d > 9) d -= 9; } s += d; }
+  return (10 - (s % 10)) % 10 === +v[10];
+};
+const page = async (u: string) => {
+  const r = await fetch(u, { headers: { "User-Agent": UA, Accept: "text/html" }, signal: AbortSignal.timeout(6000), redirect: "follow" });
+  if (!r.ok || !okHost(new URL(r.url).hostname)) return "";
+  if (!/html|text/i.test(r.headers.get("content-type") || "")) return "";
+  const buf = new Uint8Array(await r.arrayBuffer()).slice(0, 600000);
+  return new TextDecoder("utf-8", { fatal: false }).decode(buf);
+};
+const vatsIn = (html: string) => {
+  const t = html.replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/g, " ").replace(/\s+/g, " ");
+  const n: Record<string, number> = {};
+  const re = /(?:p\.?\s*iva|partita\s+iva|vat(?:\s*(?:n\.?|no\.?|number|id))?|c\.?\s*f\.?\s*(?:\/|e|-)\s*p\.?\s*iva)\W{0,8}(?:IT\s*)?((?:\d[ .]?){11})(?!\d)/gi;
+  for (const m of t.matchAll(re)) { const v = m[1].replace(/\D/g, ""); if (itVat(v)) n[v] = (n[v] || 0) + 1; }
+  for (const m of t.matchAll(/\bIT\s?(\d{11})(?!\d)/g)) if (itVat(m[1])) n[m[1]] = (n[m[1]] || 0) + 1;
+  return n;
+};
+async function fromSite(site: string) {
+  const base = new URL(site), found: Record<string, number> = {}, seen = new Set<string>();
+  const add = (n: Record<string, number>) => { for (const k in n) found[k] = (found[k] || 0) + n[k]; };
+  let home = "";
+  try { home = await page(base.origin + "/"); } catch { /* sito non raggiungibile */ }
+  seen.add(base.origin + "/"); add(vatsIn(home));
+  const links: string[] = [];
+  for (const m of home.matchAll(/href\s*=\s*["']([^"'#]+)["']/gi)) {
+    try {
+      const u = new URL(m[1], base.origin + "/");
+      if (u.origin === base.origin && /contatt|privacy|legal|note-|chi-siamo|azienda|about|cookie|imprint|credits|dati-societ/i.test(u.pathname) && !seen.has(u.href)) { seen.add(u.href); links.push(u.href); }
+    } catch { /* link non valido */ }
+  }
+  if (!Object.keys(found).length) for (const p of ["/contatti", "/privacy-policy", "/privacy", "/note-legali", "/chi-siamo"]) { const u = base.origin + p; if (!seen.has(u)) { seen.add(u); links.push(u); } }
+  for (const u of links.slice(0, 4)) {
+    if (Object.keys(found).length && links.indexOf(u) >= 2) break;
+    try { add(vatsIn(await page(u))); } catch { /* pagina non raggiungibile */ }
+  }
+  const best = Object.entries(found).sort((a, b) => b[1] - a[1])[0];
+  return best ? best[0] : "";
+}
+async function viesCheck(vat: string) {
+  try {
+    const v = await fetch(`https://ec.europa.eu/taxation_customs/vies/rest-api/ms/IT/vat/${vat}`, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(10000) });
+    if (!v.ok) return null;
+    const j = await v.json();
+    const f = (x: unknown) => { const s = clean(x, 240); return s === "---" ? "" : s; };
+    return { valid: j?.isValid === true, name: f(j?.name), address: f(j?.address) };
+  } catch { return null; }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(req) });
   if (req.method !== "POST") return out(req, { err: "method" }, 405);
   let b: any;
   try { b = await req.json(); } catch { return out(req, { err: "bad" }, 400); }
+  if (b?.site) {
+    const site = url_(b.site);
+    if (!site || !okHost(new URL(site).hostname)) return out(req, { err: "bad" }, 400);
+    if ((await rpc(req, "vies_take", { user_lim: 40 })) !== "ok") return out(req, { err: "user" }, 429);
+    let vat = "";
+    try { vat = await fromSite(site); } catch (e) { console.error("site", String(e)); }
+    if (!vat) return out(req, { piva: "" });
+    const vi = await viesCheck(vat);
+    // se VIES dice che il numero non esiste, non lo proponiamo; se VIES non risponde lo proponiamo come non verificato
+    if (vi && !vi.valid) return out(req, { piva: "" });
+    return out(req, { piva: "IT" + vat, verified: !!vi, name: vi?.name || "", address: vi?.address || "" });
+  }
   const q = clean(b?.q, 100);
   if (q.length < 3) return out(req, { err: "bad" }, 400);
 

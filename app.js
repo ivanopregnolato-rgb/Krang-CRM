@@ -279,7 +279,14 @@ $('piva').addEventListener('input',()=>later('piva'));
     const go=document.createElement('button');go.type='button';go.className='btn p lbl';go.textContent='Usa i dati selezionati';
     go.onclick=()=>{let n=0;rows.forEach(([f,x,c])=>{if(c.checked){$(f).value=x;$(f).dispatchEvent(new Event('input',{bubbles:true}));n++}});cx.hidden=true;if(n)toast('Dati compilati: controllali prima di salvare.')};
     const back=document.createElement('button');back.type='button';back.className='btn lbl';back.textContent='Indietro';back.onclick=()=>list(via,window._csItems);
-    const bar=document.createElement('div');bar.className='vrow';bar.append(go,back);cx.append(bar)};
+    const bar=document.createElement('div');bar.className='vrow';bar.append(go,back);cx.append(bar);
+    if(!piva&&it.website&&$('piva')&&it.src!=='google'){const st=document.createElement('div');st.className='hint';st.textContent='Cerco la partita IVA nel sito dell’azienda…';cx.insertBefore(st,bar);
+      SB.csearch({site:it.website}).then(r=>{if(!st.isConnected)return;if(!r||!r.piva){st.textContent='Partita IVA non trovata nel sito: puoi inserirla a mano.';return}
+        let x=r.piva;const m=x.match(/^([A-Z]{2})(.+)$/);if(m&&m[1]===$('paese').value)x=m[2];const cur=$('piva').value.trim();
+        const lab=document.createElement('label');lab.className='chk';const c=document.createElement('input');c.type='checkbox';c.checked=!cur||cur===x;const sp=document.createElement('span');
+        sp.textContent='Partita IVA: '+x+(r.verified?' (trovata nel sito e confermata da VIES)':' (trovata nel sito, VIES non ha risposto: da verificare)')+(cur&&!c.checked?' (sostituisce «'+cur+'»)':'');lab.append(c,sp);cx.insertBefore(lab,st);rows.push(['piva',x,c]);
+        const nm=(it.name||'').trim().toLowerCase().replace(/[^a-z0-9àèéìòù ]/g,'');st.textContent=r.name&&nm&&!r.name.toLowerCase().includes(nm.split(' ')[0])?'Attenzione: per VIES questa partita IVA è intestata a «'+r.name+'». Controlla che sia l’azienda giusta.':'';st.className=st.textContent?'warn':'hint'
+      }).catch(()=>{if(st.isConnected)st.textContent='Ricerca della partita IVA dal sito non disponibile: inseriscila a mano.'})}};
   const list=(via,items)=>{
     window._csItems=items;cx.replaceChildren();cx.hidden=false;
     const t=document.createElement('div');t.className='hint';t.textContent=via==='google'?'Nessun risultato in Wikidata e OpenStreetMap: ecco cosa risulta da una ricerca Google (da verificare).':'Trovati in Wikidata e OpenStreetMap. Tocca quello giusto:';cx.append(t);
@@ -10358,7 +10365,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.27.1';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.28.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10673,6 +10680,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.26','Scheda Privacy: in alto lo stato attuale in sola lettura (informativa, consensi, conservazione) e «Dettagli e modifica manuale» sempre chiuso all’apertura.'],
 ['1.27','«Conserva i dati fino al» si compila da solo con la scadenza delle regole di conservazione (modificabile a mano). Nuova gestione delle richieste di anonimizzazione: registrazione con scadenza di un mese, email di conferma, anonimizzazione con avvisi su opportunità e dati contabili, promemoria e elenco nella Revisione conservazione.']
 ['1.27.1','Il tasto Salva in fondo ora compare anche nel tab Privacy (e negli altri tab della scheda cliente) quando modifichi qualcosa. La scadenza di conservazione calcolata in automatico non mostra più la spunta verde: è solo una proposta, non un’azione già svolta.'],
+['1.28','Cerca azienda online: se il risultato scelto ha un sito web, l’app cerca la partita IVA nelle pagine del sito (home, contatti, privacy) e la controlla con VIES prima di proporla. Se la ragione sociale ufficiale è diversa da quella scelta, ti avvisa.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
