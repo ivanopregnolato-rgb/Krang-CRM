@@ -297,7 +297,7 @@ $('piva').addEventListener('input',()=>later('piva'));
     cb.disabled=true;say('Ricerca in corso…');
     try{const r=await SB.csearch({q});
       if(r&&r.limit){say('Ricerca Google non disponibile oggi per il limite raggiunto: compila a mano.',true);return}
-      if(!r||!Array.isArray(r.items)||!r.items.length){say('Nessun risultato per «'+q+'». Prova un nome più preciso o compila a mano.');return}
+      if(!r||!Array.isArray(r.items)||!r.items.length){say('Nessun risultato per «'+q+'». Le fonti gratuite (Wikidata e OpenStreetMap) conoscono soprattutto le aziende più grandi o già mappate: le piccole attività spesso non ci sono. Prova con un nome più preciso (aggiungi la città) oppure compila a mano.');return}
       list(r.via,r.items)
     }catch(e){const st=e&&e.status;say(st===429?'Hai raggiunto il limite di ricerche di oggi: riprova domani o compila a mano.':'Ricerca non disponibile ora: compila a mano.',true);try{window.logErr&&st!==429&&window.logErr('rete','Ricerca azienda: '+(st||'errore'),'company-search')}catch(x){}}
     finally{cb.disabled=false}}}
@@ -10365,7 +10365,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.28.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.28.1';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10681,6 +10681,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.27','«Conserva i dati fino al» si compila da solo con la scadenza delle regole di conservazione (modificabile a mano). Nuova gestione delle richieste di anonimizzazione: registrazione con scadenza di un mese, email di conferma, anonimizzazione con avvisi su opportunità e dati contabili, promemoria e elenco nella Revisione conservazione.']
 ['1.27.1','Il tasto Salva in fondo ora compare anche nel tab Privacy (e negli altri tab della scheda cliente) quando modifichi qualcosa. La scadenza di conservazione calcolata in automatico non mostra più la spunta verde: è solo una proposta, non un’azione già svolta.'],
 ['1.28','Cerca azienda online: se il risultato scelto ha un sito web, l’app cerca la partita IVA nelle pagine del sito (home, contatti, privacy) e la controlla con VIES prima di proporla. Se la ragione sociale ufficiale è diversa da quella scelta, ti avvisa.'],
+['1.28.1','Cerca azienda online: quando non trova nulla, il messaggio spiega perché (le piccole aziende spesso non sono nelle fonti gratuite) e suggerisce di aggiungere la città.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
