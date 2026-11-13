@@ -9817,7 +9817,7 @@ $('st_bkf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f
  const TIT=['Cena aziendale','Riserva per ristorante','Fornitura mensile','Offerta per hotel','Aperitivi estate','Regali clienti','Riordino cantina','Evento privato','Selezione matrimoni','Brindisi di fine anno','Fornitura stagionale','Regalistica Natale','Gara hotel','Carta vini nuova','Contratto annuale','Evento aziendale','Degustazione guidata','Menù di primavera'];
  const LS=['web','email','manuale','web'];
  /* quantità scelta con lo slider (numero di clienti): lead e opportunità seguono in proporzione */
- const sizeNow=()=>{const e=$('st_exSize'),c=Math.max(10,Math.min(1500,parseInt(e&&e.value,10)||100)),t=Math.round(c*1.5+30),o=Math.round(t*.22);return{c,l:Math.max(10,Math.round(c*.3)),k:t-o,o,t:c.toLocaleString('it-IT')+' clienti, '+Math.max(10,Math.round(c*.3)).toLocaleString('it-IT')+' lead e '+t.toLocaleString('it-IT')+' opportunità'}};
+ const sizeNow=()=>{const e=$('st_exSize'),c=Math.max(100,Math.min(1500,parseInt(e&&e.value,10)||100)),t=Math.round(c*1.5+30),o=Math.round(t*.22);return{c,l:Math.max(10,Math.round(c*.3)),k:t-o,o,t:c.toLocaleString('it-IT')+' clienti, '+Math.max(10,Math.round(c*.3)).toLocaleString('it-IT')+' lead e '+t.toLocaleString('it-IT')+' opportunità'}};
  const upH=()=>{const v=$('st_exV');if(v)v.textContent=sizeNow().t;const e=$('st_exH');if(e)e.textContent='Opportunità vinte, perse e aperte distribuite negli ultimi 14 mesi, più un catalogo di '+CAT.length+' prodotti con magazzino e '+LST.length+' listini. Le email sono tutte su yopmail.com e non ci sono numeri di telefono. “Rimuovi esempi” toglie solo quanto è stato aggiunto da qui.'};
  {const e=$('st_exSize');if(e)e.addEventListener('input',upH);upH()}
  $('st_exAdd').onclick=()=>{if(opps.some(o=>o.demo)||clients.some(c=>c.demo)){toast('Gli esempi sono già presenti: rimuovili prima di aggiungerli di nuovo.');return}
@@ -10739,7 +10739,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.28.1','Cerca azienda online: quando non trova nulla, il messaggio spiega perché (le piccole aziende spesso non sono nelle fonti gratuite) e suggerisce di aggiungere la città.'],
 ['1.28.2','Ottimizzazioni interne: il controllo del tasto Salva non lascia più timer attivi quando una scheda si chiude, l’aggiornamento dei badge è meno frequente (più leggero con molti clienti) ed è stato tolto del codice non usato.'],
 ['1.29','Dati di esempio molto più ricchi: tre dimensioni (piccolo, medio e stress test fino a 1.000 clienti e 1.500 opportunità), catalogo di 38 prodotti con magazzino e giacenze, 6 listini per nazione con sconti a scaglioni, lead e messaggi. Le email sono tutte su yopmail.com e non ci sono numeri di telefono.'],
-['1.29.1','Dati di esempio: la quantità si sceglie con uno slider (da 10 a 1.500 clienti); lead e opportunità seguono in proporzione.'],
+['1.29.1','Dati di esempio: la quantità si sceglie con uno slider (da 100 a 1.500 clienti, a blocchi di 100); lead e opportunità seguono in proporzione.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
