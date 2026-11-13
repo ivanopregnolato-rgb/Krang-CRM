@@ -10394,6 +10394,12 @@ async function autoSync(){if(autoBusy||document.hidden)return;autoBusy=true;
   }catch(e){}finally{autoBusy=false}}
 setTimeout(autoSync,2500);setInterval(autoSync,24e4);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(autoSync,800)});
 const _setTab=setTab;setTab=function(v){_setTab(v);paintBadges();if(v==='lead'&&Date.now()-(LAST.scan||0)>12e4)leadScan()};
+/* in tutte le pagine tranne la Home, al posto del menu c'è la freccia indietro che riporta alla Home */
+{const hb=$('homeBk'),mb=$('menuBtn'),paintBk=()=>{const home=tab==='home'&&!($('anSh')&&!$('anSh').hidden);hb.hidden=home;mb.hidden=!home};
+ hb.onclick=()=>setTab('home');
+ const _s3=setTab;setTab=function(v){const r=_s3.apply(this,arguments);paintBk();return r};
+ const _oa=window.openAn;if(_oa)window.openAn=function(){const r=_oa.apply(this,arguments);paintBk();return r};
+ paintBk()}
 render();renderO();renderP();setTab('home');
 /* ===== guida di benvenuto: primi passi ===== */
 const wState=()=>{let enc=false;try{enc=SB.e2e.state()==='ready'}catch(e){}return[
@@ -10420,7 +10426,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.30.2';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.31.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10743,6 +10749,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.30','Scorri con il dito a destra o a sinistra per passare da un tab all’altro: tra Home, Clienti, Lead e Opportunità, tra le sezioni della scheda cliente e della scheda lead (Dati, Privacy, ecc.) e tra le sezioni dei Prodotti. Non scatta sui campi di testo, sulle liste che scorrono in orizzontale o quando c’è una finestra aperta.'],
 ['1.30.1','Nella scheda cliente e nella scheda lead, scorrere verso destra dal primo tab equivale alla freccia indietro: se ci sono modifiche l’app chiede se salvarle, scartarle o restare.'],
 ['1.30.2','Scorrere verso destra in qualsiasi scheda (prodotto, opportunità, listino, impostazioni, ecc.) equivale alla freccia indietro, con la richiesta di salvare se ci sono modifiche.'],
+['1.31','In tutte le pagine tranne la Home (Clienti, Lead, Opportunità, Prodotti, Marketing, Analytics) compare la freccia indietro al posto del menu e riporta alla Home. Anche scorrere verso destra dalla prima sezione di Prodotti, da Marketing e da Analytics riporta alla Home.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -10986,10 +10993,12 @@ function guideify(root){
  document.addEventListener('touchend',e=>{const s=st;st=null;if(!s||!e.changedTouches.length)return;const t=e.changedTouches[0],dx=t.clientX-s.x,dy=t.clientY-s.y;
    if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.8||Date.now()-s.t>700)return;
    try{if(String(getSelection()).length)return}catch(x){}
-   if(s.bar instanceof Element){if(dx>0){const bk=(s.bar.querySelector('.top [data-i=back]')||{closest:()=>null}).closest('button')||s.bar.querySelector('.top button');if(bk&&vis(bk))bk.click()}return}
+   if(s.bar instanceof Element){if(dx>0){const bk=(s.bar.querySelector('.top [data-i=back]')||{closest:()=>null}).closest('button')||s.bar.querySelector('.top button');if(bk&&vis(bk))bk.click();else if(!$('homeBk').hidden)$('homeBk').click()}return}
    const l=btns(s.bar),i=cur(l),n=i+(dx<0?1:-1);
    /* sul primo tab di una scheda, scorrere verso il precedente equivale alla freccia indietro (con la richiesta di salvare se ci sono modifiche) */
    if(dx>0&&(s.bar==='#cTabs'||s.bar==='#lTabs')&&i<=0){const bk=$(s.bar==='#cTabs'?'close':'lClose');if(bk&&vis(bk))bk.click();return}
+   /* Prodotti (prima sezione) e Marketing non hanno un tab precedente: lo scorrimento verso destra riporta alla Home */
+   if(dx>0&&(s.bar==='#pSeg'||s.bar==='#tabs')&&i<=0&&!$('homeBk').hidden){$('homeBk').click();return}
    if(i<0||n<0||n>=l.length)return;
    l[n].click();
    const v=s.bar==='#tabs'?['homeView','list','leadView','oppView'].map($).find(vis):s.bar==='#pSeg'?$('prodView'):null;
