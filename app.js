@@ -10420,7 +10420,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.29.1';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.30.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10740,6 +10740,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.28.2','Ottimizzazioni interne: il controllo del tasto Salva non lascia più timer attivi quando una scheda si chiude, l’aggiornamento dei badge è meno frequente (più leggero con molti clienti) ed è stato tolto del codice non usato.'],
 ['1.29','Dati di esempio molto più ricchi: tre dimensioni (piccolo, medio e stress test fino a 1.000 clienti e 1.500 opportunità), catalogo di 38 prodotti con magazzino e giacenze, 6 listini per nazione con sconti a scaglioni, lead e messaggi. Le email sono tutte su yopmail.com e non ci sono numeri di telefono.'],
 ['1.29.1','Dati di esempio: la quantità si sceglie con uno slider (da 100 a 1.500 clienti, a blocchi di 100); lead e opportunità seguono in proporzione.'],
+['1.30','Scorri con il dito a destra o a sinistra per passare da un tab all’altro: tra Home, Clienti, Lead e Opportunità, tra le sezioni della scheda cliente e della scheda lead (Dati, Privacy, ecc.) e tra le sezioni dei Prodotti. Non scatta sui campi di testo, sulle liste che scorrono in orizzontale o quando c’è una finestra aperta.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -10965,3 +10966,25 @@ function guideify(root){
     hh.replaceWith(tip)})}
 /* email al cliente: listino e brochure (file o link) sempre disponibili, come nelle risposte ai lead */
 {const _oc=openCompose;openCompose=function(c){const r=_oc.apply(this,arguments);try{if(!$('mCompose').hidden&&c&&c.id&&!cmpQ&&!cmpLeadRef)cmpExtras(c)}catch(e){}return r}}
+/* ===== scorrimento orizzontale (swipe) tra i tab: pagine principali, scheda cliente, scheda lead, sezioni prodotti ===== */
+{const vis=el=>!!el&&!el.hidden&&el.getClientRects().length>0;
+ const btns=sel=>{const bar=document.querySelector(sel);return bar?[...bar.querySelectorAll('button')].filter(b=>!b.hidden&&!b.disabled&&vis(b)):[]};
+ const cur=l=>l.findIndex(b=>b.classList.contains('on'));
+ const noSw=t=>{for(let e=t;e&&e!==document.body;e=e.parentElement){if(e.matches&&e.matches('input,textarea,select,[contenteditable="true"],canvas,.nosw'))return true;const o=getComputedStyle(e).overflowX;if((o==='auto'||o==='scroll')&&e.scrollWidth>e.clientWidth+2)return true}return false};
+ const open=()=>[...document.querySelectorAll('.sheet,.modal')].some(vis)||vis($('appMenu'));
+ const where=t=>{ /* quale gruppo di tab governa il punto toccato */
+   for(const [id,bar] of [['sheet','#cTabs'],['lSheet','#lTabs']]){const s=$(id);if(vis(s)&&s.contains(t))return bar}
+   if(open())return null;
+   if(tab==='prod'&&vis($('prodView'))&&$('prodView').contains(t))return '#pSeg';
+   return '#tabs'};
+ let st=null;
+ document.addEventListener('touchstart',e=>{st=null;if(e.touches.length!==1)return;const t=e.touches[0];if(t.clientX<24||t.clientX>innerWidth-24)return;if(noSw(e.target))return;const w=where(e.target);if(!w)return;st={x:t.clientX,y:t.clientY,t:Date.now(),bar:w}},{passive:true});
+ document.addEventListener('touchcancel',()=>{st=null},{passive:true});
+ document.addEventListener('touchend',e=>{const s=st;st=null;if(!s||!e.changedTouches.length)return;const t=e.changedTouches[0],dx=t.clientX-s.x,dy=t.clientY-s.y;
+   if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.8||Date.now()-s.t>700)return;
+   try{if(String(getSelection()).length)return}catch(x){}
+   const l=btns(s.bar),i=cur(l),n=i+(dx<0?1:-1);if(i<0||n<0||n>=l.length)return;
+   l[n].click();
+   const v=s.bar==='#tabs'?['homeView','list','leadView','oppView'].map($).find(vis):s.bar==='#pSeg'?$('prodView'):null;
+   if(v&&!matchMedia('(prefers-reduced-motion:reduce)').matches){v.classList.remove('swl','swr');void v.offsetWidth;v.classList.add(dx<0?'swl':'swr');setTimeout(()=>v.classList.remove('swl','swr'),260)}
+ },{passive:true})}
