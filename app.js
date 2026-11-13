@@ -10752,7 +10752,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.30.1','Nella scheda cliente e nella scheda lead, scorrere verso destra dal primo tab equivale alla freccia indietro: se ci sono modifiche l’app chiede se salvarle, scartarle o restare.'],
 ['1.30.2','Scorrere verso destra in qualsiasi scheda (prodotto, opportunità, listino, impostazioni, ecc.) equivale alla freccia indietro, con la richiesta di salvare se ci sono modifiche.'],
 ['1.31','Assistente: la freccia per inviare il messaggio è allineata al campo di testo. In tutte le pagine tranne la Home (Clienti, Lead, Opportunità, Prodotti, Marketing, Analytics) compare, accanto al menu, la freccia indietro che riporta alla Home. Anche scorrere verso destra dalla prima sezione di Prodotti, da Marketing e da Analytics riporta alla Home.'],
-['1.31.1','Correzioni dopo la revisione. Scorrere una riga di Clienti o Lead per mostrarne le azioni non cambia più scheda. In Marketing scorrere passa tra Segmenti e Campagne. Dopo “Cerca dati online” e Annulla la scheda non risulta più modificata, e i risultati di una ricerca non finiscono su un altro cliente. La finestra “modifiche non salvate” porta il focus sul pulsante e si chiude con Esc. Privacy: testi corretti e avviso se la scadenza di conservazione è già passata. Pulsanti dell’intestazione più grandi. “Rimuovi esempi” toglie anche le opportunità (e i movimenti di magazzino) che hai creato sui clienti di esempio, e il numero di lead di esempio resta quello annunciato.'],
+['1.31.1','Correzioni dopo la revisione. Scorrere una riga di Clienti o Lead per mostrarne le azioni non cambia più scheda. In Marketing scorrere passa tra Segmenti e Campagne. Dopo “Cerca dati online” e Annulla la scheda non risulta più modificata, e i risultati di una ricerca non finiscono su un altro cliente. La finestra “modifiche non salvate” porta il focus sul pulsante e si chiude con Esc. Privacy: testi corretti e avviso se la scadenza di conservazione è già passata. Pulsanti dell’intestazione più grandi. In tutti i campi password e PIN (accesso, passphrase, backup, PIN di emergenza) c’è l’occhietto per mostrare o nascondere quanto scritto. “Rimuovi esempi” toglie anche le opportunità (e i movimenti di magazzino) che hai creato sui clienti di esempio, e il numero di lead di esempio resta quello annunciato.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -11008,3 +11008,18 @@ function guideify(root){
    const v=s.bar==='#tabs'?['homeView','list','leadView','oppView'].map($).find(vis):s.bar==='#pSeg'?$('prodView'):s.bar==='#mSeg'?$('mktView'):null;
    if(v&&!matchMedia('(prefers-reduced-motion:reduce)').matches){v.classList.remove('swl','swr');void v.offsetWidth;v.classList.add(dx<0?'swl':'swr');setTimeout(()=>v.classList.remove('swl','swr'),260)}
  },{passive:true})}
+
+/* ===== occhietto: mostra/nascondi in tutti i campi password (esistenti e creati dopo) ===== */
+{const EYE='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  OFF='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.6 10.6 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.5 6.6C3.7 8.4 2 12 2 12s3.6 7 10 7c1.7 0 3.2-.4 4.5-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+  const st=document.createElement('style');st.textContent='.pwv{position:relative;display:block;flex:none}.pwv>input{padding-right:48px!important}.pwe{position:absolute;right:2px;width:44px;display:grid;place-items:center;background:none;border:0;padding:0;color:var(--muted);cursor:pointer;border-radius:12px;-webkit-tap-highlight-color:transparent}.pwe:focus-visible{outline:2px solid var(--ink);outline-offset:-4px}';document.head.append(st);
+  const wrap=i=>{if(i.dataset.pwv||i.type!=='password'||!i.parentNode)return;i.dataset.pwv='1';
+    const w=document.createElement('span');w.className='pwv';i.parentNode.insertBefore(w,i);w.append(i);
+    const cs=getComputedStyle(i),b=document.createElement('button');b.type='button';b.className='pwe';b.style.top=cs.marginTop;b.style.bottom=cs.marginBottom;
+    const set=on=>{b.innerHTML=on?OFF:EYE;b.setAttribute('aria-label',on?'Nascondi':'Mostra');b.title=on?'Nascondi':'Mostra';b.setAttribute('aria-pressed',String(on))};set(false);
+    b.onpointerdown=e=>e.preventDefault();
+    b.onclick=()=>{const show=i.type==='password';i.type=show?'text':'password';set(show);try{i.focus({preventScroll:true})}catch(e){}};
+    document.addEventListener('visibilitychange',()=>{if(document.hidden&&i.type==='text'){i.type='password';set(false)}});
+    w.append(b)};
+  const scan=r=>{try{(r.querySelectorAll?r.querySelectorAll('input[type=password]'):[]).forEach(wrap)}catch(e){}};
+  scan(document);new MutationObserver(m=>{for(const x of m)for(const n of x.addedNodes)if(n.nodeType===1){if(n.matches&&n.matches('input[type=password]'))wrap(n);else scan(n)}}).observe(document.body,{childList:true,subtree:true})}
