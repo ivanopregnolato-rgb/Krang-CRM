@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.23.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.23.0|2026-11-12"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.24.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.24.0|2026-11-12"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -150,7 +150,7 @@ h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em}
 .acts a:nth-child(2){background:var(--lilac)}
 .acts a:nth-child(3){background:#b5ebc0}
 .acts a svg{width:26px;height:26px;stroke-width:2}
-.delw{margin:28px 0 8px;display:flex;flex-direction:column;gap:8px}.delw .btn[hidden]{display:none}.top{position:sticky;top:-12px;z-index:5;background:var(--bg);margin:-12px -16px 8px!important;padding:12px 16px 8px}
+.svb{width:100%}.delw{margin:28px 0 8px;display:flex;flex-direction:column;gap:8px}.delw .btn[hidden]{display:none}.top{position:sticky;top:-12px;z-index:5;background:var(--bg);margin:-12px -16px 8px!important;padding:12px 16px 8px}
 .tbar #favBtn{width:44px;height:44px;background:none!important;border:0;box-shadow:none;padding:0}.tbar #favBtn svg{width:30px;height:30px}
 .acts #favBtn{width:48px;height:58px;background:none!important;border:0;box-shadow:none;padding:0;margin:0}.acts #favBtn svg{width:34px;height:34px}
 
@@ -707,6 +707,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
     
   </div>
 </div>
+  <div class="delw" id="stSv"></div>
   <div hidden><button id="st_ok" type="button"></button><button id="st_x" type="button"></button></div></div></div>
 <div class="modal" id="mConv" hidden><div class="box info" role="dialog"><p>Converti in prospect</p><div class="hint" style="margin:0 0 10px">Scegli come registrare l’anagrafica. Potrai cambiarlo dopo dalla scheda.</div>
   <div class="two"><button class="btn lbl" id="cv_p" type="button"><span data-i="user"></span>Persona fisica</button><button class="btn lbl" id="cv_a" type="button"><span data-i="building"></span>Azienda</button></div>
@@ -844,7 +845,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="gmail.js?v=1.23.0"></script>
-<script src="app.js?v=1.23.0"></script>
+<script src="gmail.js?v=1.24.0"></script>
+<script src="app.js?v=1.24.0"></script>
 </body>
 </html>
