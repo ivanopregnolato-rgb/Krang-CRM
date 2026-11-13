@@ -9,7 +9,7 @@ const KB=[
  a:'KRANG CRM non si scarica dall’App Store: si aggiunge alla schermata Home da Safari e funziona a schermo intero.',
  s:['Apri l’indirizzo dell’app con Safari.','Tocca il tasto Condividi.','Scegli «Aggiungi alla schermata Home» e conferma.','Apri KRANG CRM dall’icona appena creata.']},
 {t:'Primi passi',i:['02-primi-passi'],k:'primi passi iniziare cominciare benvenuto checklist guida iniziale scheda home bussola nascondere riaprire',
- a:'I Primi passi sono quattro: cifratura dei dati, accesso con biometria, profilo dell’azienda e primo cliente. La scheda sta in Home; se l’hai nascosta la riapri dal menu, voce Aiuto → Primi passi.',
+ a:'I Primi passi sono cinque: cifratura dei dati, accesso con biometria, profilo dell’azienda, primo cliente e assistente. La scheda sta in Home; se l’hai nascosta la riapri dal menu, voce Aiuto → Primi passi.',
  go:['Apri Primi passi','help']},
 {t:'Provare l’app con dati di esempio',k:'esempi esempio prova provare demo dati finti fittizi aggiungere rimuovere togliere',
  a:'Puoi aggiungere 16 clienti, 10 lead e 56 opportunità di prova (email fittizie) e toglierli quando vuoi, senza toccare i tuoi dati veri.',
