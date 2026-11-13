@@ -9370,7 +9370,7 @@ function openLead(l){
   lCur=l||null;const d=l||{};
   $('l_privT').textContent='quelli scartati dopo '+S.lead.scartati+' giorni, i nuovi dopo '+S.lead.nuovi+' '+(S.lead.nuovi===1?'mese':'mesi')+'.';
   setErr('l_email','');setLTipo(d.tipo||(d.azienda?'azienda':'persona'));setLTab('dati');$('lTabs').hidden=!l;paintLP();
-  $('l_nome').value=d.nome||'';$('l_cognome').value=d.cognome||'';$('l_email').value=d.email||'';$('l_tel').value=d.telefono||'';$('l_paese').value=d.paese||(S.wa&&S.wa.paese)||'IT';if(window.paintLPaese)paintLPaese();$('l_az').value=d.azienda||'';$('l_rich').value=d.richiesta||'';$('l_paste').value='';$('l_exth').textContent='';
+  $('l_nome').value=d.nome||'';$('l_cognome').value=d.cognome||'';$('l_email').value=d.email||'';$('l_tel').value=d.telefono||'';$('l_paese').value=d.paese||(S.wa&&S.wa.paese)||'IT';if(window.paintLPaese)paintLPaese();$('l_az').value=d.azienda||'';$('l_rich').value=d.richiesta||'';$('l_ruolo').value=d.ruolo||'';$('l_nascita').value=d.nascita||'';$('l_piva').value=d.piva||'';$('l_pec').value=d.pec||'';$('l_sito').value=d.sito||'';$('l_ind').value=d.indirizzo||'';$('l_note').value=d.note||'';['l_pec','l_piva','l_nascita'].forEach(f=>setErr(f,''));$('l_paste').value='';$('l_exth').textContent='';
   $('lTitle').textContent=l?lName(l):'Nuovo lead';
   $('l_pasteBox').hidden=!!l;$('l_open').hidden=!(l&&l.threadId);$('l_act').style.gridTemplateColumns=l&&l.threadId?'':'repeat(2,minmax(0,1fr))';$('l_sync').hidden=!(l&&l.email);setLCm('all');$('l_chkh').textContent='';paintLM();paintLActs(l);if(l&&l.email&&Date.now()-(LAST['l'+l.id]||0)>18e4)leadSync(l);
   const done=l&&l.stato!=='nuovo',src=$('l_src');src.hidden=!l;
@@ -9385,11 +9385,19 @@ $('lTabs').onclick=e=>{const b=e.target.closest('button');if(b){setLTab(b.datase
 function paintLP(){const w=$('l_pst');w.textContent='';const l=lCur;if(!l)return;const ok=!!l.inf,c=h('i','chip',ok?'Informativa fornita il '+fmtD(l.inf.d)+' · '+l.inf.via:'Informativa da inviare');c.style.background=ok?'#b5ebc0':'#f5cad6';w.append(c);
   $('l_pinfE').lastChild.textContent=ok?'Reinvia via email':'Via email';$('l_pinfW').lastChild.textContent=ok?'Reinvia via WhatsApp':'Via WhatsApp'}
 $('l_pinfE').onclick=()=>{setLTab('msg');$('l_reply').onclick()};$('l_pinfW').onclick=()=>{setLTab('msg');$('l_wa').onclick()};
-function setLTipo(t){lTipo=t;{const two=document.querySelector('#lSheet .lp[data-lp=dati] .two'),az=$('l_azF');if(t==='azienda')two.before(az);else two.after(az)}document.querySelectorAll('#l_seg button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));const L=(id,x)=>{const e=document.querySelector('label[for='+id+']');if(e)e.textContent=x};if(t==='azienda'){L('l_az','Ragione sociale');L('l_nome','Nome referente');L('l_cognome','Cognome referente')}else{L('l_az','Azienda');L('l_nome','Nome');L('l_cognome','Cognome')}}
+function setLTipo(t){lTipo=t;{const two=document.querySelector('#lSheet .lp[data-lp=dati] .two'),az=$('l_azF'),pf=$('l_pivaF'),pc=$('l_pecF');if(t==='azienda'){pf.hidden=false;pc.hidden=false;two.before(az,pf,pc)}else{pf.hidden=true;pc.hidden=true;two.after(az,pf,pc)}}document.querySelectorAll('#l_seg button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));const L=(id,x)=>{const e=document.querySelector('label[for='+id+']');if(e)e.textContent=x};if(t==='azienda'){L('l_az','Ragione sociale');L('l_nome','Nome referente');L('l_cognome','Cognome referente');L('l_ruolo','Ruolo del referente')}else{L('l_az','Azienda');L('l_nome','Nome');L('l_cognome','Cognome');L('l_ruolo','Ruolo')}}
 $('l_seg').onclick=e=>{const b=e.target.closest('button');if(b)setLTipo(b.dataset.t)};
 function lTel(){let n=$('l_tel').value.replace(/[\s.()\/-]/g,''),pa=$('l_paese').value||'IT';if(n.startsWith('00'))n='+'+n.slice(2);if(n.startsWith('+')){const hit=splitPfx(n);if(hit){pa=hit.iso;n=hit.rest}}else n=n.replace(/\D/g,'');return{telefono:n,paese:pa}}
-function lRead(){return{tipo:lTipo,nome:$('l_nome').value.trim(),cognome:$('l_cognome').value.trim(),email:$('l_email').value.trim().toLowerCase(),...lTel(),azienda:$('l_az').value.trim(),richiesta:$('l_rich').value.trim()}}
-function lCheck(d){let ok=true;setErr('l_email','');if(d.tipo==='azienda'&&!d.azienda){toast('Indica la ragione sociale dell’azienda.');$('l_az').focus();return false}
+function lRead(){return{tipo:lTipo,nome:$('l_nome').value.trim(),cognome:$('l_cognome').value.trim(),email:$('l_email').value.trim().toLowerCase(),...lTel(),azienda:$('l_az').value.trim(),richiesta:$('l_rich').value.trim(),ruolo:$('l_ruolo').value.trim(),nascita:$('l_nascita').value,piva:$('l_piva').value.trim(),pec:$('l_pec').value.trim(),sito:$('l_sito').value.trim(),indirizzo:$('l_ind').value.trim(),note:$('l_note').value.trim()}}
+function lCheck(d){let ok=true;setErr('l_email','');['l_pec','l_piva','l_nascita'].forEach(f=>setErr(f,''));
+  if(d.tipo!=='azienda'){d.piva='';d.pec=''}
+  if(d.pec){d.pec=d.pec.toLowerCase();if(!/^[^\s@.][^\s@]*@[^\s@.]+(\.[^\s@.]+)*\.[a-z]{2,}$/.test(d.pec)){setErr('l_pec','Inserisci una PEC valida, ad esempio nome@pec.azienda.it.');ok=false}}
+  if(d.piva){let v=d.piva.replace(/[\s.-]/g,'').toUpperCase();const it=(d.paese||'IT')==='IT';if(it&&v.startsWith('IT'))v=v.slice(2);let okv=it?/^\d{11}$/.test(v):/^[A-Z0-9]{4,15}$/.test(v);
+    if(okv&&it){let s=0;for(let i=0;i<10;i++){let n=+v[i];if(i%2){n*=2;if(n>9)n-=9}s+=n}okv=(10-s%10)%10===+v[10]}
+    if(!okv){setErr('l_piva',it?'Partita IVA non valida: servono 11 cifre corrette.':'Partita IVA non valida.');ok=false}
+    else{d.piva=v;$('l_piva').value=v;const clash=clients.find(c=>(c.piva||'').toUpperCase()===v);if(clash){setErr('l_piva','Partita IVA già registrata per '+fullName(clash)+'.');ok=false}}}
+  if(d.nascita){const t=new Date(d.nascita+'T00:00');if(isNaN(t)||t.getFullYear()<1900){setErr('l_nascita','Inserisci una data valida.');ok=false}else if(d.nascita>ymd()){setErr('l_nascita','La data di nascita non può essere nel futuro.');ok=false}}
+if(d.tipo==='azienda'&&!d.azienda){toast('Indica la ragione sociale dell’azienda.');$('l_az').focus();return false}
   if(!d.email||!mailRe.test(d.email)){setErr('l_email','Inserisci un’email valida.');ok=false}
   else if(knownEmail(d.email)){setErr('l_email','Questa email è già in anagrafica clienti.');ok=false}
   else if(leads.some(x=>x!==lCur&&x.email===d.email&&x.stato!=='scartato')){setErr('l_email','Esiste già un lead con questa email.');ok=false}
@@ -9509,7 +9517,7 @@ $('cv_p').onclick=()=>{$('mConv').hidden=true;setLTipo('persona');doConv()};
 $('cv_a').onclick=()=>{const d=lRead();if(!d.azienda){$('mConv').hidden=true;setLTipo('azienda');toast('Indica la ragione sociale dell’azienda, poi converti.');$('l_az').focus();return}$('mConv').hidden=true;setLTipo('azienda');doConv()};
 function doConv(){const d=lRead();if(!lCheck(d))return;const l=lCur||(()=>{const n=Date.now();const x=stampNew({id:'l'+n.toString(36),fonte:'manuale',oggetto:'',data:n,creato:n,stato:'nuovo',...d});leads.push(x);return x})();Object.assign(l,d);
   const digits=(d.telefono||'').replace(/\D/g,''),dupTel=digits&&clients.some(c=>(c.telefono||'').replace(/\D/g,'')===digits);
-  const c={id:Date.now().toString(36)+'c',tipo:d.tipo,nome:d.nome,cognome:d.cognome,azienda:d.azienda,ruolo:'',nascita:'',piva:'',paese:d.paese||'IT',telefono:dupTel?'':d.telefono,email:d.email,sito:'',indirizzo:'',note:d.richiesta?'Richiesta iniziale ('+fmtD(ymd(new Date(l.data)))+'): '+d.richiesta:'',foto:'',wa:[],agg:ymd(),privacy:mkPriv({fonteDati:'interessato',base:'contratto'}),lead:{id:l.id,fonte:l.fonte,data:l.data,richiesta:d.richiesta}};
+  const c={id:Date.now().toString(36)+'c',tipo:d.tipo,nome:d.nome,cognome:d.cognome,azienda:d.azienda,ruolo:d.ruolo||'',nascita:d.nascita||'',piva:d.piva||'',pec:d.pec||'',paese:d.paese||'IT',telefono:dupTel?'':d.telefono,email:d.email,sito:d.sito||'',indirizzo:d.indirizzo||'',note:[d.note,d.richiesta?'Richiesta iniziale ('+fmtD(ymd(new Date(l.data)))+'): '+d.richiesta:''].filter(Boolean).join('\n\n'),foto:'',wa:[],agg:ymd(),privacy:mkPriv({fonteDati:'interessato',base:'contratto'}),lead:{id:l.id,fonte:l.fonte,data:l.data,richiesta:d.richiesta}};
   const inf=l.inf||pendInf[(d.email||'').toLowerCase()]||pendInf[(d.telefono||'').replace(/\D/g,'')];if(l.wa&&l.wa.length&&!dupTel)c.wa=l.wa.slice();if(inf){c.privacy.informativa=true;c.privacy.infData=inf.d;c.privacy.infModo=inf.via||'Email';c.privacy.infVer='1.0';}
   stampNew(c);clients.push(c);if(inf)logP(c,'Informativa inviata via '+(inf.via==='WhatsApp'?'WhatsApp':'email')+' in risposta al lead',inf.via==='WhatsApp'?'invioWa':'invio');logP(c,'Anagrafica creata (fonte: lead da '+({web:'form web',email:'email',manuale:'inserimento manuale'}[l.fonte]||'lead')+')','creazione');
   l.stato='convertito';l.clienteId=c.id;l.convertito=Date.now();persist();persistL();$('lSheet').hidden=true;renderL();setTab('clienti');render();openSheet(c);toast('Lead convertito in prospect.'+(dupTel?' Telefono non copiato: già presente in un altro cliente.':''))};
@@ -10302,7 +10310,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.24.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.25.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10612,7 +10620,8 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.21','Registro degli errori applicativi per il gestore (solo testo tecnico ripulito, mai dati dei clienti); Privacy e Termini dentro Info; note di rilascio.'],
 ['1.22','Ricerca online della partita IVA (VIES, servizio gratuito dell’Unione Europea): compila ragione sociale e indirizzo dopo la tua conferma; contatore degli utenti online nel monitor del gestore.'],
 ['1.23','Suggerimenti per le aziende dal nome: Wikidata e OpenStreetMap e, se non trovano nulla, una ricerca Google. Scegli il risultato e compili sito, telefono, email, indirizzo e partita IVA dopo la tua conferma.'],
-['1.24','Tasto Salva in fondo alle schede: compare solo quando il record è nuovo o modificato (clienti, lead, opportunità, prodotti, preventivi, impostazioni e editor di marketing e listini).']
+['1.24','Tasto Salva in fondo alle schede: compare solo quando il record è nuovo o modificato (clienti, lead, opportunità, prodotti, preventivi, impostazioni e editor di marketing e listini).'],
+['1.25','La scheda lead ha gli stessi campi della scheda cliente (partita IVA e PEC per le aziende, ruolo, data di nascita, sito, indirizzo, note) e li porta nel cliente alla conversione.']
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
