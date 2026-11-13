@@ -40,7 +40,7 @@ header{display:contents}
 h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em}
 .sub{display:inline-block;margin-top:2px;padding:1px 12px;border-radius:999px;background:var(--butter);color:#2d2b55;font-size:13px;font-weight:600}
 .hrow{display:flex;justify-content:space-between;align-items:center}
-.hrow .ico{width:38px;height:38px;border-radius:11px}
+.hrow .ico{width:44px;height:44px;border-radius:12px}
 .hrow .ico svg{width:22px;height:22px}
 
 /* campi */
@@ -356,7 +356,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 
 /* privacy, email, registro */
 .logi{font-size:13px;color:var(--muted);padding:5px 0;border-bottom:1px solid var(--line)}
-.psum{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px}.ps-h{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}.ps-r{display:flex;gap:10px;align-items:flex-start;padding:7px 0}.ps-r+.ps-r{border-top:1px solid var(--line)}.ps-i{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:700;background:var(--line);color:var(--muted)}.ps-i.ok{background:#b5ebc0;color:#1d5a30}.ps-i.wait{background:#f6edb8;color:#6b5a10}.ps-t b{display:block;font-weight:600;font-size:15px}.ps-t span{display:block;font-size:13px;color:var(--muted)}
+.psum{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px}.ps-h{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}.ps-r{display:flex;gap:10px;align-items:flex-start;padding:7px 0}.ps-r+.ps-r{border-top:1px solid var(--line)}.ps-i{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:700;background:var(--line);color:var(--muted)}.ps-i.ok{background:#b5ebc0;color:#1d5a30}.ps-i.wait{background:#f6edb8;color:#6b5a10}.ps-i.warn{background:#fbd5cf;color:#8a2a1c}.ps-t b{display:block;font-weight:600;font-size:15px}.ps-t span{display:block;font-size:13px;color:var(--muted)}
 .req{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px}
 .req div{font-size:13px;color:var(--muted)}
 .req b{display:block;font-weight:600;margin-bottom:2px}
@@ -386,7 +386,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 
 #cTabs button{overflow:visible;flex-direction:column;gap:2px;height:auto;min-height:52px;padding:6px 2px;font-size:10.5px;line-height:1.1;position:relative}
 #cTabs .cnt,#tabs .cnt,#lTabs .cnt{position:absolute;top:2px;right:50%;margin-right:-26px;font-size:10px;line-height:15px;min-width:15px;padding:0 4px}
-#tabs button,#lTabs button{position:relative}
+#tabs button,#lTabs button{position:relative;min-height:44px}
 .cnt.al{background:var(--danger);color:#fff}
 .rs{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.rchip{font-style:normal;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--butter);color:#5a4a00;white-space:nowrap}.rchip.al{background:var(--danger);color:#fff}
 .tp-sum{font-size:13px;color:var(--muted);margin:2px 0 10px}
@@ -492,7 +492,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
     <div id="oList"></div><div class="kan" id="kan" hidden></div>
   </div>
 </div>
-<div class="modal" id="mDirty" hidden><div class="box" role="alertdialog" aria-labelledby="dirtyT"><p id="dirtyT">Ci sono modifiche non salvate.</p><button class="btn p lbl" id="dY" type="button"><span data-i="check"></span>Salva</button><button class="btn d lbl" id="dN" type="button"><span data-i="x"></span>Non salvare</button><button class="btn lbl" id="dC" type="button"><span data-i="edit"></span>Continua a modificare</button></div></div>
+<div class="modal" id="mDirty" hidden><div class="box" role="alertdialog" aria-modal="true" aria-labelledby="dirtyT"><p id="dirtyT">Ci sono modifiche non salvate.</p><button class="btn p lbl" id="dY" type="button"><span data-i="check"></span>Salva</button><button class="btn d lbl" id="dN" type="button"><span data-i="x"></span>Non salvare</button><button class="btn lbl" id="dC" type="button"><span data-i="edit"></span>Continua a modificare</button></div></div>
 <input type="file" id="cardFile" accept="image/*" hidden>
 <div class="sheet" id="cardRev" hidden style="z-index:6"><div>
 <div class="top"><h2>Biglietto da visita</h2><button class="btn ico pk" id="crX" type="button" aria-label="Chiudi" title="Chiudi"><span data-i="back"></span></button></div>
@@ -747,7 +747,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 <div class="sheet" id="sheet" hidden>
 <div>
   <div class="top"><h2 id="sheetTitle">Nuovo cliente</h2><button class="btn ico pk" id="close" aria-label="Chiudi" title="Chiudi"><span data-i="back"></span></button></div>
-  <div class="tabs" id="cTabs"><button type="button" class="on" data-p="dati" title="Dati" aria-label="Dati"><span data-i="user"></span>Dati</button><button type="button" data-p="opp" title="Opportunità" aria-label="Opportunità"><span data-i="target"></span>Opportunità<span class="cnt" id="cCnt"></span></button><button type="button" data-p="priv" title="Privacy" aria-label="Privacy"><span data-i="shield"></span>Privacy</button><button type="button" data-p="comm" title="Contatti" aria-label="Contatti"><span data-i="Scrivi"></span>Contatti</button><button type="button" data-p="tr" title="Transazioni" aria-label="Transazioni"><span data-i="bag"></span>Acquisti</button><button type="button" data-p="tp" title="Storia" aria-label="Storia"><span data-i="route"></span>Storia</button></div>
+  <div class="tabs" id="cTabs"><button type="button" class="on" data-p="dati" title="Dati" aria-label="Dati"><span data-i="user"></span>Dati</button><button type="button" data-p="opp" title="Opportunità" aria-label="Opportunità"><span data-i="target"></span>Opportunità<span class="cnt" id="cCnt"></span></button><button type="button" data-p="priv" title="Privacy" aria-label="Privacy"><span data-i="shield"></span>Privacy</button><button type="button" data-p="comm" title="Contatti" aria-label="Contatti"><span data-i="Scrivi"></span>Contatti</button><button type="button" data-p="tr" title="Acquisti" aria-label="Acquisti"><span data-i="bag"></span>Acquisti</button><button type="button" data-p="tp" title="Storia" aria-label="Storia"><span data-i="route"></span>Storia</button></div>
   <div class="msg" id="msg" hidden></div>
   <div class="seg" id="seg" role="group" aria-label="Tipo di anagrafica"><button type="button" class="on" data-t="persona"><span data-i="user"></span>Persona</button><button type="button" data-t="azienda"><span data-i="building"></span>Azienda</button></div>
   <div id="favHold" hidden><button class="ico" id="favBtn" type="button" aria-label="Preferito" title="Preferito"><span data-i="star"></span></button></div>

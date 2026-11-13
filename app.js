@@ -109,7 +109,7 @@ function swipeRow(b,c,o){o=o||{};
   function close(){set(0,true);off=0;if(swOpen===close)swOpen=null}
   b.addEventListener('pointerdown',e=>{if(!Lw&&!Rw)return;down=true;drag=false;moved=false;x0=e.clientX;y0=e.clientY;off=cur;if(swOpen&&swOpen!==close)swOpen()});
   b.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-x0,dy=e.clientY-y0;
-    if(!drag){if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.5){drag=true;moved=true;try{b.setPointerCapture(e.pointerId)}catch(_){}}else return}
+    if(!drag){if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.5){drag=true;moved=true;window.__swDrag=Date.now();try{b.setPointerCapture(e.pointerId)}catch(_){}}else return}
     set(Math.max(-Rw,Math.min(Lw,off+dx)),false)});
   const end=()=>{if(!down)return;down=false;if(!drag)return;drag=false;
     const v=cur>Lw/2?Lw:cur<-Rw/2?-Rw:0;set(v,true);off=v;swOpen=v?close:null;setTimeout(()=>{moved=false},350)};
@@ -121,7 +121,7 @@ function openSheet(c,data){
   newRef=null;editing=c||null;try{paintCre('sheet',c,'cl')}catch(e){}const d=data||c||{};
   FIELDS.forEach(f=>$(f).value=d[f]||'');setErr('nascita','');ageHint();
   if(!$('paese').value)$('paese').value='IT';
-  curFav=!!d.fav;paintFav();curFoto=d.foto||'';paintPhoto();applyTipo(d.tipo||'persona');try{['csBox','viesBox'].forEach(i=>{const e=$(i);if(e)e.hidden=true});window.csUpd&&csUpd();window.viesUpd&&viesUpd()}catch(e){}renderLinked();loadPriv(d.privacy);setPane('dati');document.querySelectorAll('#cTabs [data-p=opp],#cTabs [data-p=comm],#cTabs [data-p=tp],#cTabs [data-p=tr]').forEach(b=>{b.hidden=!editing});tpSel=null;tpOff=new Set();mapQ='';updMap();$('p_copy').hidden=!editing;setErr('telefono','');setErr('email','');setErr('piva','');
+  curFav=!!d.fav;paintFav();curFoto=d.foto||'';paintPhoto();applyTipo(d.tipo||'persona');try{['csBox','viesBox'].forEach(i=>{const e=$(i);if(e)e.hidden=true});window.csReset&&csReset();window.viesReset&&viesReset();window.csUpd&&csUpd();window.viesUpd&&viesUpd()}catch(e){}renderLinked();loadPriv(d.privacy);setPane('dati');document.querySelectorAll('#cTabs [data-p=opp],#cTabs [data-p=comm],#cTabs [data-p=tp],#cTabs [data-p=tr]').forEach(b=>{b.hidden=!editing});tpSel=null;tpOff=new Set();mapQ='';updMap();$('p_copy').hidden=!editing;setErr('telefono','');setErr('email','');setErr('piva','');
   $('sheetTitle').textContent=c?fullName(c):'Nuovo cliente';if(c)$('sheetTitle').append(stChip(c));
   $('del').hidden=!c;
   const a=$('acts');a.textContent='';a.hidden=!c;
@@ -248,14 +248,14 @@ $('piva').addEventListener('input',()=>later('piva'));
   const pf=$('pivaF');pf.append(btn,box);
   const upd=()=>{const t=curTipo==='azienda',v=($('piva').value||'').replace(/[\s.-]/g,'').toUpperCase();btn.hidden=!(t&&v.length>=4&&navigator.onLine!==false&&typeof SB!=='undefined'&&SB.has&&SB.has());if(btn.hidden)box.hidden=true};
   $('piva').addEventListener('input',upd);$('paese').addEventListener('change',upd);$('seg').addEventListener('click',()=>setTimeout(upd,0));window.addEventListener('online',upd);window.addEventListener('offline',upd);
-  window.viesUpd=upd;
+  window.viesUpd=upd;let vseq=0;window.viesReset=()=>{vseq++;box.hidden=true;box.replaceChildren();btn.disabled=false};
   const say=(t,warn)=>{box.hidden=false;box.replaceChildren();const p=document.createElement('div');p.className=warn?'warn':'hint';p.textContent=t;box.append(p);return box};
   btn.onclick=async()=>{
     const d={tipo:'azienda',paese:$('paese').value,piva:$('piva').value.trim()};
     if(!validate(d,'piva',false)){say('Controlla prima la partita IVA.',true);return}
     let v=d.piva.replace(/[\s.-]/g,'').toUpperCase();if(d.paese==='IT'&&v.startsWith('IT'))v=v.slice(2);
-    btn.disabled=true;say('Ricerca in corso…');
-    try{const r=await SB.vies({paese:d.paese,piva:v});
+    const my=++vseq;btn.disabled=true;say('Ricerca in corso…');
+    try{const r=await SB.vies({paese:d.paese,piva:v});if(my!==vseq)return;
       if(!r||r.valid!==true){say('Questa partita IVA non risulta registrata in VIES. Controlla le cifre.',true);return}
       const nm=r.name?tc(r.name):'',ad=r.address?viesAddr(r.address,d.paese):'';
       if(!nm&&!ad){say('Partita IVA valida. Questo paese non fornisce nome e indirizzo: compilali a mano.');return}
@@ -266,15 +266,15 @@ $('piva').addEventListener('input',()=>later('piva'));
       go.onclick=()=>{let n=0;rows.forEach(([f,x,cb])=>{if(cb.checked){$(f).value=x;$(f).dispatchEvent(new Event('input',{bubbles:true}));n++}});box.hidden=true;if(n)toast('Dati compilati da VIES: controllali prima di salvare.')};
       const no=document.createElement('button');no.type='button';no.className='btn lbl';no.textContent='Annulla';no.onclick=()=>{box.hidden=true};
       const bar=document.createElement('div');bar.className='vrow';bar.append(go,no);box.append(bar)
-    }catch(e){const st=e&&e.status;say(st===429?'Hai raggiunto il limite di ricerche di oggi: riprova domani o compila a mano.':'Ricerca non disponibile ora: compila a mano.',true);try{window.logErr&&st!==429&&window.logErr('rete','Ricerca VIES: '+(st||'errore'),'vies-lookup')}catch(x){}}
-    finally{btn.disabled=false}}}
+    }catch(e){if(my!==vseq)return;const st=e&&e.status;say(st===429?'Hai raggiunto il limite di ricerche di oggi: riprova domani o compila a mano.':'Ricerca non disponibile ora: compila a mano.',true);try{window.logErr&&st!==429&&window.logErr('rete','Ricerca VIES: '+(st||'errore'),'vies-lookup')}catch(x){}}
+    finally{if(my===vseq)btn.disabled=false}}}
 
 /* suggerimenti azienda dal nome (Wikidata, OpenStreetMap; se vuote, ricerca Google): l'utente sceglie e conferma */
 {const cb=document.createElement('button');cb.type='button';cb.id='csBtn';cb.className='btn lbl';cb.innerHTML=ICONS.search+'Cerca azienda online';cb.hidden=true;
   const cx=document.createElement('div');cx.id='csBox';cx.className='vies';cx.hidden=true;
   $('azienda').parentNode.append(cb,cx);
   const upd=()=>{const t=curTipo==='azienda',n=($('azienda').value||'').trim();cb.hidden=!(t&&n.length>=3&&navigator.onLine!==false&&typeof SB!=='undefined'&&SB.has&&SB.has());if(cb.hidden)cx.hidden=true};
-  $('azienda').addEventListener('input',upd);$('seg').addEventListener('click',()=>setTimeout(upd,0));window.addEventListener('online',upd);window.addEventListener('offline',upd);window.csUpd=upd;
+  $('azienda').addEventListener('input',upd);$('seg').addEventListener('click',()=>setTimeout(upd,0));window.addEventListener('online',upd);window.addEventListener('offline',upd);window.csUpd=upd;let seq=0;window.csReset=()=>{seq++;cx.hidden=true;cx.replaceChildren();cb.disabled=false};
   const say=(t,warn)=>{cx.hidden=false;cx.replaceChildren();const p=document.createElement('div');p.className=warn?'warn':'hint';p.textContent=t;cx.append(p)};
   const SRC={wikidata:'Wikidata',osm:'OpenStreetMap',google:'Ricerca Google'};
   const pick=(it,via)=>{
@@ -299,13 +299,13 @@ $('piva').addEventListener('input',()=>later('piva'));
     const no=document.createElement('button');no.type='button';no.className='btn lbl';no.textContent='Chiudi';no.onclick=()=>{cx.hidden=true};cx.append(no)};
   cb.onclick=async()=>{
     const q=($('azienda').value||'').trim();if(q.length<3)return;
-    cb.disabled=true;say('Ricerca in corso…');
-    try{const r=await SB.csearch({q});
+    const my=++seq;cb.disabled=true;say('Ricerca in corso…');
+    try{const r=await SB.csearch({q});if(my!==seq)return;
       if(r&&r.limit){say('Ricerca Google non disponibile oggi per il limite raggiunto: compila a mano.',true);return}
       if(!r||!Array.isArray(r.items)||!r.items.length){say('Nessun risultato per «'+q+'». Le fonti gratuite (Wikidata e OpenStreetMap) conoscono soprattutto le aziende più grandi o già mappate: le piccole attività spesso non ci sono. Prova con un nome più preciso (aggiungi la città) oppure compila a mano.');return}
       list(r.via,r.items)
-    }catch(e){const st=e&&e.status;say(st===429?'Hai raggiunto il limite di ricerche di oggi: riprova domani o compila a mano.':'Ricerca non disponibile ora: compila a mano.',true);try{window.logErr&&st!==429&&window.logErr('rete','Ricerca azienda: '+(st||'errore'),'company-search')}catch(x){}}
-    finally{cb.disabled=false}}}
+    }catch(e){if(my!==seq)return;const st=e&&e.status;say(st===429?'Hai raggiunto il limite di ricerche di oggi: riprova domani o compila a mano.':'Ricerca non disponibile ora: compila a mano.',true);try{window.logErr&&st!==429&&window.logErr('rete','Ricerca azienda: '+(st||'errore'),'company-search')}catch(x){}}
+    finally{if(my===seq)cb.disabled=false}}}
 
 $('paese').addEventListener('change',()=>{live('telefono');live('piva')});
 ['telefono','email','piva'].forEach(id=>$(id).addEventListener('blur',()=>{clearTimeout(tm);live(id,true)}));
@@ -522,12 +522,12 @@ function paintPrivSum(){
   const sm=$('p_sum');if(!sm)return;sm.textContent='';sm.className='psum';
   const p=(editing&&editing.privacy)||mkPriv(),pend=editing&&(p.richieste||[]).find(r=>effSt(r)==='inviata');
   const inf=$('p_inf').checked,infD=$('p_infdata').value,infM=$('p_infmodo').value;
-  const row=(ok,title,sub,tone)=>{const r=document.createElement('div');r.className='ps-r';const ic=document.createElement('span');ic.className='ps-i '+tone;ic.textContent=tone==='ok'?'✓':tone==='wait'?'…':'–';const t=document.createElement('div');t.className='ps-t';const b=document.createElement('b');b.textContent=title;t.append(b);if(sub){const e=document.createElement('span');e.textContent=sub;t.append(e)}r.append(ic,t);return r};
+  const row=(ok,title,sub,tone)=>{const r=document.createElement('div');r.className='ps-r';const ic=document.createElement('span');ic.className='ps-i '+tone;ic.textContent=tone==='ok'?'✓':tone==='wait'?'…':tone==='warn'?'!':'–';const t=document.createElement('div');t.className='ps-t';const b=document.createElement('b');b.textContent=title;t.append(b);if(sub){const e=document.createElement('span');e.textContent=sub;t.append(e)}r.append(ic,t);return r};
   const hd=document.createElement('div');hd.className='ps-h';hd.textContent='Stato attuale';sm.append(hd);
   sm.append(inf?row(1,'Informativa privacy','Fornita'+(infD?' il '+fmtD(infD):'')+(infM?' · '+infM:''),'ok'):pend?row(1,'Informativa privacy','Inviata, in attesa di risposta','wait'):row(1,'Informativa privacy','Da inviare','no'));
   CONS.forEach(k=>{const on=$('c_'+k).checked,c=p.cons[k]||{v:false,d:''},same=!!c.v===on;
     sm.append(row(1,CLABEL[k],on?'Consenso prestato'+(same&&c.d?' il '+fmtD(c.d):''):(c.d&&same?'Revocato il '+fmtD(c.d):'Non prestato'),on?'ok':'no'))});
-  const cv=$('p_cons').value;if(cv){const au=cv===$('p_cons').dataset.auto;sm.append(row(1,'Conservazione dei dati',au?'Scadenza calcolata in automatico: '+fmtD(cv):'Fino al '+fmtD(cv)+' (impostata a mano)',au?'no':'ok'))}
+  const cv=$('p_cons').value;if(cv){const au=cv===$('p_cons').dataset.auto;{const sc=cv<ymd();sm.append(row(1,'Conservazione dei dati',sc?'Scaduta il '+fmtD(cv)+(au?' (calcolata in automatico): valuta di anonimizzare o cancellare':' (impostata a mano): valuta di anonimizzare o cancellare'):au?'Scadenza calcolata in automatico: '+fmtD(cv):'Fino al '+fmtD(cv)+' (impostata a mano)',sc?'warn':au?'no':'ok'))}}
   {const a=editing&&editing.privacy&&editing.privacy.anon;if(a&&a.stato==='aperta')sm.append(row(1,'Richiesta di anonimizzazione','Da evadere entro '+fmtD(a.scade),'wait'))}
 }
 ['change','input'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('#p_det'))try{paintPrivSum()}catch(x){}}));
@@ -541,7 +541,7 @@ function paintReq(){
 
   const pb=$('p_prep');pb.disabled=!ok;if(pend&&ok)autoReq(pend);
   if(pend){const fr=AUTOREP[pend.token];pb.innerHTML=(fr?ICONS.check+'Risposta trovata: esamina':ICONS.search+'Controlla risposta in '+PV().nome);pb.onclick=()=>fr?showFound(pend,fr.best,fr.P):checkReplies(pend,pb)}else{pb.innerHTML=ICONS.Scrivi+(p.informativa?'Reinvia informativa':'Invia informativa');pb.onclick=openSend}
-  $('p_mailhint').textContent=!ok?'Aggiungi e salva un’email del cliente nella scheda Dati.':(!S.azienda?'Imposta il nome azienda nelle impostazioni (ingranaggio in alto): è il titolare indicato nell’informativa.':'');
+  $('p_mailhint').textContent=!ok?'Aggiungi e salva un’email del cliente nella scheda Dati.':(!S.azienda?'Imposta il nome azienda in Menu → Impostazioni: è il titolare indicato nell’informativa.':'');
   ((editing.privacy&&editing.privacy.richieste)||[]).slice().reverse().forEach(r=>{
     const st=effSt(r),C={inviata:['In attesa di risposta','#f6edb8'],completata:['Completata','#b5ebc0'],scaduta:['Scaduta','#f5cad6'],annullata:['Annullata','#dde3ee']}[st];
     const d=h('div','req'),ch=h('i','chip',C[0]);ch.style.background=C[1];
@@ -9241,7 +9241,7 @@ function reviewItems(){return{anon:clients.filter(anonOpen).sort((a,b)=>a.privac
 function autoRet(){if(editing){const c={...editing,privacy:{...(editing.privacy||{}),conserva:''}};return retention(c)}return{until:addM(Date.now(),S.ret.contatti),why:'contatto senza contratto: '+mesi(S.ret.contatti)+' dall’ultimo contatto',open:false}}
 function retHint(){const e=$('p_consH');if(!e)return;const a=autoRet(),v=$('p_cons').value,ad=a.until?ymd(new Date(a.until)):'';$('p_cons').dataset.auto=ad;e.textContent='';
   if(!ad){e.textContent='Scadenza non determinabile: mancano date di riferimento.';return}
-  if(!v||v===ad){e.textContent='Calcolata in automatico: '+a.why+'.'+(a.open?' Ci sono opportunità aperte: i dati restano in uso.':'')}
+  if(!v||v===ad){e.textContent='Calcolata in automatico. '+a.why.charAt(0).toUpperCase()+a.why.slice(1)+'.'+(a.open?' Ci sono opportunità aperte: i dati restano in uso.':'')}
   else{e.append('Impostata a mano. Con le regole sarebbe il '+fmtD(ad)+'. ');const b=h('button','link','Torna all’automatico');b.type='button';b.onclick=()=>{$('p_cons').value=ad;$('p_cons').dispatchEvent(new Event('input',{bubbles:true}));retHint()};e.append(b)}}
 $('p_cons').addEventListener('input',()=>{try{retHint();paintPrivSum()}catch(e){}});
 function anonymize(c,motivo){const id=c.id,tipo=c.tipo||'persona',pv=c.privacy||mkPriv(),log=(pv.log||[]).concat({d:new Date().toISOString().slice(0,16),t:'Dati personali anonimizzati ('+motivo+')'});
@@ -9762,7 +9762,7 @@ $('st_bkf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f
 /* ===== form senza tasti in fondo: salvataggio all'uscita ===== */
 {const DG={sheet:{c:'close',sv:'save',del:['del'],x:()=>curFoto+'|'+curTipo},pSheet:{c:'pClose',sv:'pSave',del:['pDel'],x:()=>pFoto},qSheet:{c:'qClose',sv:'qSave',del:['qDel'],x:()=>JSON.stringify(qW)},oSheet:{c:'oClose',sv:'oSave',del:['oDel'],x:()=>JSON.stringify(oD)},lSheet:{c:'lClose',sv:'l_save',del:['l_ripr','l_scarta','l_del'],x:()=>lTipo}};
  const SNAP={},HOLD={};window.holdDirty=id=>{HOLD[id]=1};
- const sig=id=>{const v=[];$(id).querySelectorAll('input,select,textarea').forEach(i=>{if(i.type==='file')return;v.push(i.type==='checkbox'||i.type==='radio'?(i.checked?1:0):i.value)});let x='';try{x=DG[id].x()}catch(e){}return v.join('\u0001')+'\u0002'+x};
+ const sig=id=>{const v=[];$(id).querySelectorAll('input,select,textarea').forEach(i=>{if(i.type==='file'||i.closest('.vies'))return;v.push(i.type==='checkbox'||i.type==='radio'?(i.checked?1:0):i.value)});let x='';try{x=DG[id].x()}catch(e){}return v.join('\u0001')+'\u0002'+x};
  const snap=id=>{SNAP[id]=sig(id)};
  window.resnap=snap;
  Object.keys(DG).forEach(id=>{const g=DG[id],sh=$(id),top=sh.querySelector('.top'),cl=$(g.c);
@@ -9771,10 +9771,11 @@ $('st_bkf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f
    const bt=sh.querySelector('.btns');if(bt)bt.style.display='none';
    const orig=cl.onclick;
    cl.onclick=()=>{if(sig(id)===SNAP[id]){orig();return}
-     $('mDirty').hidden=false;
-     $('dC').onclick=()=>{$('mDirty').hidden=true};
-     $('dN').onclick=()=>{$('mDirty').hidden=true;orig()};
-     $('dY').onclick=()=>{$('mDirty').hidden=true;$(g.sv).onclick()}};
+     const md=$('mDirty'),kd=e=>{if(e.key==='Escape'){e.stopPropagation();e.preventDefault();cls()}},cls=()=>{md.hidden=true;document.removeEventListener('keydown',kd,true)};
+     md.hidden=false;document.addEventListener('keydown',kd,true);setTimeout(()=>{try{$('dC').focus({preventScroll:true})}catch(e){}},0);
+     $('dC').onclick=cls;
+     $('dN').onclick=()=>{cls();orig()};
+     $('dY').onclick=()=>{cls();$(g.sv).onclick()}};
    new MutationObserver(()=>{if(!sh.hidden){if(HOLD[id]){HOLD[id]=0;SNAP[id]='\u0003sporco';return}snap(id);setTimeout(()=>snap(id),150);setTimeout(()=>snap(id),600)}}).observe(sh,{attributes:true,attributeFilter:['hidden']})});
  const _sc=saveClient;saveClient=function(){const r=_sc.apply(this,arguments);if(r)snap('sheet');return r};
  const _so=saveOpp;saveOpp=function(){const r=_so.apply(this,arguments);if(r)snap('oSheet');return r};
@@ -9854,7 +9855,7 @@ $('st_bkf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f
   /* la giacenza iniziale copre quanto venduto e quanto è impegnato nelle proposte, così a fine esempio resta la giacenza progettata (alcuni prodotti restano volutamente sotto scorta) */
   {const sold={};movs.forEach(m=>{if(m.demo&&m.tipo==='scarico')sold[m.prodId]=(sold[m.prodId]||0)-m.qta});opps.forEach(o=>{if(o.demo&&RES_FASI.includes(o.fase))o.prodotti.forEach(x=>{sold[x.prodId]=(sold[x.prodId]||0)+x.qta})});movs.forEach(m=>{if(m.demo&&m.tipo==='carico'&&sold[m.prodId])m.qta+=sold[m.prodId]})}
   /* lead */
-  const now=Date.now();let nl=0;for(let i=0;i<Z.l;i++){const id='lx'+(i+1);if(leads.some(l=>l.id===id))continue;const n=NM[(i*3+5)%NM.length],c=CG[(i*5+2+((i/NM.length)|0))%CG.length],r=LR[i%LR.length],t=now-(i*5%1400+2)*36e5;leads.push({id,demo:true,nome:n,cognome:c,email:yp(n,c),telefono:'',azienda:i%3?'':AZ[(i+7)%AZ.length]+' '+c,richiesta:r[1],oggetto:r[0],fonte:LS[i%LS.length],data:t,creato:t,stato:i%9===8?'scartato':'nuovo'});nl++}
+  const now=Date.now();let nl=0;for(let i=0;i<Z.l;i++){const id='lx'+(i+1);if(leads.some(l=>l.id===id))continue;const n=NM[(i*3+5)%NM.length],c=CG[(i*5+2+((i/NM.length)|0))%CG.length],r=LR[i%LR.length],t=now-(i*5%1400+2)*36e5;leads.push({id,demo:true,nome:n,cognome:c,email:yp(n,c),telefono:'',azienda:i%3?'':AZ[(i+7)%AZ.length]+' '+c,richiesta:r[1],oggetto:r[0],fonte:LS[i%LS.length],data:t,creato:t,stato:i%9===8?'scartato':'nuovo',...(i%9===8?{scartato:now-(i%25)*864e5}:{})});nl++}
   persist();persistO();persistL();persistP();persistM();try{saveS()}catch(e){}render();renderO();try{renderL()}catch(e){}try{renderH()}catch(e){}try{if(typeof renderP==='function')renderP();if(typeof renderMag==='function')renderMag();if(typeof renderCpq==='function')renderCpq()}catch(e){}
   toast('Esempi aggiunti: '+XC.length+' clienti, '+(Z.k+Z.o)+' opportunità, '+nl+' lead, '+np+' prodotti, '+nl2+' listini.')};
 $('st_exDel').onclick=()=>{const has=opps.some(o=>o.demo)||clients.some(c=>c.demo)||leads.some(l=>l.demo)||prods.some(p=>p.demo)||((S.cpq&&S.cpq.listini)||[]).some(l=>l.demo);if(!has){toast('Non ci sono esempi da rimuovere.');return}
@@ -10164,7 +10165,7 @@ function stops(){const out=[];clients.forEach(c=>{const p=c.privacy&&c.privacy.c
 let asub='fun';try{const u=localStorage.getItem('crm-asub');if(u==='fun'||u==='eng')asub=u}catch(e){}
  function renderAn(){const sh=$('anSh');if(!sh||sh.hidden)return;let H=$('anBody');if(!H){H=h('div');H.id='anBody';sh.firstChild.append(H)}H.textContent='';const sg=h('div','seg');sg.style.marginBottom='10px';[['fun','Funnel'],['eng','Engagement']].forEach(([k,l])=>{const b=h('button','',l);b.type='button';b.classList.toggle('on',asub===k);b.onclick=()=>{asub=k;try{localStorage.setItem('crm-asub',k)}catch(e){}renderAn()};sg.append(b)});H.append(sg);(asub==='fun'?paneFun:paneEng)(H)}
  window.openAn=()=>{const w=shell('anSh','Analytics'),sh=$('anSh');w.firstChild.hidden=true;$('tabs').style.display='none';$('title').innerHTML='Analytics '+'<span class="beta">Beta</span>';const q=document.querySelector('.bar');if(q)q.hidden=true;sh.style.zIndex=3;sh.style.top=document.querySelector('.stk').getBoundingClientRect().bottom+'px';renderAn()};
- window.renderM=function(){const H=$('mktBody');if(!H)return;try{applyStops()}catch(e){}H.textContent='';const sg=h('div','seg');sg.style.marginBottom='10px';[['seg','Segmenti'],['cam','Campagne']].forEach(([k,l])=>{const b=h('button','',l);b.style.cssText='font-size:13px;padding:0 4px;white-space:nowrap';b.type='button';b.classList.toggle('on',sub===k);b.onclick=()=>{sub=k;try{localStorage.setItem('crm-msub',k)}catch(e){}renderM()};sg.append(b)});H.append(sg);
+ window.renderM=function(){const H=$('mktBody');if(!H)return;try{applyStops()}catch(e){}H.textContent='';const sg=h('div','seg');sg.id='mSeg';sg.style.marginBottom='10px';[['seg','Segmenti'],['cam','Campagne']].forEach(([k,l])=>{const b=h('button','',l);b.style.cssText='font-size:13px;padding:0 4px;white-space:nowrap';b.type='button';b.classList.toggle('on',sub===k);b.onclick=()=>{sub=k;try{localStorage.setItem('crm-msub',k)}catch(e){}renderM()};sg.append(b)});H.append(sg);
   ({seg:paneSeg,fun:paneFun,eng:paneEng,cam:paneCamp})[sub](H)};
  const _st=setTab;setTab=function(v){_st(v);{const a=$('anSh');if(a)a.hidden=true}$('tabs').style.display=['home','clienti','lead','opp'].includes(v)?'':'none';$('mktView').hidden=v!=='mkt';if(v==='mkt'){document.querySelector('.bar').hidden=true;$('title').innerHTML='Marketing '+'<span class="beta">Beta</span>';renderM()}};
 }
@@ -10751,7 +10752,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.30.1','Nella scheda cliente e nella scheda lead, scorrere verso destra dal primo tab equivale alla freccia indietro: se ci sono modifiche l’app chiede se salvarle, scartarle o restare.'],
 ['1.30.2','Scorrere verso destra in qualsiasi scheda (prodotto, opportunità, listino, impostazioni, ecc.) equivale alla freccia indietro, con la richiesta di salvare se ci sono modifiche.'],
 ['1.31','Assistente: la freccia per inviare il messaggio è allineata al campo di testo. In tutte le pagine tranne la Home (Clienti, Lead, Opportunità, Prodotti, Marketing, Analytics) compare, accanto al menu, la freccia indietro che riporta alla Home. Anche scorrere verso destra dalla prima sezione di Prodotti, da Marketing e da Analytics riporta alla Home.'],
-['1.31.1','“Rimuovi esempi” ora toglie anche le opportunità (con i relativi movimenti di magazzino) che hai creato sui clienti di esempio, così non restano opportunità su “Cliente rimosso”. Il messaggio di conferma indica quante sono.'],
+['1.31.1','Correzioni dopo la revisione. Scorrere una riga di Clienti o Lead per mostrarne le azioni non cambia più scheda. In Marketing scorrere passa tra Segmenti e Campagne. Dopo “Cerca dati online” e Annulla la scheda non risulta più modificata, e i risultati di una ricerca non finiscono su un altro cliente. La finestra “modifiche non salvate” porta il focus sul pulsante e si chiude con Esc. Privacy: testi corretti e avviso se la scadenza di conservazione è già passata. Pulsanti dell’intestazione più grandi. “Rimuovi esempi” toglie anche le opportunità (e i movimenti di magazzino) che hai creato sui clienti di esempio, e il numero di lead di esempio resta quello annunciato.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -10981,18 +10982,19 @@ function guideify(root){
 {const vis=el=>!!el&&!el.hidden&&el.getClientRects().length>0;
  const btns=sel=>{const bar=document.querySelector(sel);return bar?[...bar.querySelectorAll('button')].filter(b=>!b.hidden&&!b.disabled&&vis(b)):[]};
  const cur=l=>l.findIndex(b=>b.classList.contains('on'));
- const noSw=t=>{for(let e=t;e&&e!==document.body;e=e.parentElement){if(e.matches&&e.matches('input,textarea,select,[contenteditable="true"],canvas,.nosw'))return true;const o=getComputedStyle(e).overflowX;if((o==='auto'||o==='scroll')&&e.scrollWidth>e.clientWidth+2)return true}return false};
+ const noSw=t=>{for(let e=t;e&&e!==document.body;e=e.parentElement){if(e.matches&&e.matches('input,textarea,select,[contenteditable="true"],canvas,.nosw,.crChip,.crGhost'))return true;const o=getComputedStyle(e).overflowX;if((o==='auto'||o==='scroll')&&e.scrollWidth>e.clientWidth+2)return true}return false};
  const open=()=>[...document.querySelectorAll('.sheet,.modal')].some(vis)||vis($('appMenu'));
  const where=t=>{ /* quale gruppo di tab governa il punto toccato */
    for(const [id,bar] of [['sheet','#cTabs'],['lSheet','#lTabs']]){const s=$(id);if(vis(s)&&s.contains(t))return bar}
    const sh=t.closest&&t.closest('.sheet');if(vis(sh))return [...document.querySelectorAll('.modal')].some(vis)?null:sh; /* scheda senza tab: lo scorrimento verso destra vale come freccia indietro */
    if(open())return null;
    if(tab==='prod'&&vis($('prodView'))&&$('prodView').contains(t))return '#pSeg';
+   if(tab==='mkt'&&vis($('mktView'))&&$('mktView').contains(t)&&$('mSeg'))return '#mSeg';
    return '#tabs'};
  let st=null;
- document.addEventListener('touchstart',e=>{st=null;if(e.touches.length!==1)return;const t=e.touches[0];if(t.clientX<24||t.clientX>innerWidth-24)return;if(noSw(e.target))return;const w=where(e.target);if(!w)return;st={x:t.clientX,y:t.clientY,t:Date.now(),bar:w}},{passive:true});
+ document.addEventListener('touchstart',e=>{st=null;window.__swDrag=0;if(e.touches.length!==1)return;const t=e.touches[0];if(t.clientX<24||t.clientX>innerWidth-24)return;if(noSw(e.target))return;const w=where(e.target);if(!w)return;st={x:t.clientX,y:t.clientY,t:Date.now(),bar:w}},{passive:true});
  document.addEventListener('touchcancel',()=>{st=null},{passive:true});
- document.addEventListener('touchend',e=>{const s=st;st=null;if(!s||!e.changedTouches.length)return;const t=e.changedTouches[0],dx=t.clientX-s.x,dy=t.clientY-s.y;
+ document.addEventListener('touchend',e=>{const s=st;st=null;if(!s||!e.changedTouches.length)return;if(window.__swDrag){window.__swDrag=0;return} /* gesto già usato da una riga a scorrimento */const t=e.changedTouches[0],dx=t.clientX-s.x,dy=t.clientY-s.y;
    if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.8||Date.now()-s.t>700)return;
    try{if(String(getSelection()).length)return}catch(x){}
    if(s.bar instanceof Element){if(dx>0){const bk=(s.bar.querySelector('.top [data-i=back]')||{closest:()=>null}).closest('button')||s.bar.querySelector('.top button');if(bk&&vis(bk))bk.click();else if(!$('homeBk').hidden)$('homeBk').click()}return}
@@ -11000,9 +11002,9 @@ function guideify(root){
    /* sul primo tab di una scheda, scorrere verso il precedente equivale alla freccia indietro (con la richiesta di salvare se ci sono modifiche) */
    if(dx>0&&(s.bar==='#cTabs'||s.bar==='#lTabs')&&i<=0){const bk=$(s.bar==='#cTabs'?'close':'lClose');if(bk&&vis(bk))bk.click();return}
    /* Prodotti (prima sezione) e Marketing non hanno un tab precedente: lo scorrimento verso destra riporta alla Home */
-   if(dx>0&&(s.bar==='#pSeg'||s.bar==='#tabs')&&i<=0&&!$('homeBk').hidden){$('homeBk').click();return}
+   if(dx>0&&(s.bar==='#pSeg'||s.bar==='#mSeg'||s.bar==='#tabs')&&i<=0&&!$('homeBk').hidden){$('homeBk').click();return}
    if(i<0||n<0||n>=l.length)return;
    l[n].click();
-   const v=s.bar==='#tabs'?['homeView','list','leadView','oppView'].map($).find(vis):s.bar==='#pSeg'?$('prodView'):null;
+   const v=s.bar==='#tabs'?['homeView','list','leadView','oppView'].map($).find(vis):s.bar==='#pSeg'?$('prodView'):s.bar==='#mSeg'?$('mktView'):null;
    if(v&&!matchMedia('(prefers-reduced-motion:reduce)').matches){v.classList.remove('swl','swr');void v.offsetWidth;v.classList.add(dx<0?'swl':'swr');setTimeout(()=>v.classList.remove('swl','swr'),260)}
  },{passive:true})}
