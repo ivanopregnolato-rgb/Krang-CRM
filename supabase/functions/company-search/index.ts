@@ -66,6 +66,29 @@ async function wikidata(q: string): Promise<Item[]> {
 }
 
 async function osm(q: string): Promise<Item[]> {
+  try { return await nominatim(q); } catch (e) { console.error("nominatim", String(e)); return await photon(q); }
+}
+
+// Photon (komoot): stessi dati OpenStreetMap, usato quando Nominatim rifiuta le richieste dai server cloud.
+async function photon(q: string): Promise<Item[]> {
+  const j = await get(`https://photon.komoot.io/api/?limit=8&q=${encodeURIComponent(q)}`);
+  const ok = new Set(["amenity", "shop", "office", "craft", "tourism", "building", "man_made", "leisure", "healthcare", "industrial", "landuse", "club"]);
+  const words = q.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+  const res: Item[] = [], seen = new Set<string>();
+  for (const f of Array.isArray(j?.features) ? j.features : []) {
+    const p = f?.properties || {}, nm = clean(p.name, 120);
+    if (!nm || !ok.has(p.osm_key)) continue;
+    if (words.length && !words.some((w) => nm.toLowerCase().includes(w))) continue;
+    const road = [p.street, p.housenumber].filter(Boolean).join(" "), loc = [p.postcode, p.city || p.district].filter(Boolean).join(" ");
+    const address = clean([road, loc].filter(Boolean).join(", "), 160), key = nm.toLowerCase() + "|" + address.toLowerCase();
+    if (seen.has(key)) continue; seen.add(key);
+    res.push({ src: "osm", name: nm, address, website: "", phone: "", email: "", piva: "", note: clean(String(p.osm_value || "").replace(/_/g, " "), 60) });
+    if (res.length >= 4) break;
+  }
+  return res;
+}
+
+async function nominatim(q: string): Promise<Item[]> {
   const j = await get(`https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&extratags=1&limit=6&accept-language=it&q=${encodeURIComponent(q)}`);
   const ok = new Set(["amenity", "shop", "office", "craft", "tourism", "building", "man_made", "leisure", "healthcare", "industrial", "landuse", "club"]);
   const words = q.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
@@ -107,7 +130,7 @@ async function google(q: string, key: string): Promise<Item[]> {
     }),
     signal: AbortSignal.timeout(25000),
   });
-  if (!g.ok) throw new Error("ai" + g.status);
+  if (!g.ok) { console.error("gemini", g.status, (await g.text()).slice(0, 300)); throw new Error("ai" + g.status); }
   const j = await g.json();
   const txt = j?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text || "").join("") || "";
   const m = txt.match(/\[[\s\S]*\]/);
@@ -145,13 +168,16 @@ Deno.serve(async (req) => {
   const [w, o] = await Promise.allSettled([wikidata(q), osm(q)]);
   const items = [...(w.status === "fulfilled" ? w.value : []), ...(o.status === "fulfilled" ? o.value : [])];
   const failed = w.status === "rejected" && o.status === "rejected";
+  if (w.status === "rejected") console.error("wikidata", String(w.reason));
+  if (o.status === "rejected") console.error("osm", String(o.reason));
+  console.log("sources", w.status === "fulfilled" ? w.value.length : "ERR", o.status === "fulfilled" ? o.value.length : "ERR");
   if (items.length) return out(req, { items: items.slice(0, 7), via: "open" });
 
   const key = Deno.env.get("GEMINI_API_KEY");
   if (key) {
     const t = await rpc(req, "ai_take", { user_lim: AI_USER_LIM, global_lim: AI_GLOBAL_LIM });
     if (t === "ok") {
-      try { return out(req, { items: await google(q, key), via: "google" }); } catch { /* ricerca Google non disponibile */ }
+      try { return out(req, { items: await google(q, key), via: "google" }); } catch (e) { console.error("google", String(e)); }
     } else if (t === "global" || t === "user") {
       return out(req, { items: [], via: "google", limit: true });
     }
