@@ -10427,7 +10427,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.32.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.32.1';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10607,7 +10607,7 @@ const SB=(()=>{
   const TS_KEY='0x4AAAAAAF8yAH6XoMthksqM';let tsId=null,tsTok='';
   const tsSet=t=>{tsTok=t||'';SB.setCap(tsTok)};
   const tsReset=()=>{tsSet('');try{if(window.turnstile&&tsId!==null)turnstile.reset(tsId)}catch(e){}};
-  if(TS_KEY){const s=document.createElement('script');s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';s.async=true;s.onload=()=>{try{tsId=turnstile.render('#au_ts',{sitekey:TS_KEY,callback:tsSet,'expired-callback':()=>tsSet(''),'error-callback':()=>tsSet('')})}catch(e){}};document.head.append(s)}
+  if(TS_KEY){const s=document.createElement('script');s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';s.async=true;s.onload=()=>{try{tsId=turnstile.render('#au_ts',{sitekey:TS_KEY,size:'flexible',appearance:'interaction-only',theme:'auto',callback:tsSet,'expired-callback':()=>tsSet(''),'error-callback':()=>tsSet('')})}catch(e){}};document.head.append(s)}
   /* limite tentativi: dopo 5 password sbagliate l'attesa raddoppia (30 s, 1 min, 2 min... max 15 min) */
   const LK='crm-lk',lk=()=>{try{return JSON.parse(localStorage.getItem(LK)||'{}')||{}}catch(e){return{}}};
   const lkWait=()=>Math.max(0,(lk().until||0)-Date.now());
@@ -10621,13 +10621,13 @@ const SB=(()=>{
    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)){say('Inserisci un’email valida.');return}
    if(p.length<8){say('La password deve avere almeno 8 caratteri.');return}
    {const w=lkWait();if(w>0){say('Troppi tentativi: riprova tra '+(w>60000?Math.ceil(w/60000)+' minuti':Math.ceil(w/1000)+' secondi')+'.');return}}
-   if(TS_KEY&&!tsTok){say('Completa la verifica anti-bot qui sopra.');return}
+   if(TS_KEY&&!tsTok){say('Verifica di sicurezza in corso: riprova tra un istante. Se compare una casella, toccala.');return}
    const b=$a('au_go');b.disabled=true;try{
     if(mode==='up'){if(!$a('au_ok').checked){say('Per creare l’account accetta i Termini d’uso e l’Informativa privacy.');return}const ok=await SB.signUp(e,p);if(!ok){say('Ti abbiamo inviato una email: conferma l’indirizzo dal link, poi accedi.',true);mode='in';paintAu();return}}
     else await SB.signIn(e,p);
     lkOk();$a('au_p').value='';await SB.alog('login');SB.enter(p)}catch(x){if(x&&x.code==='invalid_credentials')lkFail();say(SB.msg(x))}finally{b.disabled=false;if(TS_KEY)tsReset()}};
   $a('au_go').onclick=go;$a('au_p').onkeydown=ev=>{if(ev.key==='Enter')go()};
-  $a('au_fg').onclick=async()=>{const e=$a('au_e').value.trim().toLowerCase();if(!e){say('Scrivi qui sopra la tua email, poi tocca di nuovo.');return}if(TS_KEY&&!tsTok){say('Completa la verifica anti-bot qui sopra.');return}try{await SB.recover(e);say('Se l’indirizzo è registrato, riceverai una email per scegliere una nuova password.',true)}catch(x){say(SB.msg(x))}finally{if(TS_KEY)tsReset()}};
+  $a('au_fg').onclick=async()=>{const e=$a('au_e').value.trim().toLowerCase();if(!e){say('Scrivi qui sopra la tua email, poi tocca di nuovo.');return}if(TS_KEY&&!tsTok){say('Verifica di sicurezza in corso: riprova tra un istante. Se compare una casella, toccala.');return}try{await SB.recover(e);say('Se l’indirizzo è registrato, riceverai una email per scegliere una nuova password.',true)}catch(x){say(SB.msg(x))}finally{if(TS_KEY)tsReset()}};
   paintAu();
   if(SB.link){const L=SB.link;if(L.error)say(SB.msg({code:L.code||'access_denied'}));else if(L.type==='recovery'&&L.token){document.documentElement.classList.add('noauth');SB.linkUser(L.token).then(m=>{ltok=L.token;lmail=m||'il tuo account';mode='new';paintAu()}).catch(x=>say(SB.msg(x)))}else if(L.token)say('Email confermata: ora puoi accedere.',true)}
   /* pagina Account nelle impostazioni */
@@ -10796,6 +10796,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.31','Assistente: la freccia per inviare il messaggio è allineata al campo di testo. In tutte le pagine tranne la Home (Clienti, Lead, Opportunità, Prodotti, Marketing, Analytics) compare, accanto al menu, la freccia indietro che riporta alla Home. Anche scorrere verso destra dalla prima sezione di Prodotti, da Marketing e da Analytics riporta alla Home.'],
 ['1.31.1','Correzioni dopo la revisione. Scorrere una riga di Clienti o Lead per mostrarne le azioni non cambia più scheda. In Marketing scorrere passa tra Segmenti e Campagne. Dopo “Cerca dati online” e Annulla la scheda non risulta più modificata, e i risultati di una ricerca non finiscono su un altro cliente. La finestra “modifiche non salvate” porta il focus sul pulsante e si chiude con Esc. Privacy: testi corretti e avviso se la scadenza di conservazione è già passata. Pulsanti dell’intestazione più grandi. In tutti i campi password e PIN (accesso, passphrase, backup, PIN di emergenza) c’è l’occhietto per mostrare o nascondere quanto scritto. A ogni accesso l’app controlla se esiste una versione più recente e ti avvisa, così puoi aggiornare con un tocco. “Rimuovi esempi” toglie anche le opportunità (e i movimenti di magazzino) che hai creato sui clienti di esempio, e il numero di lead di esempio resta quello annunciato.'],
 ['1.32','Cifratura dei dati trasparente. I dati nel cloud sono cifrati in automatico con la password del tuo account: niente passphrase da scegliere. Alla creazione dell’account ti viene mostrata una chiave di recupero personale, da conservare subito (copia, scarica o salva nel gestore di password); se chiudi l’app prima, ne viene generata una nuova al prossimo avvio. Puoi rigenerarla da Impostazioni → Account. Se reimposti la password da un dispositivo già collegato, la protezione si aggiorna da sola; da un dispositivo nuovo serve la chiave di recupero. Chi non aveva la cifratura la attiva al prossimo accesso con la password. I backup sono cifrati con la stessa password dell’account: sparisce la password dei backup dedicata. I vecchi backup si riaprono chiedendo la vecchia password.'],
+['1.32.1','La verifica anti-bot dell’accesso è più discreta: compare solo se serve davvero, e non occupa più spazio nella pagina.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
