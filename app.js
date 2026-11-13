@@ -10394,8 +10394,8 @@ async function autoSync(){if(autoBusy||document.hidden)return;autoBusy=true;
   }catch(e){}finally{autoBusy=false}}
 setTimeout(autoSync,2500);setInterval(autoSync,24e4);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(autoSync,800)});
 const _setTab=setTab;setTab=function(v){_setTab(v);paintBadges();if(v==='lead'&&Date.now()-(LAST.scan||0)>12e4)leadScan()};
-/* in tutte le pagine tranne la Home, al posto del menu c'è la freccia indietro che riporta alla Home */
-{const hb=$('homeBk'),mb=$('menuBtn'),paintBk=()=>{const home=tab==='home'&&!($('anSh')&&!$('anSh').hidden);hb.hidden=home;mb.hidden=!home};
+/* in tutte le pagine tranne la Home compare, accanto al menu, la freccia indietro che riporta alla Home */
+{const hb=$('homeBk'),mb=$('menuBtn'),paintBk=()=>{const home=tab==='home'&&!($('anSh')&&!$('anSh').hidden);hb.hidden=home;mb.hidden=false};
  hb.onclick=()=>setTab('home');
  const _s3=setTab;setTab=function(v){const r=_s3.apply(this,arguments);paintBk();return r};
  const _oa=window.openAn;if(_oa)window.openAn=function(){const r=_oa.apply(this,arguments);paintBk();return r};
@@ -10749,7 +10749,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.30','Scorri con il dito a destra o a sinistra per passare da un tab all’altro: tra Home, Clienti, Lead e Opportunità, tra le sezioni della scheda cliente e della scheda lead (Dati, Privacy, ecc.) e tra le sezioni dei Prodotti. Non scatta sui campi di testo, sulle liste che scorrono in orizzontale o quando c’è una finestra aperta.'],
 ['1.30.1','Nella scheda cliente e nella scheda lead, scorrere verso destra dal primo tab equivale alla freccia indietro: se ci sono modifiche l’app chiede se salvarle, scartarle o restare.'],
 ['1.30.2','Scorrere verso destra in qualsiasi scheda (prodotto, opportunità, listino, impostazioni, ecc.) equivale alla freccia indietro, con la richiesta di salvare se ci sono modifiche.'],
-['1.31','In tutte le pagine tranne la Home (Clienti, Lead, Opportunità, Prodotti, Marketing, Analytics) compare la freccia indietro al posto del menu e riporta alla Home. Anche scorrere verso destra dalla prima sezione di Prodotti, da Marketing e da Analytics riporta alla Home.'],
+['1.31','Assistente: la freccia per inviare il messaggio è allineata al campo di testo. In tutte le pagine tranne la Home (Clienti, Lead, Opportunità, Prodotti, Marketing, Analytics) compare, accanto al menu, la freccia indietro che riporta alla Home. Anche scorrere verso destra dalla prima sezione di Prodotti, da Marketing e da Analytics riporta alla Home.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
