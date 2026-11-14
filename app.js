@@ -548,11 +548,11 @@ function lkSoon(){if(lkT)return;lkT=setTimeout(()=>{lkT=0;lkSweep()},2e4)}
 /* stato attuale della privacy, in sola lettura: informativa, consensi e conservazione */
 function paintPrivSum(){
   const sm=$('p_sum');if(!sm)return;sm.textContent='';sm.className='psum';
-  const p=(editing&&editing.privacy)||mkPriv(),pend=editing&&(p.richieste||[]).find(r=>effSt(r)==='inviata');
+  const p=(editing&&editing.privacy)||mkPriv(),pend=editing&&(p.richieste||[]).find(r=>r.stato==='inviata');
   const inf=$('p_inf').checked,infD=$('p_infdata').value,infM=$('p_infmodo').value;
   const row=(ok,title,sub,tone)=>{const r=document.createElement('div');r.className='ps-r';const ic=document.createElement('span');ic.className='ps-i '+tone;ic.textContent=tone==='ok'?'✓':tone==='wait'?'…':tone==='warn'?'!':'–';const t=document.createElement('div');t.className='ps-t';const b=document.createElement('b');b.textContent=title;t.append(b);if(sub){const e=document.createElement('span');e.textContent=sub;t.append(e)}r.append(ic,t);return r};
   const hd=document.createElement('div');hd.className='ps-h';hd.textContent='Stato attuale';sm.append(hd);
-  sm.append(inf?row(1,'Informativa privacy','Fornita'+(infD?' il '+fmtD(infD):'')+(infM?' · '+infM:''),'ok'):pend?row(1,'Informativa privacy','Inviata, in attesa di risposta','wait'):row(1,'Informativa privacy','Da inviare','no'));
+  sm.append(inf?row(1,'Informativa privacy','Fornita'+(infD?' il '+fmtD(infD):'')+(infM?' · '+infM:''),'ok'):pend?row(1,'Informativa privacy','Inviata: il cliente può confermare dal link','no'):row(1,'Informativa privacy','Da inviare','no'));
   CONS.forEach(k=>{const on=$('c_'+k).checked,c=p.cons[k]||{v:false,d:''},same=!!c.v===on;
     sm.append(row(1,CLABEL[k],on?'Consenso prestato'+(same&&c.d?' il '+fmtD(c.d):''):(c.d&&same?'Revocato il '+fmtD(c.d):'Non prestato'),on?'ok':'no'))});
   const cv=$('p_cons').value;if(cv){const au=cv===$('p_cons').dataset.auto;{const sc=cv<ymd();sm.append(row(1,'Conservazione dei dati',sc?'Scaduta il '+fmtD(cv)+(au?' (calcolata in automatico): valuta di anonimizzare o cancellare':' (impostata a mano): valuta di anonimizzare o cancellare'):au?'Scadenza calcolata in automatico: '+fmtD(cv):'Fino al '+fmtD(cv)+' (impostata a mano)',sc?'warn':au?'no':'ok'))}}
@@ -567,17 +567,14 @@ function paintReq(){
   if(!editing){const pb=$('p_prep');pb.disabled=false;pb.innerHTML=ICONS.Scrivi+'Invia informativa';pb.onclick=()=>viaNew('email');return}
   const p=editing.privacy||mkPriv(),R=p.richieste||[],pend=R.find(r=>effSt(r)==='inviata'),ok=!!editing.email,given=CONS.filter(k=>p.cons[k]&&p.cons[k].v).map(k=>CLABEL[k]);
 
-  const pb=$('p_prep');pb.disabled=!ok;if(pend&&ok)autoReq(pend);else pullConsents();
-  if(pend){pb.innerHTML=ICONS.search+'Controlla se ha risposto';pb.onclick=async()=>{pb.disabled=true;const n=await pullConsents(true);pb.disabled=false;toast(n?'Consensi aggiornati dalla risposta del cliente.':'Nessuna risposta dal cliente per ora.')}}else{pb.innerHTML=ICONS.Scrivi+(p.informativa?'Reinvia informativa':'Invia informativa');pb.onclick=openSend}
+  const pb=$('p_prep');pb.disabled=!ok;{const last=R.slice().reverse().find(r=>r.stato==='inviata');if(last&&ok)autoReq(last);else pullConsents()}
+  pb.innerHTML=ICONS.Scrivi+(p.informativa||R.length?'Reinvia informativa':'Invia informativa');pb.onclick=openSend
   $('p_mailhint').textContent=!ok?'Aggiungi e salva un’email del cliente nella scheda Dati.':(!S.azienda?'Imposta il nome azienda in Menu → Impostazioni: è il titolare indicato nell’informativa.':'');
   ((editing.privacy&&editing.privacy.richieste)||[]).slice().reverse().forEach(r=>{
-    const st=effSt(r),C={inviata:['In attesa di risposta','#f6edb8'],completata:['Completata','#b5ebc0'],scaduta:['Scaduta','#f5cad6'],annullata:['Annullata','#dde3ee']}[st];
+    const st=effSt(r),C={inviata:['Inviata','#dde3ee'],completata:['Completata','#b5ebc0'],scaduta:['Scaduta','#f5cad6'],annullata:['Annullata','#dde3ee']}[st];
     const d=h('div','req'),ch=h('i','chip',C[0]);ch.style.background=C[1];
     d.append(ch,h('div','','Inviata il '+fmtDT(r.creata+'Z')+' a '+r.email+(r.via&&r.via!=='mailto'?' (da '+provName(r.via)+')':'')),h('div','','Codice '+r.token+(r.ver?', informativa v'+r.ver:'')+(r.stato==='completata'?'. Risposta ricevuta il '+fmtDT(r.ricevuta+'Z')+'.':'. Il link resta valido: il cliente può rispondere quando vuole.')));
     if(r.consegna){d.append(h('div',r.consegna.stato==='respinta'?'warn':'','Consegna: '+(r.consegna.stato==='respinta'?'email respinta, controlla l’indirizzo':'nessun errore rilevato')+' (verificata il '+fmtDT(r.consegna.verificata+'Z')+')'))}
-    if(st==='inviata'){const dd=Math.floor((Date.now()-new Date(r.creata+'Z'))/864e5);if(dd>=7)d.append(h('div','warn','Nessuna risposta da '+dd+' giorni.'));
-            const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'Annulla richiesta';x.onclick=()=>askConfirm('Annullare la richiesta con codice '+r.token+'? Resta nel registro come annullata.','x','Annulla richiesta',()=>{r.stato='annullata';logP(editing,'Richiesta di consenso annullata (codice '+r.token+')','annullo');persist();loadPriv(editing.privacy)});
-      if(dd>=7){const rb=h('button','btn lbl');rb.type='button';rb.innerHTML=ICONS.Scrivi+'Invia promemoria';rb.onclick=()=>remind(r);d.append(rb)}d.append(x)}
     w.append(d)})}
 function openSend(){
   if(!editing||!editing.email)return;
@@ -9632,7 +9629,7 @@ document.querySelectorAll('#tabs [data-i=inbox]').forEach(e=>e.innerHTML=ICONS.i
 const rsScore=rs=>rs.reduce((t,x)=>t+(x[1]>=2?10:3),0);
 function rsRow(rs){if(!rs||!rs.length)return null;const d=document.createElement('div');d.className='rs';rs.slice(0,3).forEach(x=>{const i=document.createElement('i');i.className='rchip'+(x[1]>=2?' al':'');i.textContent=x[0];d.append(i)});if(rs.length>3){const i=document.createElement('i');i.className='rchip';i.textContent='+'+(rs.length-3);d.append(i)}return d}
 function cReasons(c){const r=[];try{const pv=c.privacy,R=(pv&&pv.richieste)||[];
-  if(!pv||!pv.informativa){if(R.some(x=>effSt(x)==='inviata'))r.push(['Attesa risposta privacy',1]);else r.push(['Informativa da inviare',1,true])}
+  if(!pv||!pv.informativa){r.push(['Informativa da inviare',1,true])}
   R.forEach(x=>{if(effSt(x)==='scaduta')r.push(['Consensi scaduti',2]);});
   if(waUnread(c))r.push(['WhatsApp da leggere',2]);
   try{if(retention(c).expired)r.push(['Dati scaduti',2]);else if(staleConsents(c).length)r.push(['Consensi da rivedere',1])}catch(e){}
@@ -10423,7 +10420,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(!S.askSeen){S.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.34.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(!S.askSeen){S.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.34.1';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10811,6 +10808,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.32.3','Chiave di recupero: su iPhone il pulsante «Condividi o salva in…» apre il foglio di condivisione (gestore di password, Note, file) al posto del salvataggio automatico, che Safari non supporta. «Fatto» si sblocca solo dopo una condivisione, una copia o un download riusciti.'],
 ['1.32.4','Conferma dell’indirizzo email alla registrazione: dopo aver creato l’account ricevi una email con un link e puoi accedere solo dopo averlo aperto. Se la email non arriva c’è il pulsante «Rinvia email di conferma».'],
 ['1.32.5','Guida dei primi passi rinnovata: ora sono cinque e in ordine cifratura dei dati, accesso con biometria, profilo dell’azienda, primo cliente e assistente. Tolto il passo sulla posta.'],
+['1.34.1','Tolta la scheda «In attesa di risposta» e il pulsante «Annulla richiesta»: il link dei consensi non scade, quindi non serve più attendere né annullare. L’informativa inviata resta nel registro, e il pulsante è sempre «Reinvia informativa».'],
 ['1.34.0','La pagina del link personale mostra il nome della tua azienda, l’informativa con versione e data di entrata in vigore e lo stato attuale dei consensi, che il cliente può cambiare quando vuole. Dalla stessa pagina può chiedere una copia dei suoi dati (portabilità) o la cancellazione e anonimizzazione: sono richieste che arrivano nella posta in arrivo e nella scheda Privacy, e che approvi o rifiuti tu entro un mese. Niente avviene da solo.'],
 ['1.33.0','Consensi con un link personale. Quando invii l’informativa per email o WhatsApp, il messaggio contiene un link: il cliente lo apre dal telefono, senza account, sceglie i consensi facoltativi e conferma. La risposta arriva da sola nella scheda Privacy del cliente. Il link resta sempre valido, così il cliente può cambiare o revocare i consensi quando vuole. Non serve più rispondere alla email: sono state tolte la lettura delle risposte dalla posta, la registrazione a mano e le scadenze dei codici. Anche la gestione dello STOP è stata tolta: le campagne partono solo verso chi ha il consenso al marketing e ogni messaggio contiene il link per modificarlo o revocarlo. In Impostazioni → Privacy e conservazione ora c’è l’informativa: puoi leggerla e modificarla se il testo proposto non è corretto, e lo storico mostra ogni versione con il periodo di validità e il numero di clienti a cui è stata fornita. Sul server restano solo le scelte sì/no, la data e un’impronta del link: mai nome o email del cliente.'],
 ]}];
