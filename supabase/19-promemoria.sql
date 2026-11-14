@@ -52,3 +52,7 @@ create or replace function public.claim_reminders() returns table(uid uuid, n in
   from f where f.n>0 $$;
 revoke all on function public.claim_reminders() from public, anon, authenticated;
 grant execute on function public.claim_reminders() to service_role;
+
+-- Titolo opzionale nella notifica: arriva già cifrato dall'app (chiave solo sui dispositivi dell'utente).
+alter table public.reminders add column if not exists blob text;
+-- (set_reminders e claim_reminders sono stati aggiornati per gestire "blob"; vedi migrazione promemoria_titolo_cifrato)

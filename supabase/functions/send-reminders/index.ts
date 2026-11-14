@@ -18,15 +18,21 @@ Deno.serve(async (req) => {
   if (error) return new Response(error.message, { status: 500 });
   let sent = 0, gone = 0;
   for (const r of due || []) {
-    const body = r.n === 1 ? 'Hai un’attività in scadenza.' : 'Hai ' + r.n + ' attività in scadenza.';
-    const payload = JSON.stringify({ t: 'KRANG CRM', b: body, n: r.n });
+    // Ogni promemoria con titolo cifrato dall'app parte da solo (il server non lo legge: lo decifra il dispositivo).
+    // Quelli senza titolo, o oltre i primi 5, vengono riassunti in un avviso generico.
+    const blobs: string[] = (r.blobs || []).slice(0, 5);
+    const extra = r.n - blobs.length;
+    const msgs: { t: string; b: string; e?: string }[] = blobs.map((e) => ({ t: 'KRANG CRM', b: 'Hai un’attività in scadenza.', e }));
+    if (extra > 0) msgs.push({ t: 'KRANG CRM', b: blobs.length ? 'Hai altre ' + extra + ' attività in scadenza.' : extra === 1 ? 'Hai un’attività in scadenza.' : 'Hai ' + extra + ' attività in scadenza.' });
     for (const s of r.subs || []) {
-      try {
-        await webpush.sendNotification({ endpoint: s.e, keys: { p256dh: s.p, auth: s.a } }, payload, { TTL: 6 * 3600, urgency: 'normal' });
-        sent++;
-      } catch (e) {
-        const c = (e as { statusCode?: number }).statusCode;
-        if (c === 404 || c === 410) { await sb.from('push_subs').delete().eq('endpoint', s.e); gone++; }
+      for (const m of msgs) {
+        try {
+          await webpush.sendNotification({ endpoint: s.e, keys: { p256dh: s.p, auth: s.a } }, JSON.stringify(m), { TTL: 6 * 3600, urgency: 'normal' });
+          sent++;
+        } catch (e) {
+          const c = (e as { statusCode?: number }).statusCode;
+          if (c === 404 || c === 410) { await sb.from('push_subs').delete().eq('endpoint', s.e); gone++; break; }
+        }
       }
     }
   }

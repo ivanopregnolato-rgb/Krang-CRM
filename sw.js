@@ -7,6 +7,10 @@ self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(e.request.me
 
 /* promemoria push: il testo è generico (arriva cifrato dal server); un tocco apre l'elenco delle attività */
 self.addEventListener('push',e=>{let d={};try{d=e.data?e.data.json():{}}catch(x){}
- e.waitUntil(self.registration.showNotification(d.t||'KRANG CRM',{body:d.b||'Hai attività in scadenza.',icon:'kcrm-192.png',badge:'kcrm-192.png',tag:'krang-tk',data:{go:'tk'}}))});
+ const show=(b)=>self.registration.showNotification(d.t||'KRANG CRM',{body:b,icon:'kcrm-192.png',badge:'kcrm-192.png',tag:'krang-tk-'+(d.e?String(d.e).slice(-12):'g'),data:{go:'tk'}});
+ e.waitUntil((async()=>{let b=d.b||'Hai attività in scadenza.';
+  if(d.e){try{const kb=await new Promise((ok,ko)=>{const q=indexedDB.open('krang-push',1);q.onupgradeneeded=()=>q.result.createObjectStore('k');q.onerror=()=>ko();q.onsuccess=()=>{const r=q.result.transaction('k').objectStore('k').get('nk');r.onsuccess=()=>ok(r.result);r.onerror=()=>ko()}});
+   if(kb){const u=s=>Uint8Array.from(atob((s+'='.repeat((4-s.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0)),o=u(d.e),k=await crypto.subtle.importKey('raw',u(kb),'AES-GCM',false,['decrypt']),t=JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:o.slice(0,12)},k,o.slice(12)))).t;if(t)b=t}}catch(x){}}
+  return show(b)})())});
 self.addEventListener('notificationclick',e=>{e.notification.close();
  e.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(l=>{for(const c of l){if('focus' in c){try{c.postMessage({go:'tk'})}catch(x){}return c.focus()}}return self.clients.openWindow('./?go=tk')}))});
