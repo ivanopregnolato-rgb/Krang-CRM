@@ -567,7 +567,7 @@ function paintReq(){
   if(!editing){const pb=$('p_prep');pb.disabled=false;pb.innerHTML=ICONS.Scrivi+'Invia informativa';pb.onclick=()=>viaNew('email');return}
   const p=editing.privacy||mkPriv(),R=p.richieste||[],pend=R.find(r=>effSt(r)==='inviata'),ok=!!editing.email,given=CONS.filter(k=>p.cons[k]&&p.cons[k].v).map(k=>CLABEL[k]);
 
-  const pb=$('p_prep');pb.disabled=!ok;{const last=R.slice().reverse().find(r=>r.stato==='inviata');if(last&&ok)autoReq(last);else pullConsents()}
+  const pb=$('p_prep');pb.disabled=!ok;pullConsents();
   pb.innerHTML=ICONS.Scrivi+(p.informativa||R.length?'Reinvia informativa':'Invia informativa');pb.onclick=openSend
   $('p_mailhint').textContent=!ok?'Aggiungi e salva un’email del cliente nella scheda Dati.':(!S.azienda?'Imposta il nome azienda in Menu → Impostazioni: è il titolare indicato nell’informativa.':'');
   w.hidden=true}
@@ -576,7 +576,7 @@ function openSend(){
   if(!S.azienda){toast('Imposta prima il nome azienda: è il titolare indicato nell’informativa.');openSettings();setErr('st_az','Inserisci il nome dell’azienda.');return}
   const now=new Date();
   rq={id:'r'+Date.now().toString(36),token:tok(),creata:now.toISOString().slice(0,16),email:editing.email,stato:'inviata'};
-  $('ms_to').value=rq.email;$('ms_sub').value=INFO_SUBJ();$('ms_body').value=mailText(editing,rq);lkStart(editing);$('ms_op').value=opName;setErr('ms_op','');setErr('ms_gmail','');$('ms_gmail').hidden=true;gm().then(m=>{$('ms_gmail').hidden=!(m&&autoOk());$('ms_gmail').lastChild.textContent='Invia con '+PV().nome}).catch(()=>{});$('mSend').hidden=false}
+  $('ms_to').value=rq.email;$('ms_sub').value=INFO_SUBJ();$('ms_body').value=mailText(editing,rq);lkStart(editing);$('ms_op').value=opName;setErr('ms_op','');$('mSend').hidden=false}
 $('p_prep').onclick=openSend;
 $('ms_x').onclick=()=>{$('mSend').hidden=true};
 $('ms_copy').onclick=async()=>{if(!await lkReady())return;toast(await copyText('Oggetto: '+$('ms_sub').value+'\n\n'+$('ms_body').value)?'Testo copiato.':'Copia non riuscita.')};
@@ -586,96 +586,36 @@ $('ms_ok').onclick=async()=>{
   saveOp(op);const p=editing.privacy=editing.privacy||mkPriv();p.richieste=p.richieste||[];p.richieste.push(rq);
   logP(editing,'Informativa inviata via email a '+rq.email+' (codice '+rq.token+', informativa v'+rq.ver+', con link ai consensi)','invio');
   persist();$('mSend').hidden=true;loadPriv(p);render();toast('Invio registrato nel registro.')};
-function finishSend(via,res){
-  const p=editing.privacy=editing.privacy||mkPriv();p.richieste=p.richieste||[];
-  rq.via=via==='auto'?PV().id:via;const pl=res&&res.payload;if(pl&&typeof pl==='object'){if(pl.id)rq.msgId=String(pl.id);if(pl.threadId)rq.threadId=String(pl.threadId)}
-  p.richieste.push(rq);
-  logP(editing,'Informativa inviata '+(via==='auto'?'da '+PV().nome+' ':'via email ')+'a '+rq.email+' (codice '+rq.token+', informativa v'+rq.ver+', con link ai consensi)','invio');
-  persist();$('mSend').hidden=true;loadPriv(p);render();toast(via==='auto'?'Email inviata e registrata nel registro.':'Invio registrato nel registro.')}
-async function doGmailSend(){
-  const b=$('ms_gmail');b.disabled=true;setErr('ms_gmail','');
-  try{
-    if(!await lkReady())return;
-    const mcp=await gm();
-    if(!mcp||!autoOk()){setErr('ms_gmail',hasClaude()?pn('Collegamento a Gmail non disponibile qui: usa Apri posta o invia l’email a mano.'):gmNo()+' Oppure usa Apri posta.');return}
-    if(!S.replyTo){try{const w=await detectMe();if(w.email){S.replyTo=w.email;saveS()}}catch(e){}}
-    const a={to:rq.email,subject:$('ms_sub').value,text:$('ms_body').value,fromName:mitt()};
-    if(S.replyTo&&mailRe.test(S.replyTo))a.html=mailHtml($('ms_body').value,rq,S.replyTo,$('ms_sub').value);
-    const res=await PV().send(mcp,a);
-    finishSend('auto',res);
-  }catch(e){
-    const c=e&&e.code,U='Esito incerto: controlla la cartella Posta inviata di Gmail prima di riprovare. Se l’email è partita, tocca “Ho inviato l’email”.';
-    const M={server_not_connected:'Gmail non è collegato: collegalo da Impostazioni, Connettori, su claude.ai.',needs_reauth:'La connessione a Gmail è scaduta: ricollegala da Impostazioni, Connettori, su claude.ai.',selection_required:'Hai più connettori Gmail: sceglinone uno quando richiesto e riprova.',not_in_manifest:'Autorizzazione negata: riprova e consenti a questa pagina di usare Gmail.',approval_required:'Serve la tua approvazione: riprova e consenti l’invio.',blocked_by_policy:'Il tuo amministratore blocca l’invio da Gmail.',tool_error:'Gmail ha rifiutato l’invio. Controlla l’indirizzo del destinatario.',server_unavailable:U,upstream_error:U,cancelled:U};
-    setErr('ms_gmail',pn(M[c]||'Invio non riuscito. Riprova o invia l’email a mano.'));
-  }finally{b.disabled=false}}
-$('ms_gmail').onclick=()=>{const op=$('ms_op').value.trim();if(!op){setErr('ms_op','Indica chi registra l’invio.');return}saveOp(op);
-  doGmailSend()};
 const pj=r=>{let p=r&&r.payload;if(typeof p==='string'){try{p=JSON.parse(p)}catch(e){}}return(p&&typeof p==='object')?p:{}};
-function gmReadErr(e){return pn(gmReadErr0(e))}
-function gmReadErr0(e){const c=e&&e.code;if(e&&e.gd&&GDM[c])return GDM[c];return({server_not_connected:'Gmail non è collegato: collegalo da Impostazioni, Connettori, su claude.ai.',needs_reauth:'La connessione a Gmail è scaduta: ricollegala da Impostazioni, Connettori.',not_in_manifest:'Autorizzazione negata: riprova e consenti la lettura di Gmail.',approval_required:'Serve la tua approvazione per leggere Gmail: riprova.',blocked_by_policy:'Il tuo amministratore blocca l’accesso a Gmail.',server_unavailable:'Gmail non risponde: riprova tra poco.'})[c]||'Lettura di Gmail non riuscita. Riprova.'}
 const LAST={};
-let tr='',cmpTo='';
-const gm=async()=>{if(typeof claude!=='undefined'){const m=await claude.use('mcp');if(m)return m}if(window.GD){GD.setClient(S.gcid||'');if(GD.ready())return GD}return null};
-const hasClaude=()=>typeof claude!=='undefined';
-const gmNo=d=>hasClaude()?d:'Gmail non è collegato (il collegamento dura circa un’ora): tocca Collega Gmail in Impostazioni, Posta.';
+let cmpTo='';
 const dec=s=>new DOMParser().parseFromString(String(s||''),'text/html').documentElement.textContent;
-function gmSendErr(e){return pn(gmSendErr0(e))}
-const GDM={server_not_connected:'Gmail non è collegato: inserisci l’ID client e tocca Collega Gmail (Impostazioni, Posta).',needs_reauth:'La connessione a Gmail è scaduta (dura circa un’ora): tocca Collega Gmail in Impostazioni, Posta.',not_in_manifest:'Google ha negato l’accesso: ricollega Gmail e consenti sia l’invio sia la lettura.',gd_api:'La Gmail API non è attiva nel tuo progetto Google Cloud: attivala e riprova.',tool_error:'Gmail ha rifiutato la richiesta. Controlla l’indirizzo del destinatario.',server_unavailable:'Gmail non risponde: riprova tra poco.'};
-function gmSendErr0(e){const c=e&&e.code;if(e&&e.gd&&GDM[c])return c==='server_unavailable'?'Esito incerto: controlla la cartella Posta inviata di Gmail prima di riprovare.':GDM[c];const U='Esito incerto: controlla la cartella Posta inviata di Gmail prima di riprovare.';return({server_not_connected:'Gmail non è collegato: collegalo da Impostazioni, Connettori, su claude.ai.',needs_reauth:'La connessione a Gmail è scaduta: ricollegala da Impostazioni, Connettori.',selection_required:'Hai più connettori Gmail: sceglinone uno e riprova.',not_in_manifest:'Autorizzazione negata: riprova e consenti l’invio.',approval_required:'Serve la tua approvazione: riprova e consenti l’invio.',blocked_by_policy:'Il tuo amministratore blocca l’invio da Gmail.',tool_error:'Gmail ha rifiutato l’invio. Controlla l’indirizzo del destinatario.',server_unavailable:U,upstream_error:U,cancelled:U})[c]||'Invio non riuscito. Riprova o usa Apri posta.'}
-/* registro minimo delle email sul cliente (solo data e direzione, niente testo) */
-function emSave(c,ms,local){if(!c)return 0;const em=c.em=c.em||[],mail=(c.email||'').toLowerCase();let n=0;
-  const add=(id,dir,iso)=>{if(!iso||isNaN(new Date(iso)))return;if(id&&em.some(e=>e.id===id))return
-    if(dir==='out'&&id&&id[0]!=='s'&&em.some(e=>e.id&&e.id[0]==='s'&&e.dir==='out'&&Math.abs(Date.parse(e.data)-Date.parse(iso))<3e5)){const e=em.find(x=>x.id&&x.id[0]==='s'&&x.dir==='out'&&Math.abs(Date.parse(x.data)-Date.parse(iso))<3e5);e.id=id;return}
-    em.push({id,dir,data:iso});n++};
-  if(local)add('s'+Date.now().toString(36),'out',new Date().toISOString());
-  else(ms||[]).forEach(m=>{const t=+m.internalDate;if(!t||!m.id)return;{const inb=String(m.sender||'').toLowerCase().includes(mail);add(String(m.id),inb?'in':'out',new Date(t).toISOString())}});
-  if(n){c.agg=new Date().toISOString();try{persist()}catch(e){}}return n}
-function paintComm(ths){
-  const w=$('comm');w.textContent='';const mail=editing.email.toLowerCase(),ms=[];
-  ths.forEach(t=>(t.messages||[]).forEach(m=>ms.push(m)));TM[editing.id]=ms.slice();emSave(editing,ms);try{paintAllC()}catch(e){}
-  infSent(editing,ms).forEach(x=>ms.push({internalDate:x.t,sender:'',subject:x.sub,snippet:x.txt,local:1}));
-  ms.sort((a,b)=>+b.internalDate-+a.internalDate);
-  if(!ms.length){w.append(h('div','hint','Nessuna email scambiata con '+editing.email+'.'));return}
-  w.append(h('div','hint',ms.length+' messaggi, dal più recente. Tocca un messaggio per leggere la conversazione.'));
-  ms.forEach(m=>{const inb=String(m.sender||'').toLowerCase().includes(mail),d=h('div','req'),ch=h('i','chip',inb?'Ricevuta':'Inviata');ch.style.background=inb?'#b5ebc0':'#d9d1f3';
-    d.tabIndex=0;d.style.cursor='pointer';d.append(ch,h('b','',dec(m.subject)||'(senza oggetto)'),h('div','',fmtDT(+m.internalDate)),h('div','',dec(m.snippet)));
-    if(m.local){d.style.cursor='default';d.tabIndex=-1}else{d.onclick=()=>openThread(m.threadId);d.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();openThread(m.threadId)}}}w.append(d)})}
+/* registro minimo delle email sul cliente: data, direzione e oggetto delle email inviate dall'app (niente testo) */
+function emSave(c,ms,local,sub){if(!c||!local)return 0;const em=c.em=c.em||[];em.push({id:'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,4),dir:'out',data:new Date().toISOString(),og:sub?String(sub).slice(0,200):''});c.agg=new Date().toISOString();try{persist()}catch(e){}return 1}
+function emItems(c){const it=[];(c.em||[]).forEach(e=>{const t=Date.parse(e.data);if(!isNaN(t))it.push({t,dir:e.dir,title:e.og||(e.dir==='in'?'Email ricevuta':'Email inviata'),text:''})});infSent(c).forEach(x=>it.push({t:x.t,dir:'out',title:x.sub,text:x.txt}));return it}
+function paintComm(){
+  const w=$('comm');w.textContent='';try{paintAllC()}catch(e){}if(!editing)return;
+  const ms=emItems(editing).sort((a,b)=>b.t-a.t);
+  if(!ms.length){w.append(h('div','hint','Nessuna email registrata. Quelle che invii da qui compaiono nell’elenco.'));return}
+  w.append(h('div','hint',ms.length+(ms.length===1?' email registrata':' email registrate')+', dalla più recente.'));
+  ms.forEach(m=>{const inb=m.dir==='in',d=h('div','req'),ch=h('i','chip',inb?'Ricevuta':'Inviata');ch.style.background=inb?'#b5ebc0':'#d9d1f3';
+    d.append(ch,h('b','',m.title),h('div','',fmtDT(m.t)));if(m.text)d.append(h('div','',m.text));w.append(d)})}
 const cmStat=(t,err)=>{const e=$('allSt');if(!e)return;e.textContent=t||'';e.className=err?'err':'hint';e.hidden=!t};
-async function loadComm(){
+function loadComm(){
   paintWa();const w=$('comm'),cl=editing;w.textContent='';cmStat('');
-  if(!cl||!cl.email){w.append(h('div','hint','Aggiungi e salva un’email del cliente nella scheda Dati.'));cmStat('Senza email del cliente le email non si leggono: aggiungila nella scheda Dati.');return}
-  w.append(h('div','hint',pn('Lettura da Gmail in corso…')));cmStat('Lettura delle email da Gmail in corso…');
-  try{
-    const mcp=await gm();if(editing!==cl)return;
-    if(!mcp){w.textContent='';w.append(h('div','hint',hasClaude()?pn('Collegamento a Gmail non disponibile in questa visualizzazione.'):gmNo()));cmStat(hasClaude()?'Collegamento a Gmail non disponibile in questa visualizzazione: si vedono solo i messaggi WhatsApp registrati.':gmNo()+' Si vedono solo i messaggi WhatsApp registrati.');return}
-    const P=PV();if(!P.search){w.textContent='';w.append(h('div','hint','La lettura delle email non è ancora disponibile per '+P.nome+'.'));cmStat('La lettura delle email non è ancora disponibile per '+P.nome+'.');return}
-    const s=await P.search(mcp,P.qContact(cl.email));
-    if(editing!==cl)return;paintComm(pj(s).threads||[]);cmStat('');
-  }catch(e){if(editing===cl){w.textContent='';w.append(h('div','err',gmReadErr(e)));$('comm').lastChild.hidden=false;cmStat(gmReadErr(e),true)}}}
-async function openThread(id){
-  tr='';$('mt_title').textContent='Conversazione';$('mt_body').textContent='Lettura in corso…';$('mThread').hidden=false;
-  try{
-    const mcp=await gm();if(!mcp){$('mt_body').textContent=hasClaude()?'Collegamento a Gmail non disponibile.':gmNo();return}
-    const P=PV();if(!P.thread){$('mt_body').textContent='Non disponibile per '+P.nome+'.';return}
-    const g=pj(await P.thread(mcp,id)),ms=(g.messages||[]).slice().sort((a,b)=>+a.internalDate-+b.internalDate);
-    $('mt_title').textContent=dec((ms[0]&&ms[0].subject)||'Conversazione');
-    const w=$('mt_body'),lines=[];w.textContent='';
-    ms.forEach(m=>{const hd='['+fmtDT(+m.internalDate)+'] Da: '+m.sender+' A: '+(m.toRecipients||[]).join(', '),body=String(m.plaintextBody||dec(m.snippet)||'').trim(),b=h('div','msgb');b.append(h('div','mh',hd),h('pre','',body));w.append(b);lines.push(hd+'\n'+body)});
-    tr='Oggetto: '+$('mt_title').textContent+'\n\n'+lines.join('\n\n---\n\n');
-  }catch(e){$('mt_body').textContent=gmReadErr(e)}}
-$('mt_copy').onclick=async()=>toast(tr&&await copyText(tr)?'Trascrizione copiata.':'Niente da copiare.');
-$('mt_x').onclick=()=>{$('mThread').hidden=true};
-$('cm_ref').onclick=loadComm;$('cm_new').onclick=()=>{if(editing){openCompose(editing);offerInf(editing)}};
+  if(!cl)return;
+  if(!cl.email){w.append(h('div','hint','Aggiungi e salva un’email del cliente nella scheda Dati.'));cmStat('Senza email del cliente non puoi scrivere: aggiungila nella scheda Dati.');return}
+  paintComm()}
+$('cm_new').onclick=()=>{if(editing){openCompose(editing);offerInf(editing)}};
 function openCompose(c){cmpLeadRef=null;cmpInfC=null;cmpAtt=[];cmpQ=null;cmpOpts=null;$('mc_att').hidden=true;$('mc_att').textContent='';
   if(!c.email){toast('Aggiungi un’email al cliente.');return}
   cmpTo=c.email;cmpLog='';const nome=contactName(c);
   cmpName=nome;$('mc_to').value=cmpTo;$('mc_sub').value='';$('mc_body').value='Gentile '+nome+',\n\n\n\n'+firma();
-  ['mc_sub','mc_body','mc_gmail'].forEach(k=>setErr(k,''));
+  ['mc_sub','mc_body'].forEach(k=>setErr(k,''));
   const ok=c.privacy&&c.privacy.cons&&c.privacy.cons.mkEmail&&c.privacy.cons.mkEmail.v;
   $('mc_hint').textContent=ok?'':'Questo cliente non ha dato il consenso al marketing via email: usa questa email solo per comunicazioni legate al rapporto in corso.';
-  $('mc_gmail').hidden=true;
   const T=$('mc_tpl');T.textContent='';TEMPLATES.forEach(([l,s,t])=>{const b=h('button','',l);b.type='button';b.style.background='var(--lilac)';b.onclick=()=>{$('mc_sub').value=subj(s);$('mc_body').value=tpl('Gentile {nome},\n\n'+t+'\n\n',{nome})+firma()};T.append(b)});
-  gm().then(m=>{$('mc_gmail').hidden=!((m||(!hasClaude()&&S.gcid&&PV().id==='gmail'))&&autoOk());$('mc_gmail').lastChild.textContent='Invia con '+PV().nome}).catch(()=>{});mcActs();$('mCompose').hidden=false}
+  mcActs();$('mCompose').hidden=false}
 $('mc_x').onclick=()=>{$('mCompose').hidden=true};
 const mcFiles=()=>cmpAtt.map(a=>new File([a.u8],a.name,{type:a.mime||'application/pdf'}));
 const canShareF=()=>{try{return !!(cmpAtt.length&&navigator.share&&navigator.canShare&&navigator.canShare({files:mcFiles()}))}catch(e){return false}};
@@ -687,27 +627,14 @@ $('mc_share').onclick=async()=>{if(!mcCheck())return;try{await navigator.share({
 $('mc_done').onclick=()=>{if(!mcCheck())return;afterSent('Registrata come inviata.')};
 const launchMail=()=>launch('mailto:'+cmpTo+'?subject='+encodeURIComponent($('mc_sub').value)+'&body='+encodeURIComponent($('mc_body').value),$('mc_body').value);
 function afterSent(msg){
-    {const cc=clients.find(x=>x.email&&x.email.toLowerCase()===String(cmpTo||'').toLowerCase());if(cc)emSave(cc,null,true)}
+    {const cc=clients.find(x=>x.email&&x.email.toLowerCase()===String(cmpTo||'').toLowerCase());if(cc)emSave(cc,null,true,$('mc_sub').value.trim())}
     if(cmpLeadRef&&$('mc_body').value.includes(INF_MARK)){const inf={d:ymd(),via:'Email'};if(cmpLeadRef.l){cmpLeadRef.l.inf=inf;persistL()}else pendInf[cmpLeadRef.email]=inf}
     if(cmpLeadRef&&cmpLeadRef.l){lLog(cmpLeadRef.l,{dir:'out',via:'Email',data:new Date().toISOString(),oggetto:$('mc_sub').value.trim(),testo:$('mc_body').value.split(INF_MARK)[0].trim()+($('mc_body').value.includes(INF_MARK)?'\n[+ informativa privacy]':'')});try{paintLM()}catch(e){}}
     if(cmpInfC&&$('mc_body').value.includes(INF_MARK)){const c=cmpInfC,pv=c.privacy=c.privacy||mkPriv();pv.informativa=true;pv.infData=ymd();pv.infModo='Email';pv.infVer=infUse();logP(c,'Informativa inviata via email a '+cmpTo,'invio');persist();if(editing===c)loadPriv(pv);try{render()}catch(e){}}
     if(cmpLog){logP(editing,cmpLog,'promemoria');persist();loadPriv(editing.privacy);cmpLog=''}$('mCompose').hidden=true;toast(cmpQ?markSent(cmpQ,'Email registrata. Preventivo impostato su “Inviato”.','email'):(msg||'Email inviata.'));if(!$('commF').classList.contains('pane-hide'))loadComm();
 }
-async function doCompose(){
-  const b=$('mc_gmail');b.disabled=true;setErr('mc_gmail','');
-  try{
-    const mcp=await gm();if(!mcp){setErr('mc_gmail',hasClaude()?'Collegamento a Gmail non disponibile qui: usa Apri posta.':gmNo()+' Oppure usa Apri posta.');return}
-    if(!autoOk()){setErr('mc_gmail','L’invio automatico non è disponibile per '+PV().nome+': usa Apri posta.');return}
-    await PV().send(mcp,{to:cmpTo,subject:$('mc_sub').value.trim(),text:$('mc_body').value,html:mailHtmlBro($('mc_body').value)||undefined,fromName:mitt(),atts:cmpAtt.map(a=>({name:a.name,b64:b64(a.u8),mime:a.mime}))});
-    afterSent();
-  }catch(e){setErr('mc_gmail',gmSendErr(e))}
-  finally{b.disabled=false}}
-$('mc_gmail').onclick=()=>{
-  const s=$('mc_sub').value.trim(),t=$('mc_body').value.trim();setErr('mc_sub',s?'':'Inserisci l’oggetto.');setErr('mc_body',t?'':'Scrivi il testo del messaggio.');
-  if(!s||!t)return;
-  doCompose()};
 let cmpInfC=null,cmpLeadRef=null,cmpName='',cmpLog='',cmpAtt=[],cmpQ=null,cmpOpts=null;
-let S={azienda:'',replyTo:'',alias:'',firma:'Cordiali saluti\n{azienda}',provider:'mailto'};try{S=Object.assign(S,JSON.parse(localStorage.getItem('crm-settings-v1')||'{}'))}catch(e){}
+let S={azienda:'',replyTo:'',alias:'',firma:'Cordiali saluti\n{azienda}'};try{S=Object.assign(S,JSON.parse(localStorage.getItem('crm-settings-v1')||'{}'))}catch(e){}
 S.ret=Object.assign({contratto:120,contatti:24,marketing:24,profilazione:12,comunicazioni:24},S.ret||{});
 if(S.wa){delete S.wa.bus;delete S.wa.send}
 S.qValid=S.qValid>0?S.qValid:30;S.qCond=S.qCond||'Prezzi in euro, IVA esclusa salvo diversa indicazione. Pagamento e tempi di consegna da concordare.';
@@ -725,73 +652,18 @@ const subj=s=>tpl(s).replace(/\s+–\s*$/,'');
 const firma=()=>tpl(S.firma||'Cordiali saluti\n{azienda}').replace(/\n{3,}/g,'\n\n').trim();
 const INFO_SUBJ=()=>'Informativa sulla privacy'+(az()?' – '+az():'')+' e richiesta di consensi';
 const TEMPLATES=[['Ringraziamento','Grazie per il nostro incontro – {azienda}','grazie per il tempo dedicatoci. Restiamo a disposizione per qualsiasi chiarimento.'],['Preventivo','Il nostro preventivo – {azienda}','come concordato le invio il nostro preventivo. Resto a disposizione per ogni chiarimento.'],['Seguito','Aggiornamento sulla nostra conversazione – {azienda}','volevo sapere se ha avuto modo di valutare la nostra proposta.']];
-/* ===== Strato provider di posta =====
-   Ogni provider espone la stessa interfaccia:
-   send(mcp,{to,subject,text,html,fromName}), search(mcp,query), thread(mcp,id),
-   qContact/qCode/qBounce/qSent (costruttori di ricerca nel linguaggio del provider).
-   I messaggi restituiti devono avere la forma canonica: id, threadId, sender, toRecipients,
-   subject, internalDate (ms), plaintextBody, snippet, labelIds.
-   Un provider senza send/search resta in modalità manuale (Apri posta, Copia). */
-const PROVIDERS=[
- {id:'mailto',nome:'Programma di posta del dispositivo',gruppo:'Consigliato',stato:'manuale'},
- {id:'gmail',nome:'Gmail',server:'Gmail',gruppo:'Avanzato: invio automatico',stato:'attivo',alias:'account',aliasHelp:'In Gmail il nome del mittente si imposta nell’account: Impostazioni, Account e importazione, Invia messaggio come.',
-  send:(m,a)=>{const g={to:[a.to],subject:a.subject,body:a.text};if(a.html)g.htmlBody=a.html;if(a.atts&&a.atts.length)g.attachments=a.atts.map(x=>({filename:x.name,content:x.b64,mimeType:x.mime||'application/pdf'}));return m.callTool('Gmail','send_message',g)},
-  search:(m,q)=>m.callTool('Gmail','search_threads',{query:q,pageSize:20}),
-  thread:(m,id)=>m.callTool('Gmail','get_thread',{threadId:id}),
-  qContact:e=>'from:'+e+' OR to:'+e+' OR cc:'+e,qCode:t=>'"'+t+'"',
-  qInbound:'in:inbox newer_than:30d -category:promotions -category:social -category:updates -category:forums',qBounce:(e,d)=>'from:(mailer-daemon OR postmaster) "'+e+'" after:'+d.replace(/-/g,'/'),qSent:'in:sent'}];
-const PV=()=>PROVIDERS.find(p=>p.id===S.provider)||PROVIDERS[0];
-const autoOk=()=>!!PV().send;
-const pn=s=>String(s).replace(/Gmail/g,PV().nome);
-const provName=id=>(PROVIDERS.find(p=>p.id===id)||{nome:id}).nome;
-let detName='';
-async function detectMe(P=PV()){const mcp=await gm();const E={email:'',name:''};if(!mcp||!P.search)return E;const s=await P.search(mcp,P.qSent);for(const t of(pj(s).threads||[]))for(const m of(t.messages||[]))if((m.labelIds||[]).includes('SENT')){const raw=String(m.sender||''),x=raw.match(/[^\s<>"]+@[^\s<>"]+/);if(x)return{email:x[0].toLowerCase(),name:raw.replace(/<[^>]*>/g,'').replace(/["']/g,'').replace(x[0],'').trim()}}return E}
-async function provStatus(P){if(!P.server)return null;try{const mcp=await gm();if(!mcp||!mcp.listTools)return null;const r=await mcp.listTools(),s=((r&&r.servers)||[]).find(x=>x.server===P.server);return s?s.authStatus:'assente'}catch(e){return null}}
-const selProv=()=>PROVIDERS.find(p=>p.id===$('st_prov').value)||PROVIDERS[0];
-function fillProv(){const s=$('st_prov');s.textContent='';const g={};PROVIDERS.forEach(p=>{if(!g[p.gruppo]){const o=document.createElement('optgroup');o.label=p.gruppo;s.append(o);g[p.gruppo]=o}const op=h('option','',p.nome+({prossimo:' (in arrivo)',server:' (con l’app)'}[p.stato]||''));op.value=p.id;g[p.gruppo].append(op)})}
-function aliasHint(){const P=selProv(),al=$('st_alias').value.trim()||$('st_az').value.trim();let t;
-  if(P.alias==='account'){t=P.aliasHelp;if(detName&&al)t+=detName.toLowerCase()===al.toLowerCase()?' Il nome attualmente mostrato coincide.':' Il nome attualmente mostrato è «'+detName+'», diverso da «'+al+'».'}
-  else if(P.alias==='messaggio')t='Questo servizio permette di indicare il nome del mittente a ogni messaggio.';
-  else t='Il nome mostrato al destinatario dipende dall’account di posta o dal programma usato. Il nome azienda compare comunque in oggetto, testo e firma.';
-  $('st_aliashint').textContent=t}
-function gdPaint(){const e=$('st_gds');if(!e)return;const c=($('st_gcid').value||'').trim();GD.setClient(c);e.textContent=GD.ready()?'Gmail è collegato. Il collegamento dura circa un’ora: poi tocca di nuovo Collega Gmail.':c?'Non collegato: tocca Collega Gmail.':'Inserisci l’ID client per collegare Gmail.'}
-function provHint(){const P=selProv(),el=$('st_provhint');{const dt=$('st_det');if(dt)dt.hidden=P.id!=='gmail'}const dir=P.id==='gmail'&&!hasClaude();{const b=$('st_gd');if(b)b.hidden=!dir}if(dir){el.textContent='Gmail si collega direttamente al tuo account Google: le email vanno dal tuo dispositivo a Google, senza passare da altri server.';gdPaint();return}
-  const T={manuale:'Nessun collegamento e nessun permesso: scrivi l’email qui e inviala dal tuo programma di posta con Apri posta (o con Condividi con allegati, se ci sono PDF). Poi tocca Segna come inviata. Le risposte dei clienti si registrano a mano.',};
-  if(P.stato!=='attivo'){el.textContent=T[P.stato]||'';return}
-  el.textContent='Verifica del collegamento…';
-  provStatus(P).then(s=>{if(selProv()!==P)return;el.textContent=s==='connected'?P.nome+' è collegato.':s==='needs_reauth'?'La connessione a '+P.nome+' è scaduta: ricollegala da claude.ai, Impostazioni, Connettori.':s==='assente'?P.nome+' non risulta collegato: collegalo da claude.ai, Impostazioni, Connettori.':''})}
-function mailHtml(txt,r,rt,sj){
-  const i=txt.indexOf('\nCONSENSI FACOLTATIVI\n'),a=i<0?txt:txt.slice(0,i),u=r.url||'';
-  if(!u)return '<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#263045;max-width:560px">'+esc(txt).replace(/\n/g,'<br>')+'</div>';
-  return '<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#263045;max-width:560px">'+esc(a).replace(/\n/g,'<br>')+'<p><b>CONSENSI FACOLTATIVI</b><br>Per scegliere a quali trattamenti facoltativi acconsente, apra la sua pagina personale e confermi.</p><a href="'+esc(u)+'" style="display:block;margin:8px 0;padding:14px 16px;background:#b5ebc0;color:#263045;text-decoration:none;border-radius:10px;font-weight:bold;text-align:center">Scegli i miei consensi</a><p style="font-size:13px">Se il pulsante non si apre, copi questo indirizzo nel browser:<br>'+esc(u)+'</p><p>Se non desidera prestare alcun consenso non è necessario fare nulla: il rifiuto non incide sul servizio. Può cambiare o revocare le sue scelte in qualsiasi momento riaprendo lo stesso link.</p><p>'+esc(r.sig||'').replace(/\n/g,'<br>')+'</p><p style="font-size:12px;color:#6b7488">Questa email non contiene strumenti di tracciamento.</p></div>'}
-async function bounceCheck(mcp,r){
-  const P=PV();if(!P.search)return false;const s=await P.search(mcp,P.qBounce(r.email,r.creata.slice(0,10)));
-  const since=new Date(r.creata+'Z').getTime();let hit=null;
-  for(const t of(pj(s).threads||[]))for(const m of(t.messages||[]))if(+m.internalDate>=since&&!hit)hit=m;
-  r.consegna={stato:hit?'respinta':'ok',verificata:new Date().toISOString().slice(0,16)};
-  logP(editing,'Verifica consegna: '+(hit?'email respinta dal server del destinatario':'nessun errore di consegna rilevato')+' (codice '+r.token+')','consegna');persist();loadPriv(editing.privacy);return!!hit}
-function remind(r){openCompose(editing);$('mc_sub').value='Promemoria: informativa sulla privacy'+(az()?' – '+az():'');
-  const u=conUrl(editing);lkStart(editing);$('mc_body').value='Gentile '+cmpName+',\n\nle abbiamo inviato alcuni giorni fa la nostra informativa sulla privacy. Se desidera indicare i consensi facoltativi, può farlo da questa pagina personale:\n\n'+u+'\n\nNon è necessario se non desidera prestare consensi; può cambiare le sue scelte quando vuole riaprendo lo stesso link.\n\n'+firma();
-  cmpLog='Promemoria inviato via email (codice '+r.token+')'}
-function openSettings(){setSp(null);try{$('st_gcid').value=S.gcid||''}catch(e){}try{paintCloud();paintDrive()}catch(e){}paintWaSet();$('st_qv').value=S.qValid;$('st_qc').value=S.qCond;$('st_ls').value=S.lead.scartati;$('st_ln').value=S.lead.nuovi;$('st_lg').value=S.lead.giorni;$('st_linf').checked=S.lead.inf!==false;['st_qv','st_ls','st_ln','st_lg'].forEach(k=>setErr(k,''));try{paintBro()}catch(e){}$('st_piva').value=S.piva||'';$('st_ind').value=S.indirizzo||'';$('st_tel').value=S.telefono||'';$('st_sito').value=S.sito||'';fillProv();$('st_az').value=S.azienda;$('st_alias').value=S.alias;$('st_firma').value=S.firma;$('st_prov').value=PV().id;$('st_rt').value=S.replyTo;['contratto','contatti','marketing','profilazione','comunicazioni'].forEach(k=>{$('st_r_'+k).value=S.ret[k];setErr('st_r_'+k,'')});['st_rt','st_az'].forEach(k=>setErr(k,''));detName='';aliasHint();provHint();$('mSet').hidden=false;stTouched=false;stBase=stSig();setTimeout(()=>{if(!stTouched)stBase=stSig()},900)}
+function aliasHint(){$('st_aliashint').textContent='Il nome mostrato al destinatario dipende dal programma di posta che usi. Il nome azienda compare comunque in oggetto, testo e firma.'}
+function openSettings(){setSp(null);try{paintCloud();paintDrive()}catch(e){}paintWaSet();$('st_qv').value=S.qValid;$('st_qc').value=S.qCond;$('st_ls').value=S.lead.scartati;$('st_ln').value=S.lead.nuovi;$('st_linf').checked=S.lead.inf!==false;['st_qv','st_ls','st_ln'].forEach(k=>setErr(k,''));try{paintBro()}catch(e){}$('st_piva').value=S.piva||'';$('st_ind').value=S.indirizzo||'';$('st_tel').value=S.telefono||'';$('st_sito').value=S.sito||'';$('st_az').value=S.azienda;$('st_alias').value=S.alias;$('st_firma').value=S.firma;$('st_rt').value=S.replyTo;['contratto','contatti','marketing','profilazione','comunicazioni'].forEach(k=>{$('st_r_'+k).value=S.ret[k];setErr('st_r_'+k,'')});['st_rt','st_az'].forEach(k=>setErr(k,''));aliasHint();$('mSet').hidden=false;stTouched=false;stBase=stSig();setTimeout(()=>{if(!stTouched)stBase=stSig()},900)}
 ['st_az','st_alias'].forEach(id=>$(id).addEventListener('input',aliasHint));
 let stTouched=false,stBase='';
 const stSig=()=>[...$('mSet').querySelectorAll('input:not([type=file]):not([data-ns]),select:not([data-ns]),textarea')].map(e=>e.type==='checkbox'?(e.checked?1:0):e.value).join('\u0001');
 $('mSet').addEventListener('input',()=>{stTouched=true});$('mSet').addEventListener('change',()=>{stTouched=true});
-$('st_gdb').onclick=async()=>{const b=$('st_gdb'),id=($('st_gcid').value||'').trim();if(!/^[\w.-]+\.apps\.googleusercontent\.com$/.test(id)){$('st_gds').textContent='L’ID client deve finire con .apps.googleusercontent.com.';return}
-  S.gcid=id;GD.setClient(id);b.disabled=true;$('st_gds').textContent='Apro l’accesso Google…';
-  try{await GD.connect();saveS();if(!$('st_rt').value.trim()){try{const w=await detectMe(selProv());if(w.email){$('st_rt').value=w.email;detName=w.name;aliasHint()}}catch(e){}}toast('Gmail collegato.')}
-  catch(e){$('st_gds').textContent=e&&e.code==='server_unavailable'?'Impossibile contattare Google: controlla la connessione.':'Accesso non riuscito o annullato. Controlla l’ID client e che la tua email sia tra gli utenti di prova.';b.disabled=false;return}
-  b.disabled=false;gdPaint()};
-$('st_gcid').addEventListener('input',()=>{try{gdPaint()}catch(e){}});
-$('st_prov').addEventListener('change',()=>{detName='';aliasHint();provHint()});
 $('st_x').onclick=()=>{$('mSet').hidden=true};
 saveBtn($('stSv'),stSig,()=>{stStay=!!spCur;try{$('st_ok').onclick()}finally{stStay=false}},()=>stBase);
 let stStay=false;
 $('stBack').onclick=()=>{if(spCur){if(stSig()===stBase){setSp(null);return}$('mDirty').hidden=false;$('dC').onclick=()=>{$('mDirty').hidden=true};$('dN').onclick=()=>{$('mDirty').hidden=true;openSettings()};$('dY').onclick=()=>{$('mDirty').hidden=true;stStay=true;try{$('st_ok').onclick()}finally{stStay=false}};return}if(stSig()===stBase){$('mSet').hidden=true;return}$('mDirty').hidden=false;$('dC').onclick=()=>{$('mDirty').hidden=true};$('dN').onclick=()=>{$('mDirty').hidden=true;$('mSet').hidden=true};$('dY').onclick=()=>{$('mDirty').hidden=true;$('st_ok').onclick()}};
-$('st_det').onclick=async()=>{const b=$('st_det');b.disabled=true;setErr('st_rt','');try{const w=await detectMe(selProv());if(w.email){$('st_rt').value=w.email;detName=w.name;aliasHint()}else setErr('st_rt','Non sono riuscito a rilevarlo: scrivilo a mano.')}catch(e){setErr('st_rt',gmReadErr(e))}finally{b.disabled=false}};
-$('st_ok').onclick=()=>{const RK=['contratto','contatti','marketing','profilazione','comunicazioni'],nr={};let rok=true;RK.forEach(k=>{const v=parseInt($('st_r_'+k).value,10);if(!(v>=1&&v<=240)){setErr('st_r_'+k,'Inserisci i mesi (da 1 a 240).');rok=false;setSp('pv')}else{setErr('st_r_'+k,'');nr[k]=v}});if(!rok)return;const NV=[['st_qv',1,365,'pr'],['st_ls',1,365,'ld'],['st_ln',1,60,'ld'],['st_lg',1,365,'ld']],nvv={};for(const [k,a,b,pn] of NV){const v=parseInt($(k).value,10);if(!(v>=a&&v<=b)){setSp(pn);setErr(k,'Inserisci un numero da '+a+' a '+b+'.');return}setErr(k,'');nvv[k]=v}
-  S.gcid=($('st_gcid').value||'').trim();S.wa={paese:$('st_wpaese').value||'IT',inf:$('st_winf').value,tpl:[...document.querySelectorAll('#st_wtpl .wt')].map(r=>[r.querySelector('input').value.trim(),r.querySelector('textarea').value]).filter(x=>x[0]&&x[1].trim())};if(!S.wa.tpl.length)S.wa.tpl=[['Ciao','Ciao {nome}, ']];S.qValid=nvv.st_qv;S.qCond=$('st_qc').value.trim()||S.qCond;S.lead={scartati:nvv.st_ls,nuovi:nvv.st_ln,giorni:nvv.st_lg,inf:$('st_linf').checked};S.ret=nr;const rt=$('st_rt').value.trim().toLowerCase();if(rt&&!mailRe.test(rt)){setSp('em');setErr('st_rt','Indirizzo email non valido.');return}S.azienda=$('st_az').value.trim();S.piva=$('st_piva').value.trim();S.indirizzo=$('st_ind').value.trim();S.telefono=$('st_tel').value.trim();S.sito=$('st_sito').value.trim();S.alias=$('st_alias').value.trim();S.firma=$('st_firma').value.trim()||'Cordiali saluti\n{azienda}';S.provider=$('st_prov').value;S.replyTo=rt;saveS();if(stStay){stStay=false;setSp(null);stBase=stSig()}else $('mSet').hidden=true;try{paintReq()}catch(e){}toast('Impostazioni salvate.')};
+$('st_ok').onclick=()=>{const RK=['contratto','contatti','marketing','profilazione','comunicazioni'],nr={};let rok=true;RK.forEach(k=>{const v=parseInt($('st_r_'+k).value,10);if(!(v>=1&&v<=240)){setErr('st_r_'+k,'Inserisci i mesi (da 1 a 240).');rok=false;setSp('pv')}else{setErr('st_r_'+k,'');nr[k]=v}});if(!rok)return;const NV=[['st_qv',1,365,'pr'],['st_ls',1,365,'ld'],['st_ln',1,60,'ld']],nvv={};for(const [k,a,b,pn] of NV){const v=parseInt($(k).value,10);if(!(v>=a&&v<=b)){setSp(pn);setErr(k,'Inserisci un numero da '+a+' a '+b+'.');return}setErr(k,'');nvv[k]=v}
+  S.wa={paese:$('st_wpaese').value||'IT',inf:$('st_winf').value,tpl:[...document.querySelectorAll('#st_wtpl .wt')].map(r=>[r.querySelector('input').value.trim(),r.querySelector('textarea').value]).filter(x=>x[0]&&x[1].trim())};if(!S.wa.tpl.length)S.wa.tpl=[['Ciao','Ciao {nome}, ']];S.qValid=nvv.st_qv;S.qCond=$('st_qc').value.trim()||S.qCond;S.lead={scartati:nvv.st_ls,nuovi:nvv.st_ln,giorni:S.lead.giorni,inf:$('st_linf').checked};S.ret=nr;const rt=$('st_rt').value.trim().toLowerCase();if(rt&&!mailRe.test(rt)){setSp('em');setErr('st_rt','Indirizzo email non valido.');return}S.azienda=$('st_az').value.trim();S.piva=$('st_piva').value.trim();S.indirizzo=$('st_ind').value.trim();S.telefono=$('st_tel').value.trim();S.sito=$('st_sito').value.trim();S.alias=$('st_alias').value.trim();S.firma=$('st_firma').value.trim()||'Cordiali saluti\n{azienda}';S.replyTo=rt;saveS();if(stStay){stStay=false;setSp(null);stBase=stSig()}else $('mSet').hidden=true;try{paintReq()}catch(e){}toast('Impostazioni salvate.')};
 function renderLinked(){
   const f=$('linkedF'),w=$('linked');w.textContent='';
   if(!editing){f.hidden=true;return}
@@ -9249,7 +9121,7 @@ function openReview(){paintReview();$('rvSheet').hidden=false;$('rvSheet').scrol
 $('rvClose').onclick=()=>{$('rvSheet').hidden=true;if(tab==='home')renderH()};$('st_rev').onclick=()=>{$('mSet').hidden=true;openReview()};
 
 const TP_LANES=[['anag','Anagrafica','user','#cdbff5'],['priv','Privacy','shield','#b9e6d3'],['mail','Email','Scrivi','#bfe0f8'],['wa','WhatsApp','WhatsApp','#b5ebc0'],['call','Chiamate','Chiama','#f7c6d9'],['opp','Commerciale','target','#ffd9b0']];
-const TM={};let tpOff=new Set(),tpSel=null;
+let tpOff=new Set(),tpSel=null;
 const tsOf=x=>{if(!x)return NaN;x=String(x);return new Date(x.length<=10?x+'T12:00':/Z|[+-]\d\d:?\d\d$/.test(x)?x:x+'Z').getTime()};
 function oppCreated(o){if(o.creata)return tsOf(o.creata);const m=/^o([0-9a-z]{7,9})$/.exec(o.id||'');if(m){const t=parseInt(m[1],36);if(t>1e12&&t<4e12)return t}return NaN}
 function leadEvents(l){const E=[],add=(t,lane,title,sub,go)=>{if(!isNaN(t))E.push({t,lane,title,sub:sub||'',go})};
@@ -9279,25 +9151,19 @@ function touchEvents(c){
   const g={};(c.wa||[]).forEach(m=>{const d=String(m.data||'').slice(0,10),k=d+m.dir;(g[k]=g[k]||{d,dir:m.dir,n:0,t:tsOf(m.data)}).n++});
   Object.values(g).forEach(x=>add(x.t,'wa',x.dir==='in'?'WhatsApp ricevuto':'WhatsApp inviato',x.n>1?x.n+' messaggi':'1 messaggio',()=>{setPane('comm');setCm('wa');loadComm()}));
   (c.calls||[]).forEach(k=>add(new Date(k.data).getTime(),'call','Chiamata · '+esLabel(k.esito),(k.esito==='ok'&&k.dur?k.dur+' min':'')+(k.nota?(k.esito==='ok'&&k.dur?' · ':'')+k.nota.slice(0,60):''),()=>{setPane('comm');setCm('call')}));
-  (TM[c.id]||[]).forEach(m=>{const inb=String(m.sender||'').toLowerCase().includes((c.email||'').toLowerCase());add(+m.internalDate,'mail',inb?'Email ricevuta':'Email inviata',dec(m.subject)||'(senza oggetto)',()=>openThread(m.threadId))});
+  (c.em||[]).forEach(e=>add(Date.parse(e.data),'mail',e.dir==='in'?'Email ricevuta':'Email inviata',e.og||'',()=>{setPane('comm');setCm('mail');loadComm()}));
   if(c.lead)add(+c.lead.data||tsOf(c.agg),'anag','Lead acquisito',({web:'da form web',email:'da email',manuale:'inserito a mano'}[c.lead.fonte]||'')+(c.lead.richiesta?' · '+c.lead.richiesta.slice(0,80):''),()=>setPane('dati'));
   const won=opps.filter(o=>o.clienteId===c.id&&o.fase==='vinta'&&o.chiusa).sort((a,b)=>a.chiusa<b.chiusa?-1:1)[0];if(won)add(tsOf(won.chiusa),'opp','Diventato cliente','prima opportunità vinta: '+won.titolo,()=>openOpp(won));
   oppsOf(c.id).forEach(o=>{const go=()=>openOpp(o);add(oppCreated(o),'opp','Opportunità creata',o.titolo,go);
     if(o.chiusa&&(o.fase==='vinta'||o.fase==='persa'))add(tsOf(o.chiusa),'opp',o.fase==='vinta'?'Opportunità vinta':'Opportunità persa',o.titolo+' · '+eur(o.valore),go);
     (o.preventivi||[]).forEach(q=>{add(tsOf(q.data),'opp','Preventivo '+q.num+' creato',o.titolo+' · '+eur2(qTot(q.righe).lordo),()=>openQuote(o,q));if(q.inviato)add(tsOf(q.inviato),'opp','Preventivo '+q.num+' inviato',(q.via?'via '+q.via+' · ':'')+qInfo(q).split(' · ').slice(-1)[0],()=>openQuote(o,q))})});
   return E.sort((a,b)=>a.t-b.t)}
-async function touchMail(cl){
-  if(TM[cl.id]||!cl.email)return;
-  try{const mcp=await gm();if(!mcp)return;const P=PV();if(!P.search)return;const r=pj(await P.search(mcp,P.qContact(cl.email))),ms=[];
-    (r.threads||[]).forEach(t=>(t.messages||[]).forEach(m=>ms.push(m)));TM[cl.id]=ms;emSave(cl,ms);
-    if(editing===cl&&!$('tpF').classList.contains('pane-hide'))paintTouch(true)}catch(e){}}
 function paintTouch(noFetch,L0){
   const c=L0||editing,w=L0?$('l_tpBody'):$('tpBody');if(!c)return;w.textContent='';
-  if(!L0&&!noFetch&&c.email&&!TM[c.id])touchMail(c);
   const E=L0?leadEvents(c):touchEvents(c);
   if(!E.length){w.append(h('div','hint','Nessun contatto registrato per questo '+(L0?'lead':'cliente')+'.'));return}
   const first=E[0].t,last=E[E.length-1].t,days=Math.floor((Date.now()-last)/864e5);
-  w.append(h('div','tp-sum',E.length+' touchpoint · dal '+fmtD(ymd(new Date(first)))+' · ultimo '+(days<=0?'oggi':days===1?'ieri':days+' giorni fa')+((!L0&&c.email&&!TM[c.id])?' · lettura email…':'')));
+  w.append(h('div','tp-sum',E.length+' touchpoint · dal '+fmtD(ymd(new Date(first)))+' · ultimo '+(days<=0?'oggi':days===1?'ieri':days+' giorni fa')));
   const span=Math.max(last-first,864e5),map=h('div','tp-map'),sel=h('div','tp-sel',tpSel?'':'Tocca un punto per i dettagli.');
   const dots=[];
   TP_LANES.forEach(L=>{const ev=E.filter(e=>e.lane===L[0]);if(!ev.length)return;
@@ -9387,7 +9253,7 @@ function openLead(l){
   setErr('l_email','');setLTipo(d.tipo||(d.azienda?'azienda':'persona'));setLTab('dati');$('lTabs').hidden=!l;paintLP();
   $('l_nome').value=d.nome||'';$('l_cognome').value=d.cognome||'';$('l_email').value=d.email||'';$('l_tel').value=d.telefono||'';$('l_paese').value=d.paese||(S.wa&&S.wa.paese)||'IT';if(window.paintLPaese)paintLPaese();$('l_az').value=d.azienda||'';$('l_rich').value=d.richiesta||'';$('l_ruolo').value=d.ruolo||'';$('l_nascita').value=d.nascita||'';$('l_piva').value=d.piva||'';$('l_pec').value=d.pec||'';$('l_sito').value=d.sito||'';$('l_ind').value=d.indirizzo||'';$('l_note').value=d.note||'';['l_pec','l_piva','l_nascita'].forEach(f=>setErr(f,''));$('l_paste').value='';$('l_exth').textContent='';
   $('lTitle').textContent=l?lName(l):'Nuovo lead';
-  $('l_pasteBox').hidden=!!l;$('l_open').hidden=!(l&&l.threadId);$('l_act').style.gridTemplateColumns=l&&l.threadId?'':'repeat(2,minmax(0,1fr))';$('l_sync').hidden=!(l&&l.email);setLCm('all');$('l_chkh').textContent='';paintLM();paintLActs(l);if(l&&l.email&&Date.now()-(LAST['l'+l.id]||0)>18e4)leadSync(l);
+  $('l_pasteBox').hidden=!!l;$('l_act').style.gridTemplateColumns='repeat(2,minmax(0,1fr))';setLCm('all');$('l_chkh').textContent='';paintLM();paintLActs(l);
   const done=l&&l.stato!=='nuovo',src=$('l_src');src.hidden=!l;
   if(l){const st=l.stato==='convertito'?'Convertito in prospect':l.stato==='scartato'?'Scartato':'Nuovo';src.textContent=st+' · '+({web:'form web',email:'email',manuale:'inserito a mano'}[l.fonte]||'')+' · '+fmtD(ymd(new Date(l.data)));src.style.background=l.stato==='convertito'?'#b9e6d3':l.stato==='scartato'?'var(--line)':'#ffd9b0'}
   $('l_ripr').hidden=!(l&&l.stato==='scartato');$('l_conv').hidden=!!(l&&l.stato==='convertito');$('l_scarta').hidden=!l||l.stato!=='nuovo';$('l_del').hidden=!l;$('l_reply').hidden=!l;
@@ -9396,7 +9262,7 @@ function openLead(l){
 $('lClose').onclick=()=>{$('lSheet').hidden=true};
 let lTipo='persona';
 function setLTab(k){if(k==='tp'&&lCur)setTimeout(()=>paintTouch(true,lCur),0);document.querySelectorAll('#lTabs button').forEach(b=>b.classList.toggle('on',b.dataset.lp===k));document.querySelectorAll('#lSheet .lp').forEach(e=>e.hidden=e.dataset.lp!==k)}
-$('lTabs').onclick=e=>{const b=e.target.closest('button');if(b){setLTab(b.dataset.lp);if(b.dataset.lp==='msg'&&lCur){const mm=lMsgs(lCur)[0];if(mm&&mm.dir==='in'&&lUnread(lCur)){lCur.msgSeen=+mm.data||tsOf(mm.data);try{persistL()}catch(e){}setTimeout(()=>{try{paintBadges()}catch(e){}},0)}}if(b.dataset.lp==='msg'&&lCur&&lCur.email&&Date.now()-(LAST['l'+lCur.id]||0)>18e4)leadSync(lCur)}};
+$('lTabs').onclick=e=>{const b=e.target.closest('button');if(b){setLTab(b.dataset.lp);if(b.dataset.lp==='msg'&&lCur){const mm=lMsgs(lCur)[0];if(mm&&mm.dir==='in'&&lUnread(lCur)){lCur.msgSeen=+mm.data||tsOf(mm.data);try{persistL()}catch(e){}setTimeout(()=>{try{paintBadges()}catch(e){}},0)}}}};
 function paintLP(){const w=$('l_pst');w.textContent='';const l=lCur;if(!l)return;const ok=!!l.inf,c=h('i','chip',ok?'Informativa fornita il '+fmtD(l.inf.d)+' · '+l.inf.via:'Informativa da inviare');c.style.background=ok?'#b5ebc0':'#f5cad6';w.append(c);
   $('l_pinfE').lastChild.textContent=ok?'Reinvia via email':'Via email';$('l_pinfW').lastChild.textContent=ok?'Reinvia via WhatsApp':'Via WhatsApp'}
 $('l_pinfE').onclick=()=>{setLTab('msg');$('l_reply').onclick()};$('l_pinfW').onclick=()=>{setLTab('msg');$('l_wa').onclick()};
@@ -9437,12 +9303,11 @@ function paintAll(host,items,empty){host.textContent='';items.sort((a,b)=>b.t-a.
     if(m.text){const x=h('div','',m.text.length>300?m.text.slice(0,300)+'…':m.text);x.style.cssText='white-space:pre-wrap;color:var(--ink);font-size:14px;margin-top:4px';d.append(x)}
     if(m.del){const x=h('button','btn ico');x.type='button';x.innerHTML=ICONS.trash;x.setAttribute('aria-label','Elimina la chiamata');x.title='Elimina';x.style.cssText='float:right;width:36px;height:36px;min-height:0;padding:0';x.onclick=e=>{e.stopPropagation();m.del()};d.prepend(x)}
     if(m.go){d.tabIndex=0;d.style.cursor='pointer';d.onclick=m.go;d.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();m.go()}}}host.append(d)})}
-/* informative inviate per email dal CRM: voci del registro messaggi, a meno che Gmail le mostri gia' */
-function infSent(c,ms){const out=[];((c.privacy&&c.privacy.richieste)||[]).forEach(r=>{if(r.stato==='annullata')return;const t=new Date(r.creata+'Z').getTime();if(isNaN(t))return;
-  if((ms||[]).some(m=>Math.abs(+m.internalDate-t)<9e5&&/informativa/i.test(dec(m.subject)||'')))return;
+/* informative inviate per email dal CRM: voci del registro messaggi */
+function infSent(c){const out=[];((c.privacy&&c.privacy.richieste)||[]).forEach(r=>{if(r.stato==='annullata')return;const t=new Date(r.creata+'Z').getTime();if(isNaN(t))return;
   out.push({t,sub:'Informativa sulla privacy e richiesta di consensi',txt:'Con il link personale per scegliere i consensi'+(r.ver?' · informativa v'+r.ver:'')+(r.stato==='completata'?' · il cliente ha risposto':'')})});return out}
-function allClient(c){const mail=(c.email||'').toLowerCase(),it=[];(TM[c.id]||[]).forEach(m=>it.push({t:+m.internalDate,kind:'mail',dir:String(m.sender||'').toLowerCase().includes(mail)?'in':'out',title:dec(m.subject)||'(senza oggetto)',text:dec(m.snippet),go:()=>openThread(m.threadId)}));
-  infSent(c,TM[c.id]).forEach(x=>it.push({t:x.t,kind:'mail',dir:'out',title:x.sub,text:x.txt}));(c.wa||[]).forEach(m=>it.push({t:new Date(m.data).getTime(),kind:'wa',dir:m.dir,text:m.testo}));(c.calls||[]).forEach(k=>it.push({t:new Date(k.data).getTime(),kind:'call',dir:'out',call:k,text:callTxt(k),del:()=>delCall(c,k,false)}));return it}
+function allClient(c){const mail=(c.email||'').toLowerCase(),it=[];(c.em||[]).forEach(e=>{const t=Date.parse(e.data);if(!isNaN(t))it.push({t,kind:'mail',dir:e.dir,title:e.og||(e.dir==='in'?'Email ricevuta':'Email inviata'),text:''})});
+  infSent(c).forEach(x=>it.push({t:x.t,kind:'mail',dir:'out',title:x.sub,text:x.txt}));(c.wa||[]).forEach(m=>it.push({t:new Date(m.data).getTime(),kind:'wa',dir:m.dir,text:m.testo}));(c.calls||[]).forEach(k=>it.push({t:new Date(k.data).getTime(),kind:'call',dir:'out',call:k,text:callTxt(k),del:()=>delCall(c,k,false)}));return it}
 function allLead(l){const it=[];(l.msgs||[]).forEach(m=>{let t=String(m.testo||'');const ii=t.indexOf(INF_MARK);if(ii>=0)t=t.slice(0,ii).trim()+'\n[+ informativa privacy]';it.push({t:new Date(m.data).getTime(),kind:'mail',dir:m.dir,title:m.oggetto,text:t})});
   (l.wa||[]).forEach(m=>it.push({t:new Date(m.data).getTime(),kind:'wa',dir:m.dir,text:m.testo}));(l.calls||[]).forEach(k=>it.push({t:new Date(k.data).getTime(),kind:'call',dir:'out',call:k,text:callTxt(k),del:()=>delCall(l,k,true)}));return it}
 let lCm='all';
@@ -9452,7 +9317,7 @@ function paintLM(){const l=lCur,w=$('l_msgs'),W=$('l_waList');w.textContent='';W
   const all=lMsgs(l),ml=all.filter(m=>m.via!=='WhatsApp'),wl=(l.wa||[]).slice().sort((x,y)=>String(y.data).localeCompare(String(x.data)));
   {const bd=$('l_bdg');bd.hidden=!all.length;bd.textContent=all.length}
   $('l_mailCnt').textContent=ml.length||'';$('l_waCnt').textContent=wl.length||'';
-  if(!ml.length)w.append(h('div','hint','Nessuna email ancora. Quelle che invii da qui compaiono nell’elenco e le risposte ricevute in Gmail si aggiungono da sole.'));
+  if(!ml.length)w.append(h('div','hint','Nessuna email ancora. Quelle che invii da qui compaiono nell’elenco e le risposte le registri a mano.'));
   ml.slice(0,30).forEach(m=>{const d=h('div','lm'),ch=h('i','chip',(m.dir==='in'?'Ricevuto':'Inviato')+' · '+m.via);ch.style.background=m.dir==='in'?'#b5ebc0':'#d9d1f3';d.append(ch,h('div','t',fmtDT(m.data)+(m.oggetto?' · '+m.oggetto:'')));let t=String(m.testo||'');const ii=t.indexOf(INF_MARK);if(ii>=0)t=t.slice(0,ii).trim()+'\n[+ informativa privacy]';d.append(h('pre','',t.length>400?t.slice(0,400)+'…':t));w.append(d)});
   if(!wl.length)W.append(h('div','hint','Nessun messaggio registrato. Puoi scrivere da qui, registrare a mano un messaggio ricevuto o importare la chat esportata da WhatsApp.'));
   else W.append(h('div','hint',wl.length+(wl.length===1?' messaggio':' messaggi')+', dal più recente.'));
@@ -9463,21 +9328,7 @@ function paintLM(){const l=lCur,w=$('l_msgs'),W=$('l_waList');w.textContent='';W
     d.append(x,ch,h('div','',fmtDT(m.data)+(m.fonte==='app'?' · aperto da app':m.fonte==='import'?' · importato':m.fonte==='business'?' · da WhatsApp Business':m.fonte==='api'?' · inviato dal CRM':'')),tx);W.append(d)})}
 function lLog(l,m){(l.msgs=l.msgs||[]).push(m);persistL()}
 $('l_aMail').onclick=()=>$('l_reply').onclick();$('l_aWa').onclick=()=>$('l_wa').onclick();
-$('l_sync').onclick=()=>{if(lCur&&lCur.email)leadSync(lCur)};
 $('l_regwa').onclick=()=>{if(!lCur)return;wrLead=lCur;wrDir='in';paintWr();const n=new Date();$('wr_dt').value=new Date(n.getTime()-n.getTimezoneOffset()*6e4).toISOString().slice(0,16);$('wr_txt').value='';setErr('wr_dt','');setErr('wr_txt','');$('mWr').hidden=false};
-async function leadSync(l,quiet){const st=$('l_chkh'),em=(l.email||'').toLowerCase();if(!em)return 0;LAST['l'+l.id]=Date.now();
-  if(!quiet&&lCur===l)st.textContent='Controllo delle risposte…';
-  try{const mcp=await gm();if(!mcp){if(!quiet&&lCur===l)st.textContent=hasClaude()?'Collegamento a Gmail non disponibile in questa visualizzazione: si vedono solo i messaggi già registrati.':gmNo();return 0}
-    const P=PV();if(!P.search)return 0;
-    const r=pj(await P.search(mcp,'from:'+em+' OR to:'+em+' newer_than:180d'));let n=0;const have=new Set((l.msgs||[]).map(m=>m.gid).filter(Boolean));
-    (r.threads||[]).forEach(t=>(t.messages||[]).forEach(m=>{const id=m.id||m.messageId;if(!id||have.has(id))return;have.add(id);
-      const from=fromHeader(m.sender).email,inb=from===em,dt=+m.internalDate||Date.parse(m.date||'')||Date.now();
-      (l.msgs=l.msgs||[]).push({gid:id,dir:inb?'in':'out',via:'Email',data:new Date(dt).toISOString(),oggetto:dec(m.subject||''),testo:String(m.plaintextBody||dec(m.snippet)||'').trim()});n++}));
-    l.msgs=(l.msgs||[]).filter(m=>{if(m.gid)return true;return !(l.msgs||[]).some(x=>x.gid&&x.dir==='out'&&Math.abs(Date.parse(x.data)-Date.parse(m.data))<12e4)});
-    persistL();if(lCur===l){paintLM();const d=new Date();st.textContent='Aggiornato alle '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+(n?' · '+n+(n===1?' nuovo messaggio':' nuovi messaggi'):'')}
-    return n
-  }catch(e){if(!quiet&&lCur===l)st.textContent='';return 0}}
-$('l_open').onclick=()=>{if(lCur&&lCur.threadId)openThread(lCur.threadId)};
 function leadAttPaint(){const w=$('mc_att');w.textContent='';w.hidden=false;
   w.append(h('div','','Allegati e informativa (tocca per includere o togliere):'));
   const row=h('div','tp-chips');cmpOpts.forEach(o=>{const b=h('button');b.type='button';b.classList.toggle('on',o.on);b.textContent=(o.on?'✓ ':'')+o.label;b.onclick=()=>{if(o.none){toast('Carica la brochure o incolla il suo link in Impostazioni, Allegati.');return}o.on=!o.on;if(o.inf)infSet(o.on);if(o.link)broLinkSet(o.on);leadAttApply();leadAttPaint()};row.append(b)});w.append(row);
@@ -9485,7 +9336,6 @@ function leadAttPaint(){const w=$('mc_att');w.textContent='';w.hidden=false;
 const INF_MARK='\n\n— INFORMATIVA PRIVACY (art. 13-14 GDPR) —\n',pendInf={};
 const infBlock=()=>{infUse();return INF_MARK+infoTxt()};
 const BROL=()=>'\n\nLa brochure è disponibile a questo link: '+((S.broLink&&S.broLink.url)||'');
-function mailHtmlBro(t){if(!(S.broLink&&S.broLink.url))return null;const L=BROL().trim();if(!t.includes(L))return null;const esc=x=>String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'),url=esc(S.broLink.url).replace(/"/g,'&quot;');return '<div>'+esc(t).split(esc(L)).join('La brochure è <a href="'+url+'">disponibile a questo link</a>.').replace(/\n/g,'<br>')+'</div>'}
 function broPlace(v,on){const L=BROL();v=v.split(L).join('');const i=v.indexOf(INF_MARK),head=i>=0?v.slice(0,i):v,tail=i>=0?v.slice(i):'';if(!on)return head+tail;let sg='';try{sg='\n\n'+firma()}catch(e){}const k=sg.length>2?head.lastIndexOf(sg):-1;return (k>=0?head.slice(0,k)+L+head.slice(k):head.replace(/\s+$/,'')+L)+tail}
 function broLinkSet(on){const t=$('mc_body');if(!S.broLink||!S.broLink.url)return;t.value=broPlace(t.value,on)}
 function waBroSet(on){const t=$('wa_txt');if(!S.broLink||!S.broLink.url)return;t.value=broPlace(t.value,on)}
@@ -9540,30 +9390,6 @@ function doConv(){const d=lRead();if(!lCheck(d))return;const l=lCur||(()=>{const
   const inf=l.inf||pendInf[(d.email||'').toLowerCase()]||pendInf[(d.telefono||'').replace(/\D/g,'')];if(l.wa&&l.wa.length&&!dupTel)c.wa=l.wa.slice();if(inf){c.privacy.informativa=true;c.privacy.infData=inf.d;c.privacy.infModo=inf.via||'Email';c.privacy.infVer='1.0';}
   stampNew(c);clients.push(c);if(inf)logP(c,'Informativa inviata via '+(inf.via==='WhatsApp'?'WhatsApp':'email')+' in risposta al lead',inf.via==='WhatsApp'?'invioWa':'invio');logP(c,'Anagrafica creata (fonte: lead da '+({web:'form web',email:'email',manuale:'inserimento manuale'}[l.fonte]||'lead')+')','creazione');
   l.stato='convertito';l.clienteId=c.id;l.convertito=Date.now();persist();persistL();$('lSheet').hidden=true;renderL();setTab('clienti');render();openSheet(c);toast('Lead convertito in prospect.'+(dupTel?' Telefono non copiato: già presente in un altro cliente.':''))};
-async function leadScan(){if(lBusy)return;LAST.scan=Date.now();lBusy=true;try{if(!localStorage.getItem('crm-lead-reseen-v2')){lSeen=[];localStorage.setItem('crm-lead-reseen-v2','1')}}catch(e){}const st=$('lStatus'),btn=$('lScan');btn.disabled=true;st.textContent='Lettura delle email in corso…';
-  try{const mcp=await gm();if(!mcp){st.textContent=hasClaude()?'Collegamento alla posta non disponibile in questa visualizzazione.':gmNo();return}
-    const P=PV();if(!P.search||!P.qInbound){st.textContent='L’analisi delle email non è ancora disponibile per '+P.nome+'.';return}
-    const r=pj(await P.search(mcp,P.qInbound.replace(/newer_than:\d+d/,'newer_than:'+S.lead.giorni+'d'))),msgs=[];(r.threads||[]).forEach(t=>(t.messages||[]).forEach(m=>msgs.push(m)));
-    msgs.sort((a,b)=>+b.internalDate-+a.internalDate);
-    const by={};msgs.forEach(m=>{if((m.labelIds||[]).includes('SENT'))return;const f=fromHeader(m.sender);if(!f.email||AUTO_RE.test(f.email)||knownEmail(f.email))return;if(lSeen.includes(m.id))return;if(!by[f.email])by[f.email]=m});
-    const cand=Object.values(by).slice(0,12);let added=0,n=0,skip=0,fail=0;
-    const dn=(m,e)=>{const x=(m.addressDisplayNames||[]).find(a=>String(a.emailAddress||'').toLowerCase()===e);return x&&x.displayName?x.displayName:''};
-    for(const m of cand){n++;st.textContent='Analisi email '+n+' di '+cand.length+'…';
-      const f=fromHeader(m.sender),nm=dn(m,f.email);
-      // legge la conversazione intera: l'anteprima della ricerca non contiene il testo
-      let body='',sent=false;
-      try{if(P.thread){const g=pj(await P.thread(mcp,m.threadId)),ms=g.messages||[];sent=ms.some(x=>(x.labelIds||[]).includes('SENT'));const mm=ms.find(x=>x.id===m.id)||{};body=String(mm.plaintextBody||'')}}catch(e){}
-      if(sent){lSeen.push(m.id);skip++;continue}                     // conversazione già aperta da me: non è un nuovo contatto
-      const text=(body||dec(m.snippet||'')).trim();
-      let o;try{o=await extractLead({sender:nm?'"'+nm+'" <'+f.email+'>':m.sender,subject:dec(m.subject),text})}catch(e){fail++;continue}
-      const short=text.replace(/\s+/g,' ').length<25;                // testo troppo breve per giudicare: lo propongo comunque
-      if((!short&&o.enquiry===false)||!o.email||knownEmail(o.email)||leads.some(x=>x.email===o.email)){lSeen.push(m.id);skip++;continue}
-      leads.push(stampNew({id:'l'+(+m.internalDate).toString(36)+n,nome:o.nome,cognome:o.cognome,email:o.email,telefono:o.telefono,azienda:o.azienda,richiesta:o.richiesta||dec(m.subject)||'',oggetto:dec(m.subject),fonte:f.email===o.email?'email':'web',threadId:m.threadId,msgId:m.id,data:+m.internalDate,creato:Date.now(),stato:'nuovo'}));lSeen.push(m.id);added++}
-    persistL();lFilter='nuovo';renderL();
-    st.textContent=cand.length?(added?'Trovati '+added+(added===1?' nuovo lead':' nuovi lead')+' su '+cand.length+' email da indirizzi non in anagrafica.':'Nessun nuovo lead: '+cand.length+' email analizzate, '+skip+' ignorate perché non sembrano richieste di contatto o riguardano conversazioni già aperte.')+(fail?' '+fail+' da riprovare.':''):'Nessuna email nuova da indirizzi sconosciuti negli ultimi '+S.lead.giorni+' giorni.';
-  }catch(e){st.textContent=gmReadErr(e)}
-  finally{lBusy=false;btn.disabled=false;try{renderH()}catch(e){}}}
-$('lScan').onclick=leadScan;
 
 let broK='file';
 function setBroK(k){broK=k;[['file','st_bFile'],['url','st_bUrl']].forEach(([x,id])=>$(id).hidden=x!==k);document.querySelectorAll('#st_broSeg button').forEach(b=>b.classList.toggle('on',b.dataset.b===k))}
@@ -9582,7 +9408,7 @@ $('st_broFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';i
   const MAX=700*1024;let u8=new Uint8Array(await f.arrayBuffer()),name=f.name,mime='application/pdf',msg='Brochure salvata.';
   if(u8.length>MAX){const z=await zipOne(f.name,u8);
     if(z.length>MAX){
-      setErr('st_bro','Anche compresso in zip il file pesa '+Math.round(z.length/1024)+' KB (massimo 700 KB). Il connettore non trasferisce file più grandi: riduci immagini o pagine, oppure caricalo tu su Google Drive, condividilo con “chiunque abbia il link” e incolla il link qui sotto.');return}
+      setErr('st_bro','Anche compresso in zip il file pesa '+Math.round(z.length/1024)+' KB (massimo 700 KB). Riduci immagini o pagine, oppure caricalo su un servizio di archiviazione online, condividilo con “chiunque abbia il link” e incolla il link qui sotto.');return}
     msg='File compresso in zip: da '+Math.round(u8.length/1024)+' a '+Math.round(z.length/1024)+' KB.';u8=z;name=f.name.replace(/\.pdf$/i,'')+'.zip';mime='application/zip'}
   S.brochure={name,b64:b64(u8),mime};
   try{localStorage.setItem('crm-settings-v1',JSON.stringify(S))}catch(x){S.brochure=null;setErr('st_bro','Spazio pieno: impossibile salvare la brochure.');paintBro();return}
@@ -9590,8 +9416,8 @@ $('st_broFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';i
 $('st_broDel').onclick=()=>{S.brochure=null;saveS();paintBro()};
 
 const SPG=[['La tua azienda',[['az','building','Profilo azienda',()=>S.azienda||'Nome, partita IVA, sede e contatti']]],
- ['Comunicazione',[['em','Scrivi','Posta',()=>provName(S.provider)+(S.replyTo?' · '+S.replyTo:'')],['wa','WhatsApp','WhatsApp',()=>'Messaggi rapidi e paese dei numeri'],['al','clip','Allegati e brochure',()=>'Listino e brochure per le risposte ai lead']]],
- ['Vendite',[['pr','doc','Preventivi',()=>'Validità '+S.qValid+' giorni e condizioni'],['ld','target','Lead',()=>'Pulizia automatica e analisi delle email']]],
+ ['Comunicazione',[['em','Scrivi','Email',()=>S.replyTo||'Mittente, firma e contatto'],['wa','WhatsApp','WhatsApp',()=>'Messaggi rapidi e paese dei numeri'],['al','clip','Allegati e brochure',()=>'Listino e brochure per le risposte ai lead']]],
+ ['Vendite',[['pr','doc','Preventivi',()=>'Validità '+S.qValid+' giorni e condizioni'],['ld','target','Lead',()=>'Pulizia automatica dei lead']]],
  ['Dati e privacy',[['sc','user','Accesso e sicurezza',()=>LOCK.on?'Biometria attiva':'Blocco non attivo'],['pv','shield','Privacy e conservazione',()=>'Durate di conservazione e revisione'],['bk','download','Backup, accessi ed esempi',()=>'Esporta, importa, persone e dati di prova']]]];
 const SPN={};SPG.forEach(g=>g[1].forEach(r=>SPN[r[0]]=r[2]));
 (()=>{const cl=document.querySelector('#mSet .sp[data-sp=cl]'),k=[...cl.children],bk=h('div','sp');bk.dataset.sp='bk';bk.hidden=true;k.slice(1).forEach(e=>bk.append(e));cl.after(bk)})();
@@ -9967,12 +9793,10 @@ $('st_exDel').onclick=()=>{const has=opps.some(o=>o.demo)||clients.some(c=>c.dem
   b=box('Per fonte','Per ogni fonte: opportunità create, tasso di vittoria sulle chiuse e valore vinto.');Object.entries(bo).sort((a,c)=>c[1].v-a[1].v).forEach(([k,x])=>{const r=h('div','pbar');r.append(h('span','',k+' '),bar(x.c?x.w/x.c*100:0,'#b5ebc0'),h('em','',x.n+' · '+pct(x.w,x.c)+' · '+eur(x.v)));b.append(r)});if(!O.length)b.append(h('div','hint','Nessuna opportunità nel periodo.'));H.append(b)}
  function paneEng(H){H.append(per());const f=from();
   const bk=[['Attivi (≤30 gg)',0,30,'#b5ebc0'],['31–90 gg',31,90,'#f6edb8'],['Oltre 90 gg',91,1e9,'#f7d9bb'],['Mai contattati',-1,-1,'#f5cad6']],cnt=bk.map(()=>0);clients.forEach(c=>{const g=gg(c);bk.forEach((x,i)=>{if(g===null?x[1]===-1:(x[1]!==-1&&g>=x[1]&&g<=x[2]))cnt[i]++})});
-  const rf=h('button','btn lbl');rf.type='button';rf.innerHTML='<span>'+ICONS.reset+'</span> Aggiorna email dei clienti';rf.title='Legge da Gmail le email scambiate con i clienti e ne registra data e direzione';
-  rf.onclick=async()=>{const L=clients.filter(c=>c.email);if(!L.length){toast('Nessun cliente con email.');return}rf.disabled=true;let i=0,add=0;try{for(const c of L){rf.textContent='Lettura '+(++i)+' di '+L.length+'…';const n0=(c.em||[]).length;delete TM[c.id];await touchMail(c);add+=(c.em||[]).length-n0}toast(add?'Registrate '+add+' email.':'Nessuna email nuova (o Gmail non raggiungibile).')}finally{redraw()}};H.append(rf);
-  let b=box('Contatti con i clienti','Quanto tempo è passato dall’ultimo contatto registrato: messaggi WhatsApp, email (solo data e direzione) e informative inviate. Le email si registrano quando scrivi dall’app o apri la scheda del cliente; “Aggiorna email” le legge da Gmail per tutti.');
+  let b=box('Contatti con i clienti','Quanto tempo è passato dall’ultimo contatto registrato: messaggi WhatsApp, email (solo data e direzione) e informative inviate. Le email si registrano quando le invii dall’app.');
   const v=h('div','wb-v');v.append(h('span','',String(clients.length)),h('small','clienti e prospect'));b.append(v);bk.forEach((x,i)=>{const r=h('div','pbar'),lb=h('span','',x[0]);r.append(lb,bar(clients.length?cnt[i]/clients.length*100:0,x[3]),h('em','',String(cnt[i])));b.append(r)});H.append(b);
   let ws=0,wr=0;const inP=d=>!f||tsOf(d)>=f;clients.forEach(c=>(c.wa||[]).forEach(m=>{if(inP(m.data))m.dir==='out'?ws++:wr++}));leads.forEach(l=>(l.wa||[]).forEach(m=>{if(inP(m.data))m.dir==='out'?ws++:wr++}));let es=0,er=0,cs=0,cr=0;clients.forEach(c=>(c.em||[]).forEach(m=>{if(inP(m.data))m.dir==='out'?cs++:cr++}));leads.forEach(l=>(l.msgs||[]).forEach(m=>{if(inP(m.data))m.dir==='out'?es++:er++}));
-  b=box('Messaggi nel periodo','Messaggi registrati nell’app per clienti e lead. Le email dei clienti contano da quando sono registrate (vedi “Aggiorna email”).');b.append(rowKV('WhatsApp inviati '+ws,'ricevuti '+wr),rowKV('Email clienti inviate '+cs,'ricevute '+cr),rowKV('Email lead inviate '+es,'ricevute '+er));H.append(b);
+  b=box('Messaggi nel periodo','Messaggi registrati nell’app per clienti e lead. Le email contano da quando le invii dall’app.');b.append(rowKV('WhatsApp inviati '+ws,'ricevuti '+wr),rowKV('Email clienti inviate '+cs,'ricevute '+cr),rowKV('Email lead inviate '+es,'ricevute '+er));H.append(b);
   const nc=n=>clients.filter(c=>c.privacy&&c.privacy.cons&&c.privacy.cons[n]&&c.privacy.cons[n].v).length;
   b=box('Consensi','Quanti clienti hanno dato il consenso: sono quelli che puoi raggiungere con comunicazioni di marketing.');[['Informativa data',clients.filter(c=>c.privacy&&c.privacy.informativa).length],['Marketing via email',nc('mkEmail')],['Marketing telefono e WhatsApp',nc('mkTel')]].forEach(([l,n])=>{const r=h('div','pbar');r.append(h('span','',l),bar(clients.length?n/clients.length*100:0,'#bfe0f8'),h('em','',n+' · '+pct(n,clients.length)));b.append(r)});H.append(b);
   const cold=clients.map(c=>[c,gg(c)]).filter(x=>x[1]===null||x[1]>90).sort((a,c)=>(c[0].fav?1:0)-(a[0].fav?1:0)||(c[1]===null?1e9:c[1])-(a[1]===null?1e9:a[1])).slice(0,6);
@@ -9981,17 +9805,18 @@ $('st_exDel').onclick=()=>{const has=opps.some(o=>o.demo)||clients.some(c=>c.dem
  S.camps=S.camps||[];
  const FOOT=c=>'\n\nPuoi modificare o revocare il consenso alle nostre comunicazioni commerciali in qualsiasi momento da questa pagina personale: '+conUrl(c);
  const eligible=(ms,ch)=>{const ok=[],no={cons:0,dato:0};ms.forEach(c=>{const k=ch==='wa'?'mkTel':'mkEmail',has=ch==='wa'?c.telefono:c.email;if(!(c.privacy&&c.privacy.cons&&c.privacy.cons[k]&&c.privacy.cons[k].v)){no.cons++;return}if(!has){no.dato++;return}ok.push(c)});return{ok,no}};
- const campHtml=(t,sj,c)=>{const e=x=>String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'),i=t.lastIndexOf('\n\nPuoi modificare o revocare il consenso'),a=i<0?t:t.slice(0,i),u=conUrl(c);
-  return '<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#263045;max-width:560px">'+e(a).replace(/\n/g,'<br>')+'<p style="margin:18px 0 6px"><a href="'+e(u)+'" style="display:inline-block;padding:10px 16px;background:#d9d1f3;color:#263045;text-decoration:none;border-radius:10px;font-weight:bold">Gestisci i miei consensi</a></p><p style="font-size:12px;color:#6b7488">Puoi modificare o revocare il consenso alle comunicazioni commerciali in qualsiasi momento dalla tua pagina personale: '+e(u)+'<br>Questa email non contiene strumenti di tracciamento.</p></div>'};
  const first=c=>c.tipo==='azienda'?(c.nome||fullName(c)):(c.nome||fullName(c));
  const fillT=(t,c)=>tpl(t,{nome:first(c)});
  const cdesc=cp=>{const d=cp.dest||[],ok=d.filter(x=>x.st==='ok').length;let rs=0,op=0;d.forEach(x=>{const t=tsOf(x.d||cp.data),c=clients.find(z=>z.id===x.id);if(!c)return;if([...(c.em||[]),...(c.wa||[])].some(m=>m.dir==='in'&&tsOf(m.data)>t))rs++;if(opps.some(o=>o.clienteId===c.id&&tsOf(o.creata)>=t-864e5))op++});return{ok,tot:d.length,rs,op}};
+/* email di campagna: il messaggio si apre nel programma di posta del dispositivo e l'invio si registra sul cliente */
+ async function qMail(c,sub,txt,done){try{await lkEnsure(c)}catch(e){toast('Non riesco a creare il link dei consensi: controlla la connessione e riprova.');return}
+  const body=txt+'\n\n'+tpl(S.firma||'')+FOOT(c);emSave(c,null,true,sub);done();launch('mailto:'+c.email+'?subject='+encodeURIComponent(sub)+'&body='+encodeURIComponent(body),body)}
  const shell=(id,title)=>{let sh=$(id);if(!sh){sh=h('div','sheet');sh.id=id;sh.style.zIndex=4;document.body.append(sh)}sh.hidden=false;sh.textContent='';const w=h('div'),top=h('div','top'),x=h('button','btn ico pk');x.type='button';x.title=x.ariaLabel='Chiudi';x.innerHTML=ICONS.back;x.onclick=()=>{sh.hidden=true;renderM()};top.append(h('h2','',title),x);w.append(top);sh.append(w);sh.scrollTop=0;return w};
  function openQueue(cp){const w=shell('campQ',cp.nome);
   const info=h('div','hint');w.append(info);const L=h('div');w.append(L);
   const paintQ=()=>{const d=cp.dest,ok=d.filter(x=>x.st==='ok').length;info.textContent=ok+' di '+d.length+' inviati. '+'Tocca “Apri” per ogni contatto: il messaggio è già pronto, devi solo premere invio.';L.textContent='';
    d.forEach(x=>{const c=clients.find(z=>z.id===x.id);if(!c)return;const r=h('div','row'),t=h('div','tx');r.style.cursor='default';t.style.cssText='flex:1;min-width:0';t.append(h('b','',fullName(c)),h('em','',x.st==='ok'?'Inviato':x.st==='err'?'Errore':'Da inviare'));r.append(t);
-    if(x.st!=='ok'){const b=h('button','btn lbl');b.type='button';b.style.cssText='flex:none;white-space:nowrap;width:auto';b.innerHTML='<span>'+ICONS.WhatsApp+'</span> Apri';b.onclick=async()=>{try{await lkEnsure(c)}catch(e){toast('Non riesco a creare il link dei consensi: controlla la connessione e riprova.');return}const txt=fillT(cp.txt,c)+'\n\nPer modificare o revocare il consenso alle nostre comunicazioni: '+conUrl(c);const log=()=>{(c.wa=c.wa||[]).push({id:waId(),dir:'out',data:new Date().toISOString(),testo:txt,fonte:'campagna'});x.st='ok';c.agg=new Date().toISOString();persist();saveS();paintQ()};
+    if(x.st!=='ok'){const b=h('button','btn lbl');b.type='button';b.style.cssText='flex:none;white-space:nowrap;width:auto';b.innerHTML='<span>'+(cp.canale==='email'?ICONS.Scrivi:ICONS.WhatsApp)+'</span> Apri';b.onclick=async()=>{if(cp.canale==='email'){qMail(c,fillT(cp.sub||'',c),fillT(cp.txt,c),()=>{x.st='ok';saveS();paintQ()});return}try{await lkEnsure(c)}catch(e){toast('Non riesco a creare il link dei consensi: controlla la connessione e riprova.');return}const txt=fillT(cp.txt,c)+'\n\nPer modificare o revocare il consenso alle nostre comunicazioni: '+conUrl(c);const log=()=>{(c.wa=c.wa||[]).push({id:waId(),dir:'out',data:new Date().toISOString(),testo:txt,fonte:'campagna'});x.st='ok';c.agg=new Date().toISOString();persist();saveS();paintQ()};
      log();launch('https://wa.me/'+waNum(c)+'?text='+encodeURIComponent(txt),txt)};r.append(b)}L.append(r)})};paintQ()}
  function paneCamp(H){ovCamps(H);
   H.append(h('div','hint','Le campagne partono solo verso i clienti con il consenso al marketing (email o WhatsApp). In ogni messaggio c’è il link personale con cui il cliente può modificarlo o revocarlo: la scelta arriva da sola nella scheda Privacy.'))}
@@ -10003,35 +9828,16 @@ $('st_exDel').onclick=()=>{const has=opps.some(o=>o.demo)||clients.some(c=>c.dem
  window.runBday=async function(){const B=S.auto.bday;if(!B.on||bBusy)return 0;bBusy=true;let n=0;try{const now=new Date(),yr=now.getFullYear(),ch=B.canale;
   const todo=eligible(clients.filter(c=>isBday(c,now)&&c.bdayYear!==yr),ch).ok;if(!todo.length)return 0;
   const k=bdayCamp();
-  if(ch==='wa'){todo.forEach(c=>{c.bdayYear=yr;k.dest.push({id:c.id,st:'att',d:new Date().toISOString()});n++});persist();saveS();return n}
-  let mcp;try{mcp=await gm()}catch(e){}if(!mcp||!autoOk())return 0;
-  if(!S.replyTo){try{const me=await detectMe();if(me.email){S.replyTo=me.email;saveS()}}catch(e){}}
-  for(const c of todo){c.bdayYear=yr;persist();const body=fillT(B.txt,c)+'\n\n'+tpl(S.firma||'')+FOOT(c);
-   try{await lkEnsure(c);await PV().send(mcp,{to:c.email,subject:fillT(B.sub,c),text:body,html:campHtml(body,fillT(B.sub,c),c),fromName:mitt(),atts:[]});k.dest.push({id:c.id,st:'ok',d:new Date().toISOString()});emSave(c,null,true);n++}
-   catch(e){delete c.bdayYear;persist();break}}
+  todo.forEach(c=>{c.bdayYear=yr;k.dest.push({id:c.id,st:'att',d:new Date().toISOString()});n++});persist();
   if(k.dest.length>400)k.dest=k.dest.slice(-400);saveS();return n}finally{bBusy=false;try{if(n&&tab==='mkt')renderM()}catch(e){}}};
  function openBday(){const w=shell('bdSh','Compleanno'),B=S.auto.bday;
   const fld=(l,el)=>{const f=h('div','f');f.append(h('label','',l),el);w.append(f);return el};
-  w.append(h('div','hint','Ogni giorno, quando l’app è aperta, viene mandato un augurio a chi compie gli anni. Serve la data di nascita e il consenso al marketing per il canale scelto. Ogni cliente riceve un solo augurio all’anno.'));
+  w.append(h('div','hint','Ogni giorno, quando l’app è aperta, viene preparato un augurio per chi compie gli anni, da inviare con un tocco. Serve la data di nascita e il consenso al marketing per il canale scelto. Ogni cliente riceve un solo augurio all’anno.'));
   const cs=h('div','seg');const chb={};[['email','Email'],['wa','WhatsApp']].forEach(([k,l])=>{const b=h('button','',l);b.type='button';b.onclick=()=>{B.canale=k;paint()};cs.append(b);chb[k]=b});fld('Canale',cs);
   const sub=fld('Oggetto',h('input'));sub.value=B.sub;const tx=fld('Messaggio',h('textarea'));tx.rows=6;tx.value=B.txt;
   const hint=h('div','hint');w.append(hint);
-  const paint=()=>{chb.email.classList.toggle('on',B.canale==='email');chb.wa.classList.toggle('on',B.canale==='wa');sub.parentNode.hidden=B.canale!=='email';const nb=clients.filter(c=>c.nascita).length,E=eligible(clients.filter(c=>c.nascita),B.canale);hint.textContent=nb+' contatti con data di nascita, '+E.ok.length+' raggiungibili con consenso. '+(B.canale==='wa'?'Su WhatsApp l’augurio non parte da solo: compare in coda e lo invii con un tocco.':'')};
+  const paint=()=>{chb.email.classList.toggle('on',B.canale==='email');chb.wa.classList.toggle('on',B.canale==='wa');sub.parentNode.hidden=B.canale!=='email';const nb=clients.filter(c=>c.nascita).length,E=eligible(clients.filter(c=>c.nascita),B.canale);hint.textContent=nb+' contatti con data di nascita, '+E.ok.length+' raggiungibili con consenso. '+(B.canale==='wa'?'L’augurio non parte da solo: compare in coda e lo invii con un tocco.':'')};
   paint();const c0=B.canale;const sv9=()=>{B.sub=sub.value;B.txt=tx.value;saveS();$('bdSh').hidden=true;renderM();toast('Campagna salvata.')},sg9=()=>JSON.stringify([B.canale,sub.value,tx.value]);{const sw=h('div','delw');w.append(sw);saveBtn(sw,sg9,sv9)}dirtyBack(w.querySelector('.top button'),sg9,sv9,()=>{B.canale=c0;$('bdSh').hidden=true;renderM()})}
- /* ----- campagna sempre attiva: richiesta consensi ----- */
- S.auto.cons=Object.assign({on:false,max:10},S.auto.cons||{});
- const consCamp=()=>{let k=S.camps.find(x=>x.id==='k_cons');if(!k){k={id:'k_cons',auto:1,nome:'Richiesta consensi (sempre attiva)',segNome:'Consenso marketing mai espresso',canale:'email',data:new Date().toISOString(),sub:'',txt:'',dest:[]};S.camps.unshift(k)}return k};
- const needCons=c=>{if(!c.email||!mailRe.test(c.email))return false;const pv=c.privacy,m=pv&&pv.cons&&pv.cons.mkEmail;if(m&&(m.v||m.d))return false;const R=((pv&&pv.richieste)||[]).filter(r=>r.stato!=='annullata');if(R.some(r=>r.stato==='completata'))return false;const last=R.map(r=>tsOf(r.creata)).sort((a,b)=>b-a)[0];if(R.length>=2)return false;if(last&&Date.now()-last<14*DAY)return false;return true};
- window.needCons=needCons;let cBusy=false;
- window.runCons=async function(){const C=S.auto.cons;if(!C.on||cBusy||!S.azienda)return 0;cBusy=true;let n=0;try{const todo=clients.filter(needCons).slice(0,C.max||10);if(!todo.length)return 0;
-  let mcp;try{mcp=await gm()}catch(e){}if(!mcp||!autoOk())return 0;if(!S.replyTo){try{const me=await detectMe();if(me.email){S.replyTo=me.email;saveS()}}catch(e){}}
-  const k=consCamp();
-  for(const c of todo){const now=new Date(),rq0={id:'r'+Date.now().toString(36)+n,token:tok(),creata:now.toISOString().slice(0,16),email:c.email,stato:'inviata',auto:1};
-   try{await lkEnsure(c);const text=mailText(c,rq0),sj=INFO_SUBJ(),a={to:c.email,subject:sj,text,fromName:mitt()};if(S.replyTo&&mailRe.test(S.replyTo))a.html=mailHtml(text,rq0,S.replyTo,sj);
-    const res=await PV().send(mcp,a);rq0.via=PV().id;const pl=res&&res.payload;if(pl&&typeof pl==='object'){if(pl.id)rq0.msgId=String(pl.id);if(pl.threadId)rq0.threadId=String(pl.threadId)}
-    const p=c.privacy=c.privacy||mkPriv();p.richieste=p.richieste||[];p.richieste.push(rq0);logP(c,'Richiesta di consensi inviata automaticamente a '+c.email+' (codice '+rq0.token+', informativa v'+rq0.ver+', con link ai consensi)','invio');
-    k.dest.push({id:c.id,st:'ok',d:new Date().toISOString()});emSave(c,null,true);persist();n++}catch(e){break}}
-  if(k.dest.length>400)k.dest=k.dest.slice(-400);saveS();return n}finally{cBusy=false;try{if(n){render();if(tab==='mkt')renderM()}}catch(e){}}};
  /* ----- percorsi di campagna (passi, attese, ripetizioni) ----- */
  const segById=id=>PRE.find(x=>x.id===id)||S.segs.find(x=>x.id===id);
  const newStep=(first,ch)=>({id:'t'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),ch:ch||'email',wait:first?0:3,cond:first?'sempre':'norisp',sub:first?'Una novità per te da {mittente}':'Hai visto la nostra proposta?',txt:first?'Gentile {nome},\n\nvolevamo condividere con te una novità.\n\n':'Gentile {nome},\n\nvolevamo ricordarti la nostra proposta: restiamo a disposizione.\n\n'});
@@ -10040,10 +9846,9 @@ $('st_exDel').onclick=()=>{const has=opps.some(o=>o.demo)||clients.some(c=>c.dem
  function jrStat(j){const CM=new Map(clients.map(c=>[c.id,c]));return j.steps.map((s,i)=>{const o={ok:0,att:0,skip:0,rep:0,L:{ok:[],att:[],skip:[],rep:[]}};Object.entries(j.dest).forEach(([id,e])=>{const st=e.s[s.id];if(!st)return;o[st.st]=(o[st.st]||0)+1;const c=CM.get(id);if(c&&o.L[st.st])o.L[st.st].push([c,st.d,st.w==='consenso'?'senza consenso':st.w==='risposto'?'aveva già risposto':'']);if(st.st==='ok'&&c){const nx=j.steps[i+1],nt=nx&&e.s[nx.id]?tsOf(e.s[nx.id].d):Infinity,t0=tsOf(st.d);if(msgs(c).some(m=>m.dir==='in'&&tsOf(m.data)>t0&&tsOf(m.data)<nt)){o.rep++;o.L.rep.push([c,st.d,''])}}});return o})}
  const listOf=(d,fn)=>{const L={ok:[],att:[],skip:[],rep:[]};d.forEach(x=>{const c=clients.find(z=>z.id===x.id);if(!c)return;const k=x.st==='ok'?'ok':x.st==='att'?'att':'skip';L[k].push([c,x.d,'']);if(x.st==='ok'&&repliedSince(c,tsOf(x.d)))L.rep.push([c,x.d,''])});return L};
  function showList(title,items){const w=shell('jrL',title);if(!items.length){w.append(h('div','empty','Nessun contatto.'));return}items.slice().sort((a,b)=>String(b[1]||'').localeCompare(String(a[1]||''))).forEach(([c,d,note])=>{const r=h('button','row'),t=h('div','tx'),nm=fullName(c);t.append(h('b','',nm),h('span','',[c.ruolo,c.azienda].filter(Boolean).join(', ')));const bits=[];if(d)bits.push(fmtDT(String(d).replace(/Z$/,'').slice(0,16)+'Z'));if(note)bits.push(note);if(bits.length)t.append(h('em','',bits.join(' · ')));const av=h('div','av',(nm[0]||'?').toUpperCase());av.style.background='var(--lilac)';r.append(av,t);r.onclick=()=>openSheet(c);w.append(r)})}
- async function sendStepMail(mcp,c,s){if(!S.replyTo){try{const me=await detectMe();if(me.email){S.replyTo=me.email;saveS()}}catch(e){}}await lkEnsure(c);const body=fillT(s.txt,c)+'\n\n'+tpl(S.firma||'')+FOOT(c);await PV().send(mcp,{to:c.email,subject:fillT(s.sub,c),text:body,html:campHtml(body,fillT(s.sub,c),c),fromName:mitt(),atts:[]});emSave(c,null,true)}
  let jBusy=false;
  window.runJr=async function(){if(jBusy)return 0;jBusy=true;let n=0,dirty=false;try{
-  const act=S.jr.filter(j=>j.on&&j.steps.length);if(!act.length)return 0;const now=Date.now(),CM=new Map(clients.map(c=>[c.id,c]));let mcp=null,tried=false,sent=0;
+  const act=S.jr.filter(j=>j.on&&j.steps.length);if(!act.length)return 0;const now=Date.now(),CM=new Map(clients.map(c=>[c.id,c]));
   for(const j of act){const sg=segById(j.segId);if(!sg)continue;const mem=members(sg);
    if(j.mode==='always'||!j.enrolled){mem.forEach(c=>{if(!j.dest[c.id]){j.dest[c.id]={e:new Date().toISOString(),cy:0,s:{}};dirty=true}});if(!j.enrolled){j.enrolled=1;dirty=true}}
    const inSeg=new Set(mem.map(c=>c.id));
@@ -10055,19 +9860,15 @@ $('st_exDel').onclick=()=>{const has=opps.some(o=>o.demo)||clients.some(c=>c.dem
      if(now<prev+(s.wait||0)*DAY)break;
      if(!eligible([c],s.ch).ok.length){e.s[s.id]={st:'skip',d:new Date().toISOString(),w:'consenso'};dirty=true;prev=now;continue}
      if(s.cond==='norisp'&&repliedSince(c,prev)){e.s[s.id]={st:'skip',d:new Date().toISOString(),w:'risposto'};dirty=true;prev=now;continue}
-     if(s.ch==='wa'){e.s[s.id]={st:'att',d:new Date().toISOString()};dirty=true;n++;break}
-     if(sent>=20)break;
-     if(!tried){tried=true;try{mcp=await gm()}catch(x){}if(!(mcp&&autoOk()))mcp=null}
-     if(!mcp){j.lastErr='Invio automatico non disponibile: controlla il collegamento a Gmail.';dirty=true;break}
-     try{await sendStepMail(mcp,c,s);e.s[s.id]={st:'ok',d:new Date().toISOString()};delete j.lastErr;dirty=true;n++;sent++}catch(x){j.lastErr=gmSendErr(x);mcp=null;dirty=true}
+     e.s[s.id]={st:'att',d:new Date().toISOString()};dirty=true;n++;
      break}}}
   return n}finally{jBusy=false;if(dirty)saveS();try{if(tab==='mkt')renderM();const d=$('jrD');if(d&&!d.hidden)jrDraw()}catch(e){}}};
- /* coda WhatsApp di un percorso */
+ /* coda dei messaggi di un percorso */
  function openJrQ(j){const w=shell('jrQ',j.nome),CM=new Map(clients.map(c=>[c.id,c]));const info=h('div','hint'),L=h('div');w.append(info,L);
   const paintQ=()=>{const P=[];Object.entries(j.dest).forEach(([id,e])=>j.steps.forEach(s=>{if(e.s[s.id]&&e.s[s.id].st==='att')P.push([CM.get(id),e,s])}));info.textContent=P.length?P.length+' messaggi da inviare. '+'Tocca “Apri” per ogni contatto: il messaggio è già pronto, devi solo premere invio.':'Nessun messaggio WhatsApp in attesa.';L.textContent='';
    P.forEach(([c,e,s])=>{if(!c)return;const r=h('div','row'),t=h('div','tx');r.style.cursor='default';t.style.cssText='flex:1;min-width:0';t.append(h('b','',fullName(c)),h('em','','Da inviare'));r.append(t);
-    const b=h('button','btn lbl');b.type='button';b.style.cssText='flex:none;white-space:nowrap;width:auto';b.innerHTML='<span>'+ICONS.WhatsApp+'</span> Apri';
-    b.onclick=async()=>{const txt=fillT(s.txt,c),log=()=>{(c.wa=c.wa||[]).push({id:waId(),dir:'out',data:new Date().toISOString(),testo:txt,fonte:'campagna'});e.s[s.id]={st:'ok',d:new Date().toISOString()};c.agg=new Date().toISOString();persist();saveS();paintQ()};
+    const b=h('button','btn lbl');b.type='button';b.style.cssText='flex:none;white-space:nowrap;width:auto';b.innerHTML='<span>'+(s.ch==='email'?ICONS.Scrivi:ICONS.WhatsApp)+'</span> Apri';
+    b.onclick=async()=>{if(s.ch==='email'){qMail(c,fillT(s.sub||'',c),fillT(s.txt,c),()=>{e.s[s.id]={st:'ok',d:new Date().toISOString()};saveS();paintQ()});return}const txt=fillT(s.txt,c),log=()=>{(c.wa=c.wa||[]).push({id:waId(),dir:'out',data:new Date().toISOString(),testo:txt,fonte:'campagna'});e.s[s.id]={st:'ok',d:new Date().toISOString()};c.agg=new Date().toISOString();persist();saveS();paintQ()};
      log();launch('https://wa.me/'+waNum(c)+'?text='+encodeURIComponent(txt),txt)};r.append(b);L.append(r)})};paintQ()}
  /* editor del percorso */
  function openJrEd(j,segId){const w=shell('jrEd',j?'Modifica campagna':'Nuova campagna');
@@ -10106,11 +9907,9 @@ $('st_exDel').onclick=()=>{const has=opps.some(o=>o.demo)||clients.some(c=>c.dem
    steps:j.steps.map((s,i)=>({ch:s.ch,title:s.ch==='wa'?'WhatsApp':'Email',desc:s.ch==='email'?s.sub:s.txt.split('\n')[0],wait:s.wait,cond:s.cond,st:st[i]})),rep:j.rep}}
   if(it.k==='bday'){const B=S.auto.bday,k=S.camps.find(x=>x.id==='k_bday'),d=k?k.dest:[],now=new Date();return{nome:'Auguri di compleanno',on:B.on,toggle:v=>setAuto('bday',v),edit:()=>{$('jrD').hidden=true;openBday()},pend:d.filter(x=>x.st==='att').length,openQ:()=>k&&openQueue({...k,dest:d.filter(x=>x.st==='att'),nome:'Auguri di compleanno'}),
    seg:{list:()=>clients.filter(c=>isBday(c,now)).map(c=>[c,null,'']),nome:'Compleanno oggi',count:clients.filter(c=>isBday(c,now)).length,sub:'con consenso al marketing'},steps:[{ch:B.canale,title:B.canale==='wa'?'WhatsApp':'Email',desc:B.canale==='email'?B.sub:B.txt.split('\n')[0],wait:0,cond:'sempre',st:(()=>{const L=listOf(d);return{ok:L.ok.length,att:L.att.length,skip:0,rep:L.rep.length,L}})()}]}}
-  if(it.k==='cons'){const C=S.auto.cons,k=S.camps.find(x=>x.id==='k_cons'),d=k?k.dest:[];return{nome:'Richiesta consensi',on:C.on,toggle:v=>setAuto('cons',v),
-   seg:{list:()=>clients.filter(needCons).map(c=>[c,null,'']),nome:'Consenso marketing mai espresso',count:clients.filter(needCons).length,sub:'al massimo '+(C.max||10)+' al giorno'},steps:[{ch:'email',title:'Email',desc:'Informativa privacy con pulsanti per i consensi',wait:0,cond:'sempre',st:(()=>{const L=listOf(d);L.rep=L.ok.filter(x=>((x[0].privacy&&x[0].privacy.richieste)||[]).some(r=>r.stato==='completata'));return{ok:L.ok.length,att:0,skip:0,rep:L.rep.length,L}})()}]}}
   const cp=it.cp,d=cp.dest||[];return{nome:cp.nome,on:false,done:true,seg:{list:()=>d.map(x=>[clients.find(z=>z.id===x.id),x.d,'']).filter(x=>x[0]),nome:cp.segNome||'Segmento',count:d.length,sub:'campagna singola'},steps:[{ch:cp.canale,title:cp.canale==='wa'?'WhatsApp':'Email',desc:cp.sub||'',wait:0,cond:'sempre',st:(()=>{const L=listOf(d);return{ok:L.ok.length,att:L.att.length,skip:L.skip.length,rep:L.rep.length,L}})()}]}}
  function setJr(j,v){j.on=v;saveS();if(v)runJr();renderM();if($('jrD')&&!$('jrD').hidden)jrDraw()}
- function setAuto(k,v){if(k==='cons'&&v&&!S.azienda){toast('Imposta prima il nome azienda in Impostazioni: è il titolare indicato nell’informativa.');renderM();if($('jrD')&&!$('jrD').hidden)jrDraw();return}S.auto[k].on=v;if(v){if(k==='bday')bdayCamp();else consCamp()}saveS();if(v){k==='bday'?runBday():runCons()}renderM();if($('jrD')&&!$('jrD').hidden)jrDraw()}
+ function setAuto(k,v){S.auto[k].on=v;if(v)bdayCamp();saveS();if(v)runBday();renderM();if($('jrD')&&!$('jrD').hidden)jrDraw()}
  const swEl=(on,fn)=>{const l=h('label','sw'),i=h('input');i.type='checkbox';i.checked=on;i.setAttribute('aria-label','Attiva o spegni');i.onclick=e=>e.stopPropagation();i.onchange=()=>swSave(i,fn,'Attivata e salvata.','Spenta e salvata.');l.append(i,h('i'));l.onclick=e=>e.stopPropagation();return l};
  function node(ico,title,desc,badge,chips,onBadge){const n=h('div','fnode');if(badge!==null){const b=h(onBadge?'button':'i','fbadge',String(badge));if(onBadge){b.type='button';b.title=b.ariaLabel='Mostra i contatti';b.onclick=onBadge}n.append(b)}const t=h('div','fh');const ic=h('span','fic');ic.innerHTML=ICONS[ico]||'';t.append(ic,h('b','',title));n.append(t);if(desc)n.append(h('div','fd',desc));if(chips&&chips.length){const c=h('div','fchips');chips.forEach(([l,cl,fn])=>{const x=h(fn?'button':'span','fchip',l);if(fn){x.type='button';x.onclick=fn;x.style.border='0';x.style.cursor='pointer'}if(cl)x.style.background=cl;c.append(x)});n.append(c)}return n}
  function jrDraw(){const H=$('jrBody');if(!H||!curItem)return;const y=H.parentNode.parentNode.scrollTop;H.textContent='';const v=viewOf(curItem);
@@ -10130,7 +9929,7 @@ $('st_exDel').onclick=()=>{const has=opps.some(o=>o.demo)||clients.some(c=>c.dem
   const x=$('jrD').querySelector('.top button');const cl=x.onclick;x.onclick=()=>{clearInterval(jrTimer);cl()}}
  /* panoramica */
  function ovCamps(H){const add=h('button','btn p lbl');add.type='button';add.innerHTML='<span>'+ICONS.plus+'</span> Nuova campagna';add.onclick=()=>openJrEd(null);H.append(add);
-  const items=[...S.jr.map(j=>({k:'jr',j})),{k:'bday'},{k:'cons'}].map(it=>({it,v:viewOf(it)}));
+  const items=[...S.jr.map(j=>({k:'jr',j})),{k:'bday'}].map(it=>({it,v:viewOf(it)}));
   const sec=(t,L,col)=>{const hh=h('div','hh'),dt=h('span','dot');dt.style.background=col;dt.style.marginRight='8px';const sp=h('span','',t+' ('+L.length+')');sp.style.display='flex';sp.style.alignItems='center';sp.prepend(dt);hh.append(sp);H.append(hh);if(!L.length)H.append(h('div','hint','Nessuna.'));
    L.forEach(({it,v})=>{const r=h('div','row');r.style.cursor='pointer';r.tabIndex=0;const d2=h('span','dot');d2.style.background=col;const tx=h('div','tx'),sent=v.steps.reduce((a,s)=>a+s.st.ok,0),rep=v.steps.reduce((a,s)=>a+s.st.rep,0);
     tx.style.cssText='flex:1;min-width:0';tx.append(h('b','',v.nome),h('span','',v.seg.nome+' · '+v.steps.length+(v.steps.length===1?' passo':' passi')),h('em','',sent+' inviati · '+rep+' risposte'+(v.pend?' · '+v.pend+' da inviare':'')));
@@ -10311,7 +10110,7 @@ window.openLst=l=>{const L=l?JSON.parse(JSON.stringify(l)):{id:'l'+Date.now().to
   const s0=sig(),back=w.querySelector('.top button');{const sw=h('div','delw');w.append(sw);saveBtn(sw,sig,doSave)}
   back.onclick=()=>{if(sig()===s0){$('cpqEd').hidden=true;return}$('mDirty').hidden=false;$('dC').onclick=()=>{$('mDirty').hidden=true};$('dN').onclick=()=>{$('mDirty').hidden=true;$('cpqEd').hidden=true};$('dY').onclick=()=>{$('mDirty').hidden=true;doSave()}}};
 }
-setTimeout(()=>{try{runBday()}catch(e){}try{runCons()}catch(e){}try{runJr()}catch(e){}},900);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>{try{runBday()}catch(e){}try{runCons()}catch(e){}try{runJr()}catch(e){}},1200)});
+setTimeout(()=>{try{runBday()}catch(e){}try{runJr()}catch(e){}},900);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>{try{runBday()}catch(e){}try{runJr()}catch(e){}},1200)});
 {const mb=$('menuBtn'),mn=$('appMenu'),bk=$('amBack');const close=()=>{mn.hidden=true;bk.hidden=true;mb.setAttribute('aria-expanded','false')};
  mb.onclick=()=>{const o=mn.hidden;mn.hidden=!o;bk.hidden=!o;mb.setAttribute('aria-expanded',String(o));if(o)mn.querySelector('button').focus()};bk.onclick=close;
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!mn.hidden){close();mb.focus()}});
@@ -10358,14 +10157,6 @@ $('sc_test').onclick=async()=>{try{await lkVerify();toast('Biometria riconosciut
 $('sc_dis').onclick=()=>askConfirm('Disattivare il blocco? L’app si aprirà senza biometria.','trash','Disattiva',()=>{LOCK={};lkSave();document.documentElement.classList.remove('locked');paintLock();toast('Blocco disattivato.')});
 function paintDrive(){}
 
-const autoReq=r=>{pullConsents();if(Date.now()-(LAST['r'+r.token]||0)<6e4)return;LAST['r'+r.token]=Date.now();(async()=>{try{const mcp=await gm();if(mcp&&PV().search&&!r.consegna&&editing&&editing.privacy&&(editing.privacy.richieste||[]).includes(r))await bounceCheck(mcp,r)}catch(e){}})()};
-let autoBusy=false;
-async function autoSync(){if(autoBusy||document.hidden)return;autoBusy=true;
-  try{const mcp=await gm();if(!mcp||!PV().search)return;
-    if(Date.now()-(LAST.scan||0)>6e5)await leadScan();
-    for(const l of leads.filter(x=>x.stato==='nuovo'&&x.email&&((x.msgs&&x.msgs.length)||x.inf)).slice(0,8)){if(Date.now()-(LAST['l'+l.id]||0)>6e5)await leadSync(l,true)}
-    renderH();try{renderL()}catch(e){}
-  }catch(e){}finally{autoBusy=false}}
 /* risposte dei clienti dalla pagina dei consensi: si applicano da sole alla scheda e poi si cancellano dal server */
 function applyConsent(c,r){const p=c.privacy=c.privacy||mkPriv(),dt=new Date(r.at),ok=!isNaN(dt),day=ymd(ok?dt:new Date()),ch=r.choices||{},esito=[],opx=opName;opName='Pagina consensi';
   const when=(ok?dt:new Date()).toISOString().slice(0,16),pend=(p.richieste||[]).filter(x=>x.stato==='inviata');
@@ -10387,14 +10178,8 @@ function pullConsents(force){if(pcBusy)return pcBusy;if(!SB.has()||!CLOUD.starte
     else if(upd.size){const c0=[...upd][0];toast(upd.size===1?'Consensi di '+fullName(c0)+' aggiornati dal cliente.':'Consensi aggiornati da '+upd.size+' clienti.');if(editing&&upd.has(editing))try{loadPriv(editing.privacy)}catch(e){}try{render()}catch(e){}}
   }catch(e){}finally{pcBusy=null;lkSoon()}return n})()}
 window.pullConsents=pullConsents;setInterval(()=>pullConsents(),24e4);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>pullConsents(),1500)});setTimeout(()=>pullConsents(),6000);
-setTimeout(autoSync,2500);setInterval(autoSync,24e4);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(autoSync,800)});
-const _setTab=setTab;setTab=function(v){_setTab(v);paintBadges();if(v==='lead'&&Date.now()-(LAST.scan||0)>12e4)leadScan()};
+const _setTab=setTab;setTab=function(v){_setTab(v);paintBadges()};
 /* in tutte le pagine tranne la Home compare, accanto al menu, la freccia indietro che riporta alla Home */
-{const hb=$('homeBk'),mb=$('menuBtn'),paintBk=()=>{const home=tab==='home'&&!($('anSh')&&!$('anSh').hidden);hb.hidden=home;mb.hidden=false};
- hb.onclick=()=>setTab('home');
- const _s3=setTab;setTab=function(v){const r=_s3.apply(this,arguments);paintBk();return r};
- const _oa=window.openAn;if(_oa)window.openAn=function(){const r=_oa.apply(this,arguments);paintBk();return r};
- paintBk()}
 render();renderO();renderP();setTab('home');
 /* ===== guida di benvenuto: primi passi ===== */
 const wState=()=>{let enc=false;try{enc=SB.e2e.state()==='ready'}catch(e){}return[
@@ -10421,7 +10206,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(!S.askSeen){S.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.34.1';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(!S.askSeen){S.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10770,7 +10555,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.3','Biglietto da visita: avviso di salvataggio, lettura in due passaggi, assegnazione dei campi migliorata.'],
 ['1.4','Biglietto da visita: revisione guidata con trascinamento, due lati e nome più affidabile.'],
 ['1.5','Pagine Informativa privacy e Termini d’uso, consenso alla registrazione.'],
-['1.6','Cifratura end-to-end dei dati (passphrase e chiave di recupero, foto cifrate); invio e lettura Gmail direttamente dal telefono, senza permessi aggiuntivi.'],
+['1.6','Cifratura end-to-end dei dati (passphrase e chiave di recupero, foto cifrate); invio delle email direttamente dal telefono, senza permessi aggiuntivi.'],
 ['1.7','Posta senza permessi, guida di benvenuto e impostazioni più pulite.'],
 ['1.8','Registro chiamate per clienti e lead (elenco, registra, richiama), scheda Contatti e menu a icone senza sovrapposizioni.'],
 ['1.9','Data e utente di creazione e di ultimo aggiornamento di ogni record, inclusi nel backup.'],
@@ -10809,6 +10594,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.32.3','Chiave di recupero: su iPhone il pulsante «Condividi o salva in…» apre il foglio di condivisione (gestore di password, Note, file) al posto del salvataggio automatico, che Safari non supporta. «Fatto» si sblocca solo dopo una condivisione, una copia o un download riusciti.'],
 ['1.32.4','Conferma dell’indirizzo email alla registrazione: dopo aver creato l’account ricevi una email con un link e puoi accedere solo dopo averlo aperto. Se la email non arriva c’è il pulsante «Rinvia email di conferma».'],
 ['1.32.5','Guida dei primi passi rinnovata: ora sono cinque e in ordine cifratura dei dati, accesso con biometria, profilo dell’azienda, primo cliente e assistente. Tolto il passo sulla posta.'],
+['1.35.0','Tolti l’invio e la lettura automatica delle email: le email si scrivono nell’app e si inviano dal programma di posta del telefono (Apri posta), poi si registrano sulla scheda. Anche le campagne e gli auguri di compleanno funzionano così: i messaggi si preparano in coda e li invii con un tocco. Non si leggono più le email in arrivo, quindi sono state tolte la ricerca automatica dei lead dalle email e la richiesta consensi automatica. Impostazioni → Email ora contiene solo mittente, firma e indirizzo di contatto. Tolta anche la freccia per tornare alla Home dalle schermate principali: resta nelle Impostazioni.'],
 ['1.34.1','Magazzino: con nessun prodotto gestito ora si vede l’elenco dei prodotti da attivare con il +, e il messaggio non rimanda più a una sezione che non esiste. Il tema Neon è ora l’aspetto predefinito (si cambia da Impostazioni → Aspetto). Tolta la scheda «In attesa di risposta» e il pulsante «Annulla richiesta»: il link dei consensi non scade, quindi non serve più attendere né annullare. L’informativa inviata per email ora compare tra i messaggi del cliente (Tutti ed Email), non più nella scheda Privacy, e il pulsante è sempre «Reinvia informativa».'],
 ['1.34.0','La pagina del link personale mostra il nome della tua azienda, l’informativa con versione e data di entrata in vigore e lo stato attuale dei consensi, che il cliente può cambiare quando vuole. Dalla stessa pagina può chiedere una copia dei suoi dati (portabilità) o la cancellazione e anonimizzazione: sono richieste che arrivano nella posta in arrivo e nella scheda Privacy, e che approvi o rifiuti tu entro un mese. Niente avviene da solo.'],
 ['1.33.0','Consensi con un link personale. Quando invii l’informativa per email o WhatsApp, il messaggio contiene un link: il cliente lo apre dal telefono, senza account, sceglie i consensi facoltativi e conferma. La risposta arriva da sola nella scheda Privacy del cliente. Il link resta sempre valido, così il cliente può cambiare o revocare i consensi quando vuole. Non serve più rispondere alla email: sono state tolte la lettura delle risposte dalla posta, la registrazione a mano e le scadenze dei codici. Anche la gestione dello STOP è stata tolta: le campagne partono solo verso chi ha il consenso al marketing e ogni messaggio contiene il link per modificarlo o revocarlo. In Impostazioni → Privacy e conservazione ora c’è l’informativa: puoi leggerla e modificarla se il testo proposto non è corretto, e lo storico mostra ogni versione con il periodo di validità e il numero di clienti a cui è stata fornita. Sul server restano solo le scelte sì/no, la data e un’impronta del link: mai nome o email del cliente.'],
@@ -11056,12 +10842,12 @@ function guideify(root){
  document.addEventListener('touchend',e=>{const s=st;st=null;if(!s||!e.changedTouches.length)return;if(window.__swDrag){window.__swDrag=0;return} /* gesto già usato da una riga a scorrimento */const t=e.changedTouches[0],dx=t.clientX-s.x,dy=t.clientY-s.y;
    if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.8||Date.now()-s.t>700)return;
    try{if(String(getSelection()).length)return}catch(x){}
-   if(s.bar instanceof Element){if(dx>0){const bk=(s.bar.querySelector('.top [data-i=back]')||{closest:()=>null}).closest('button')||s.bar.querySelector('.top button');if(bk&&vis(bk))bk.click();else if(!$('homeBk').hidden)$('homeBk').click()}return}
+   if(s.bar instanceof Element){if(dx>0){const bk=(s.bar.querySelector('.top [data-i=back]')||{closest:()=>null}).closest('button')||s.bar.querySelector('.top button');if(bk&&vis(bk))bk.click()}return}
    const l=btns(s.bar),i=cur(l),n=i+(dx<0?1:-1);
    /* sul primo tab di una scheda, scorrere verso il precedente equivale alla freccia indietro (con la richiesta di salvare se ci sono modifiche) */
    if(dx>0&&(s.bar==='#cTabs'||s.bar==='#lTabs')&&i<=0){const bk=$(s.bar==='#cTabs'?'close':'lClose');if(bk&&vis(bk))bk.click();return}
    /* Prodotti (prima sezione) e Marketing non hanno un tab precedente: lo scorrimento verso destra riporta alla Home */
-   if(dx>0&&(s.bar==='#pSeg'||s.bar==='#mSeg'||s.bar==='#tabs')&&i<=0&&!$('homeBk').hidden){$('homeBk').click();return}
+   
    if(i<0||n<0||n>=l.length)return;
    l[n].click();
    const v=s.bar==='#tabs'?['homeView','list','leadView','oppView'].map($).find(vis):s.bar==='#pSeg'?$('prodView'):s.bar==='#mSeg'?$('mktView'):null;

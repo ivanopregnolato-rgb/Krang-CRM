@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.34.1"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.34.1|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.35.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.35.0|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -137,7 +137,7 @@ h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em}
 .att .ico{width:36px;height:36px;border-radius:10px}
 .busy svg{animation:pulse .9s ease-in-out infinite}
 @keyframes pulse{50%{transform:scale(.8) rotate(-8deg)}}
-#menuBtn[hidden],#homeBk[hidden]{display:none}
+#menuBtn[hidden]{display:none}
 @keyframes swl{from{opacity:.4;transform:translateX(28px)}to{opacity:1;transform:none}}@keyframes swr{from{opacity:.4;transform:translateX(-28px)}to{opacity:1;transform:none}}.swl{animation:swl .22s ease-out}.swr{animation:swr .22s ease-out}
 @media (prefers-reduced-motion:reduce){.busy svg{animation:none}.row:active,.btn:active,.acts a:active{transform:none}}
 
@@ -271,7 +271,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 #lockScr .err{color:#ffb3c0;font-weight:600}
 #mSet{z-index:8}#stBack{order:-1;background:transparent!important;border:0;box-shadow:none;margin-left:-8px}.sp[hidden]{display:none}#mSet .sp{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px 14px 6px;margin:0 0 12px;box-shadow:var(--sh)}#mSet .sp>h3{margin:0 0 8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
 .shg{margin:0 0 16px}.shg>h3{margin:0 0 8px 4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}.shg .sl{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--sh);overflow:hidden}.shr{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);cursor:pointer;color:inherit;font:inherit;min-height:60px}.shr:last-child{border-bottom:0}.shr:active{background:var(--bg)}.shr .ic{width:38px;height:38px;border-radius:12px;background:var(--lilac);display:grid;place-items:center;flex:none;color:#2d2b55}.shr .ic svg{width:20px;height:20px}.shr .tx{flex:1;min-width:0}.shr .tx b{display:block;font-size:15px}.shr .tx span{display:block;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.shr .ch{width:18px;flex:none;color:var(--muted)}
-.lbar{display:flex;gap:8px;align-items:center;margin:4px 0 6px}.lbar .cfl{flex:1;margin:0;flex-wrap:wrap}.lbar #lScan{width:44px;height:34px;min-height:0;padding:0;border-radius:999px;flex:none;display:grid;place-items:center;background:var(--lilac);color:#2d2b55;border:0;box-shadow:none}.lbar #lScan svg{width:19px;height:19px}.lbar #lScan:active{transform:scale(.94)}.lbar #lScan:disabled{opacity:1}.lbar #lScan:disabled svg{animation:lspin 1s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}
+.lbar{display:flex;gap:8px;align-items:center;margin:4px 0 6px}.lbar .cfl{flex:1;margin:0;flex-wrap:wrap}
 .lq{display:block;color:var(--muted);font-size:13px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;white-space:normal;margin-top:2px}
 .tabs button{font-size:11px;padding:0 2px;gap:4px}
 .srow{display:flex;gap:8px;align-items:stretch;margin:12px 0 8px}.srow .search{margin:0;flex:1;min-width:0}.addIc{width:50px;flex:none;padding:0;border-radius:14px;display:grid;place-items:center;box-shadow:0 2px 6px rgba(60,120,100,.28);height:48px;min-height:0;align-self:flex-start}.addIc svg{width:24px;height:24px}.addIc:active{transform:scale(.95)}.cfrow{margin:0 0 8px}
@@ -445,7 +445,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 <div class="app">
   <header>
     <div class="stk">
-    <div class="hrow"><button class="btn ico" id="homeBk" type="button" aria-label="Torna alla Home" title="Torna alla Home" hidden><span data-i="back"></span></button><button class="btn ico" id="menuBtn" type="button" aria-label="Menu" aria-haspopup="true" aria-expanded="false" title="Menu"><span data-i="menu"></span></button><h1 id="title">Clienti</h1></div>
+    <div class="hrow"><button class="btn ico" id="menuBtn" type="button" aria-label="Menu" aria-haspopup="true" aria-expanded="false" title="Menu"><span data-i="menu"></span></button><h1 id="title">Clienti</h1></div>
     <div id="amBack" hidden></div><div class="amenu" id="appMenu" role="menu" hidden><button type="button" role="menuitem" data-m="home"><span data-i="home"></span>Home</button><button type="button" role="menuitem" data-m="an"><span data-i="analytics"></span>Analytics <span class="beta">Beta</span></button><button type="button" role="menuitem" data-m="prod"><span data-i="box"></span>Prodotti</button><button type="button" role="menuitem" data-m="mkt"><span data-i="mega"></span>Marketing <span class="beta">Beta</span></button><hr class="amsep"><button type="button" role="menuitem" data-m="set"><span data-i="gear"></span>Impostazioni</button><hr class="amsep"><button type="button" role="menuitem" data-m="help"><span data-i="help"></span>Aiuto</button><hr class="amsep"><button type="button" role="menuitem" data-m="info"><span data-i="info"></span>Info</button></div>
     <div class="tabs" id="tabs"><button type="button" class="on" data-v="home"><span data-i="home"></span>Home</button><button type="button" data-v="clienti"><span data-i="users"></span>Clienti</button><button type="button" data-v="lead"><span data-i="inbox"></span>Lead</button><button type="button" data-v="opp"><span data-i="target"></span>Opportunità</button></div>
     </div>
@@ -480,7 +480,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   </div>
   <div id="mktView" hidden><div id="mktBody"></div></div>
   <div id="leadView" hidden>
-    <div class="lbar"><div class="cfl" id="lFilt" role="group" aria-label="Filtra i lead"></div><button class="btn ico" id="lScan" type="button" aria-label="Aggiorna lead dalle email" title="Aggiorna: cerca nuove richieste nelle email"><span class="rfi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></span></button></div>
+    <div class="lbar"><div class="cfl" id="lFilt" role="group" aria-label="Filtra i lead"></div></div>
     <div class="srow"><input class="search" id="lq" type="search" placeholder="Cerca nome, email, telefono…" aria-label="Cerca lead"><button class="btn p addIc" id="lAdd" type="button" aria-label="Nuovo lead" title="Nuovo lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
     <div class="hint" id="lStatus"></div>
     <div id="lList"></div>
@@ -593,7 +593,6 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="ms_body">Testo</label><textarea id="ms_body" rows="9" readonly></textarea></div>
   <div class="f"><label for="ms_op">Operatore (chi registra l’invio)</label><input id="ms_op" autocomplete="off"><div class="err" id="err-ms_op" hidden></div></div>
   <div class="two"><button class="btn lbl" id="ms_copy" type="button"><span data-i="copy"></span>Copia</button><button class="btn lbl" id="ms_open" type="button"><span data-i="Scrivi"></span>Apri posta</button></div>
-  <div class="hint">Con Gmail l’invio è immediato.</div><button class="btn p lbl" id="ms_gmail" type="button" hidden><span data-i="Scrivi"></span>Invia con Gmail</button><div class="err" id="err-ms_gmail" hidden></div>
   <button class="btn lbl" id="ms_ok" type="button"><span data-i="check"></span>Ho inviato l’email</button>
   <button class="btn lbl" id="ms_x" type="button"><span data-i="x"></span>Annulla</button></div></div>
 <div class="modal" id="mCompose" hidden><div class="box info" role="dialog"><p>Email</p>
@@ -603,7 +602,6 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="mc_sub">Oggetto</label><input id="mc_sub" autocomplete="off"><div class="err" id="err-mc_sub" hidden></div></div>
   <div class="f"><label for="mc_body">Testo</label><textarea id="mc_body" rows="9"></textarea><div class="err" id="err-mc_body" hidden></div></div>
   <div class="hint" id="mc_att" hidden></div>
-  <button class="btn p lbl" id="mc_gmail" type="button" hidden><span data-i="Scrivi"></span>Invia con Gmail</button><div class="err" id="err-mc_gmail" hidden></div>
   <button class="btn p lbl" id="mc_share" type="button" hidden><span data-i="scarico"></span>Condividi con allegati</button>
   <button class="btn p lbl" id="mc_open" type="button"><span data-i="Scrivi"></span>Apri posta</button>
   <button class="btn lbl" id="mc_done" type="button"><span data-i="check"></span>Segna come inviata</button>
@@ -620,18 +618,9 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="hint">Questi dati compaiono nelle intestazioni dei PDF (preventivi e listino) e come titolare nell’informativa privacy.</div>
 </div>
 <div class="sp" data-sp="em" hidden>
-  <h3>Servizio di posta</h3>
-  <div class="f"><select id="st_prov" aria-label="Servizio di posta"></select><div class="hint" id="st_provhint"></div></div>
-  <div id="st_gd" hidden>
-    <div class="f"><label for="st_gcid">ID client OAuth Google</label><input id="st_gcid" placeholder="xxxx.apps.googleusercontent.com" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
-    <button class="btn p lbl" id="st_gdb" type="button" style="margin-bottom:6px"><span data-i="Scrivi"></span>Collega Gmail</button>
-    <div class="hint" id="st_gds"></div>
-    <div class="hint"><b>Come ottenere l’ID client (una volta sola).</b> In Google Cloud Console crea un progetto e attiva la <b>Gmail API</b>. In “Schermata di consenso OAuth” scegli <b>Esterno</b>, resta in modalità <b>Test</b> e aggiungi la tua email tra gli utenti di prova. In “Credenziali” crea un <b>ID client OAuth</b> di tipo <b>Applicazione web</b> e inserisci come origine JavaScript autorizzata l’indirizzo di questa app (solo l’origine, senza percorso). L’app chiede di inviare e leggere le email; il collegamento dura circa un’ora e si rinnova con un tocco.</div>
-  </div>
-  <h3 style="margin-top:6px">Mittente</h3>
-  <div class="f"><label for="st_rt">Indirizzo email di risposta</label><input id="st_rt" type="email" autocomplete="off"><div class="err" id="err-st_rt" hidden></div></div>
-  <button class="btn lbl" id="st_det" type="button" style="margin-bottom:6px"><span data-i="search"></span>Rileva dall’account</button>
-  <div class="hint">I clienti rispondono a questo indirizzo con i pulsanti dei consensi.</div>
+  <h3>Mittente</h3>
+  <div class="f"><label for="st_rt">Indirizzo email di contatto</label><input id="st_rt" type="email" autocomplete="off"><div class="err" id="err-st_rt" hidden></div></div>
+  <div class="hint">Compare nell’informativa privacy come contatto del titolare.</div>
   <div class="f"><label for="st_alias">Nome del mittente (alias)</label><input id="st_alias" autocomplete="off" placeholder="Se vuoto, usa il nome azienda"><div class="hint" id="st_aliashint"></div></div>
   <div class="f"><label for="st_firma">Firma delle email</label><textarea id="st_firma" rows="3"></textarea><div class="hint">Segnaposto: {azienda}, {mittente}.</div></div>
 </div>
@@ -653,7 +642,6 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 </div>
 <div class="sp" data-sp="ld" hidden>
   <div class="two"><div class="f"><label for="st_ls">Scartati: elimina dopo (giorni)</label><input id="st_ls" inputmode="numeric" autocomplete="off"><div class="err" id="err-st_ls" hidden></div></div><div class="f"><label for="st_ln">Nuovi: elimina dopo (mesi)</label><input id="st_ln" inputmode="numeric" autocomplete="off"><div class="err" id="err-st_ln" hidden></div></div></div>
-  <div class="f"><label for="st_lg">Analisi email: ultimi (giorni)</label><input id="st_lg" inputmode="numeric" autocomplete="off"><div class="err" id="err-st_lg" hidden></div></div>
   <div class="f"><label class="chk"><input type="checkbox" id="st_linf"><span>Includi l’informativa privacy nelle risposte ai lead<em>Proposta attiva: puoi toglierla caso per caso.</em></span></label></div>
 </div>
 <div class="sp" data-sp="wa" hidden>
@@ -694,7 +682,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
     <div class="seg" id="st_broSeg" style="margin:4px 0 10px"><button type="button" class="on" data-b="file" aria-label="File" title="File"><span data-i="clip"></span><span class="lb">File</span></button><button type="button" data-b="url" aria-label="Link pubblico" title="Link pubblico"><span data-i="link"></span><span class="lb">Link</span></button></div>
     <div id="st_bFile"><div class="dual"><button class="btn lbl" id="st_broAdd" type="button"><span data-i="clip"></span> Carica PDF</button><button class="btn lbl" id="st_broDel" type="button"><span data-i="trash"></span> Rimuovi</button></div>
       <input type="file" id="st_broFile" accept="application/pdf" hidden><div class="err" id="err-st_bro" hidden></div>
-      <div class="hint">La brochure resta sul dispositivo e viene allegata alle email. Massimo 700 KB: se è più pesante la comprimo in zip. Oltre, il connettore non riesce a trasferirla.</div></div>
+      <div class="hint">La brochure resta sul dispositivo e viene allegata alle email. Massimo 700 KB: se è più pesante la comprimo in zip. Per file più grandi usa un link.</div></div>
     <div id="st_bUrl" hidden><label for="st_brolink">Link alla brochure</label><input id="st_brolink" type="url" placeholder="https://…" autocomplete="off"><div class="err" id="err-st_brolink" hidden></div>
       <div class="hint">Incolla l’indirizzo del PDF, raggiungibile da chiunque senza accesso: una pagina del tuo sito oppure un file nel tuo cloud. Per Google Drive (o Dropbox, OneDrive, Google Cloud Storage) carica il PDF dal tuo account, scegli Condividi → “Chiunque abbia il link” e incolla qui il link. Va bene anche per file grandi. Nelle email e nei messaggi WhatsApp il testo contiene questo link; nelle risposte ai lead, se la brochure non è allegata, il testo contiene il link.</div></div>
     
@@ -727,9 +715,6 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <a class="btn p lbl" id="ml_go" href="#"><span data-i="Chiama"></span><span>Apri</span></a>
   <button class="btn lbl" id="ml_copy" type="button"><span data-i="copy"></span> Copia</button>
   <button class="btn lbl" id="ml_x" type="button"><span data-i="x"></span>Chiudi</button></div></div>
-<div class="modal" id="mThread" hidden><div class="box info" role="dialog"><p id="mt_title"></p><div id="mt_body"></div>
-  <button class="btn lbl" id="mt_copy" type="button"><span data-i="copy"></span>Copia trascrizione</button>
-  <button class="btn lbl" id="mt_x" type="button"><span data-i="x"></span>Chiudi</button></div></div>
 <div class="modal" id="info" hidden><div class="box info" role="dialog"><div class="itx" id="infoBody"></div>
 
   <button class="btn lbl" id="infoClose" type="button"><span data-i="x"></span>Chiudi</button></div></div>
@@ -793,7 +778,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div id="trF" class="pane-hide"><div id="trBody"></div></div>
   <div id="commF" class="pane-hide"><div class="seg" id="cmSeg"><button type="button" aria-label="Tutti" title="Tutti" class="on" data-c="all"><span data-i="list"></span><span class="lb">Tutti</span></button><button type="button" aria-label="Email" title="Email" data-c="mail"><span data-i="Scrivi"></span><span class="lb">Email</span></button><button type="button" aria-label="WhatsApp" title="WhatsApp" data-c="wa"><span data-i="WhatsApp"></span><span class="lb">WhatsApp</span><span class="cnt" id="waCnt"></span></button><button type="button" aria-label="Chiamate" title="Chiamate" data-c="call"><span data-i="Chiama"></span><span class="lb">Chiamate</span><span class="cnt" id="callCnt"></span></button></div>
   <div id="cmAll"><div class="two"><button class="btn lbl" id="cm_aMail" type="button"><span data-i="Scrivi"></span>Email</button><button class="btn lbl" id="cm_aWa" type="button"><span data-i="WhatsApp"></span>WhatsApp</button></div><div id="allSt" class="hint" hidden style="margin-top:8px"></div><div id="allList" style="margin-top:10px"></div></div>
-  <div id="cmMail" hidden><div class="two"><button class="btn lbl" id="cm_new" type="button"><span data-i="Scrivi"></span>Email</button><button class="btn lbl" id="cm_ref" type="button"><span data-i="reset"></span>Aggiorna</button></div><div id="comm" style="margin-top:10px"></div></div>
+  <div id="cmMail" hidden><div class="two"><button class="btn lbl" id="cm_new" type="button"><span data-i="Scrivi"></span>Email</button></div><div id="comm" style="margin-top:10px"></div></div>
   <div id="cmWa" hidden>
     <div class="mact"><button class="btn lbl" id="wa_new" type="button"><span data-i="WhatsApp"></span>Scrivi</button><button class="btn lbl" id="wa_reg" type="button"><span data-i="edit"></span>Registra</button><button class="btn lbl" id="wa_imp" type="button"><span data-i="carico"></span>Importa</button></div>
     <input type="file" id="wa_file" accept=".txt,.zip,text/plain,application/zip" hidden>
@@ -836,7 +821,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 <div class="lp" data-lp="msg" hidden>
   <div class="seg" id="l_cmSeg"><button type="button" aria-label="Tutti" title="Tutti" class="on" data-c="all"><span data-i="list"></span><span class="lb">Tutti</span></button><button type="button" aria-label="Email" title="Email" data-c="mail"><span data-i="Scrivi"></span><span class="lb">Email</span><span class="cnt" id="l_mailCnt"></span></button><button type="button" aria-label="WhatsApp" title="WhatsApp" data-c="wa"><span data-i="WhatsApp"></span><span class="lb">WhatsApp</span><span class="cnt" id="l_waCnt"></span></button><button type="button" aria-label="Chiamate" title="Chiamate" data-c="call"><span data-i="Chiama"></span><span class="lb">Chiamate</span><span class="cnt" id="l_callCnt"></span></button></div>
   <div id="l_cmAll"><div class="two"><button class="btn lbl" id="l_aMail" type="button"><span data-i="Scrivi"></span>Email</button><button class="btn lbl" id="l_aWa" type="button"><span data-i="WhatsApp"></span>WhatsApp</button></div><div id="l_allList" style="margin-top:10px"></div></div>
-  <div id="l_cmMail" hidden><div class="lact" id="l_act"><button class="btn lbl" id="l_reply" type="button"><span data-i="Scrivi"></span>Email</button><button class="btn lbl" id="l_sync" type="button"><span data-i="reset"></span>Aggiorna</button><button class="btn lbl" id="l_open" type="button"><span data-i="list"></span>Thread</button></div>
+  <div id="l_cmMail" hidden><div class="lact" id="l_act"><button class="btn lbl" id="l_reply" type="button"><span data-i="Scrivi"></span>Email</button></div>
     <div id="l_msgs" style="margin-top:10px"></div></div>
   <div id="l_cmWa" hidden><div class="mact"><button class="btn lbl" id="l_wa" type="button"><span data-i="WhatsApp"></span>Scrivi</button><button class="btn lbl" id="l_regwa" type="button"><span data-i="edit"></span>Registra</button><button class="btn lbl" id="l_wimp" type="button"><span data-i="carico"></span>Importa</button></div>
     <div id="l_waList" style="margin-top:10px"></div></div>
@@ -860,7 +845,6 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="gmail.js?v=1.34.1"></script>
-<script src="app.js?v=1.34.1"></script>
+<script src="app.js?v=1.35.0"></script>
 </body>
 </html>
