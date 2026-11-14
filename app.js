@@ -10249,7 +10249,6 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   let n=0,t=5;try{const st=wState();n=st.filter(x=>x.done).length;t=st.length}catch(e){}
   const rows=[
     ['compass','Primi passi',n+' di '+t+' completati',()=>{S.welcomeOff=false;saveS();openWel()}],
-    ['doc','Manuale utente','In arrivo: guida interattiva alle funzioni',null],
     ['chat','Assistente','Chiedi come si fa una cosa',()=>{M.hidden=true;openAsk()}]];
   const g=h('div','shg'),l=h('div','sl');
   rows.forEach(([ic,nm,sm,fn])=>{const b=h('button','shr wlr');b.type='button';const i=h('span','ic');i.innerHTML=ICONS[ic]||'';const tx=h('div','tx');tx.append(h('b','',nm),h('span','',sm));b.append(i,tx);
@@ -10679,7 +10678,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.38.2','La lista dei contatti caricata dalla rubrica resta sul dispositivo per consentirti di importarli con calma e viene cancellata da sola dopo 3 giorni (oppure subito con «Elimina la lista»). I contatti importati escono dalla lista.'],
 ['1.38.3','Confronto delle anagrafiche duplicate più leggibile: ogni valore è a tutta larghezza, con il testo completo e l’indicazione della scheda di provenienza.'],
 ['1.39.0','Duplicati più intelligenti: l’app riconosce anche nomi e cognomi scritti in modo diverso o con piccoli errori (Max e Massimiliano, De Simone e Desimone, Verdi e Verdy, nome e cognome invertiti), aziende simili e indirizzi simili, e per ogni coppia indica una probabilità stimata calcolata sui campi compilati in entrambe le schede.'],
-['1.39.1','Nuovo passo nei Primi passi: «I prodotti a catalogo» spiega come inserirli, come collegarli alle opportunità e come funziona lo scarico dal magazzino.'],
+['1.39.1','Nuovo passo nei Primi passi: «I prodotti a catalogo» spiega come inserirli, come collegarli alle opportunità e come funziona lo scarico dal magazzino. In Aiuto è stata tolta la voce «Manuale utente» (in arrivo).'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
