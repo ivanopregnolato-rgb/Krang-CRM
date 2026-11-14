@@ -10694,6 +10694,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.40.2','L’Assistente ora sa rispondere su come importare i contatti dalla rubrica e su come funzionano le anagrafiche duplicate (confronto, unione e annullo), con il pulsante per andare subito alla pagina giusta. Quando una domanda non c’entra con nessun argomento del manuale, l’Assistente lo dice invece di proporre una risposta fuori tema.'],
 ['1.41.0','Nuove attività (task). Ogni attività ha un titolo, una scadenza obbligatoria (i tasti Oggi, Domani e Tra una settimana compilano la data, che resta modificabile) e un collegamento obbligatorio a un cliente, un lead o un’opportunità. Cliente, lead e opportunità hanno un tab Task dove le crei e le gestisci, con un tocco le segni come fatte. In Home, sotto «Da fare», compaiono le attività scadute, quelle di oggi e dei prossimi 3 giorni, e «Tutte le attività» apre l’elenco completo raggruppato per scadenza. Le attività sono cifrate e sincronizzate come gli altri dati e finiscono anche nel backup.'],
 ['1.41.1','Scheda cliente: Contatti, Acquisti e Storia sono riuniti nel tab «Storico», con tre sezioni selezionabili in alto. La ricerca è più intelligente: in Clienti, Lead e Opportunità ogni parola scritta viene cercata in tutti i dati, in qualsiasi ordine. Prima «Mario Rossi» non trovava l’anagrafica mentre «Mario» sì; ora funzionano anche «Rossi Mario», i numeri di telefono scritti con gli spazi e i nomi senza accenti.'],
+['1.41.2','Layout più arioso nell’elenco clienti (più spazio tra contatore, filtri e ricerca). Nella scheda cliente i cinque tab hanno tutti la stessa larghezza. Nell’opportunità lo scorrimento a destra e a sinistra ora passa tra Dati e Task.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -10926,7 +10927,7 @@ function guideify(root){
  const noSw=t=>{for(let e=t;e&&e!==document.body;e=e.parentElement){if(e.matches&&e.matches('input,textarea,select,[contenteditable="true"],canvas,.nosw,.crChip,.crGhost'))return true;const o=getComputedStyle(e).overflowX;if((o==='auto'||o==='scroll')&&e.scrollWidth>e.clientWidth+2)return true}return false};
  const open=()=>[...document.querySelectorAll('.sheet,.modal')].some(vis)||vis($('appMenu'));
  const where=t=>{ /* quale gruppo di tab governa il punto toccato */
-   for(const [id,bar] of [['sheet','#cTabs'],['lSheet','#lTabs']]){const s=$(id);if(vis(s)&&s.contains(t))return bar}
+   for(const [id,bar] of [['sheet','#cTabs'],['lSheet','#lTabs'],['oSheet','#oTabs']]){const s=$(id);if(vis(s)&&s.contains(t))return bar}
    const sh=t.closest&&t.closest('.sheet');if(vis(sh))return [...document.querySelectorAll('.modal')].some(vis)?null:sh; /* scheda senza tab: lo scorrimento verso destra vale come freccia indietro */
    if(open())return null;
    if(tab==='prod'&&vis($('prodView'))&&$('prodView').contains(t))return '#pSeg';
@@ -10941,7 +10942,7 @@ function guideify(root){
    if(s.bar instanceof Element){if(dx>0){const bk=(s.bar.querySelector('.top [data-i=back]')||{closest:()=>null}).closest('button')||s.bar.querySelector('.top button');if(bk&&vis(bk))bk.click()}return}
    const l=btns(s.bar),i=cur(l),n=i+(dx<0?1:-1);
    /* sul primo tab di una scheda, scorrere verso il precedente equivale alla freccia indietro (con la richiesta di salvare se ci sono modifiche) */
-   if(dx>0&&(s.bar==='#cTabs'||s.bar==='#lTabs')&&i<=0){const bk=$(s.bar==='#cTabs'?'close':'lClose');if(bk&&vis(bk))bk.click();return}
+   if(dx>0&&(s.bar==='#cTabs'||s.bar==='#lTabs'||s.bar==='#oTabs')&&i<=0){const bk=$(s.bar==='#cTabs'?'close':s.bar==='#oTabs'?'oClose':'lClose');if(bk&&vis(bk))bk.click();return}
    /* Prodotti (prima sezione) e Marketing non hanno un tab precedente: lo scorrimento verso destra riporta alla Home */
    
    if(i<0||n<0||n>=l.length)return;
