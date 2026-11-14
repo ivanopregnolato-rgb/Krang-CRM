@@ -10236,6 +10236,7 @@ const wState=()=>{let enc=false;try{enc=SB.e2e.state()==='ready'}catch(e){}retur
  {k:'sc',ic:'user',t:'L’accesso con biometria',d:'Face ID o impronta per aprire l’app',done:!!(typeof LOCK!=='undefined'&&LOCK.on)},
  {k:'az',ic:'building',t:'Il profilo della tua azienda',d:'Nome, partita IVA e firma delle email',done:!!(S.azienda&&S.azienda.trim())},
  {k:'cl',ic:'users',t:'Il tuo primo cliente',d:'Scrivi i dati o fotografa un biglietto da visita',done:clients.length>0},
+ {k:'pr',ic:'box',t:'I prodotti a catalogo',d:'Inseriscili e collegali alle opportunità',done:prods.length>0},
  {k:'as',ic:'chat',t:'L’assistente',d:'Chiedi come si fa una cosa: risponde in pochi secondi',done:!!S.askSeen}]};
 function paintWel(){const w=$('hWel');if(!w)return;w.textContent='';if(S.welcomeOff)return;const st=wState(),n=st.filter(x=>x.done).length;if(n===st.length)return;
   const b=h('button','wcard');b.type='button';const i=h('span','ic');i.innerHTML=ICONS.compass;const tx=h('div','tx');const bar=h('div','wbar'),f=h('i');f.style.width=Math.round(n/st.length*100)+'%';bar.append(f);
@@ -10264,6 +10265,15 @@ function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=
     B.append(h('h3','','Il tuo primo cliente'),h('p','wsub','Scegli come inserirlo: puoi cambiare tutto dopo.'));
     const a=h('button','btn p lbl');a.type='button';a.innerHTML=ICONS.edit+'<span>Scrivo i dati</span>';a.onclick=()=>{closeWel();setTab('clienti');openSheet(null)};
     const c=h('button','btn lbl');c.type='button';c.innerHTML=ICONS.camera+'<span>Fotografo un biglietto da visita</span>';c.onclick=()=>{closeWel();setTab('clienti');CARD.add(false);$('cardFile').click()};
+    B.append(a,c,back());return}
+  if(view==='pr'){
+    B.append(h('h3','','I prodotti a catalogo'),h('p','wsub','Dal catalogo alle opportunità, in tre passi.'));
+    const p=(t)=>{const d=h('p','wtx');d.innerHTML=t;B.append(d)};
+    p('<b>1. Inserisci un prodotto.</b> Nella sezione Prodotti tocca il «+», scrivi nome, prezzo e, se vuoi, codice, categoria e foto. Per i prodotti fisici attiva «Gestisci magazzino»: l’app terrà giacenza e disponibilità. Un prodotto non attivo non compare tra quelli selezionabili.');
+    p('<b>2. Collegalo a un’opportunità.</b> Apri o crea un’opportunità e, nella parte Prodotti tocca il pulsante con la scatola («Aggiungi dal catalogo»): scegli il prodotto e poi sistema quantità e prezzo della riga. Con il «+» accanto aggiungi invece una riga libera, senza passare dal catalogo. Il totale dell’opportunità si calcola da solo.');
+    p('<b>3. Tieni tutto allineato.</b> Le righe sono una copia del prodotto al momento in cui le aggiungi: se in seguito cambi il prezzo a catalogo, «Aggiorna righe» le riallinea. Quando l’opportunità diventa <b>vinta</b>, l’app ti propone di scaricare i prodotti dal magazzino e ti avvisa se la disponibilità non basta.');
+    const a=h('button','btn p lbl');a.type='button';a.innerHTML=ICONS.box+'<span>Aggiungi un prodotto</span>';a.onclick=()=>{closeWel();setTab('prod');openProd(null)};
+    const c=h('button','btn lbl');c.type='button';c.innerHTML=ICONS.tag+'<span>Vai alle opportunità</span>';c.onclick=()=>{closeWel();setTab('opp')};
     B.append(a,c,back());return}
   if(view==='cr'){
     let ready=false,can=false;try{ready=SB.e2e.state()==='ready';can=!!(SB.has&&SB.has())}catch(e){}
@@ -10669,6 +10679,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.38.2','La lista dei contatti caricata dalla rubrica resta sul dispositivo per consentirti di importarli con calma e viene cancellata da sola dopo 3 giorni (oppure subito con «Elimina la lista»). I contatti importati escono dalla lista.'],
 ['1.38.3','Confronto delle anagrafiche duplicate più leggibile: ogni valore è a tutta larghezza, con il testo completo e l’indicazione della scheda di provenienza.'],
 ['1.39.0','Duplicati più intelligenti: l’app riconosce anche nomi e cognomi scritti in modo diverso o con piccoli errori (Max e Massimiliano, De Simone e Desimone, Verdi e Verdy, nome e cognome invertiti), aziende simili e indirizzi simili, e per ogni coppia indica una probabilità stimata calcolata sui campi compilati in entrambe le schede.'],
+['1.39.1','Nuovo passo nei Primi passi: «I prodotti a catalogo» spiega come inserirli, come collegarli alle opportunità e come funziona lo scarico dal magazzino.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
