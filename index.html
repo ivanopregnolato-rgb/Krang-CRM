@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.41.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.41.0|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.41.1"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.41.1|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -740,7 +740,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 <div class="sheet" id="sheet" hidden>
 <div>
   <div class="top"><h2 id="sheetTitle">Nuovo cliente</h2><button class="btn ico pk" id="close" aria-label="Chiudi" title="Chiudi"><span data-i="back"></span></button></div>
-  <div class="tabs" id="cTabs"><button type="button" class="on" data-p="dati" title="Dati" aria-label="Dati"><span data-i="user"></span>Dati</button><button type="button" data-p="opp" title="Opportunità" aria-label="Opportunità"><span data-i="target"></span>Opportunità<span class="cnt" id="cCnt"></span></button><button type="button" data-p="tk" title="Task" aria-label="Task"><span data-i="check"></span>Task<span class="cnt" id="cTkCnt"></span></button><button type="button" data-p="priv" title="Privacy" aria-label="Privacy"><span data-i="shield"></span>Privacy</button><button type="button" data-p="comm" title="Contatti" aria-label="Contatti"><span data-i="Scrivi"></span>Contatti</button><button type="button" data-p="tr" title="Acquisti" aria-label="Acquisti"><span data-i="bag"></span>Acquisti</button><button type="button" data-p="tp" title="Storia" aria-label="Storia"><span data-i="route"></span>Storia</button></div>
+  <div class="tabs" id="cTabs"><button type="button" class="on" data-p="dati" title="Dati" aria-label="Dati"><span data-i="user"></span>Dati</button><button type="button" data-p="opp" title="Opportunità" aria-label="Opportunità"><span data-i="target"></span>Opportunità<span class="cnt" id="cCnt"></span></button><button type="button" data-p="tk" title="Task" aria-label="Task"><span data-i="check"></span>Task<span class="cnt" id="cTkCnt"></span></button><button type="button" data-p="priv" title="Privacy" aria-label="Privacy"><span data-i="shield"></span>Privacy</button><button type="button" data-p="st" title="Storico" aria-label="Storico"><span data-i="route"></span>Storico</button></div>
   <div class="msg" id="msg" hidden></div>
   <div class="seg" id="seg" role="group" aria-label="Tipo di anagrafica"><button type="button" class="on" data-t="persona"><span data-i="user"></span>Persona</button><button type="button" data-t="azienda"><span data-i="building"></span>Azienda</button></div>
   <div id="favHold" hidden><button class="ico" id="favBtn" type="button" aria-label="Preferito" title="Preferito"><span data-i="star"></span></button></div>
@@ -785,6 +785,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label>Diritti dell’interessato</label><button class="btn lbl" id="p_copy" type="button"><span data-i="copy"></span>Copia i dati del cliente (accesso e portabilità)</button><div class="hint">Per la cancellazione usa il cestino nella scheda Dati.</div></div>
   <div class="f"><label>Registro delle modifiche</label><div id="p_log"></div></div></details>
 </div>
+  <div class="seg" id="stSeg" role="group" aria-label="Storico del cliente"><button type="button" class="on" data-s="comm"><span data-i="Scrivi"></span>Contatti</button><button type="button" data-s="tr"><span data-i="bag"></span>Acquisti</button><button type="button" data-s="tp"><span data-i="route"></span>Storia</button></div>
   <div id="tpF" class="pane-hide"><div id="tpBody"></div></div>
   <div id="trF" class="pane-hide"><div id="trBody"></div></div>
   <div id="commF" class="pane-hide"><div class="seg" id="cmSeg"><button type="button" aria-label="Tutti" title="Tutti" class="on" data-c="all"><span data-i="list"></span><span class="lb">Tutti</span></button><button type="button" aria-label="Email" title="Email" data-c="mail"><span data-i="Scrivi"></span><span class="lb">Email</span></button><button type="button" aria-label="WhatsApp" title="WhatsApp" data-c="wa"><span data-i="WhatsApp"></span><span class="lb">WhatsApp</span><span class="cnt" id="waCnt"></span></button><button type="button" aria-label="Chiamate" title="Chiamate" data-c="call"><span data-i="Chiama"></span><span class="lb">Chiamate</span><span class="cnt" id="callCnt"></span></button></div>
@@ -860,6 +861,6 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.41.0"></script>
+<script src="app.js?v=1.41.1"></script>
 </body>
 </html>
