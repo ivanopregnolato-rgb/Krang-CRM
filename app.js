@@ -9421,7 +9421,7 @@ $('st_broDel').onclick=()=>{S.brochure=null;saveS();paintBro()};
 const SPG=[['La tua azienda',[['az','building','Profilo azienda',()=>S.azienda||'Nome, partita IVA, sede e contatti']]],
  ['Comunicazione',[['em','Scrivi','Email',()=>S.replyTo||'Mittente, firma e contatto'],['wa','WhatsApp','WhatsApp',()=>'Messaggi rapidi e paese dei numeri'],['al','clip','Allegati e brochure',()=>'Listino e brochure per le risposte ai lead']]],
  ['Vendite',[['pr','doc','Preventivi',()=>'Validità '+S.qValid+' giorni e condizioni'],['ld','target','Lead',()=>'Pulizia automatica dei lead']]],
- ['Dati e privacy',[['sc','user','Accesso e sicurezza',()=>LOCK.on?'Biometria attiva':'Blocco non attivo'],['pv','shield','Privacy e conservazione',()=>'Durate di conservazione e revisione'],['dp','users','Anagrafiche duplicate',()=>'Trova e unisci le schede doppie'],['bk','download','Backup, accessi ed esempi',()=>'Esporta, importa, persone e dati di prova']]]];
+ ['Dati e privacy',[['sc','user','Accesso e sicurezza',()=>LOCK.on?'Biometria attiva':'Blocco non attivo'],['pv','shield','Privacy e conservazione',()=>'Durate di conservazione e revisione'],['vc','user','Importa dalla rubrica',()=>'Da un file contatti (.vcf)'],['dp','users','Anagrafiche duplicate',()=>'Trova e unisci le schede doppie'],['bk','download','Backup, accessi ed esempi',()=>'Esporta, importa, persone e dati di prova']]]];
 const SPN={};SPG.forEach(g=>g[1].forEach(r=>SPN[r[0]]=r[2]));
 (()=>{const cl=document.querySelector('#mSet .sp[data-sp=cl]'),k=[...cl.children],bk=h('div','sp');bk.dataset.sp='bk';bk.hidden=true;k.slice(1).forEach(e=>bk.append(e));cl.after(bk)})();
 let spCur=null;
@@ -9451,7 +9451,7 @@ $('ih_all').onclick=async()=>{const H=S.infHist||[];toast(await copyText('Storic
 $('st_ok').addEventListener('click',()=>setTimeout(()=>{try{infSync();pubRefresh()}catch(e){}},300));
 setTimeout(()=>{try{infSync()}catch(e){}},3000);
 function paintHub(){const H=$('stHub');H.textContent='';SPG.forEach(([t,rows])=>{const g=h('div','shg'),l=h('div','sl');g.append(h('h3','',t),l);rows.forEach(([k,ic,nm,sm])=>{const b=h('button','shr');b.type='button';const i=h('span','ic');i.innerHTML=ICONS[ic]||'';const tx=h('div','tx');let sub='';try{sub=sm()}catch(e){}tx.append(h('b','',nm),h('span','',sub));const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(i,tx,c);b.onclick=()=>setSp(k);l.append(b)});H.append(g)})}
-function setSp(k){try{laHide()}catch(e){}if(k==='pv')try{paintInf()}catch(e){}if(k==='dp'){dpCur=null;try{dpPaint()}catch(e){}}spCur=k||null;document.querySelectorAll('#mSet .sp').forEach(e=>e.hidden=e.dataset.sp!==k);$('stHub').hidden=!!k;if(!k)paintHub();if(k==='sc')try{paintLock()}catch(e){}$('stTitle').textContent=k?SPN[k]:'Impostazioni';$('stBack').setAttribute('aria-label',k?'Indietro':'Chiudi');const sh=$('mSet');if(sh)sh.scrollTop=0}
+function setSp(k){try{laHide()}catch(e){}if(k==='pv')try{paintInf()}catch(e){}if(k==='vc'){try{vcReset()}catch(e){}}if(k==='dp'){dpCur=null;try{dpPaint()}catch(e){}}spCur=k||null;document.querySelectorAll('#mSet .sp').forEach(e=>e.hidden=e.dataset.sp!==k);$('stHub').hidden=!!k;if(!k)paintHub();if(k==='sc')try{paintLock()}catch(e){}$('stTitle').textContent=k?SPN[k]:'Impostazioni';$('stBack').setAttribute('aria-label',k?'Indietro':'Chiudi');const sh=$('mSet');if(sh)sh.scrollTop=0}
 
 document.querySelectorAll('#tabs [data-i=inbox]').forEach(e=>e.innerHTML=ICONS.inbox);
 /* ===== motivi per record: chip + ordinamento per priorità ===== */
@@ -10664,6 +10664,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.37.2','Nella scheda cliente, «Dettagli e modifica manuale» del tab Privacy resta sempre chiuso: se manca l’informativa, l’avviso compare accanto a «Invierò l’informativa più tardi».'],
 ['1.37.3','Creando una nuova anagrafica serve almeno un recapito: telefono o email.'],
 ['1.37.4','Anche i lead richiedono almeno un recapito: telefono o email. L’email non è più obbligatoria se c’è il telefono.'],
+['1.38.0','Importa dalla rubrica (Impostazioni → Dati e privacy): scegli un file contatti .vcf, controlla l’anteprima con i duplicati già segnalati e importa i contatti come prospect. Servono almeno telefono o email.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -11047,3 +11048,62 @@ function dpBan(c){const B=$('dupBan');if(!B)return;B.textContent='';B.hidden=tru
     const n=h('button','btn lbl','Non è un duplicato');n.type='button';n.onclick=()=>{(S.dupIgnore=S.dupIgnore||[]).push(c.id+'|'+x.id);saveS();dpBan(c)};bt.append(m,n);d.append(bt);B.append(d)})}
 {const _os=openSheet;openSheet=function(c){const r=_os.apply(this,arguments);try{dpBan(c)}catch(e){}return r}}
 document.addEventListener('change',e=>{if(e.target&&(e.target.id==='p_later'||e.target.id==='p_inf'))try{setErr('p_later','')}catch(x){}});
+
+/* ===== Import dalla rubrica (.vcf) (1.38) ===== */
+let vcRows=[];
+function vcReset(){vcRows=[];const L=$('vc_L');if(L)L.textContent=''}
+function vcDec(v,params){if(/ENCODING=QUOTED-PRINTABLE|;QUOTED-PRINTABLE/i.test(params)){try{v=decodeURIComponent(v.replace(/=([0-9A-F]{2})/gi,'%$1'))}catch(e){v=v.replace(/=([0-9A-F]{2})/gi,(m,x)=>String.fromCharCode(parseInt(x,16)))}}return v}
+const vcUn=v=>v.replace(/\\n/gi,' ').replace(/\\([,;\\])/g,'$1').trim();
+function vcParse(txt){
+  txt=txt.replace(/^﻿/,'').replace(/=\r?\n/g,'').replace(/\r?\n[ \t]/g,'');
+  const out=[];const re=/BEGIN:VCARD([\s\S]*?)END:VCARD/gi;let m;
+  while((m=re.exec(txt))){const c={tel:[],email:[]};
+    m[1].split(/\r?\n/).forEach(line=>{const i=line.indexOf(':');if(i<1)return;const head=line.slice(0,i),params=head.split(';').slice(1).join(';').toUpperCase();let name=head.split(';')[0].toUpperCase().replace(/^.*\./,'');let v=vcDec(line.slice(i+1),params);
+      if(name==='N'){const p=v.split(';');c.fam=vcUn(p[0]||'');c.giv=vcUn(p[1]||'')}
+      else if(name==='FN')c.fn=vcUn(v);
+      else if(name==='ORG')c.org=vcUn(v.split(';')[0]);
+      else if(name==='TITLE')c.title=vcUn(v);
+      else if(name==='TEL')c.tel.push({v:vcUn(v).replace(/^tel:/i,''),cell:/CELL|MOBILE|IPHONE|PREF/.test(params)});
+      else if(name==='EMAIL')c.email.push(vcUn(v).toLowerCase());
+      else if(name==='ADR'){const p=v.split(';').map(vcUn);const st=p[2]||'',ct=[p[5],p[3]].filter(Boolean).join(' '),rg=p[4]?' ('+p[4]+')':'';c.adr=[st,ct+rg].filter(x=>x.trim()).join(', ')}
+      else if(name==='URL')c.url=vcUn(v);
+      else if(name==='NOTE')c.note=vcUn(v);
+      else if(name==='BDAY'){const b=vcUn(v).replace(/-/g,'');if(/^\d{8}/.test(b))c.bday=b.slice(0,4)+'-'+b.slice(4,6)+'-'+b.slice(6,8)}});
+    out.push(c)}
+  return out}
+function vcTel(raw){let n=String(raw||'').replace(/[\s.()\/-]/g,''),pa=(S.wa&&S.wa.paese)||'IT';if(n.startsWith('00'))n='+'+n.slice(2);if(n.startsWith('+')){const hit=splitPfx(n);if(hit){pa=hit.iso;n=hit.rest}else n=n.replace(/\D/g,'')}else n=n.replace(/\D/g,'');return n.length>=6&&n.length<=15?{telefono:n,paese:pa}:null}
+function vcBuild(c){
+  let nome=c.giv||'',cognome=c.fam||'';if(!nome&&!cognome&&c.fn){const p=c.fn.split(/\s+/);nome=p.shift()||'';cognome=p.join(' ')}
+  const azienda=c.org||'';if(!nome&&!cognome&&!azienda)return null;
+  const tipo=!nome&&!cognome?'azienda':'persona';
+  const tp=(c.tel.find(t=>t.cell)||c.tel[0]);const tel=tp?vcTel(tp.v):null;
+  const em=c.email.find(e=>mailRe.test(e))||'';
+  const r={tipo,nome,cognome,azienda,ruolo:c.title||'',nascita:c.bday||'',piva:'',pec:'',paese:tel?tel.paese:((S.wa&&S.wa.paese)||'IT'),telefono:tel?tel.telefono:'',email:em,sito:c.url||'',indirizzo:c.adr||'',note:c.note||'',foto:''};
+  return r}
+function vcStatus(r,seen){
+  if(!r.telefono&&!r.email)return 'senza recapito';
+  const dg=x=>String(x||'').replace(/\D/g,'').slice(-9);
+  if(r.email&&(knownEmail(r.email)||seen.e.has(r.email)))return 'già presente (email)';
+  if(r.telefono&&r.telefono.length>=6&&(clients.some(c=>c.telefono&&dg(c.telefono)===dg(r.telefono))||seen.t.has(dg(r.telefono))))return 'già presente (telefono)';
+  const n=dpN(r.nome),c=dpN(r.cognome);if(n&&c&&clients.some(x=>dpN(x.nome)===n&&dpN(x.cognome)===c))return 'già presente (nome)';
+  return ''}
+function vcPaint(){
+  const L=$('vc_L');L.textContent='';
+  if(!vcRows.length){L.append(h('div','hint','Nessun contatto trovato nel file.'));return}
+  const ok=vcRows.filter(x=>!x.st),dup=vcRows.filter(x=>x.st&&x.st[0]==='g').length,nr=vcRows.filter(x=>x.st==='senza recapito').length;
+  L.append(h('div','hint',vcRows.length+' contatti nel file: '+ok.length+' nuovi, '+dup+' già presenti, '+nr+' senza telefono né email (non importabili).'));
+  const go=h('button','btn p lbl');go.type='button';
+  const upd=()=>{const n=vcRows.filter(x=>x.on).length;go.textContent='Importa '+n+(n===1?' contatto':' contatti')+' come prospect';go.disabled=!n};
+  vcRows.slice(0,400).forEach(x=>{const lb=h('label','chk');const cb=document.createElement('input');cb.type='checkbox';cb.checked=x.on;cb.disabled=x.st==='senza recapito';cb.onchange=()=>{x.on=cb.checked;upd()};
+    const sp=h('span','',fullName(x.r));const em=h('em','',[x.r.azienda&&x.r.tipo!=='azienda'?x.r.azienda:'',x.r.telefono,x.r.email,x.st?'— '+x.st:''].filter(Boolean).join(' · '));sp.append(em);lb.append(cb,sp);L.append(lb)});
+  if(vcRows.length>400)L.append(h('div','hint','Sono mostrati i primi 400; gli altri seguono la stessa regola: vengono importati se nuovi.'));
+  go.onclick=()=>vcImport();L.append(go);upd()}
+function vcImport(){
+  const sel=vcRows.filter(x=>x.on);if(!sel.length)return;const t0=Date.now();let k=0;
+  sel.forEach(x=>{const c=stampNew({id:(t0+k).toString(36)+'c'+k,...x.r,wa:[],agg:new Date().toISOString(),privacy:mkPriv({fonteDati:'interessato',base:'contratto'})});k++;logP(c,'Importato dalla rubrica','creazione');clients.push(c)});
+  persist();try{render()}catch(e){}vcRows=[];$('vc_L').textContent='';$('vc_L').append(h('div','hint',sel.length+(sel.length===1?' contatto importato':' contatti importati')+' come prospect. Ricorda di inviare l’informativa privacy a chi non l’ha ancora ricevuta.'));toast('Contatti importati.')}
+$('vc_pick').onclick=()=>$('vc_file').click();
+$('vc_file').onchange=async e=>{const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
+  try{const txt=await f.text();const cards=vcParse(txt);const seen={e:new Set,t:new Set};
+    vcRows=cards.map(vcBuild).filter(Boolean).map(r=>{const st=vcStatus(r,seen);if(!st){if(r.email)seen.e.add(r.email);if(r.telefono)seen.t.add(String(r.telefono).slice(-9))}return{r,st,on:!st}});vcPaint()}
+  catch(err){toast('Impossibile leggere il file.')}};
