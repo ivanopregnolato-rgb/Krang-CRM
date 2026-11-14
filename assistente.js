@@ -101,6 +101,12 @@ const KB=[
  a:'Menu → Analytics ha due viste. Funnel: lead diventati clienti per fonte e tasso delle opportunità (create, aperte, vinte, perse, ciclo medio). Engagement: clienti attivi o fermi, messaggi del periodo, consensi ed elenco «Da riattivare». Ogni riquadro ha la (i) con la spiegazione.',go:['Apri Analytics','an']},
 {t:'Marketing: segmenti e campagne',i:['25-marketing-segmenti', '26-marketing-campagne'],k:'marketing segmenti segmento campagne campagna compleanno auguri richiesta consensi stop gruppi clienti fermi riattivare',
  a:'Menu → Marketing: i Segmenti sono gruppi di clienti definiti da condizioni (ce ne sono di pronti, e puoi crearne di tuoi con «Nuovo segmento»). Le Campagne sono azioni con interruttore, come gli auguri di compleanno e i percorsi a più passi: i messaggi si preparano da soli e restano in coda, e li invii tu con un tocco («Apri») dal programma di posta o da WhatsApp. Le campagne riguardano solo chi ha dato il consenso al marketing; in ogni messaggio c’è il link personale con cui il cliente può modificarlo o revocarlo, e la scelta arriva da sola nella scheda Privacy.',go:['Apri Marketing','mkt']},
+{t:'Importare i contatti dalla rubrica del telefono',k:'importare importa rubrica contatti telefono vcf vcard file contatti iphone android caricare prospect',
+ a:'Puoi portare nel CRM i contatti della rubrica come prospect: li scegli tu, nessuno è selezionato in partenza. L’app li legge da un file .vcf e il file resta solo sul tuo dispositivo; la lista si cancella da sola dopo 3 giorni. I contatti già in anagrafica (stessa email, telefono o nome) compaiono in fondo all’elenco e non si importano, per non creare doppioni.',
+ s:['Nell’app Contatti scegli i contatti (o tutta la rubrica), tocca Condividi e salva il file .vcf in File.','Menu → Impostazioni → Dati e privacy → Importa dalla rubrica, poi «Scegli il file .vcf».','Cerca e spunta i contatti che vuoi, poi tocca «Importa come prospect».','L’informativa privacy dei contatti importati risulta da inviare: la trovi tra le cose da fare.'],go:['Vai a Importa dalla rubrica','set:vc']},
+{t:'Anagrafiche duplicate e unione',k:'duplicati duplicato doppioni doppio unire unione merge stessa persona simili somiglianza probabilita confronta sono diversi annulla unione',
+ a:'L’app cerca da sola le schede che sembrano la stessa persona o azienda (stessa partita IVA, nome e cognome simili, stesso indirizzo) e indica una probabilità. Niente viene unito senza la tua conferma: puoi confrontarle, segnarle come diverse o unirle; l’unione porta con sé opportunità, lead, acquisti e preventivi e si può annullare entro 30 giorni.',
+ s:['Menu → Impostazioni → Anagrafiche duplicate.','Tocca «Confronta» per vedere le due schede affiancate.','Scegli «Sono diversi» oppure «Unisci».'],go:['Vai ad Anagrafiche duplicate','set:dp']},
 {t:'Home e totali',i:['01-home'],k:'home cruscotto totali aperte ponderato pipeline vinte periodo 30 giorni 90 giorni margine',
  a:'La Home mostra i contatori, i totali Aperte e Ponderato (valore × probabilità), la Pipeline per fase, le Vinte con filtro 30 giorni / 90 giorni / 12 mesi / Sempre e l’elenco «Da fare».',go:['Vai alla Home','home']},
 {t:'Blocco con Face ID, impronta o PIN',i:['30-set-sc'],k:'face id biometria impronta pin blocco bloccare app sicurezza sblocco accesso emergenza touch id',
@@ -133,11 +139,12 @@ function rank(q){const qt=[...new Set(toks(q))];if(!qt.length)return[];
  return KB.map((e,i)=>{const d=DOC[i];let s=0,hit=0;qt.forEach(w=>{let x=0;if(d.t.has(w))x=3;else if(d.k.has(w))x=2.4;else if(d.b.has(w))x=1;if(x){hit++;s+=x*idf(w)}});
    const cov=hit/qt.length;return{e,i,s:s*(0.4+0.6*cov),hit}}).filter(r=>r.hit>0).sort((a,b)=>b.s-a.s)}
 function local(q){const r=rank(q);if(!r.length||r[0].s<2.2)return null;
+ const nq=new Set(toks(q)).size;if(nq>2&&r[0].hit*2<nq)return null;
  const top=r[0],more=r.slice(1,4).filter(x=>x.s>=top.s*.55&&x.s>=2.2).slice(0,2);
  return{e:top.e,more:more.map(x=>x.e)}}
 const GO={home:()=>setTab('home'),clienti:()=>setTab('clienti'),lead:()=>setTab('lead'),opp:()=>setTab('opp'),mkt:()=>setTab('mkt'),an:()=>openAn(),info:()=>openInfo(),help:()=>openHelp(),
  'prod:cat':()=>{setTab('prod');window.pSec='cat';paintPSec()},'prod:lst':()=>{setTab('prod');window.pSec='lst';paintPSec()},'prod:mag':()=>{setTab('prod');window.pSec='mag';paintPSec()}};
-['az','cl','em','wa','al','pr','ld','pv','sc','bk'].forEach(k=>GO['set:'+k]=()=>{openSettings();setSp(k)});
+['az','cl','em','wa','al','pr','ld','pv','sc','bk','vc','dp'].forEach(k=>GO['set:'+k]=()=>{openSettings();setSp(k)});
 const STARTERS=['Come creo un cliente?','Come mando un preventivo?','Come faccio il backup?','Come invio un’email?','Come registro una chiamata?'];
 let M=null,box=null,inp=null,started=false;
 function bubble(cls){const d=h('div','ab '+cls);box.append(d);return d}
