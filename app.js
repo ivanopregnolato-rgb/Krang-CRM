@@ -9204,11 +9204,10 @@ $('indirizzo').addEventListener('keydown',e=>{if(e.key==='Enter')e.preventDefaul
 document.querySelectorAll('#cTabs [data-i=route]').forEach(e=>e.innerHTML=ICONS.route);
 
 // ===== LEAD =====
-const LKEY='crm-lead-v1',LSEEN='crm-lead-seen-v1';
-let leads=[],lSeen=[],lFilter='nuovo',lCur=null,lBusy=false;
+const LKEY='crm-lead-v1';
+let leads=[],lFilter='nuovo',lCur=null;
 try{leads=JSON.parse(localStorage.getItem(LKEY)||'[]')}catch(e){}
-try{lSeen=JSON.parse(localStorage.getItem(LSEEN)||'[]')}catch(e){}
-const persistL=()=>{try{stampMods(leads,'l')}catch(e){}try{localStorage.setItem(LKEY,JSON.stringify(leads));localStorage.setItem(LSEEN,JSON.stringify(lSeen.slice(-600)))}catch(e){toast('Spazio pieno: impossibile salvare i lead.')}try{cloudPush('ld')}catch(e){}try{dPush()}catch(e){}};
+const persistL=()=>{try{stampMods(leads,'l')}catch(e){}try{localStorage.setItem(LKEY,JSON.stringify(leads))}catch(e){toast('Spazio pieno: impossibile salvare i lead.')}try{cloudPush('ld')}catch(e){}try{dPush()}catch(e){}};
 (function purgeLeads(){const n=Date.now(),b=leads.length;leads=leads.filter(l=>!(l.stato==='scartato'&&n-(l.scartato||l.creato)>S.lead.scartati*864e5)&&!(l.stato==='nuovo'&&n-l.creato>S.lead.nuovi*30.5*864e5));if(leads.length!==b)persistL()})();
 const AUTO_RE=/no-?reply|donotreply|do-not-reply|mailer-daemon|postmaster|notification|newsletter|bounce|alert|noreply|automated|updates?@|billing|invoice|fattura/i;
 const lName=l=>[l.nome,l.cognome].filter(Boolean).join(' ')||l.email||'Lead senza nome';
@@ -9253,7 +9252,7 @@ function openLead(l){
   setErr('l_email','');setLTipo(d.tipo||(d.azienda?'azienda':'persona'));setLTab('dati');$('lTabs').hidden=!l;paintLP();
   $('l_nome').value=d.nome||'';$('l_cognome').value=d.cognome||'';$('l_email').value=d.email||'';$('l_tel').value=d.telefono||'';$('l_paese').value=d.paese||(S.wa&&S.wa.paese)||'IT';if(window.paintLPaese)paintLPaese();$('l_az').value=d.azienda||'';$('l_rich').value=d.richiesta||'';$('l_ruolo').value=d.ruolo||'';$('l_nascita').value=d.nascita||'';$('l_piva').value=d.piva||'';$('l_pec').value=d.pec||'';$('l_sito').value=d.sito||'';$('l_ind').value=d.indirizzo||'';$('l_note').value=d.note||'';['l_pec','l_piva','l_nascita'].forEach(f=>setErr(f,''));$('l_paste').value='';$('l_exth').textContent='';
   $('lTitle').textContent=l?lName(l):'Nuovo lead';
-  $('l_pasteBox').hidden=!!l;$('l_act').style.gridTemplateColumns='repeat(2,minmax(0,1fr))';setLCm('all');$('l_chkh').textContent='';paintLM();paintLActs(l);
+  $('l_pasteBox').hidden=!!l;$('l_act').style.gridTemplateColumns='repeat(2,minmax(0,1fr))';setLCm('all');paintLM();paintLActs(l);
   const done=l&&l.stato!=='nuovo',src=$('l_src');src.hidden=!l;
   if(l){const st=l.stato==='convertito'?'Convertito in prospect':l.stato==='scartato'?'Scartato':'Nuovo';src.textContent=st+' · '+({web:'form web',email:'email',manuale:'inserito a mano'}[l.fonte]||'')+' · '+fmtD(ymd(new Date(l.data)));src.style.background=l.stato==='convertito'?'#b9e6d3':l.stato==='scartato'?'var(--line)':'#ffd9b0'}
   $('l_ripr').hidden=!(l&&l.stato==='scartato');$('l_conv').hidden=!!(l&&l.stato==='convertito');$('l_scarta').hidden=!l||l.stato!=='nuovo';$('l_del').hidden=!l;$('l_reply').hidden=!l;
