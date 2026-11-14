@@ -399,7 +399,7 @@ function setTab(v){tab=v;document.querySelectorAll('#tabs button').forEach(b=>b.
 $('tabs').onclick=e=>{const b=e.target.closest('button');if(b){if(b.dataset.v==='opp'){oFilt='';setTab('opp');renderO();return}setTab(b.dataset.v)}};
 $('vList').onclick=()=>{oView='list';renderO()};$('vKan').onclick=()=>{oView='kan';renderO()};
 FONTI.forEach(f=>{const o=h('option','',f);o.value=f;$('o_fonte').append(o)});
-function paintFasi(){const w=$('o_fasi');w.textContent='';FASI.forEach(f=>{const b=h('button','',f[1]);b.type='button';b.style.background=f[3];b.classList.toggle('on',oD.fase===f[0]);b.onclick=()=>{oD.fase=f[0];$('o_prob').value=f[2];setErr('o_prob','');paintFasi()};w.append(b)})}
+function paintFasi(){const w=$('o_fasi');w.textContent='';FASI.forEach(f=>{const b=h('button','',f[1]);b.type='button';b.style.background=f[3];b.classList.toggle('on',oD.fase===f[0]);b.onclick=()=>{oD.fase=f[0];$('o_prob').value=f[2];setErr('o_prob','');paintFasi();w.dispatchEvent(new Event('input',{bubbles:true}))};w.append(b)})}
 function recalc(){updAll.forEach(f=>f());const n=oD.prodotti.length,m=mg(oD);$('o_tot').textContent=n?'Totale prodotti: '+eur(total(oD))+(m.ok?' · Margine: '+eur(m.mar)+' ('+pct(m.pct)+')'+(m.par?' sulle righe con costo':''):''):'';if(n){$('o_valore').value=total(oD);setErr('o_valore','')}$('o_valore').disabled=n>0;if(window.paintAppr)paintAppr()}
 function paintProd(){const w=$('o_prod');w.textContent='';updAll=[];oD.prodotti.forEach((p,i)=>{const c=h('div','pc'),l1=h('div','l1'),l2=h('div','l2');
   const n=h('input');n.placeholder='Prodotto';n.value=p.nome;if(p.prodId){n.readOnly=true;n.title='Prodotto del catalogo: il nome non si modifica';n.style.background='var(--bg)'}n.setAttribute('aria-label','Nome prodotto');n.oninput=()=>{p.nome=n.value};
@@ -657,7 +657,7 @@ function aliasHint(){$('st_aliashint').textContent='Il nome mostrato al destinat
 function openSettings(){setSp(null);try{paintCloud();paintDrive()}catch(e){}try{laHide();paintLaSet()}catch(e){}paintWaSet();$('st_qv').value=S.qValid;$('st_qc').value=S.qCond;$('st_ls').value=S.lead.scartati;$('st_ln').value=S.lead.nuovi;$('st_linf').checked=S.lead.inf!==false;['st_qv','st_ls','st_ln'].forEach(k=>setErr(k,''));try{paintBro()}catch(e){}$('st_piva').value=S.piva||'';$('st_ind').value=S.indirizzo||'';$('st_tel').value=S.telefono||'';$('st_sito').value=S.sito||'';$('st_az').value=S.azienda;$('st_alias').value=S.alias;$('st_firma').value=S.firma;$('st_rt').value=S.replyTo;['contratto','contatti','marketing','profilazione','comunicazioni'].forEach(k=>{$('st_r_'+k).value=S.ret[k];setErr('st_r_'+k,'')});['st_rt','st_az'].forEach(k=>setErr(k,''));aliasHint();$('mSet').hidden=false;stTouched=false;stBase=stSig();setTimeout(()=>{if(!stTouched)stBase=stSig()},900)}
 ['st_az','st_alias'].forEach(id=>$(id).addEventListener('input',aliasHint));
 let stTouched=false,stBase='';
-const stSig=()=>[...$('mSet').querySelectorAll('input:not([type=file]):not([data-ns]),select:not([data-ns]),textarea')].map(e=>e.type==='checkbox'?(e.checked?1:0):e.value).join('\u0001');
+const stSig=()=>[...$('mSet').querySelectorAll('input:not([type=file]):not([data-ns]),select:not([data-ns]),textarea')].filter(e=>!e.closest('[data-sp="vc"]')).map(e=>e.type==='checkbox'?(e.checked?1:0):e.value).join('\u0001');
 $('mSet').addEventListener('input',()=>{stTouched=true});$('mSet').addEventListener('change',()=>{stTouched=true});
 $('st_x').onclick=()=>{$('mSet').hidden=true};
 saveBtn($('stSv'),stSig,()=>{stStay=!!spCur;try{$('st_ok').onclick()}finally{stStay=false}},()=>stBase);
@@ -9285,6 +9285,7 @@ if(d.tipo==='azienda'&&!d.azienda){toast('Indica la ragione sociale dell’azien
   else if(!mailRe.test(d.email)){setErr('l_email','Inserisci un’email valida.');ok=false}
   else if(knownEmail(d.email)){setErr('l_email','Questa email è già in anagrafica clienti.');ok=false}
   else if(leads.some(x=>x!==lCur&&x.email===d.email&&x.stato!=='scartato')){setErr('l_email','Esiste già un lead con questa email.');ok=false}
+  if(!ok){const el=$('lSheet').querySelector('.bad');if(el){try{const pn=el.closest('.lp');if(pn&&pn.hidden){const k=pn.dataset.lp;const tb=document.querySelector('#lSheet [data-lt="'+k+'"]');if(tb)tb.click()}}catch(e){}el.scrollIntoView({block:'center'});try{el.focus({preventScroll:true})}catch(e){}}}
   return ok}
 $('l_ext').onclick=async()=>{const t=$('l_paste').value.trim();if(!t){$('l_exth').textContent='Incolla prima il testo del messaggio.';return}
   const b=$('l_ext');b.disabled=true;$('l_exth').textContent='Lettura in corso…';
@@ -10005,8 +10006,8 @@ let asub='fun';try{const u=localStorage.getItem('crm-asub');if(u==='fun'||u==='e
  function afterPriceChange(){if(!PSNAP){snapP();return}
    const ch=new Set();prods.forEach(p=>{const o=PSNAP[p.id];if(o&&(o.prezzo!==(+p.prezzo||0)||(known(p)&&o.costo!==p.costo)))ch.add(p.id)});
    const all=lsig()!==LSNAP,old=PSNAP;snapP();if(!ch.size&&!all)return;
-   let lines=0,nop=0,qn=0;opps.forEach(o=>{if(o.fase==='vinta'||o.fase==='persa')return;const cli=clients.find(x=>x.id===o.clienteId)||null,k=repriceList(o.prodotti,cli,ch,all,old);(o.preventivi||[]).forEach(q=>{if(q.stato==='bozza'&&repriceList(q.righe,cli,ch,all,old))qn++});if(k){lines+=k;nop++}});
-   if(typeof oEd!=='undefined'&&oD&&!$('oSheet').hidden&&oEd&&oEd.fase!=='vinta'&&oEd.fase!=='persa'){const k=repriceList(oD.prodotti,cOf(),ch,all,old);if(k){try{paintProd()}catch(e){}}}
+   let lines=0,nop=0,qn=0;opps.forEach(o=>{if(o.fase==='vinta'||o.fase==='persa')return;const cli=clients.find(x=>x.id===o.clienteId)||null,k=repriceList(o.prodotti,cli,ch,all,old);(o.preventivi||[]).forEach(q=>{if(q.stato==='bozza'&&repriceList(q.righe,cli,ch,all,old))qn++});if(k){lines+=k;nop++;if((o.prodotti||[]).length)o.valore=total(o)}});
+   if(typeof oEd!=='undefined'&&oD&&!$('oSheet').hidden&&oEd&&oEd.fase!=='vinta'&&oEd.fase!=='persa'){const k=repriceList(oD.prodotti,cOf(),ch,all,old);if(k){try{paintProd()}catch(e){}try{if(oD.prodotti.length)oD.valore=total(oD)}catch(e){}}}
    if(lines||qn){try{persistO()}catch(e){}try{renderO();renderH()}catch(e){}if(lines)toast(lines+(lines===1?' prezzo aggiornato':' prezzi aggiornati')+' in '+nop+(nop===1?' opportunità aperta.':' opportunità aperte.'))}}
  {const _pp=persistP;persistP=function(){const r=_pp.apply(this,arguments);try{afterPriceChange()}catch(e){}return r}
   const _ss=saveS;saveS=function(){const r=_ss.apply(this,arguments);try{afterPriceChange()}catch(e){}return r}
@@ -10679,6 +10680,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.38.3','Confronto delle anagrafiche duplicate più leggibile: ogni valore è a tutta larghezza, con il testo completo e l’indicazione della scheda di provenienza.'],
 ['1.39.0','Duplicati più intelligenti: l’app riconosce anche nomi e cognomi scritti in modo diverso o con piccoli errori (Max e Massimiliano, De Simone e Desimone, Verdi e Verdy, nome e cognome invertiti), aziende simili e indirizzi simili, e per ogni coppia indica una probabilità stimata calcolata sui campi compilati in entrambe le schede.'],
 ['1.39.1','Nuovo passo nei Primi passi: «I prodotti a catalogo» spiega come inserirli, come collegarli alle opportunità e come funziona lo scarico dal magazzino. In Aiuto è stata tolta la voce «Manuale utente» (in arrivo).'],
+['1.40.0','Correzioni dopo la prova con utenti. Importa dalla rubrica: «Seleziona i visibili» non include più i contatti già presenti (non si creano più schede doppie) e dopo l’import la pagina non chiede più di salvare. Cambiando il prezzo a catalogo, il valore delle opportunità aperte si aggiorna anche in elenco e in Home. Il cambio di fase mostra subito Salva. Nella scheda Lead, premendo Salva si va direttamente al campo da correggere.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -11139,19 +11141,19 @@ function vcPaint(){
   const upd=()=>{const n=vcRows.filter(x=>x.on).length;go.textContent='Importa '+n+(n===1?' contatto':' contatti')+' come prospect';go.disabled=!n};
   let vis=[];
   const draw=()=>{list.textContent='';const t=nrm(q.value.trim());vis=vcRows.filter(x=>!t||nrm([fullName(x.r),x.r.azienda,x.r.telefono,x.r.email].join(' ')).includes(t));
-    vis.slice(0,200).forEach(x=>{const lb=h('label','chk');const cb=document.createElement('input');cb.type='checkbox';cb.checked=x.on;cb.disabled=x.st==='senza recapito';cb.onchange=()=>{x.on=cb.checked;vcSave();upd()};
+    vis.slice(0,200).forEach(x=>{const lb=h('label','chk');const cb=document.createElement('input');cb.type='checkbox';cb.checked=x.on;cb.disabled=!!x.st;if(x.st)x.on=false,cb.checked=false;cb.onchange=()=>{x.on=cb.checked;vcSave();upd()};
       const sp=h('span','',fullName(x.r));sp.append(h('em','',[x.r.azienda&&x.r.tipo!=='azienda'?x.r.azienda:'',x.r.telefono,x.r.email,x.st?'— '+x.st:''].filter(Boolean).join(' · ')));lb.append(cb,sp);list.append(lb)});
     if(!vis.length)list.append(h('div','hint','Nessun contatto corrisponde alla ricerca.'));
     else if(vis.length>200)list.append(h('div','hint','Mostrati i primi 200 di '+vis.length+': restringi la ricerca per vedere gli altri.'))};
   q.oninput=draw;
-  bAll.onclick=()=>{vis.forEach(x=>{if(x.st!=='senza recapito')x.on=true});vcSave();draw();upd()};
+  bAll.onclick=()=>{vis.forEach(x=>{if(!x.st)x.on=true});vcSave();draw();upd()};
   bNone.onclick=()=>{vcRows.forEach(x=>x.on=false);vcSave();draw();upd()};
   go.onclick=()=>vcImport();
   const del=h('button','btn lbl','Elimina la lista');del.type='button';del.onclick=()=>askConfirm('Eliminare la lista dei contatti caricata? I contatti già importati restano in anagrafica.','trash','Elimina',()=>{vcDrop();vcPaint()});L.append(del);
   const dl=Math.max(0,Math.ceil((vcT+VCD-Date.now())/864e5));L.append(h('div','hint','La lista resta su questo dispositivo, solo per te, ancora '+(dl||1)+(dl>1?' giorni':' giorno')+', poi viene cancellata da sola.'));
   draw();upd()}
 function vcImport(){
-  const sel=vcRows.filter(x=>x.on);if(!sel.length)return;const t0=Date.now();let k=0;
+  const seen={e:new Set,t:new Set};const sel=vcRows.filter(x=>{if(!x.on)return false;if(vcStatus(x.r,seen)){x.st=vcStatus(x.r,{e:new Set,t:new Set})||'già presente';x.on=false;return false}if(x.r.email)seen.e.add(x.r.email);if(x.r.telefono)seen.t.add(String(x.r.telefono).replace(/\D/g,'').slice(-9));return true});if(!sel.length){vcSave();vcPaint();toast('I contatti scelti sono già presenti in anagrafica.');return}const t0=Date.now();let k=0;
   sel.forEach(x=>{const c=stampNew({id:(t0+k).toString(36)+'c'+k,...x.r,wa:[],agg:new Date().toISOString(),privacy:mkPriv({fonteDati:'interessato',base:'contratto'})});k++;logP(c,'Importato dalla rubrica','creazione');clients.push(c)});
   persist();try{render()}catch(e){}vcRows=vcRows.filter(x=>!x.on);vcSave();$('vc_L').textContent='';if(vcRows.length)vcPaint();$('vc_L').prepend(h('div','hint',sel.length+(sel.length===1?' contatto importato':' contatti importati')+' come prospect. Per tutti l’informativa privacy risulta da inviare: la trovi tra le cose da fare.'));toast('Contatti importati.')}
 $('vc_pick').onclick=()=>$('vc_file').click();
