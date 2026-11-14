@@ -740,7 +740,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 <div class="sheet" id="sheet" hidden>
 <div>
   <div class="top"><h2 id="sheetTitle">Nuovo cliente</h2><button class="btn ico pk" id="close" aria-label="Chiudi" title="Chiudi"><span data-i="back"></span></button></div>
-  <div class="tabs" id="cTabs"><button type="button" class="on" data-p="dati" title="Dati" aria-label="Dati"><span data-i="user"></span>Dati</button><button type="button" data-p="opp" title="Opportunità" aria-label="Opportunità"><span data-i="target"></span>Opportunità<span class="cnt" id="cCnt"></span></button><button type="button" data-p="priv" title="Privacy" aria-label="Privacy"><span data-i="shield"></span>Privacy</button><button type="button" data-p="comm" title="Contatti" aria-label="Contatti"><span data-i="Scrivi"></span>Contatti</button><button type="button" data-p="tr" title="Acquisti" aria-label="Acquisti"><span data-i="bag"></span>Acquisti</button><button type="button" data-p="tp" title="Storia" aria-label="Storia"><span data-i="route"></span>Storia</button></div>
+  <div class="tabs" id="cTabs"><button type="button" class="on" data-p="dati" title="Dati" aria-label="Dati"><span data-i="user"></span>Dati</button><button type="button" data-p="opp" title="Opportunità" aria-label="Opportunità"><span data-i="target"></span>Opportunità<span class="cnt" id="cCnt"></span></button><button type="button" data-p="tk" title="Task" aria-label="Task"><span data-i="check"></span>Task<span class="cnt" id="cTkCnt"></span></button><button type="button" data-p="priv" title="Privacy" aria-label="Privacy"><span data-i="shield"></span>Privacy</button><button type="button" data-p="comm" title="Contatti" aria-label="Contatti"><span data-i="Scrivi"></span>Contatti</button><button type="button" data-p="tr" title="Acquisti" aria-label="Acquisti"><span data-i="bag"></span>Acquisti</button><button type="button" data-p="tp" title="Storia" aria-label="Storia"><span data-i="route"></span>Storia</button></div>
   <div class="msg" id="msg" hidden></div>
   <div class="seg" id="seg" role="group" aria-label="Tipo di anagrafica"><button type="button" class="on" data-t="persona"><span data-i="user"></span>Persona</button><button type="button" data-t="azienda"><span data-i="building"></span>Azienda</button></div>
   <div id="favHold" hidden><button class="ico" id="favBtn" type="button" aria-label="Preferito" title="Preferito"><span data-i="star"></span></button></div>
@@ -797,7 +797,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   </div>
   <div id="cmCall" hidden><div class="mact"><button class="btn lbl" id="cl_call" type="button"><span data-i="Chiama"></span>Chiama</button><button class="btn lbl" id="cl_reg" type="button"><span data-i="edit"></span>Registra</button></div><div id="callBox" style="margin-top:10px"></div><div id="callList" style="margin-top:10px"></div></div></div>
   <div class="f" id="linkedF" hidden><div id="linked"></div><button class="btn add" id="addOppFor" type="button" aria-label="Nuova opportunità per questo cliente" title="Nuova opportunità per questo cliente"><span data-i="add"></span></button></div>
-  <div class="f" id="tkF" hidden><label>Attività</label><div id="tkL"></div><button class="btn lbl" id="tkAdd" type="button" style="width:100%"><span data-i="add"></span>Aggiungi attività</button></div>
+  <div class="f" id="tkF" hidden></div>
   <div class="btns"><button class="btn d" id="del" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina cliente" title="Elimina cliente"><span data-i="trash"></span></button><button class="btn p" id="save" aria-label="Salva cliente" title="Salva cliente" style="flex:9 1 0"><span data-i="check"></span></button></div>
 </div>
 </div>
@@ -806,7 +806,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="top"><h2 id="lTitle">Nuovo lead</h2><button class="btn ico pk" id="lClose" type="button" aria-label="Chiudi" title="Chiudi"><span data-i="back"></span></button></div>
   <div class="qbn" id="l_src" hidden></div>
   <div class="acts" id="l_acts" hidden></div>
-  <div class="tabs" id="lTabs" role="tablist"><button type="button" class="on" data-lp="dati"><span data-i="user"></span>Dati</button><button type="button" data-lp="priv"><span data-i="shield"></span>Privacy</button><button type="button" data-lp="msg"><span data-i="Scrivi"></span>Contatti<i class="bdg" id="l_bdg" hidden></i></button><button type="button" data-lp="tp"><span data-i="route"></span>Storia</button></div>
+  <div class="tabs" id="lTabs" role="tablist"><button type="button" class="on" data-lp="dati"><span data-i="user"></span>Dati</button><button type="button" data-lp="tk"><span data-i="check"></span>Task<span class="cnt" id="lTkCnt"></span></button><button type="button" data-lp="priv"><span data-i="shield"></span>Privacy</button><button type="button" data-lp="msg"><span data-i="Scrivi"></span>Contatti<i class="bdg" id="l_bdg" hidden></i></button><button type="button" data-lp="tp"><span data-i="route"></span>Storia</button></div>
 <div class="lp" data-lp="dati">
   <div class="f" id="l_pasteBox"><label for="l_paste">Incolla l’email o il messaggio del form</label><textarea id="l_paste" rows="4" placeholder="Incolla qui il testo: nome, email e richiesta vengono ricavati da soli"></textarea><button class="btn lbl" id="l_ext" type="button" style="margin-top:8px"><span data-i="search"></span> Ricava i dati</button><div class="hint" id="l_exth"></div></div>
   <div class="seg" id="l_seg" role="group" aria-label="Tipo di contatto"><button type="button" class="on" data-t="persona"><span data-i="user"></span>Persona</button><button type="button" data-t="azienda"><span data-i="building"></span>Azienda</button></div>
@@ -829,6 +829,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="hint">L’informativa (artt. 13-14 GDPR) va data al primo contatto. Scegli il canale: il testo viene proposto già nel messaggio.</div>
   <div class="lact two2"><button class="btn lbl" id="l_pinfE" type="button"><span data-i="Scrivi"></span>Via email</button><button class="btn lbl" id="l_pinfW" type="button"><span data-i="WhatsApp"></span>Via WhatsApp</button></div>
 </div>
+<div class="lp" data-lp="tk" hidden><div id="l_tkBody"></div></div>
 <div class="lp" data-lp="tp" hidden><div id="l_tpBody"></div></div>
 <div class="lp" data-lp="msg" hidden>
   <div class="seg" id="l_cmSeg"><button type="button" aria-label="Tutti" title="Tutti" class="on" data-c="all"><span data-i="list"></span><span class="lb">Tutti</span></button><button type="button" aria-label="Email" title="Email" data-c="mail"><span data-i="Scrivi"></span><span class="lb">Email</span><span class="cnt" id="l_mailCnt"></span></button><button type="button" aria-label="WhatsApp" title="WhatsApp" data-c="wa"><span data-i="WhatsApp"></span><span class="lb">WhatsApp</span><span class="cnt" id="l_waCnt"></span></button><button type="button" aria-label="Chiamate" title="Chiamate" data-c="call"><span data-i="Chiama"></span><span class="lb">Chiamate</span><span class="cnt" id="l_callCnt"></span></button></div>
@@ -845,6 +846,8 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 </div></div>
 <div class="sheet" id="oSheet" hidden><div>
   <div class="top"><h2 id="oTitle">Nuova opportunità</h2><button class="btn ico pk" id="oClose" type="button" aria-label="Chiudi" title="Chiudi"><span data-i="back"></span></button></div>
+  <div class="tabs" id="oTabs"><button type="button" class="on" data-op="dati"><span data-i="target"></span>Dati</button><button type="button" data-op="tk"><span data-i="check"></span>Task<span class="cnt" id="oTkCnt"></span></button></div>
+  <div class="f" id="oTkF" hidden></div>
   <div class="f"><label for="o_titolo">Titolo</label><input id="o_titolo" autocomplete="off"><div class="err" id="err-o_titolo" hidden></div></div>
   <div class="f"><label for="o_cliente">Cliente</label><select id="o_cliente"></select><button type="button" class="qrow" id="o_cl" hidden></button><div class="hint" id="o_clh"></div><div class="err" id="err-o_cliente" hidden></div></div>
   <div class="f"><label>Fase</label><div class="chips" id="o_fasi"></div></div>

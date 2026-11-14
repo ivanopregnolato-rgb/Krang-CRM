@@ -454,8 +454,8 @@ $('oDel').onclick=()=>{if(!oEd)return;askConfirm('Eliminare l’opportunità “
 function setPane(p){if(p==='priv'){try{$('p_det').open=false;setErr('p_later','')}catch(e){}}
  if(p==='comm'&&editing&&editing.id&&waUnread(editing)){const a=waLast(editing);editing.waSeen=a.data;try{persist()}catch(e){}setTimeout(()=>{try{paintBadges()}catch(e){}},0)}
 document.querySelectorAll('#cTabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));$('sheet').classList.toggle('np-dati',p!=='dati');
-  [...$('sheet').firstElementChild.children].forEach(el=>{if(el.classList.contains('top')||el.id==='cTabs')return;const k=el.id==='linkedF'||el.id==='tkF'?'opp':el.id==='privF'?'priv':el.id==='commF'?'comm':el.id==='tpF'?'tp':el.id==='trF'?'tr':el.id==='msg'?'*':el.classList.contains('btns')?'dati,priv':el.classList.contains('delw')?'*':'dati';el.classList.toggle('pane-hide',k!=='*'&&!k.split(',').includes(p))})}
-$('cTabs').onclick=e=>{const b=e.target.closest('button');if(b){setPane(b.dataset.p);if(b.dataset.p==='comm')loadComm();if(b.dataset.p==='tp')paintTouch();if(b.dataset.p==='tr')paintTr()}};
+  [...$('sheet').firstElementChild.children].forEach(el=>{if(el.classList.contains('top')||el.id==='cTabs')return;const k=el.id==='linkedF'?'opp':el.id==='tkF'?'tk':el.id==='privF'?'priv':el.id==='commF'?'comm':el.id==='tpF'?'tp':el.id==='trF'?'tr':el.id==='msg'?'*':el.classList.contains('btns')?'dati,priv':el.classList.contains('delw')?'*':'dati';el.classList.toggle('pane-hide',k!=='*'&&!k.split(',').includes(p))})}
+$('cTabs').onclick=e=>{const b=e.target.closest('button');if(b){setPane(b.dataset.p);if(b.dataset.p==='comm')loadComm();if(b.dataset.p==='tp')paintTouch();if(b.dataset.p==='tr')paintTr();if(b.dataset.p==='tk')tkPaintAll()}};
 const CONS=['mkEmail','mkTel','profilazione','terzi'];
 const CLABEL={mkEmail:'Marketing via email',mkTel:'Marketing telefonico e WhatsApp',profilazione:'Profilazione commerciale',terzi:'Comunicazione a partner terzi'};
 function privUI(){const on=$('p_inf').checked;$('p_infx').hidden=!on;if(on&&!$('p_infdata').value)$('p_infdata').value=ymd();
@@ -10687,7 +10687,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.40.0','Correzioni dopo la prova con utenti. Importa dalla rubrica: «Seleziona i visibili» non include più i contatti già presenti (non si creano più schede doppie) e dopo l’import la pagina non chiede più di salvare. Cambiando il prezzo a catalogo, il valore delle opportunità aperte si aggiorna anche in elenco e in Home; se l’opportunità ha un preventivo inviato o accettato resta invece il prezzo promesso al cliente, e nella scheda compare «Aggiorna ai prezzi attuali». Il cambio di fase mostra subito Salva. Nella scheda Lead, premendo Salva si va direttamente al campo da correggere.'],
 ['1.40.1','Importa dalla rubrica: i contatti che non si possono importare ora sono raggruppati in fondo all’elenco con il motivo scritto chiaro. «Già in anagrafica» indica anche con quale scheda coincidono e perché (stessa email, stesso telefono o stesso nome); «Senza telefono né email» spiega cosa manca.'],
 ['1.40.2','L’Assistente ora sa rispondere su come importare i contatti dalla rubrica e su come funzionano le anagrafiche duplicate (confronto, unione e annullo), con il pulsante per andare subito alla pagina giusta. Quando una domanda non c’entra con nessun argomento del manuale, l’Assistente lo dice invece di proporre una risposta fuori tema.'],
-['1.41.0','Nuove attività (task). Puoi annotare le cose da fare con titolo, scadenza e nota, e collegarle a un cliente, a un lead o a un’opportunità. In Home, sotto «Da fare», trovi le attività scadute, quelle di oggi e dei prossimi 3 giorni, e con «Tutte le attività» apri l’elenco completo, raggruppato per scadenza, dove le segni come fatte con un tocco. Nella scheda del cliente, nella sezione Opportunità, c’è l’elenco delle sue attività e il pulsante «Aggiungi attività». Le attività sono cifrate e sincronizzate come gli altri dati e finiscono anche nel backup.'],
+['1.41.0','Nuove attività (task). Ogni attività ha un titolo, una scadenza obbligatoria (i tasti Oggi, Domani e Tra una settimana compilano la data, che resta modificabile) e un collegamento obbligatorio a un cliente, un lead o un’opportunità. Cliente, lead e opportunità hanno un tab Task dove le crei e le gestisci, con un tocco le segni come fatte. In Home, sotto «Da fare», compaiono le attività scadute, quelle di oggi e dei prossimi 3 giorni, e «Tutte le attività» apre l’elenco completo raggruppato per scadenza. Le attività sono cifrate e sincronizzate come gli altri dati e finiscono anche nel backup.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -11193,25 +11193,29 @@ function tkWhen(t){if(!t.scad)return 'Senza scadenza';const td=ymd();if(t.scad<t
 function tkDone(t,on){t.stato=on?'fatta':'aperta';if(on)t.fatta=ymd();else delete t.fatta;persistT();try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast(on?'Attività completata.':'Attività riaperta.')}
 function tkActions(add,td){const lim=new Date(new Date(td+'T00:00').getTime()+3*864e5);const lm=new Date(lim.getTime()-lim.getTimezoneOffset()*6e4).toISOString().slice(0,10);
   tkOpen_().forEach(t=>{if(!t.scad||t.scad>lm)return;const r=tkRef(t);add(t.scad<td?91:t.scad===td?86:52,'clock',t.titolo,tkWhen(t)+(r?' · '+r.nome:''),()=>tkOpen(t))})}
-function tkShell(id,title,onClose){let sh=$(id);if(!sh){sh=h('div','sheet');sh.id=id;sh.style.zIndex=6;document.body.append(sh)}sh.hidden=false;sh.textContent='';const w=h('div'),top=h('div','top'),x=h('button','btn ico pk');x.type='button';x.title=x.ariaLabel='Chiudi';x.innerHTML=ICONS.back;x.onclick=()=>{if(onClose)onClose();else sh.hidden=true};top.append(h('h2','',title),x);w.append(top);sh.append(w);sh.scrollTop=0;return {sh,w,x}}
-function tkOpen(t,pre){const isNew=!t;const d=t?{...t,rif:t.rif?{...t.rif}:null}:{id:'t'+Date.now().toString(36),titolo:'',scad:'',nota:'',stato:'aperta',rif:pre||null};
+function tkShell(id,title,onClose){let sh=$(id);if(!sh){sh=h('div','sheet');sh.id=id;sh.style.zIndex=id==='tkSheet'?7:6;document.body.append(sh)}sh.hidden=false;sh.textContent='';const w=h('div'),top=h('div','top'),x=h('button','btn ico pk');x.type='button';x.title=x.ariaLabel='Chiudi';x.innerHTML=ICONS.back;x.onclick=()=>{if(onClose)onClose();else sh.hidden=true};top.append(h('h2','',title),x);w.append(top);sh.append(w);sh.scrollTop=0;return {sh,w,x}}
+function tkOpen(t,pre,lock){const isNew=!t;const d=t?{...t,rif:t.rif?{...t.rif}:null}:{id:'t'+Date.now().toString(36),titolo:'',scad:'',nota:'',stato:'aperta',rif:pre||null};
   const {sh,w,x}=tkShell('tkSheet',isNew?'Nuova attività':'Attività');
   const f1=h('div','f'),l1=h('label','','Cosa c’è da fare'),ti=h('input');ti.value=d.titolo;ti.placeholder='Per esempio: richiamare per il preventivo';ti.autocomplete='off';ti.id='tk_t';l1.htmlFor='tk_t';const e1=h('div','err');e1.hidden=true;f1.append(l1,ti,e1);
-  const f2=h('div','f'),l2=h('label','','Scadenza (facoltativa)'),da=h('input');da.type='date';da.value=d.scad||'';da.id='tk_d';l2.htmlFor='tk_d';
+  const f2=h('div','f'),l2=h('label','','Scadenza'),da=h('input');da.type='date';da.value=d.scad||'';da.id='tk_d';l2.htmlFor='tk_d';const e2=h('div','err');e2.hidden=true;
   const ch=h('div','');ch.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-top:6px';const plus=n=>{const x=new Date(Date.now()+n*864e5);return new Date(x-x.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
-  [['Oggi',0],['Domani',1],['Tra una settimana',7]].forEach(([n,v])=>{const b=h('button','btn lbl',n);b.type='button';b.style.cssText='width:auto;flex:none;padding:6px 12px;min-height:0';b.onclick=()=>{da.value=plus(v);da.dispatchEvent(new Event('input'))};ch.append(b)});f2.append(l2,da,ch);
+  [['Oggi',0],['Domani',1],['Tra una settimana',7]].forEach(([n,v])=>{const b=h('button','btn lbl',n);b.type='button';b.style.cssText='width:auto;flex:none;padding:6px 12px;min-height:0';b.onclick=()=>{da.value=plus(v);e2.hidden=true;da.classList.remove('bad');da.dispatchEvent(new Event('input',{bubbles:true}))};ch.append(b)});f2.append(l2,da,e2,ch);
   const f3=h('div','f'),l3=h('label','','Nota (facoltativa)'),no=h('textarea');no.rows=3;no.value=d.nota||'';no.id='tk_n';l3.htmlFor='tk_n';f3.append(l3,no);
-  const f4=h('div','f'),l4=h('label','','Collegata a (facoltativo)'),rb=h('div',''),q=h('input'),rl=h('div','');q.type='search';q.placeholder='Cerca cliente, lead o opportunità';q.autocomplete='off';q.setAttribute('aria-label','Cerca cliente, lead o opportunità');rl.style.margin='6px 0';f4.append(l4,rb,q,rl);
-  const paintRif=()=>{rb.textContent='';const r=d.rif&&tkRef({rif:d.rif});if(r){const c=h('div','hint');c.style.cssText='display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:12px;padding:8px 10px';c.append(h('span','',r.nome));const rm=h('button','btn ico');rm.type='button';rm.innerHTML=ICONS.x||'×';rm.title=rm.ariaLabel='Togli il collegamento';rm.onclick=()=>{d.rif=null;paintRif()};c.append(rm);rb.append(c);q.hidden=true;rl.hidden=true}else{q.hidden=false;rl.hidden=false}};
+  const f4=h('div','f'),l4=h('label','','Collegata a'),rb=h('div',''),q=h('input'),rl=h('div','');q.type='search';q.placeholder='Cerca cliente, lead o opportunità';q.autocomplete='off';q.setAttribute('aria-label','Cerca cliente, lead o opportunità');rl.style.margin='6px 0';const e4=h('div','err');e4.hidden=true;f4.append(l4,rb,e4,q,rl);
+  const paintRif=()=>{rb.textContent='';const r=d.rif&&tkRef({rif:d.rif});if(r){const c=h('div','hint');c.style.cssText='display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:12px;padding:8px 10px';c.append(h('span','',r.nome));if(!lock){const rm=h('button','btn ico');rm.type='button';rm.innerHTML=ICONS.x||'×';rm.title=rm.ariaLabel='Cambia il collegamento';rm.onclick=()=>{d.rif=null;paintRif()};c.append(rm)}rb.append(c);q.hidden=true;rl.hidden=true;e4.hidden=true}else{q.hidden=false;rl.hidden=false}};
   q.oninput=()=>{rl.textContent='';const s=nrm(q.value.trim());if(s.length<2)return;const R=[];
     clients.forEach(c=>{if(nrm([fullName(c),c.azienda,c.telefono,c.email].filter(Boolean).join(' ')).includes(s))R.push({tipo:'cliente',id:c.id,n:fullName(c)})});
     (typeof leads!=='undefined'?leads:[]).forEach(l=>{if(l.stato!=='scartato'&&nrm([lName(l),l.azienda,l.email].filter(Boolean).join(' ')).includes(s))R.push({tipo:'lead',id:l.id,n:'Lead · '+lName(l)})});
     opps.forEach(o=>{if(nrm(o.titolo||'').includes(s))R.push({tipo:'opp',id:o.id,n:'Opportunità · '+o.titolo})});
-    R.slice(0,8).forEach(r=>{const b=h('button','btn lbl',r.n);b.type='button';b.style.cssText='width:100%;justify-content:flex-start;margin:0 0 4px';b.onclick=()=>{d.rif={tipo:r.tipo,id:r.id};q.value='';rl.textContent='';paintRif()};rl.append(b)});
+    R.slice(0,8).forEach(r=>{const b=h('button','btn lbl',r.n);b.type='button';b.style.cssText='width:100%;justify-content:flex-start;margin:0 0 4px';b.onclick=()=>{d.rif={tipo:r.tipo,id:r.id};q.value='';rl.textContent='';e4.hidden=true;paintRif()};rl.append(b)});
     if(!R.length)rl.append(h('div','hint','Nessun risultato.'))};
   paintRif();
   const sig=()=>JSON.stringify([ti.value.trim(),da.value,no.value.trim(),d.rif]);
-  const save=()=>{const tt=ti.value.trim();if(!tt){e1.textContent='Scrivi cosa c’è da fare.';e1.hidden=false;ti.classList.add('bad');ti.focus();return}
+  const save=()=>{const tt=ti.value.trim();let bad=null;e1.hidden=e2.hidden=e4.hidden=true;ti.classList.remove('bad');da.classList.remove('bad');
+    if(!tt){e1.textContent='Scrivi cosa c’è da fare.';e1.hidden=false;ti.classList.add('bad');bad=bad||ti}
+    if(!da.value||isNaN(new Date(da.value+'T00:00'))){e2.textContent='Scegli la scadenza: puoi usare i tasti rapidi o scrivere la data.';e2.hidden=false;da.classList.add('bad');bad=bad||da}
+    if(!(d.rif&&tkRef({rif:d.rif}))){e4.textContent='Collega l’attività a un cliente, un lead o un’opportunità.';e4.hidden=false;bad=bad||q}
+    if(bad){bad.scrollIntoView({block:'center'});try{bad.focus({preventScroll:true})}catch(e){}return}
     const rec=Object.assign(t||stampNew(d),{titolo:tt,scad:da.value||'',nota:no.value.trim(),rif:d.rif||null,stato:(t&&t.stato)||'aperta'});if(!t)tasks.push(rec);persistT();sh.hidden=true;try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast('Attività salvata.')};
   const ac=h('div','delw');w.append(f1,f2,f3,f4,ac);
   if(t){const dn=h('button','btn lbl'+(t.stato==='fatta'?'':' p'));dn.type='button';dn.innerHTML=ICONS.check+(t.stato==='fatta'?'Riapri':'Segna come fatta');dn.style.width='100%';dn.onclick=()=>{tkDone(t,t.stato!=='fatta');sh.hidden=true};
@@ -11220,7 +11224,7 @@ function tkOpen(t,pre){const isNew=!t;const d=t?{...t,rif:t.rif?{...t.rif}:null}
   if(!isNew)try{saveBtn(ac,sig,save)}catch(e){}
   if(isNew){const sv=h('button','btn p lbl');sv.type='button';sv.innerHTML=ICONS.check+'Salva';sv.style.width='100%';sv.onclick=save;ac.prepend(sv)}
   try{dirtyBack(x,sig,save,()=>{sh.hidden=true})}catch(e){}
-  ti.oninput=()=>{e1.hidden=true;ti.classList.remove('bad')};if(isNew)setTimeout(()=>{try{ti.focus()}catch(e){}},50)}
+  ti.oninput=()=>{e1.hidden=true;ti.classList.remove('bad')};da.oninput=()=>{e2.hidden=true;da.classList.remove('bad')};if(isNew)setTimeout(()=>{try{ti.focus()}catch(e){}},50)}
 let tkShowDone=false;
 function tkRow(t){const r=h('div','');r.style.cssText='display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:0 0 6px';
   const cb=h('button','btn ico');cb.type='button';cb.style.flex='none';cb.innerHTML=t.stato==='fatta'?ICONS.check:'';cb.style.borderRadius='50%';cb.style.border='2px solid var(--ink,#fff)';cb.style.opacity=t.stato==='fatta'?'.7':'1';cb.title=cb.ariaLabel=t.stato==='fatta'?'Riapri l’attività':'Segna come fatta';cb.onclick=e=>{e.stopPropagation();tkDone(t,t.stato!=='fatta')};
@@ -11234,10 +11238,26 @@ function tkListPaint(){const sh=$('tkList');if(!sh)return;const L=sh.querySelect
   const dn=tasks.filter(t=>t&&t.stato==='fatta').sort((a,b)=>String(b.fatta||'').localeCompare(String(a.fatta||'')));
   if(dn.length){const tg=h('button','btn lbl',(tkShowDone?'Nascondi':'Mostra')+' le attività fatte ('+dn.length+')');tg.type='button';tg.style.cssText='width:100%;margin-top:12px';tg.onclick=()=>{tkShowDone=!tkShowDone;tkListPaint()};L.append(tg);if(tkShowDone)dn.slice(0,50).forEach(t=>L.append(tkRow(t)))}}
 function tkList(){const {sh,w}=tkShell('tkList','Attività');const ad=h('button','btn p lbl');ad.type='button';ad.innerHTML=ICONS.add+'Nuova attività';ad.style.cssText='width:100%;margin:0 0 6px';ad.onclick=()=>tkOpen(null);const bd=h('div','tkbody');w.append(ad,bd);tkListPaint()}
-function tkPaintClient(){const f=$('tkF'),w=$('tkL');if(!f||!w)return;w.textContent='';if(!editing||$('sheet').hidden){f.hidden=true;return}f.hidden=false;
-  const l=tasks.filter(t=>t&&t.rif&&t.rif.tipo==='cliente'&&t.rif.id===editing.id&&t.stato!=='fatta').sort(tkSort);
-  if(!l.length)w.append(h('div','hint','Nessuna attività aperta per questo cliente.'));l.forEach(t=>w.append(tkRow(t)))}
-$('tkAdd').onclick=()=>{if(editing)tkOpen(null,{tipo:'cliente',id:editing.id})};
+function tkPaintClient(){tkPaintAll()}
 $('hTk').onclick=()=>tkList();
-{const _rl=renderLinked;renderLinked=function(){const r=_rl.apply(this,arguments);try{tkPaintClient()}catch(e){}return r}}
-{const _os=openSheet;openSheet=function(){const r=_os.apply(this,arguments);try{tkPaintClient()}catch(e){}return r}}
+
+function tkForRef(rif){return tasks.filter(t=>t&&t.rif&&t.rif.tipo===rif.tipo&&t.rif.id===rif.id)}
+function tkPanel(host,rif,what){host.textContent='';
+  if(!rif){host.append(h('div','hint','Salva prima '+what+': poi potrai aggiungere le attività collegate.'));return 0}
+  const ad=h('button','btn p lbl');ad.type='button';ad.innerHTML=ICONS.add+'Nuova attività';ad.style.cssText='width:100%;margin:0 0 10px';ad.onclick=()=>tkOpen(null,rif,true);host.append(ad);
+  const all=tkForRef(rif),op=all.filter(t=>t.stato!=='fatta').sort(tkSort),dn=all.filter(t=>t.stato==='fatta').sort((a,b)=>String(b.fatta||'').localeCompare(String(a.fatta||'')));
+  if(!op.length)host.append(h('div','hint',dn.length?'Nessuna attività aperta.':'Nessuna attività per questo record.'));
+  op.forEach(t=>host.append(tkRow(t)));
+  if(dn.length){const tg=h('button','btn lbl',(host._sd?'Nascondi':'Mostra')+' le attività fatte ('+dn.length+')');tg.type='button';tg.style.cssText='width:100%;margin-top:8px';tg.onclick=()=>{host._sd=!host._sd;tkPanel(host,rif,what)};host.append(tg);if(host._sd)dn.slice(0,50).forEach(t=>host.append(tkRow(t)))}
+  return op.length}
+function tkPaintAll(){const cnt=(id,n)=>{const e=$(id);if(e)e.textContent=n||''};
+  try{if(typeof editing!=='undefined'&&$('sheet')&&!$('sheet').hidden){const n=tkPanel($('tkF'),editing&&editing.id?{tipo:'cliente',id:editing.id}:null,'l’anagrafica');$('tkF').hidden=false;cnt('cTkCnt',n)}}catch(e){}
+  try{if(typeof lCur!=='undefined'&&$('lSheet')&&!$('lSheet').hidden){const n=tkPanel($('l_tkBody'),lCur&&lCur.id?{tipo:'lead',id:lCur.id}:null,'il lead');cnt('lTkCnt',n)}}catch(e){}
+  try{if(typeof oEd!=='undefined'&&$('oSheet')&&!$('oSheet').hidden){const n=tkPanel($('oTkF'),oEd&&oEd.id?{tipo:'opp',id:oEd.id}:null,'l’opportunità');cnt('oTkCnt',n)}}catch(e){}}
+function setOTab(k){const sh=$('oSheet');document.querySelectorAll('#oTabs button').forEach(b=>b.classList.toggle('on',b.dataset.op===k));
+  [...sh.firstElementChild.children].forEach(el=>{if(el.classList.contains('top')||el.id==='oTabs')return;const on=el.id==='oTkF'?k==='tk':k==='dati';el.classList.toggle('pane-hide',!on);if(el.id==='oTkF')el.hidden=k!=='tk'});if(k==='tk')tkPaintAll()}
+$('oTabs').onclick=e=>{const b=e.target.closest('button');if(b)setOTab(b.dataset.op)};
+{const _os=openSheet;openSheet=function(){const r=_os.apply(this,arguments);try{tkPaintAll()}catch(e){}return r}}
+{const _ol=openLead;openLead=function(){const r=_ol.apply(this,arguments);try{tkPaintAll()}catch(e){}return r}}
+{const _oo=openOpp;openOpp=function(){const r=_oo.apply(this,arguments);try{setOTab('dati');tkPaintAll()}catch(e){}return r}}
+{const _sl=setLTab;setLTab=function(k){const r=_sl.apply(this,arguments);if(k==='tk')try{tkPaintAll()}catch(e){}return r}}
