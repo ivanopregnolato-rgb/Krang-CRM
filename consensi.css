@@ -5,3 +5,11 @@
 @media(prefers-color-scheme:dark){.go{color:#06241c}}
 details{margin:16px 0}summary{cursor:pointer;font-weight:600}.inf p{margin:10px 0;white-space:pre-wrap}
 .err{color:#b3261e}.done{color:var(--ac);font-weight:600}
+.chk small{display:block;color:var(--mut);font-size:13px;margin-top:2px}
+.rqb{display:block;width:100%;text-align:left;padding:13px 14px;margin:8px 0;border:1px solid var(--out);border-radius:14px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+.rqb:disabled{opacity:.7;cursor:default}
+.rqc{border:1px solid var(--out);border-radius:14px;padding:12px 14px;margin:8px 0;background:var(--card)}
+.rqc .two{display:flex;gap:8px;margin-top:10px}.rqc button{flex:1;padding:11px;border-radius:12px;border:1px solid var(--out);background:var(--card);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}
+.rqc button.p{background:var(--ac);border-color:var(--ac);color:#fff}
+@media(prefers-color-scheme:dark){.rqc button.p{color:#06241c}}
+.inf p{margin:10px 0;white-space:pre-wrap}

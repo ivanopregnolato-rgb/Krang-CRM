@@ -64,7 +64,7 @@ DEMO[1].privacy=mkPriv({informativa:true,infData:'2026-02-02',infModo:'Email',lo
 DEMO[0].wa=[{id:'wa1',dir:'out',data:'2026-11-03T09:12:00.000Z',testo:'Buongiorno Giulia, le confermo l’appuntamento di giovedì alle 15 per la degustazione.',fonte:'manuale'},{id:'wa2',dir:'in',data:'2026-11-03T09:40:00.000Z',testo:'Perfetto, grazie! Porto anche il mio socio.',fonte:'manuale'},{id:'wa3',dir:'out',data:'2026-11-06T16:05:00.000Z',testo:'Ciao Giulia, le ho mandato il preventivo per i regali di Natale. Mi dica se va bene.',fonte:'manuale'},{id:'wa4',dir:'in',data:'2026-11-07T18:20:00.000Z',testo:'Grazie, lo guardo domani. Possiamo fare 30 confezioni invece di 24?',fonte:'manuale'}];
 DEMO[2].privacy=mkPriv({fonteDati:'fiera',base:'legittimo',richieste:[{id:'rdemo',token:'K7M2QX',creata:'2026-11-05T09:00',scade:'2026-11-19T09:00',email:'sophie.martin@atelier-lumiere.fr',stato:'inviata'}],log:[{d:'2026-09-18T15:00',t:'Anagrafica creata (fonte: Fiera o evento)'},{d:'2026-11-05T09:00',t:'Informativa inviata via email a sophie.martin@atelier-lumiere.fr (codice K7M2QX, valido fino al 19 nov 2026)',op:'Demo',ev:'invio'}]});
 DEMO[3].privacy=mkPriv({base:'consenso',informativa:true,infData:'2026-05-18',infModo:'Email',cons:{mkEmail:{v:true,d:'2026-05-18'},mkTel:{v:true,d:'2026-05-18'},profilazione:{v:false,d:''},terzi:{v:false,d:''}}});
-function persist(){try{stampMods(clients,'c')}catch(e){}try{localStorage.setItem(KEY,JSON.stringify(clients))}catch(e){toast('Spazio pieno: impossibile salvare sul dispositivo.')}}
+function persist(){try{stampMods(clients,'c')}catch(e){}try{localStorage.setItem(KEY,JSON.stringify(clients))}catch(e){toast('Spazio pieno: impossibile salvare sul dispositivo.')}try{lkSoon()}catch(e){}}
 const contactName=c=>c.tipo==='azienda'?([c.nome,c.cognome].filter(Boolean).join(' ')||c.azienda):fullName(c);
 const inits=nm=>{const w=String(nm||'').trim().split(/\s+/).filter(Boolean);return ((w[0]||'?')[0]+(w.length>1?w[w.length-1][0]:'')).toUpperCase()};
 function fullName(c){const p=[c.nome,c.cognome].filter(Boolean).join(' ');return c.tipo==='azienda'?(c.azienda||p||'Senza nome'):(p||c.azienda||'Senza nome')}
@@ -468,7 +468,7 @@ function loadPriv(p){p=p||mkPriv();$('p_later').checked=false;
   privUI();paintReq();$('p_det').open=false}
 function collectPriv(prev,isNew){
   prev=prev||mkPriv();const now=new Date().toISOString().slice(0,16),today=ymd(),log=(prev.log||[]).slice();
-  const p={base:$('p_base').value,fonteDati:$('p_fonte').value,informativa:$('p_inf').checked,infData:$('p_infdata').value,infModo:$('p_infmodo').value,infVer:$('p_inf').checked?((prev.informativa&&prev.infVer)||infVer()):'',cons:{},conserva:($('p_cons').value&&$('p_cons').value!==$('p_cons').dataset.auto)?$('p_cons').value:'',anon:prev.anon,log,richieste:prev.richieste||[],lk:prev.lk,lkH:prev.lkH,lkOk:prev.lkOk};
+  const p={base:$('p_base').value,fonteDati:$('p_fonte').value,informativa:$('p_inf').checked,infData:$('p_infdata').value,infModo:$('p_infmodo').value,infVer:$('p_inf').checked?((prev.informativa&&prev.infVer)||infVer()):'',cons:{},conserva:($('p_cons').value&&$('p_cons').value!==$('p_cons').dataset.auto)?$('p_cons').value:'',anon:prev.anon,log,richieste:prev.richieste||[],lk:prev.lk,lkH:prev.lkH,lkOk:prev.lkOk,lkS:prev.lkS,port:prev.port};
   if(isNew)log.push({d:now,t:'Anagrafica creata (fonte: '+$('p_fonte').selectedOptions[0].textContent+')'});
   if(p.informativa&&!p.infData)p.infData=today;if(!p.informativa)p.infData='';
   if(p.informativa&&(!prev.informativa||prev.infData!==p.infData))log.push({d:now,t:'Informativa fornita ('+p.infModo+', versione '+p.infVer+') il '+fmtD(p.infData)});
@@ -476,7 +476,8 @@ function collectPriv(prev,isNew){
   CONS.forEach(k=>{const old=prev.cons[k]||{v:false,d:''},is=$('c_'+k).checked;p.cons[k]=is===!!old.v?{...old}:{v:is,d:today};if(is!==!!old.v)log.push({d:now,t:CLABEL[k]+': '+(is?'prestato':'revocato')})});
   return p}
 $('p_show').onclick=()=>{const w=$('infoBody');w.textContent='';const t=h('p');t.append(h('b','','Informativa sul trattamento dei dati personali (artt. 13 e 14 GDPR)'));w.append(t);{const v=infVer();if(v)w.append(h('p','hint','Versione '+v+' in vigore'))}infoSections().forEach(([k,v])=>{const p=h('p');p.append(h('b','',k+': '),document.createTextNode(v));w.append(p)});const n=h('p');n.append(h('i','','Modello indicativo da adattare: fallo verificare da un consulente legale o dal DPO.'));w.append(n);$('info').hidden=false};$('infoClose').onclick=()=>{$('info').hidden=true};
-$('p_copy').onclick=async()=>{if(!editing)return;const data={cliente:{...editing,foto:editing.foto?'[presente]':''},opportunità:opps.filter(o=>o.clienteId===editing.id).map(o=>({...o,allegati:o.allegati.map(a=>({nome:a.nome,tipo:a.tipo,size:a.size}))})),esportato:new Date().toISOString()};toast(await copyText(JSON.stringify(data,null,2))?'Dati copiati negli appunti.':'Copia non riuscita.')};
+function expJson(c){const cl={...c,foto:c.foto?'[presente]':''};if(cl.privacy){cl.privacy={...cl.privacy};delete cl.privacy.lk;delete cl.privacy.lkH;delete cl.privacy.lkOk;delete cl.privacy.lkS}return JSON.stringify({cliente:cl,opportunità:opps.filter(o=>o.clienteId===c.id).map(o=>({...o,allegati:o.allegati.map(a=>({nome:a.nome,tipo:a.tipo,size:a.size}))})),esportato:new Date().toISOString()},null,2)}
+$('p_copy').onclick=async()=>{if(!editing)return;toast(await copyText(expJson(editing))?'Dati copiati negli appunti.':'Copia non riuscita.')};
 const mesi=n=>n%12===0?(n/12===1?'1 anno':n/12+' anni'):n+' mesi';
 function infoSections0(){const R=S.ret||{};return [
 ['Titolare',(S.azienda?S.azienda+(S.piva?', P. IVA '+S.piva:'')+(S.indirizzo?', sede in '+S.indirizzo:'')+(S.replyTo?' ('+S.replyTo+')':''):'[denominazione e contatti del titolare]')+'.'],
@@ -530,14 +531,19 @@ function mailText(c,r){const nome=contactName(c);r.url=conUrl(c);r.sig=firma();r
 const CON_PAGE='https://ivanopregnolato-rgb.github.io/Krang-CRM/consensi.html';
 function conUrl(c){const pv=c.privacy=c.privacy||mkPriv();if(!pv.lk||!/^[A-Za-z0-9_-]{20,64}$/.test(pv.lk)){const a=crypto.getRandomValues(new Uint8Array(24));pv.lk=btoa(String.fromCharCode(...a)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');pv.lkH='';pv.lkOk=false}return CON_PAGE+'#'+pv.lk}
 const sha256hex=async t=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)))].map(x=>x.toString(16).padStart(2,'0')).join('');
-const pubDoc=()=>({az:S.azienda||'',info:infoTxt(),ver:infUse(),cons:CONS.map(k=>({k,label:CLABEL[k]}))});
+const pubDoc=()=>{const ver=infUse(),l=(S.infHist||[])[(S.infHist||[]).length-1];return{az:S.azienda||'',info:infoTxt(),ver,vfrom:l?String(l.from||'').slice(0,10):'',cons:CONS.map(k=>({k,label:CLABEL[k]}))}};
 function pubRefresh(){try{if(SB.has()&&clients.some(c=>c.privacy&&c.privacy.lkOk))SB.consent.reg('',pubDoc()).then(()=>{LAST.pubT=Date.now()}).catch(()=>{})}catch(e){}}
 async function lkEnsure(c,force){const pv=c.privacy=c.privacy||mkPriv();conUrl(c);if(!pv.lkH)pv.lkH=await sha256hex(pv.lk);
   const stale=force||!pv.lkOk||Date.now()-(LAST.pubT||0)>6e5;if(!stale)return;
-  await SB.consent.reg(pv.lkOk?'':pv.lkH,pubDoc());LAST.pubT=Date.now();if(!pv.lkOk){pv.lkOk=true;persist()}}
+  await SB.consent.reg(pv.lkOk?'':pv.lkH,pubDoc());LAST.pubT=Date.now();if(!pv.lkOk){pv.lkOk=true;persist()}lkSoon()}
 let lkP=null,lkD=false;
 function lkStart(c){lkD=false;lkP=lkEnsure(c).then(()=>{lkD=true;return true},()=>false);return lkP}
 async function lkReady(){const ok=lkD||await lkP;if(!ok)toast('Non riesco a creare il link dei consensi: controlla la connessione e riprova.');return ok}
+/* stato mostrato sulla pagina del cliente: consensi attuali e richieste in corso (nessun dato anagrafico) */
+function lkState(c){const pv=c.privacy||{},o={c:{},rq:{}};CONS.forEach(k=>{const x=pv.cons&&pv.cons[k];if(x&&x.d)o.c[k]={v:!!x.v,d:x.d}});if(pv.anon&&pv.anon.stato==='aperta')o.rq.anonimizzazione='aperta';if(pv.port&&pv.port.stato==='aperta')o.rq.portabilita='aperta';return o}
+let lkSB=false,lkT=0;
+async function lkSweep(){if(lkSB||!SB.has())return;lkSB=true;try{let n=0,ch=false;for(const c of clients){const pv=c.privacy;if(!pv||!pv.lkOk||!pv.lkH||c.anon)continue;const js=JSON.stringify(lkState(c));if(js===pv.lkS)continue;if(n++>=25)break;try{await SB.consent.state(pv.lkH,JSON.parse(js));pv.lkS=js;ch=true}catch(e){}}if(ch)persist()}finally{lkSB=false}}
+function lkSoon(){if(lkT)return;lkT=setTimeout(()=>{lkT=0;lkSweep()},2e4)}
 
 /* stato attuale della privacy, in sola lettura: informativa, consensi e conservazione */
 function paintPrivSum(){
@@ -9010,7 +9016,7 @@ function actions(){const A=[],noInf=[],td=ymd(),add=(pri,ic,title,sub,go)=>A.pus
   (typeof leads!=='undefined'?leads:[]).filter(l=>l.stato==='nuovo').forEach(l=>{const m=lMsgs(l)[0];if(m&&lUnread(l,14))add(76,m.via==='WhatsApp'?'WhatsApp':'Scrivi','Il lead ha risposto',([l.nome,l.cognome].filter(Boolean).join(' ')||l.email||'Lead')+' · '+String(m.testo||'').slice(0,50),()=>{setTab('lead');openLead(l)})});
   {const nli=(typeof leads!=='undefined'?leads:[]).filter(l=>l.stato==='nuovo'&&!l.inf);if(nli.length===1){const l=nli[0];add(54,'alert','Informativa privacy da inviare al lead',[l.nome,l.cognome].filter(Boolean).join(' ')||l.email||'Lead',()=>{setTab('lead');openLead(l)})}else if(nli.length>1)add(54,'alert',nli.length+' lead senza informativa privacy',nli.slice(0,3).map(l=>[l.nome,l.cognome].filter(Boolean).join(' ')||l.email||'Lead').join(', ')+(nli.length>3?'…':''),()=>setTab('lead'))}
   clients.forEach(c=>{const a=waLast(c);if(waUnread(c))add(78,'WhatsApp','Rispondi su WhatsApp',fullName(c)+' · '+a.testo.slice(0,50),()=>{openSheet(c);setPane('comm');setCm('wa');loadComm()})});
-  {const I=reviewItems();I.anon.forEach(c=>{const a=c.privacy.anon,n=daysTo(a.scade);add(n<0?96:n<=10?92:72,'shield','Richiesta di anonimizzazione',fullName(c)+' · '+(n<0?'scaduta da '+(-n)+' gg':'entro '+fmtD(a.scade)),()=>{openSheet(c);setPane('priv')})})}
+  {const I=reviewItems();I.port.forEach(c=>{const a=c.privacy.port,n=daysTo(a.scade);add(n<0?95:n<=10?91:71,'shield','Richiesta di portabilità dei dati',fullName(c)+' · '+(n<0?'scaduta da '+(-n)+' gg':'entro '+fmtD(a.scade)),()=>{openSheet(c);setPane('priv')})});I.anon.forEach(c=>{const a=c.privacy.anon,n=daysTo(a.scade);add(n<0?96:n<=10?92:72,'shield','Richiesta di anonimizzazione',fullName(c)+' · '+(n<0?'scaduta da '+(-n)+' gg':'entro '+fmtD(a.scade)),()=>{openSheet(c);setPane('priv')})})}
   {const I=reviewItems(),n=I.exp.length+I.cons.length+(I.msg.n?1:0);if(n)add(58,'shield','Revisione conservazione dati',(I.exp.length?I.exp.length+' dati scaduti':'')+(I.cons.length?(I.exp.length?' · ':'')+I.cons.length+' consensi da rivedere':'')+(I.msg.n?((I.exp.length||I.cons.length)?' · ':'')+I.msg.n+' messaggi scaduti':''),openReview)}
   const low=prods.filter(lowOf);if(low.length)add(65,'box',low.length===1?'Prodotto da riordinare':low.length+' prodotti da riordinare',low.slice(0,3).map(x=>x.nome).join(', ')+(low.length>3?'…':''),()=>{window.pSec='mag';window.magFilter('sc');setTab('prod')});
   return A.sort((a,b)=>b.pri-a.pri)}
@@ -9181,7 +9187,7 @@ function retention(c){const R=S.ret,pv=c.privacy||{},re=rapportoEnd(c),lt=lastTo
   return{until,why,open,expired:!c.anon&&!open&&until>0&&until<Date.now()}}
 function staleConsents(c){const pv=c.privacy;if(!pv||c.anon)return[];const lt=lastTouch(c);if(!lt)return[];return CONS.filter(k=>pv.cons&&pv.cons[k]&&pv.cons[k].v&&addM(lt,k==='profilazione'?S.ret.profilazione:S.ret.marketing)<Date.now())}
 const oldMsgs=()=>{const cut=addM(Date.now(),-S.ret.comunicazioni);let n=0,cl=0;clients.forEach(c=>{const k=(c.wa||[]).filter(m=>new Date(m.data).getTime()<cut).length;if(k){n+=k;cl++}});return{n,cl,cut}};
-function reviewItems(){return{anon:clients.filter(anonOpen).sort((a,b)=>a.privacy.anon.scade<b.privacy.anon.scade?-1:1),exp:clients.filter(c=>retention(c).expired),cons:clients.map(c=>[c,staleConsents(c)]).filter(x=>x[1].length),msg:oldMsgs()}}
+function reviewItems(){return{port:clients.filter(portOpen).sort((a,b)=>a.privacy.port.scade<b.privacy.port.scade?-1:1),anon:clients.filter(anonOpen).sort((a,b)=>a.privacy.anon.scade<b.privacy.anon.scade?-1:1),exp:clients.filter(c=>retention(c).expired),cons:clients.map(c=>[c,staleConsents(c)]).filter(x=>x[1].length),msg:oldMsgs()}}
 function autoRet(){if(editing){const c={...editing,privacy:{...(editing.privacy||{}),conserva:''}};return retention(c)}return{until:addM(Date.now(),S.ret.contatti),why:'contatto senza contratto: '+mesi(S.ret.contatti)+' dall’ultimo contatto',open:false}}
 function retHint(){const e=$('p_consH');if(!e)return;const a=autoRet(),v=$('p_cons').value,ad=a.until?ymd(new Date(a.until)):'';$('p_cons').dataset.auto=ad;e.textContent='';
   if(!ad){e.textContent='Scadenza non determinabile: mancano date di riferimento.';return}
@@ -9206,7 +9212,18 @@ function anonRun(c,after){const op=oppsOf(c.id),open=op.filter(o=>o.fase!=='vint
   const w=[];if(open)w.push(open+(open===1?' opportunità aperta':' opportunità aperte')+': i dati sono ancora in uso');if(won)w.push(won+(won===1?' opportunità vinta':' opportunità vinte')+': verifica gli obblighi fiscali e contabili (di norma 10 anni) prima di procedere');
   askConfirm('Anonimizzare '+fullName(c)+'? Nome, contatti, foto, note e messaggi vengono cancellati e non si può annullare. L’email viene cancellata: se vuoi confermare l’interessato, invia prima l’email di conferma.'+(w.length?'\n\nAttenzione: '+w.join('; ')+'.':''),'edit','Anonimizza',()=>{
     const ric=c.privacy&&c.privacy.anon?c.privacy.anon.ric:'';anonymize(c,ric?'richiesta dell’interessato del '+fmtD(ric):'richiesta dell’interessato');c.privacy.anon={stato:'evasa',ric,evasa:ymd()};persist();try{render();renderO()}catch(e){}if(after)after();toast('Cliente anonimizzato.')})}
-function paintAnon(){const w=$('p_anonF');if(!w)return;w.textContent='';
+const portOpen=c=>!!(c&&!c.anon&&c.privacy&&c.privacy.port&&c.privacy.port.stato==='aperta');
+function paintAnon(){paintAnon1();const w=$('p_anonF');if(w&&!w.hidden&&editing)paintPort(w,editing)}
+function paintPort(w,c){const a=c.privacy&&c.privacy.port;if(!a)return;
+  const btn=(ic,l,f)=>{const b=h('button','btn lbl');b.type='button';b.innerHTML=ICONS[ic]+l;b.onclick=f;return b};
+  if(a.stato==='aperta'){const d=h('div','req');d.style.marginTop='8px';d.append(h('b','','Richiesta di portabilità dei dati'),h('div','','Ricevuta il '+fmtD(a.ric)+(a.canale?' · '+a.canale:'')),anonChip(a));
+    const bt=h('div','mact');bt.style.marginTop='8px';
+    bt.append(btn('copy','Copia i dati',async()=>{toast(await copyText(expJson(c))?'Dati copiati: incollali in un messaggio o in un file e invialli all’interessato.':'Copia non riuscita.')}),
+      btn('check','Evasa',()=>anonAsk({title:'Richiesta evasa',date:1,nl:'Note (facoltative)',ok:'Segna come evasa',fn:v=>{if(v.d>ymd()){setErr('an_n','La data non può essere nel futuro.');return false}c.privacy.port={...a,stato:'evasa',evasa:v.d,nota:v.n,chiusa:v.d};anonLog(c,'Richiesta di portabilità evasa il '+fmtD(v.d)+(v.n?' ('+v.n+')':''));persist();paintAnon();paintPrivSum();toast('Richiesta evasa e registrata.')}})),
+      btn('x','Rifiuta',()=>anonAsk({title:'Rifiuta la richiesta',nl:'Motivo del rifiuto (obbligatorio: va comunicato all’interessato)',ok:'Rifiuta',fn:v=>{if(!v.n){setErr('an_n','Indica il motivo.');return false}c.privacy.port={...a,stato:'rifiutata',motivo:v.n,chiusa:ymd()};anonLog(c,'Richiesta di portabilità rifiutata: '+v.n);persist();paintAnon();paintPrivSum();toast('Richiesta rifiutata e registrata.')}})));
+    d.append(bt);w.append(d)}
+  else{const d=h('div','hint','Richiesta di portabilità del '+fmtD(a.ric)+(a.stato==='evasa'?' evasa il '+fmtD(a.evasa):' rifiutata il '+fmtD(a.chiusa)+': '+a.motivo));d.style.marginTop='8px';w.append(d)}}
+function paintAnon1(){const w=$('p_anonF');if(!w)return;w.textContent='';
   if(!editing||editing.anon){w.hidden=true;return}
   const c=editing,a=c.privacy&&c.privacy.anon;w.hidden=false;
   const btn=(ic,l,f,cl)=>{const b=h('button','btn lbl'+(cl?' '+cl:''));b.type='button';b.innerHTML=ICONS[ic]+l;b.onclick=f;return b};
@@ -9218,9 +9235,10 @@ function paintAnon(){const w=$('p_anonF');if(!w)return;w.textContent='';
     w.append(btn('shield','Registra una richiesta di anonimizzazione',()=>anonAsk({title:'Richiesta di anonimizzazione',date:1,nl:'Note (facoltative)',ok:'Registra',fn:v=>{if(v.d>ymd()){setErr('an_n','La data non può essere nel futuro.');return false}const sc=new Date(v.d+'T00:00');sc.setMonth(sc.getMonth()+1);c.privacy=c.privacy||mkPriv();c.privacy.anon={stato:'aperta',ric:v.d,canale:v.c,nota:v.n,scade:ymd(sc)};anonLog(c,'Richiesta di anonimizzazione ricevuta ('+v.c+') il '+fmtD(v.d));persist();paintAnon();paintPrivSum();toast('Richiesta registrata: hai tempo fino al '+fmtD(ymd(sc))+'.')}})))}}
 function paintReview(){const I=reviewItems(),B=$('rvBody'),R=S.ret;B.textContent='';
   $('rvRules').textContent='Regole attive (modificabili dalle impostazioni): dati contrattuali '+mesi(R.contratto)+' dalla fine del rapporto; contatti senza contratto '+mesi(R.contatti)+'; consensi marketing '+mesi(R.marketing)+' e profilazione '+mesi(R.profilazione)+' dall’ultima interazione; messaggi registrati '+mesi(R.comunicazioni)+'.';
-  const sm=$('rvSum');sm.textContent='';[['Richieste di anonimizzazione',I.anon.length],['Dati scaduti',I.exp.length],['Consensi da rivedere',I.cons.length],['Messaggi scaduti',I.msg.n]].forEach(([k,v])=>{const e=h('div','stat');e.append(h('span','',k),h('b',v?'warn':'',String(v)));sm.append(e)});
+  const sm=$('rvSum');sm.textContent='';[['Richieste di portabilità',I.port.length],['Richieste di anonimizzazione',I.anon.length],['Dati scaduti',I.exp.length],['Consensi da rivedere',I.cons.length],['Messaggi scaduti',I.msg.n]].forEach(([k,v])=>{const e=h('div','stat');e.append(h('span','',k),h('b',v?'warn':'',String(v)));sm.append(e)});
   const sec=t=>{const d=h('div','hh');d.append(h('span','',t));B.append(d)};
-  if(!I.anon.length&&!I.exp.length&&!I.cons.length&&!I.msg.n)B.append(h('div','empty','Tutto in regola: nessun dato da rivedere.'));
+  if(!I.port.length&&!I.anon.length&&!I.exp.length&&!I.cons.length&&!I.msg.n)B.append(h('div','empty','Tutto in regola: nessun dato da rivedere.'));
+  if(I.port.length){sec('Richieste di portabilità');I.port.forEach(c=>{const a=c.privacy.port,d=h('div','req');d.append(h('b','',fullName(c)),h('div','','Ricevuta il '+fmtD(a.ric)+(a.canale?' · '+a.canale:'')),anonChip(a));const bt=h('div','dual');bt.style.marginTop='8px';const b=h('button','btn lbl');b.type='button';b.innerHTML=ICONS.user+'Apri';b.onclick=()=>{$('rvSheet').hidden=true;openSheet(c);setPane('priv')};bt.append(b);d.append(bt);B.append(d)})}
   if(I.anon.length){sec('Richieste di anonimizzazione');I.anon.forEach(c=>{const a=c.privacy.anon,d=h('div','req');d.append(h('b','',fullName(c)),h('div','','Ricevuta il '+fmtD(a.ric)+(a.canale?' · '+a.canale:'')),anonChip(a));const bt=h('div','dual');bt.style.marginTop='8px';[['user','Apri',()=>{$('rvSheet').hidden=true;openSheet(c);setPane('priv')}],['edit','Anonimizza',()=>anonRun(c,paintReview)]].forEach(([i,l,f])=>{const b=h('button','btn lbl');b.type='button';b.innerHTML=ICONS[i]+l;b.onclick=f;bt.append(b)});d.append(bt);B.append(d)})}
   if(I.exp.length){sec('Clienti con conservazione scaduta');I.exp.forEach(c=>{const r=retention(c),d=h('div','req');d.append(h('b','',fullName(c)),h('div','','Scaduta il '+fmtD(ymd(new Date(r.until)))+' · '+r.why));
     const bt=h('div','mact');bt.style.marginTop='8px';
@@ -10357,14 +10375,19 @@ function applyConsent(c,r){const p=c.privacy=c.privacy||mkPriv(),dt=new Date(r.a
   CONS.forEach(k=>{if(typeof ch[k]!=='boolean')return;const old=p.cons[k]||{v:false,d:''};if(!!old.v===ch[k]&&old.d)return;p.cons[k]={v:ch[k],d:day};esito.push(CLABEL[k]+': '+(ch[k]?'prestato':'revocato'));logP(c,CLABEL[k]+': '+(ch[k]?'prestato':'revocato')+' dal cliente con il link (versione informativa '+(r.ver||'1.0')+')',ch[k]?'consenso':'revoca')});
   pend.forEach(x=>{x.stato='completata';x.ricevuta=when;x.esito=esito;x.op='Pagina consensi';x.evidenza='Pagina consensi, informativa v'+(r.ver||'1.0')+': '+CONS.filter(k=>typeof ch[k]==='boolean').map(k=>CLABEL[k]+' '+(ch[k]?'sì':'no')).join(', ')});
   logP(c,'Risposta ricevuta dalla pagina dei consensi ('+(esito.join('; ')||'nessuna modifica ai consensi')+')','risposta');opName=opx}
+function applyRequest(c,r){const p=c.privacy=c.privacy||mkPriv(),dt=new Date(r.at),day=ymd(isNaN(dt)?new Date():dt),sc=new Date(day+'T00:00');sc.setMonth(sc.getMonth()+1);const opx=opName;opName='Pagina consensi';
+  if(r.kind==='anonimizzazione'){if(c.anon||anonOpen(c))return false;p.anon={stato:'aperta',ric:day,canale:'link personale',nota:'',scade:ymd(sc)};anonLog(c,'Richiesta di anonimizzazione ricevuta dal link personale il '+fmtD(day))}
+  else{if(c.anon||portOpen(c))return false;p.port={stato:'aperta',ric:day,canale:'link personale',nota:'',scade:ymd(sc)};anonLog(c,'Richiesta di portabilità ricevuta dal link personale il '+fmtD(day))}
+  opName=opx;return true}
 let pcBusy=null;
 function pullConsents(force){if(pcBusy)return pcBusy;if(!SB.has()||!CLOUD.started||document.hidden&&!force)return Promise.resolve(0);if(!force&&Date.now()-(LAST.pc||0)<3e4)return Promise.resolve(0);LAST.pc=Date.now();
   return pcBusy=(async()=>{let n=0;try{const rows=await SB.consent.pull();if(!rows.length)return 0;
     const byH={};clients.forEach(c=>{const h=c.privacy&&c.privacy.lkH;if(h)byH[h]=c});const done=[],orph=new Set(),upd=new Set();
-    for(const r of rows){const c=byH[r.h];if(!c){orph.add(r.h);done.push(r.id);continue}applyConsent(c,r);upd.add(c);n++;done.push(r.id)}
+    const rqs=[];for(const r of rows){const c=byH[r.h];if(!c){orph.add(r.h);done.push(r.id);continue}if(r.kind==='anonimizzazione'||r.kind==='portabilita'){if(applyRequest(c,r))rqs.push([c,r.kind])}else applyConsent(c,r);upd.add(c);n++;done.push(r.id)}
     if(upd.size)persist();await SB.consent.del(done);orph.forEach(h=>SB.consent.unlink(h).catch(()=>{}));
-    if(upd.size){const c0=[...upd][0];toast(upd.size===1?'Consensi di '+fullName(c0)+' aggiornati dal cliente.':'Consensi aggiornati da '+upd.size+' clienti.');if(editing&&upd.has(editing))try{loadPriv(editing.privacy)}catch(e){}try{render()}catch(e){}}
-  }catch(e){}finally{pcBusy=null}return n})()}
+    if(rqs.length)toast('Richiesta di '+(rqs[0][1]==='portabilita'?'portabilità':'anonimizzazione')+' ricevuta da '+fullName(rqs[0][0])+(rqs.length>1?' e altre '+(rqs.length-1):'')+': la trovi nella posta in arrivo.');
+    else if(upd.size){const c0=[...upd][0];toast(upd.size===1?'Consensi di '+fullName(c0)+' aggiornati dal cliente.':'Consensi aggiornati da '+upd.size+' clienti.');if(editing&&upd.has(editing))try{loadPriv(editing.privacy)}catch(e){}try{render()}catch(e){}}
+  }catch(e){}finally{pcBusy=null;lkSoon()}return n})()}
 window.pullConsents=pullConsents;setInterval(()=>pullConsents(),24e4);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>pullConsents(),1500)});setTimeout(()=>pullConsents(),6000);
 setTimeout(autoSync,2500);setInterval(autoSync,24e4);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(autoSync,800)});
 const _setTab=setTab;setTab=function(v){_setTab(v);paintBadges();if(v==='lead'&&Date.now()-(LAST.scan||0)>12e4)leadScan()};
@@ -10400,7 +10423,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(!S.askSeen){S.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.33.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(!S.askSeen){S.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.34.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
@@ -10544,7 +10567,8 @@ const SB=(()=>{
   async reg(h,pub){const owner=uid();if(!owner)throw new Error('nessuna sessione');
    if(pub)await js('/rest/v1/consent_pub?on_conflict=owner',{method:'POST',auth:true,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},json:Object.assign({owner,upd:new Date().toISOString()},pub)});
    if(h)await js('/rest/v1/consent_links?on_conflict=h',{method:'POST',auth:true,headers:{Prefer:'resolution=ignore-duplicates,return=minimal'},json:{h}})},
-  async pull(){return (await js('/rest/v1/consent_resp?select=id,h,choices,ver,at&order=id.asc&limit=100',{auth:true}))||[]},
+  async pull(){return (await js('/rest/v1/consent_resp?select=id,h,kind,choices,ver,at&order=id.asc&limit=100',{auth:true}))||[]},
+  state:(h,state)=>js('/rest/v1/consent_links?h=eq.'+encodeURIComponent(h),{method:'PATCH',auth:true,headers:{Prefer:'return=minimal'},json:{state}}),
   del:ids=>ids.length?js('/rest/v1/consent_resp?id=in.('+ids.map(Number).join(',')+')',{method:'DELETE',auth:true,headers:{Prefer:'return=minimal'}}):Promise.resolve(),
   unlink:h=>js('/rest/v1/consent_links?h=eq.'+encodeURIComponent(h),{method:'DELETE',auth:true,headers:{Prefer:'return=minimal'}})};
  /* presenza: ultimo istante in cui l'app era aperta (solo per il monitor del gestore) */
@@ -10787,6 +10811,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.32.3','Chiave di recupero: su iPhone il pulsante «Condividi o salva in…» apre il foglio di condivisione (gestore di password, Note, file) al posto del salvataggio automatico, che Safari non supporta. «Fatto» si sblocca solo dopo una condivisione, una copia o un download riusciti.'],
 ['1.32.4','Conferma dell’indirizzo email alla registrazione: dopo aver creato l’account ricevi una email con un link e puoi accedere solo dopo averlo aperto. Se la email non arriva c’è il pulsante «Rinvia email di conferma».'],
 ['1.32.5','Guida dei primi passi rinnovata: ora sono cinque e in ordine cifratura dei dati, accesso con biometria, profilo dell’azienda, primo cliente e assistente. Tolto il passo sulla posta.'],
+['1.34.0','La pagina del link personale mostra il nome della tua azienda, l’informativa con versione e data di entrata in vigore e lo stato attuale dei consensi, che il cliente può cambiare quando vuole. Dalla stessa pagina può chiedere una copia dei suoi dati (portabilità) o la cancellazione e anonimizzazione: sono richieste che arrivano nella posta in arrivo e nella scheda Privacy, e che approvi o rifiuti tu entro un mese. Niente avviene da solo.'],
 ['1.33.0','Consensi con un link personale. Quando invii l’informativa per email o WhatsApp, il messaggio contiene un link: il cliente lo apre dal telefono, senza account, sceglie i consensi facoltativi e conferma. La risposta arriva da sola nella scheda Privacy del cliente. Il link resta sempre valido, così il cliente può cambiare o revocare i consensi quando vuole. Non serve più rispondere alla email: sono state tolte la lettura delle risposte dalla posta, la registrazione a mano e le scadenze dei codici. Anche la gestione dello STOP è stata tolta: le campagne partono solo verso chi ha il consenso al marketing e ogni messaggio contiene il link per modificarlo o revocarlo. In Impostazioni → Privacy e conservazione ora c’è l’informativa: puoi leggerla e modificarla se il testo proposto non è corretto, e lo storico mostra ogni versione con il periodo di validità e il numero di clienti a cui è stata fornita. Sul server restano solo le scelte sì/no, la data e un’impronta del link: mai nome o email del cliente.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}

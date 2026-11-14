@@ -6,6 +6,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const ORIGINS = ["https://ivanopregnolato-rgb.github.io"];
 const KEYS = ["mkEmail", "mkTel", "profilazione", "terzi"];
+const KINDS = ["portabilita", "anonimizzazione"];
 const PER_LINK_DAY = 20, PER_IP_HOUR = 60;
 
 function cors(req: Request) {
@@ -28,32 +29,41 @@ const rest = (path: string, init: RequestInit = {}) => fetch(`${URL_}/rest/v1/${
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(req) });
-  let k = "", choices: Record<string, boolean> = {};
+  let k = "", choices: Record<string, boolean> = {}, kind = "consensi";
   if (req.method === "GET") k = new URL(req.url).searchParams.get("k") || "";
   else if (req.method === "POST") {
     try {
       const b = await req.json();
       k = String(b?.k ?? "");
+      if (KINDS.includes(b?.r)) kind = b.r;
       for (const key of KEYS) if (typeof b?.c?.[key] === "boolean") choices[key] = b.c[key];
     } catch { return out(req, { err: "bad" }, 400); }
   } else return out(req, { err: "method" }, 405);
   if (!/^[A-Za-z0-9_-]{20,64}$/.test(k)) return out(req, { err: "link" }, 404);
   const h = await hex(k);
 
-  const l = await rest(`consent_links?h=eq.${h}&select=owner`);
+  const l = await rest(`consent_links?h=eq.${h}&select=owner,state`);
   const lj = l.ok ? await l.json() : [];
   if (!lj.length) return out(req, { err: "link" }, 404);
   const owner = lj[0].owner as string;
-  const p = await rest(`consent_pub?owner=eq.${owner}&select=az,info,ver,cons`);
+  const state = (lj[0].state && typeof lj[0].state === "object") ? lj[0].state : {};
+  const p = await rest(`consent_pub?owner=eq.${owner}&select=az,info,ver,vfrom,cons`);
   const pj = p.ok ? await p.json() : [];
   if (!pj.length) return out(req, { err: "link" }, 404);
   const pub = pj[0];
 
-  if (req.method === "GET") return out(req, { az: pub.az, info: pub.info, ver: pub.ver, cons: pub.cons });
+  if (req.method === "GET") return out(req, { az: pub.az, info: pub.info, ver: pub.ver, vfrom: pub.vfrom, cons: pub.cons, state });
 
   const keys = new Set((pub.cons as { k: string }[]).map((x) => x.k));
   for (const key of Object.keys(choices)) if (!keys.has(key)) delete choices[key];
-  if (!Object.keys(choices).length) return out(req, { err: "vuoto" }, 400);
+  if (kind === "consensi" && !Object.keys(choices).length) return out(req, { err: "vuoto" }, 400);
+  if (kind !== "consensi") {
+    // Una sola richiesta aperta per tipo: se e' gia' in corso non se ne aggiungono altre.
+    const rq = (state.rq && typeof state.rq === "object") ? state.rq : {};
+    if (rq[kind] === "aperta") return out(req, { ok: true, dup: true });
+    const o = await rest(`consent_resp?h=eq.${h}&kind=eq.${kind}&select=id`, { headers: { Range: "0-0" } });
+    if (o.ok && (await o.json()).length) return out(req, { ok: true, dup: true });
+  }
 
   const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "?";
   const ipx = (await hex("kcrm-consent|" + ip)).slice(0, 24);
@@ -67,9 +77,20 @@ Deno.serve(async (req) => {
 
   const ins = await rest("consent_resp", {
     method: "POST", headers: { Prefer: "return=minimal" },
-    body: JSON.stringify({ h, owner, choices, ver: String(pub.ver || "1.0").slice(0, 12), ipx }),
+    body: JSON.stringify({ h, owner, choices, kind, ver: String(pub.ver || "1.0").slice(0, 12), ipx }),
   });
   if (!ins.ok) return out(req, { err: "salva" }, 500);
+  // La pagina mostra subito l'esito; l'app lo riallinea quando ritira la risposta.
+  const today = new Date().toISOString().slice(0, 10);
+  const ns: Record<string, unknown> = { ...state };
+  if (kind === "consensi") {
+    const c = { ...((state.c && typeof state.c === "object") ? state.c as Record<string, unknown> : {}) };
+    for (const [key, v] of Object.entries(choices)) c[key] = { v, d: today };
+    ns.c = c;
+  } else {
+    ns.rq = { ...((state.rq && typeof state.rq === "object") ? state.rq as Record<string, unknown> : {}), [kind]: "aperta" };
+  }
+  await rest(`consent_links?h=eq.${h}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ state: ns }) }).catch(() => {});
   // Pulizia: risposte mai ritirate dall'app da piu' di 180 giorni.
   rest(`consent_resp?at=lt.${new Date(Date.now() - 180 * 864e5).toISOString()}`, { method: "DELETE" }).catch(() => {});
   return out(req, { ok: true });
