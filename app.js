@@ -1,6 +1,8 @@
 try{guideify(document)}catch(e){}
 const KEY='crm-clienti-v1';
 const FIELDS=['nome','cognome','azienda','ruolo','nascita','piva','pec','paese','telefono','email','sito','indirizzo','note'];
+/* ricerca: ogni parola scritta deve comparire da qualche parte nei dati (in qualsiasi ordine); i numeri si cercano anche senza spazi */
+function smatch(q,parts){const t=String(q||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().split(/\s+/).filter(Boolean);if(!t.length)return true;const hay=parts.filter(Boolean).join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(),dg=hay.replace(/\D/g,'');return t.every(w=>{if(hay.includes(w))return true;const d=w.replace(/\D/g,'');return d.length>=3&&d.length>=w.length-1&&dg.includes(d)})}
 let clients=[],editing=null,curFav=false;function paintFav(){const b=$('favBtn');b.classList.toggle('on',curFav);b.setAttribute('aria-pressed',curFav);b.title=curFav?'Togli dai preferiti':'Aggiungi ai preferiti';b.setAttribute('aria-label',b.title)}
 const $=id=>document.getElementById(id);
 const COUNTRIES='IT,Italia,+39;SM,San Marino,+378;CH,Svizzera,+41;FR,Francia,+33;DE,Germania,+49;AT,Austria,+43;ES,Spagna,+34;PT,Portogallo,+351;GB,Regno Unito,+44;IE,Irlanda,+353;NL,Paesi Bassi,+31;BE,Belgio,+32;LU,Lussemburgo,+352;DK,Danimarca,+45;SE,Svezia,+46;NO,Norvegia,+47;FI,Finlandia,+358;PL,Polonia,+48;CZ,Cechia,+420;SK,Slovacchia,+421;HU,Ungheria,+36;RO,Romania,+40;BG,Bulgaria,+359;GR,Grecia,+30;HR,Croazia,+385;SI,Slovenia,+386;RS,Serbia,+381;TR,Turchia,+90;RU,Russia,+7;UA,Ucraina,+380;US,Stati Uniti,+1;CA,Canada,+1;MX,Messico,+52;BR,Brasile,+55;AR,Argentina,+54;CL,Cile,+56;CO,Colombia,+57;CN,Cina,+86;JP,Giappone,+81;KR,Corea del Sud,+82;IN,India,+91;AE,Emirati Arabi,+971;SA,Arabia Saudita,+966;IL,Israele,+972;EG,Egitto,+20;ZA,Sudafrica,+27;MA,Marocco,+212;TN,Tunisia,+216;AU,Australia,+61;NZ,Nuova Zelanda,+64;SG,Singapore,+65;HK,Hong Kong,+852'.split(';').map(s=>s.split(','));
@@ -78,7 +80,7 @@ function paintFilt(){const w=$('cFilt');w.textContent='';const n={prospect:0,cli
 let cLim=60;
 function render(){WONS=null;OBC=null;if(tab==='home')renderH();
   const q=$('q').value.trim().toLowerCase();const RM=new Map(),rsOf=c=>{let v=RM.get(c);if(!v){v=cReasons(c);RM.set(c,v)}return v};
-  const rows=clients.filter(c=>(!cFilter||(cFilter==='fav'?!!c.fav:cstat(c)[0]===cFilter))&&(!q||FIELDS.some(f=>f!=='paese'&&(c[f]||'').toLowerCase().includes(q))))
+  const rows=clients.filter(c=>(!cFilter||(cFilter==='fav'?!!c.fav:cstat(c)[0]===cFilter))&&(!q||smatch(q,FIELDS.filter(f=>f!=='paese').map(f=>c[f]))))
     .map(c=>[c,fullName(c)]).sort((a,b)=>(b[0].fav?1:0)-(a[0].fav?1:0)||rsScore(rsOf(b[0]))-rsScore(rsOf(a[0]))||a[1].localeCompare(b[1],'it')).map(x=>x[0]);
   $('count').textContent=clients.length===1?'1 anagrafica':clients.length+' anagrafiche';
   paintFilt();const l=$('list');l.textContent='';
@@ -384,7 +386,7 @@ function renderO(){
    [['Tasso di vittoria',T?W.length+' su '+T:null,T?Math.round(W.length/T*100)+'%':'—','Opportunità vinte sul totale di quelle chiuse (vinte più perse).'],['Media vendita',ci==null?null:cw.length,ci==null?'—':ci+' gg','Giorni medi tra la creazione e la vittoria, calcolati sulle opportunità vinte (tra parentesi quante).']].forEach(([k,n,v,i])=>{const d=h('div','stat'),l=h('span','',k+(n!=null?' ':''));if(n!=null)l.append(h('small','','('+n+')'));d.append(l,h('b','',v));s2.append(d);infoBtn(d,i)})}
   $('vList').classList.toggle('on',oView==='list');$('vKan').classList.toggle('on',oView==='kan');
   $('oList').hidden=oView!=='list';$('kan').hidden=oView!=='kan';
-  const oq=nrm(($('oq').value||'').trim()),om=o=>!oq||nrm([o.titolo,cname(o.clienteId),o.fonte,o.note].filter(Boolean).join(' ')).includes(oq);
+  const oq=nrm(($('oq').value||'').trim()),om=o=>!oq||smatch(oq,[o.titolo,cname(o.clienteId),o.fonte,o.note]);
   const L=$('oList'),K=$('kan');L.textContent='';K.textContent='';
   if(!opps.length){L.append(h('div','empty','Nessuna opportunità. Tocca + per crearne una.'));return}
   if(oFilt&&!opps.some(o=>o.fase===oFilt)&&oView==='list'){L.append(h('div','empty','Nessuna opportunità in questa fase.'));return}
@@ -451,11 +453,14 @@ function saveOpp(keep){
   if(oEd){if(oEd.fase!==rec.fase&&(rec.fase==='vinta'||rec.fase==='persa'))rec.chiusa=ymd();Object.assign(oEd,rec)}else{oEd=stampNew({id:'o'+Date.now().toString(36),creata:ymd(),...rec});opps.push(oEd)}
   const o=oEd;paintCl();persistO();renderO();renderP();if(!keep){$('oSheet').hidden=true;afterOppSave(o)}return o}
 $('oDel').onclick=()=>{if(!oEd)return;askConfirm('Eliminare l’opportunità “'+oEd.titolo+'”? L’operazione non si può annullare.','trash','Elimina',()=>{opps=opps.filter(x=>x!==oEd);persistO();$('oSheet').hidden=true;renderO();toast('Opportunità eliminata.')})};
-function setPane(p){if(p==='priv'){try{$('p_det').open=false;setErr('p_later','')}catch(e){}}
- if(p==='comm'&&editing&&editing.id&&waUnread(editing)){const a=waLast(editing);editing.waSeen=a.data;try{persist()}catch(e){}setTimeout(()=>{try{paintBadges()}catch(e){}},0)}
-document.querySelectorAll('#cTabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));$('sheet').classList.toggle('np-dati',p!=='dati');
-  [...$('sheet').firstElementChild.children].forEach(el=>{if(el.classList.contains('top')||el.id==='cTabs')return;const k=el.id==='linkedF'?'opp':el.id==='tkF'?'tk':el.id==='privF'?'priv':el.id==='commF'?'comm':el.id==='tpF'?'tp':el.id==='trF'?'tr':el.id==='msg'?'*':el.classList.contains('btns')?'dati,priv':el.classList.contains('delw')?'*':'dati';el.classList.toggle('pane-hide',k!=='*'&&!k.split(',').includes(p))})}
-$('cTabs').onclick=e=>{const b=e.target.closest('button');if(b){setPane(b.dataset.p);if(b.dataset.p==='comm')loadComm();if(b.dataset.p==='tp')paintTouch();if(b.dataset.p==='tr')paintTr();if(b.dataset.p==='tk')tkPaintAll()}};
+let cSub='comm';
+function setPane(p){if(p==='comm'||p==='tr'||p==='tp'){cSub=p;p='st'}if(p==='priv'){try{$('p_det').open=false;setErr('p_later','')}catch(e){}}
+ if(p==='st'&&cSub==='comm'&&editing&&editing.id&&waUnread(editing)){const a=waLast(editing);editing.waSeen=a.data;try{persist()}catch(e){}setTimeout(()=>{try{paintBadges()}catch(e){}},0)}
+document.querySelectorAll('#cTabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));document.querySelectorAll('#stSeg button').forEach(b=>b.classList.toggle('on',b.dataset.s===cSub));$('sheet').classList.toggle('np-dati',p!=='dati');
+  [...$('sheet').firstElementChild.children].forEach(el=>{if(el.classList.contains('top')||el.id==='cTabs')return;const sub=x=>cSub===x?'st':'-';const k=el.id==='linkedF'?'opp':el.id==='tkF'?'tk':el.id==='privF'?'priv':el.id==='stSeg'?'st':el.id==='commF'?sub('comm'):el.id==='tpF'?sub('tp'):el.id==='trF'?sub('tr'):el.id==='msg'?'*':el.classList.contains('btns')?'dati,priv':el.classList.contains('delw')?'*':'dati';el.classList.toggle('pane-hide',k!=='*'&&!k.split(',').includes(p))})}
+function stLoad(){if(cSub==='comm')loadComm();else if(cSub==='tp')paintTouch();else if(cSub==='tr')paintTr()}
+$('cTabs').onclick=e=>{const b=e.target.closest('button');if(b){setPane(b.dataset.p);if(b.dataset.p==='st')stLoad();if(b.dataset.p==='tk')tkPaintAll()}};
+$('stSeg').onclick=e=>{const b=e.target.closest('button');if(b){setPane(b.dataset.s);stLoad()}};
 const CONS=['mkEmail','mkTel','profilazione','terzi'];
 const CLABEL={mkEmail:'Marketing via email',mkTel:'Marketing telefonico e WhatsApp',profilazione:'Profilazione commerciale',terzi:'Comunicazione a partner terzi'};
 function privUI(){const on=$('p_inf').checked;$('p_infx').hidden=!on;if(on&&!$('p_infdata').value)$('p_infdata').value=ymd();
@@ -9235,7 +9240,7 @@ function renderL(){
   const w=$('lList');w.textContent='';const F=$('lFilt');F.textContent='';
   const cnt=k=>leads.filter(l=>l.stato===k).length;
   [['nuovo','Nuovi'],['convertito','Convertiti'],['scartato','Scartati']].forEach(([k,l])=>{const b=document.createElement('button');b.type='button';b.textContent=l+' '+cnt(k);b.classList.toggle('on',lFilter===k);b.onclick=()=>{lFilter=k;renderL()};F.append(b)});
-  const lqv=nrm(($('lq').value||'').trim()),rows=leads.filter(l=>l.stato===lFilter&&(!lqv||nrm([l.nome,l.cognome,l.azienda,l.email,l.telefono,l.richiesta,l.oggetto].filter(Boolean).join(' ')).includes(lqv))).sort((a,b)=>rsScore(lReasons(b))-rsScore(lReasons(a))||b.data-a.data);
+  const lqv=nrm(($('lq').value||'').trim()),rows=leads.filter(l=>l.stato===lFilter&&(!lqv||smatch(lqv,[l.nome,l.cognome,l.azienda,l.email,l.telefono,l.richiesta,l.oggetto]))).sort((a,b)=>rsScore(lReasons(b))-rsScore(lReasons(a))||b.data-a.data);
   if(!rows.length){w.append(h('div','hint',lqv?'Nessun lead trovato.':lFilter==='nuovo'?'Nessun lead da valutare. Tocca l’icona di aggiornamento per cercare richieste nelle email da indirizzi non in anagrafica, oppure + per inserirne uno.':'Nessun lead in questa sezione.'));return}
   rows.forEach(l=>{const b=h('button','row');b.type='button';
     const av=h('div','av',inits(lName(l)));av.style.background='#ffd9b0';
@@ -9493,7 +9498,7 @@ function paintBadges(){try{
     if(v==='home'){const A=actions();setBadge(b,A.length,A.some(a=>a.pri>=75))}
     else if(v==='clienti')setBadge(b,cl,clAl);else if(v==='lead')setBadge(b,L.length,lRep);else if(v==='opp')setBadge(b,op,opAl);});setBadge(document.querySelector('#appMenu [data-m=prod]'),pr,pr>0);setBadge($('menuBtn'),pr,pr>0);
   if(editing&&!$('sheet').hidden){const c=editing,bt=k=>document.querySelector('#cTabs [data-p='+k+']');
-    setBadge(bt('priv'),c.id&&privNeed(c)?1:0,true);setBadge(bt('comm'),inc(c)?1:0,true)}
+    setBadge(bt('priv'),c.id&&privNeed(c)?1:0,true);setBadge(bt('st'),inc(c)?1:0,true)}
   if(lCur&&!$('lSheet').hidden){const l=lCur,m=lMsgs(l)[0],bt=k=>document.querySelector('#lTabs [data-lp='+k+']');
     setBadge(bt('priv'),l.inf?0:1,true);setBadge(bt('msg'),lUnread(l)?1:0,true);const old=$('l_bdg');if(old)old.hidden=true}
  }catch(e){}}
@@ -10688,6 +10693,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.40.1','Importa dalla rubrica: i contatti che non si possono importare ora sono raggruppati in fondo all’elenco con il motivo scritto chiaro. «Già in anagrafica» indica anche con quale scheda coincidono e perché (stessa email, stesso telefono o stesso nome); «Senza telefono né email» spiega cosa manca.'],
 ['1.40.2','L’Assistente ora sa rispondere su come importare i contatti dalla rubrica e su come funzionano le anagrafiche duplicate (confronto, unione e annullo), con il pulsante per andare subito alla pagina giusta. Quando una domanda non c’entra con nessun argomento del manuale, l’Assistente lo dice invece di proporre una risposta fuori tema.'],
 ['1.41.0','Nuove attività (task). Ogni attività ha un titolo, una scadenza obbligatoria (i tasti Oggi, Domani e Tra una settimana compilano la data, che resta modificabile) e un collegamento obbligatorio a un cliente, un lead o un’opportunità. Cliente, lead e opportunità hanno un tab Task dove le crei e le gestisci, con un tocco le segni come fatte. In Home, sotto «Da fare», compaiono le attività scadute, quelle di oggi e dei prossimi 3 giorni, e «Tutte le attività» apre l’elenco completo raggruppato per scadenza. Le attività sono cifrate e sincronizzate come gli altri dati e finiscono anche nel backup.'],
+['1.41.1','Scheda cliente: Contatti, Acquisti e Storia sono riuniti nel tab «Storico», con tre sezioni selezionabili in alto. La ricerca è più intelligente: in Clienti, Lead e Opportunità ogni parola scritta viene cercata in tutti i dati, in qualsiasi ordine. Prima «Mario Rossi» non trovava l’anagrafica mentre «Mario» sì; ora funzionano anche «Rossi Mario», i numeri di telefono scritti con gli spazi e i nomi senza accenti.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
