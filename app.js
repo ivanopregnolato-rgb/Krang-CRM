@@ -187,6 +187,7 @@ function setErr(f,t){const e=$('err-'+f);e.textContent=t;e.hidden=!t;$(f).classL
 function validate(d,only,commit=true){
   let ok=true;const bad=(f,t)=>{setErr(f,t);ok=false};
   if(!only||only==='telefono')setErr('telefono','');if(!only||only==='email')setErr('email','');if(!only||only==='piva')setErr('piva','');if(!only||only==='pec'){setErr('pec','');if(d.pec&&curTipo==='azienda'){d.pec=d.pec.toLowerCase();if(!/^[^\s@.][^\s@]*@[^\s@.]+(\.[^\s@.]+)*\.[a-z]{2,}$/.test(d.pec))bad('pec','Inserisci una PEC valida, ad esempio nome@pec.azienda.it.')}}
+  if(!only&&!editing&&!d.telefono&&!d.email){bad('telefono','Inserisci almeno un recapito: telefono o email.');bad('email','Inserisci almeno un recapito: telefono o email.')}
   if((!only||only==='telefono')&&d.telefono){
     let n=d.telefono.replace(/[\s.()\/-]/g,'');
     if(n.startsWith('00'))n='+'+n.slice(2);
@@ -10659,6 +10660,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.37.0','Nuova funzione Anagrafiche duplicate (Impostazioni → Dati e privacy): l’app trova le schede doppie per partita IVA, nome e cognome, azienda o indirizzo, le confronta affiancate e le unisce solo dopo la tua conferma. Opportunità, messaggi, chiamate, storia e consensi confluiscono nella scheda principale; l’unione si può annullare per 30 giorni. Un avviso con icona compare anche nella scheda cliente quando esiste un possibile duplicato.'],
 ['1.37.1','Corretto l’elenco delle novità in Info, che non si apriva, e rimesso in ordine cronologico.'],
 ['1.37.2','Nella scheda cliente, «Dettagli e modifica manuale» del tab Privacy resta sempre chiuso: se manca l’informativa, l’avviso compare accanto a «Invierò l’informativa più tardi».'],
+['1.37.3','Creando una nuova anagrafica serve almeno un recapito: telefono o email.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
