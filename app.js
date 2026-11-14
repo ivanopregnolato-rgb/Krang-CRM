@@ -11251,6 +11251,9 @@ function tkPanel(host,rif,what){host.textContent='';
   if(dn.length){const tg=h('button','btn lbl',(host._sd?'Nascondi':'Mostra')+' le attività fatte ('+dn.length+')');tg.type='button';tg.style.cssText='width:100%;margin-top:8px';tg.onclick=()=>{host._sd=!host._sd;tkPanel(host,rif,what)};host.append(tg);if(host._sd)dn.slice(0,50).forEach(t=>host.append(tkRow(t)))}
   return op.length}
 function tkPaintAll(){const cnt=(id,n)=>{const e=$(id);if(e)e.textContent=n||''};
+  try{const tb=document.querySelector('#cTabs [data-p=tk]');if(tb){const sv=!!(typeof editing!=='undefined'&&editing&&editing.id);tb.hidden=!sv;if(!sv&&tb.classList.contains('on'))setPane('dati')}}catch(e){}
+  try{const tb=document.querySelector('#lTabs [data-lp=tk]');if(tb){const sv=!!(typeof lCur!=='undefined'&&lCur&&lCur.id);tb.hidden=!sv;if(!sv&&tb.classList.contains('on'))setLTab('dati')}}catch(e){}
+  try{const ob=$('oTabs');if(ob){const sv=!!(typeof oEd!=='undefined'&&oEd&&oEd.id);ob.hidden=!sv;if(!sv)setOTab('dati')}}catch(e){}
   try{if(typeof editing!=='undefined'&&$('sheet')&&!$('sheet').hidden){const n=tkPanel($('tkF'),editing&&editing.id?{tipo:'cliente',id:editing.id}:null,'l’anagrafica');$('tkF').hidden=false;cnt('cTkCnt',n)}}catch(e){}
   try{if(typeof lCur!=='undefined'&&$('lSheet')&&!$('lSheet').hidden){const n=tkPanel($('l_tkBody'),lCur&&lCur.id?{tipo:'lead',id:lCur.id}:null,'il lead');cnt('lTkCnt',n)}}catch(e){}
   try{if(typeof oEd!=='undefined'&&$('oSheet')&&!$('oSheet').hidden){const n=tkPanel($('oTkF'),oEd&&oEd.id?{tipo:'opp',id:oEd.id}:null,'l’opportunità');cnt('oTkCnt',n)}}catch(e){}}
