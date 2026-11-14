@@ -140,7 +140,7 @@ $('save').onclick=()=>saveClient();
 let newRef=null;/* anagrafica appena creata da questo foglio: va esclusa dai controlli di unicità e aggiornata, non duplicata */
 function saveClient(viaSend){
   const d={};FIELDS.forEach(f=>d[f]=$(f).value.trim());d.indirizzo=addrC(d.indirizzo);if(curTipo!=='azienda')d.pec='';d.foto=curFoto;d.tipo=curTipo;d.fav=curFav;if(!validate(d)){setPane('dati');const el=$('sheet').querySelector('.bad');if(el)el.scrollIntoView({block:'center'});return null}
-  if(!viaSend&&!editing&&$('p_fonte').value==='interessato'&&!$('p_inf').checked&&!$('p_later').checked){setPane('priv');$('p_det').open=true;setErr('p_inf','Conferma di aver fornito l’informativa privacy oppure scegli «Invierò l’informativa più tardi».');return null}
+  if(!viaSend&&!editing&&$('p_fonte').value==='interessato'&&!$('p_inf').checked&&!$('p_later').checked){setPane('priv');setErr('p_later','Conferma di aver fornito l’informativa privacy (in Dettagli e modifica manuale) oppure scegli «Invierò l’informativa più tardi».');try{$('p_laterW').scrollIntoView({block:'center'})}catch(e){}return null}
   d.privacy=collectPriv(editing&&editing.privacy,!editing);d.agg=new Date().toISOString();
   if(!['nome','cognome','azienda','telefono','email'].some(f=>d[f])){showMsg('Inserisci almeno un dato.');return null}
   let cl=editing;if(!cl&&newRef&&clients.includes(newRef)&&!$('sheet').hidden)cl=newRef;if(cl)Object.assign(cl,d);else{cl=stampNew({id:Date.now().toString(36),...d});clients.push(cl)}newRef=cl;
@@ -450,7 +450,7 @@ function saveOpp(keep){
   if(oEd){if(oEd.fase!==rec.fase&&(rec.fase==='vinta'||rec.fase==='persa'))rec.chiusa=ymd();Object.assign(oEd,rec)}else{oEd=stampNew({id:'o'+Date.now().toString(36),creata:ymd(),...rec});opps.push(oEd)}
   const o=oEd;paintCl();persistO();renderO();renderP();if(!keep){$('oSheet').hidden=true;afterOppSave(o)}return o}
 $('oDel').onclick=()=>{if(!oEd)return;askConfirm('Eliminare l’opportunità “'+oEd.titolo+'”? L’operazione non si può annullare.','trash','Elimina',()=>{opps=opps.filter(x=>x!==oEd);persistO();$('oSheet').hidden=true;renderO();toast('Opportunità eliminata.')})};
-function setPane(p){if(p==='priv'){try{$('p_det').open=false}catch(e){}}
+function setPane(p){if(p==='priv'){try{$('p_det').open=false;setErr('p_later','')}catch(e){}}
  if(p==='comm'&&editing&&editing.id&&waUnread(editing)){const a=waLast(editing);editing.waSeen=a.data;try{persist()}catch(e){}setTimeout(()=>{try{paintBadges()}catch(e){}},0)}
 document.querySelectorAll('#cTabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));$('sheet').classList.toggle('np-dati',p!=='dati');
   [...$('sheet').firstElementChild.children].forEach(el=>{if(el.classList.contains('top')||el.id==='cTabs')return;const k=el.id==='linkedF'?'opp':el.id==='privF'?'priv':el.id==='commF'?'comm':el.id==='tpF'?'tp':el.id==='trF'?'tr':el.id==='msg'?'*':el.classList.contains('btns')?'dati,priv':el.classList.contains('delw')?'*':'dati';el.classList.toggle('pane-hide',k!=='*'&&!k.split(',').includes(p))})}
@@ -10658,6 +10658,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.36.2','Le chiavi dei lead non restano più in vista: compaiono solo con il tasto Mostra, per 10 secondi, e si nascondono da sole (o con Nascondi, uscendo dalla pagina o dall’app).'],
 ['1.37.0','Nuova funzione Anagrafiche duplicate (Impostazioni → Dati e privacy): l’app trova le schede doppie per partita IVA, nome e cognome, azienda o indirizzo, le confronta affiancate e le unisce solo dopo la tua conferma. Opportunità, messaggi, chiamate, storia e consensi confluiscono nella scheda principale; l’unione si può annullare per 30 giorni. Un avviso con icona compare anche nella scheda cliente quando esiste un possibile duplicato.'],
 ['1.37.1','Corretto l’elenco delle novità in Info, che non si apriva, e rimesso in ordine cronologico.'],
+['1.37.2','Nella scheda cliente, «Dettagli e modifica manuale» del tab Privacy resta sempre chiuso: se manca l’informativa, l’avviso compare accanto a «Invierò l’informativa più tardi».'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -11040,3 +11041,4 @@ function dpBan(c){const B=$('dupBan');if(!B)return;B.textContent='';B.hidden=tru
     const m=h('button','btn lbl','Confronta e unisci');m.type='button';m.onclick=()=>{$('sheet').hidden=true;try{openSettings()}catch(e){}setSp('dp');const [k,dr]=dpFill(c)>=dpFill(x)?[c,x]:[x,c];dpCur={keep:k,drop:dr,pick:{}};dpPaint()};
     const n=h('button','btn lbl','Non è un duplicato');n.type='button';n.onclick=()=>{(S.dupIgnore=S.dupIgnore||[]).push(c.id+'|'+x.id);saveS();dpBan(c)};bt.append(m,n);d.append(bt);B.append(d)})}
 {const _os=openSheet;openSheet=function(c){const r=_os.apply(this,arguments);try{dpBan(c)}catch(e){}return r}}
+document.addEventListener('change',e=>{if(e.target&&(e.target.id==='p_later'||e.target.id==='p_inf'))try{setErr('p_later','')}catch(x){}});
