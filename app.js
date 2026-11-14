@@ -454,7 +454,7 @@ $('oDel').onclick=()=>{if(!oEd)return;askConfirm('Eliminare l’opportunità “
 function setPane(p){if(p==='priv'){try{$('p_det').open=false;setErr('p_later','')}catch(e){}}
  if(p==='comm'&&editing&&editing.id&&waUnread(editing)){const a=waLast(editing);editing.waSeen=a.data;try{persist()}catch(e){}setTimeout(()=>{try{paintBadges()}catch(e){}},0)}
 document.querySelectorAll('#cTabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));$('sheet').classList.toggle('np-dati',p!=='dati');
-  [...$('sheet').firstElementChild.children].forEach(el=>{if(el.classList.contains('top')||el.id==='cTabs')return;const k=el.id==='linkedF'?'opp':el.id==='privF'?'priv':el.id==='commF'?'comm':el.id==='tpF'?'tp':el.id==='trF'?'tr':el.id==='msg'?'*':el.classList.contains('btns')?'dati,priv':el.classList.contains('delw')?'*':'dati';el.classList.toggle('pane-hide',k!=='*'&&!k.split(',').includes(p))})}
+  [...$('sheet').firstElementChild.children].forEach(el=>{if(el.classList.contains('top')||el.id==='cTabs')return;const k=el.id==='linkedF'||el.id==='tkF'?'opp':el.id==='privF'?'priv':el.id==='commF'?'comm':el.id==='tpF'?'tp':el.id==='trF'?'tr':el.id==='msg'?'*':el.classList.contains('btns')?'dati,priv':el.classList.contains('delw')?'*':'dati';el.classList.toggle('pane-hide',k!=='*'&&!k.split(',').includes(p))})}
 $('cTabs').onclick=e=>{const b=e.target.closest('button');if(b){setPane(b.dataset.p);if(b.dataset.p==='comm')loadComm();if(b.dataset.p==='tp')paintTouch();if(b.dataset.p==='tr')paintTr()}};
 const CONS=['mkEmail','mkTel','profilazione','terzi'];
 const CLABEL={mkEmail:'Marketing via email',mkTel:'Marketing telefonico e WhatsApp',profilazione:'Profilazione commerciale',terzi:'Comunicazione a partner terzi'};
@@ -513,7 +513,7 @@ function stampMods(a,k){let ap=false;try{ap=CLOUD.applying}catch(e){}let now='',
   a.forEach(r=>{if(!r||r.id==null)return;const key=k+r.id,sg=modSig(r);
     if(MODS[key]===undefined||ap){MODS[key]=sg;return}
     if(MODS[key]!==sg){MODS[key]=sg;if(!now){now=new Date().toISOString();u=whoU()}r.mod=now;r.modU=u}})}
-function baselineMods(){[[clients,'c'],[opps,'o'],[prods,'p'],[leads,'l'],[movs,'m']].forEach(([a,k])=>a.forEach(r=>{if(r&&r.id!=null)MODS[k+r.id]=modSig(r)}))}
+function baselineMods(){[[clients,'c'],[opps,'o'],[prods,'p'],[leads,'l'],[movs,'m'],[(typeof tasks!=='undefined'?tasks:[]),'t']].forEach(([a,k])=>a.forEach(r=>{if(r&&r.id!=null)MODS[k+r.id]=modSig(r)}))}
 function creOf(r,kind){if(!r)return 0;if(r.cre){const t=new Date(r.cre).getTime();if(!isNaN(t))return t}
   let t=NaN;if(kind==='lead')t=+r.creato||+r.data;else if(kind==='opp')t=r.creata?new Date(r.creata+'T12:00:00').getTime():NaN;
   if(isNaN(t)||!t){const m=/^[a-z]?([0-9a-z]{7,9})[a-z]?$/.exec(String(r.id||''));if(m){const x=parseInt(m[1],36);if(x>1e12&&x<4e12)t=x}}
@@ -8865,6 +8865,7 @@ function actions(){const A=[],noInf=[],td=ymd(),add=(pri,ic,title,sub,go)=>A.pus
   clients.forEach(c=>{const b=bday(c.nascita);if(b&&b.days<=7)add(b.days===0?90:60-b.days,'gift','Compleanno di '+fullName(c),(b.days===0?'Oggi':b.days===1?'Domani':'Tra '+b.days+' giorni')+' · '+(b.age+(b.days===0?0:1))+' anni',()=>openSheet(c));
     const pv=c.privacy;if(!pv||!pv.informativa)noInf.push(c);
     (pv&&pv.richieste||[]).forEach(r=>{if(effSt(r)==='scaduta')add(62,'clock','Richiesta consensi scaduta',fullName(c)+' · codice '+r.token,()=>openSheet(c))})});
+  try{tkActions(add,td)}catch(e){}
   clients.forEach(c=>{if(c.rich&&c.rich<=td)add(c.rich<td?88:84,'Chiama','Richiama '+fullName(c),c.rich<td?'In ritardo dal '+fmtD(c.rich):'Da richiamare oggi',()=>openSheet(c))});
   (typeof leads!=='undefined'?leads:[]).forEach(l=>{if(l.rich&&l.rich<=td&&l.stato!=='scartato')add(l.rich<td?88:84,'Chiama','Richiama '+fullName(l),l.rich<td?'In ritardo dal '+fmtD(l.rich):'Da richiamare oggi',()=>openLead(l))});
   const nl=(typeof leads!=='undefined'?leads:[]).filter(l=>l.stato==='nuovo').length;if(nl)add(70,'plus',nl===1?'1 lead da valutare':nl+' lead da valutare','Convertili in prospect o scartali',()=>setTab('lead'));
@@ -9562,7 +9563,7 @@ function paintCloud(){const e=$('st_cstat');if(!e)return;
  persist=w(persist,'cl');persistO=w(persistO,'op');persistP=w(persistP,'pr');persistM=w(persistM,'mv');
  const _sv=saveS;saveS=function(){const r=_sv.apply(this,arguments);try{cloudPushS()}catch(e){}return r}}
 /* backup JSON */
-$('st_bkx').onclick=async()=>{try{backfillCre()}catch(e){}const o={v:1,exp:new Date().toISOString(),clienti:clients,opportunita:opps,prodotti:prods,movimenti:movs,lead:leads,impostazioni:Object.assign({},S,{brochure:undefined})};
+$('st_bkx').onclick=async()=>{try{backfillCre()}catch(e){}const o={v:1,exp:new Date().toISOString(),clienti:clients,opportunita:opps,prodotti:prods,movimenti:movs,lead:leads,attivita:tasks,impostazioni:Object.assign({},S,{brochure:undefined})};
   if(SB.e2e.state()!=='ready'){setErr('st_bk','I dati sono cifrati e bloccati su questo dispositivo: esci e accedi di nuovo con la tua password, poi riprova.');return}setErr('st_bk','');let env;try{env=await SB.e2e.seal(new TextEncoder().encode(JSON.stringify(o)))}catch(e){setErr('st_bk','Backup non riuscito: controlla la connessione e riprova.');return}const ok=await savePdf(new TextEncoder().encode(JSON.stringify(env)),'crm-backup-'+ymd()+'.json');toast(ok?'Backup salvato.':'Salvataggio non disponibile qui.')};
 $('st_bki').onclick=()=>$('st_bkf').click();
 $('st_bkf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;setErr('st_bk','');
@@ -9570,8 +9571,8 @@ $('st_bkf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f
   else if(o&&o.enc===1){const pw=await E2EUI.ask({bt:'Backup di una versione precedente',bx:'Questo file è stato cifrato con la vecchia password dei backup. Inseriscila per riaprirlo.',bl:'Vecchia password dei backup'});if(pw==null)return;DRV.pw=pw;try{o=JSON.parse(new TextDecoder().decode(await decEnv(o)))}catch(x){DRV.pw='';setErr('st_bk','Password errata o file danneggiato.');return}DRV.pw=''}if(!o||o.v!==1||!Array.isArray(o.clienti))throw 0;
     askConfirm('Importare il backup? Clienti ('+o.clienti.length+'), opportunità ('+(o.opportunita||[]).length+'), prodotti ('+(o.prodotti||[]).length+') e lead ('+(o.lead||[]).length+') vengono uniti ai dati attuali; i record con lo stesso identificativo vengono sostituiti.','clip','Importa',()=>{
       const mg=(cur,inc)=>{const m=new Map(cur.map(r=>[String(r.id),r]));(inc||[]).forEach(r=>{if(r&&r.id)m.set(String(r.id),r)});return [...m.values()]};
-      clients=mg(clients,o.clienti);opps=mg(opps,o.opportunita);prods=mg(prods,o.prodotti);movs=mg(movs,o.movimenti);leads=mg(leads,o.lead);baselineMods();
-      persist();persistO();persistP();persistM();persistL();render();renderO();renderP();try{renderL()}catch(x){}try{renderH()}catch(x){}toast('Backup importato.')})
+      clients=mg(clients,o.clienti);opps=mg(opps,o.opportunita);prods=mg(prods,o.prodotti);movs=mg(movs,o.movimenti);leads=mg(leads,o.lead);tasks=mg(tasks,o.attivita);baselineMods();
+      persist();persistO();persistP();persistM();persistL();persistT();render();renderO();renderP();try{renderL()}catch(x){}try{renderH()}catch(x){}toast('Backup importato.')})
   }catch(x){setErr('st_bk','File non valido: scegli un backup esportato da questo CRM.')}};
 
 /* ===== form senza tasti in fondo: salvataggio all'uscita ===== */
@@ -10343,7 +10344,7 @@ const SB=(()=>{
  const putBundle=b=>js('/auth/v1/user',{method:'PUT',auth:1,json:{data:{kcrm_e2e:b}}}).then(()=>{E.bundle=b});
  async function mkBundle(pass,rk,raw){const s=rnd(16),rs=rnd(16);return{v:1,it:IT,s:b64(s),w:await wrap(raw,await kek(pass,s,IT)),ri:RIT,rs:b64(rs),rw:await wrap(raw,await kek(rkNorm(rk),rs,RIT))}}
  async function rawByPass(pass){const b=E.bundle||await fetchBundle();if(!b)throw Object.assign(new Error('nessuna chiave'),{code:'nokey'});try{return await unwrap(b.w,await kek(pass,unb64(b.s),b.it))}catch(e){throw Object.assign(new Error('passphrase errata'),{code:'badpass'})}}
- async function listDel(match){for(const c of ['clienti','prodotti','opportunita','lead','movimenti','config']){const all=[];for(let off=0;off<20000;off+=100){const L=await js('/storage/v1/object/list/media',{method:'POST',auth:1,json:{prefix:uid()+'/'+c,limit:100,offset:off}});if(!L||!L.length)break;L.forEach(x=>{if(x&&x.name&&match(x.name))all.push(uid()+'/'+c+'/'+x.name)});if(L.length<100)break}
+ async function listDel(match){for(const c of ['clienti','prodotti','opportunita','lead','movimenti','config','attivita']){const all=[];for(let off=0;off<20000;off+=100){const L=await js('/storage/v1/object/list/media',{method:'POST',auth:1,json:{prefix:uid()+'/'+c,limit:100,offset:off}});if(!L||!L.length)break;L.forEach(x=>{if(x&&x.name&&match(x.name))all.push(uid()+'/'+c+'/'+x.name)});if(L.length<100)break}
    for(let i=0;i<all.length;i+=100)await js('/storage/v1/object/media',{method:'DELETE',auth:1,json:{prefixes:all.slice(i,i+100)}})}}
  const e2e={
   state:()=>E.dk?'ready':'locked',
@@ -10374,7 +10375,7 @@ const SB=(()=>{
   needMig:()=>{try{return localStorage.getItem(MG)!=='1'}catch(e){return false}},
   setMig:()=>{try{localStorage.setItem(MG,'1')}catch(e){}},
   async cleanup(){/* elimina le vecchie foto in chiaro solo se esiste la copia cifrata della stessa scheda */
-   for(const c of ['clienti','prodotti','opportunita','lead','movimenti','config']){const names=[];for(let off=0;off<20000;off+=100){const L=await js('/storage/v1/object/list/media',{method:'POST',auth:1,json:{prefix:uid()+'/'+c,limit:100,offset:off}});if(!L||!L.length)break;L.forEach(x=>{if(x&&x.name)names.push(x.name)});if(L.length<100)break}
+   for(const c of ['clienti','prodotti','opportunita','lead','movimenti','config','attivita']){const names=[];for(let off=0;off<20000;off+=100){const L=await js('/storage/v1/object/list/media',{method:'POST',auth:1,json:{prefix:uid()+'/'+c,limit:100,offset:off}});if(!L||!L.length)break;L.forEach(x=>{if(x&&x.name)names.push(x.name)});if(L.length<100)break}
     const stem=n=>n.replace(/-[^-]*\.(enc|jpg)$/,''),enc=new Set(names.filter(n=>/\.enc$/.test(n)).map(stem)),old=names.filter(n=>/\.jpg$/.test(n)&&enc.has(stem(n))).map(n=>uid()+'/'+c+'/'+n);
     for(let i=0;i<old.length;i+=100)await js('/storage/v1/object/media',{method:'DELETE',auth:1,json:{prefixes:old.slice(i,i+100)}})}}};
  async function upBlob(p,body){const T=['application/octet-stream','image/jpeg'];for(let i=0;i<T.length;i++){const r=await raw('/storage/v1/object/media/'+p,{method:'POST',auth:1,headers:{'Content-Type':T[i],'x-upsert':'true'},body});if(r.ok)return;let j=null;try{j=await r.json()}catch(e){}const er=mkErr(r,j);if(i===T.length-1||!/mime|type/i.test(er.message||''))throw er}}
@@ -10446,7 +10447,7 @@ const SB=(()=>{
   recover:email=>js('/auth/v1/recover',{method:'POST',json:Object.assign({email},sec())}),
   resend:email=>js('/auth/v1/resend',{method:'POST',json:Object.assign({type:'signup',email},sec())}),
   async logout(){try{if(ses)await raw('/auth/v1/logout?scope=local',{method:'POST',auth:1})}catch(e){}ses=null;save()},
-  async removeAccount(){try{for(const c of ['clienti','prodotti','opportunita','lead','movimenti','config']){for(let g=0;g<50;g++){const L=await js('/storage/v1/object/list/media',{method:'POST',auth:1,json:{prefix:uid()+'/'+c,limit:100,offset:0}});if(!L||!L.length)break;await js('/storage/v1/object/media',{method:'DELETE',auth:1,json:{prefixes:L.map(x=>uid()+'/'+c+'/'+x.name)}})}}}catch(e){}
+  async removeAccount(){try{for(const c of ['clienti','prodotti','opportunita','lead','movimenti','config','attivita']){for(let g=0;g<50;g++){const L=await js('/storage/v1/object/list/media',{method:'POST',auth:1,json:{prefix:uid()+'/'+c,limit:100,offset:0}});if(!L||!L.length)break;await js('/storage/v1/object/media',{method:'DELETE',auth:1,json:{prefixes:L.map(x=>uid()+'/'+c+'/'+x.name)}})}}}catch(e){}
    await js('/rest/v1/rpc/delete_my_account',{method:'POST',auth:1,json:{}});ses=null;save()},
   /* link ricevuti per email (conferma, recupero): il token non resta nell'indirizzo e non apre da solo una sessione */
   link:(()=>{const l=window.__authLink||null;try{delete window.__authLink}catch(e){}return l})(),
@@ -10686,6 +10687,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.40.0','Correzioni dopo la prova con utenti. Importa dalla rubrica: «Seleziona i visibili» non include più i contatti già presenti (non si creano più schede doppie) e dopo l’import la pagina non chiede più di salvare. Cambiando il prezzo a catalogo, il valore delle opportunità aperte si aggiorna anche in elenco e in Home; se l’opportunità ha un preventivo inviato o accettato resta invece il prezzo promesso al cliente, e nella scheda compare «Aggiorna ai prezzi attuali». Il cambio di fase mostra subito Salva. Nella scheda Lead, premendo Salva si va direttamente al campo da correggere.'],
 ['1.40.1','Importa dalla rubrica: i contatti che non si possono importare ora sono raggruppati in fondo all’elenco con il motivo scritto chiaro. «Già in anagrafica» indica anche con quale scheda coincidono e perché (stessa email, stesso telefono o stesso nome); «Senza telefono né email» spiega cosa manca.'],
 ['1.40.2','L’Assistente ora sa rispondere su come importare i contatti dalla rubrica e su come funzionano le anagrafiche duplicate (confronto, unione e annullo), con il pulsante per andare subito alla pagina giusta. Quando una domanda non c’entra con nessun argomento del manuale, l’Assistente lo dice invece di proporre una risposta fuori tema.'],
+['1.41.0','Nuove attività (task). Puoi annotare le cose da fare con titolo, scadenza e nota, e collegarle a un cliente, a un lead o a un’opportunità. In Home, sotto «Da fare», trovi le attività scadute, quelle di oggi e dei prossimi 3 giorni, e con «Tutte le attività» apri l’elenco completo, raggruppato per scadenza, dove le segni come fatte con un tocco. Nella scheda del cliente, nella sezione Opportunità, c’è l’elenco delle sue attività e il pulsante «Aggiungi attività». Le attività sono cifrate e sincronizzate come gli altri dati e finiscono anche nel backup.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -11173,3 +11175,69 @@ $('vc_file').onchange=async e=>{const f=e.target.files&&e.target.files[0];e.targ
   try{const txt=await f.text();const cards=vcParse(txt);const seen={e:new Set,t:new Set};
     vcT=Date.now();vcRows=cards.map(vcBuild).filter(Boolean).map(r=>{const st=vcStatus(r,seen);if(!st){if(r.email)seen.e.add(r.email);if(r.telefono)seen.t.add(String(r.telefono).slice(-9))}return{r,st,on:false}});vcSave();vcPaint()}
   catch(err){toast('Impossibile leggere il file.')}};
+
+/* ===== Attività (task): cose da fare con scadenza, collegate a cliente, lead o opportunità ===== */
+const TKEY='crm-task-v1';
+let tasks=[];try{tasks=JSON.parse(localStorage.getItem(TKEY)||'[]')}catch(e){}
+function persistT(){try{stampMods(tasks,'t')}catch(e){}try{localStorage.setItem(TKEY,JSON.stringify(tasks))}catch(e){toast('Spazio pieno: impossibile salvare le attività.')}try{cloudPush('tk')}catch(e){}try{dPush()}catch(e){}}
+CSPEC.tk={col:'attivita',arr:()=>tasks,set:v=>{tasks=v},save:()=>{try{localStorage.setItem(TKEY,JSON.stringify(tasks))}catch(e){}},heavy:{},after:()=>{try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}try{if($('tkList')&&!$('tkList').hidden)tkListPaint()}catch(e){}}};
+try{tasks.forEach(t=>{if(t&&t.id!=null)MODS['t'+t.id]=modSig(t)})}catch(e){}
+const tkRef=t=>{const r=t&&t.rif;if(!r)return null;
+  if(r.tipo==='cliente'){const c=clients.find(x=>x.id===r.id);return c?{nome:fullName(c),go:()=>openSheet(c)}:null}
+  if(r.tipo==='lead'){const l=(typeof leads!=='undefined'?leads:[]).find(x=>x.id===r.id);return l?{nome:'Lead · '+lName(l),go:()=>openLead(l)}:null}
+  if(r.tipo==='opp'){const o=opps.find(x=>x.id===r.id);return o?{nome:'Opportunità · '+o.titolo,go:()=>openOpp(o)}:null}
+  return null};
+const tkOpen_=()=>tasks.filter(t=>t&&t.stato!=='fatta');
+const tkSort=(a,b)=>(a.scad||'9999').localeCompare(b.scad||'9999')||String(a.cre||'').localeCompare(String(b.cre||''));
+function tkWhen(t){if(!t.scad)return 'Senza scadenza';const td=ymd();if(t.scad<td)return 'Scaduta il '+fmtD(t.scad);if(t.scad===td)return 'Oggi';const n=Math.round((new Date(t.scad+'T00:00')-new Date(td+'T00:00'))/864e5);return n===1?'Domani':fmtD(t.scad)}
+function tkDone(t,on){t.stato=on?'fatta':'aperta';if(on)t.fatta=ymd();else delete t.fatta;persistT();try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast(on?'Attività completata.':'Attività riaperta.')}
+function tkActions(add,td){const lim=new Date(new Date(td+'T00:00').getTime()+3*864e5);const lm=new Date(lim.getTime()-lim.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+  tkOpen_().forEach(t=>{if(!t.scad||t.scad>lm)return;const r=tkRef(t);add(t.scad<td?91:t.scad===td?86:52,'clock',t.titolo,tkWhen(t)+(r?' · '+r.nome:''),()=>tkOpen(t))})}
+function tkShell(id,title,onClose){let sh=$(id);if(!sh){sh=h('div','sheet');sh.id=id;sh.style.zIndex=6;document.body.append(sh)}sh.hidden=false;sh.textContent='';const w=h('div'),top=h('div','top'),x=h('button','btn ico pk');x.type='button';x.title=x.ariaLabel='Chiudi';x.innerHTML=ICONS.back;x.onclick=()=>{if(onClose)onClose();else sh.hidden=true};top.append(h('h2','',title),x);w.append(top);sh.append(w);sh.scrollTop=0;return {sh,w,x}}
+function tkOpen(t,pre){const isNew=!t;const d=t?{...t,rif:t.rif?{...t.rif}:null}:{id:'t'+Date.now().toString(36),titolo:'',scad:'',nota:'',stato:'aperta',rif:pre||null};
+  const {sh,w,x}=tkShell('tkSheet',isNew?'Nuova attività':'Attività');
+  const f1=h('div','f'),l1=h('label','','Cosa c’è da fare'),ti=h('input');ti.value=d.titolo;ti.placeholder='Per esempio: richiamare per il preventivo';ti.autocomplete='off';ti.id='tk_t';l1.htmlFor='tk_t';const e1=h('div','err');e1.hidden=true;f1.append(l1,ti,e1);
+  const f2=h('div','f'),l2=h('label','','Scadenza (facoltativa)'),da=h('input');da.type='date';da.value=d.scad||'';da.id='tk_d';l2.htmlFor='tk_d';
+  const ch=h('div','');ch.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-top:6px';const plus=n=>{const x=new Date(Date.now()+n*864e5);return new Date(x-x.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+  [['Oggi',0],['Domani',1],['Tra una settimana',7]].forEach(([n,v])=>{const b=h('button','btn lbl',n);b.type='button';b.style.cssText='width:auto;flex:none;padding:6px 12px;min-height:0';b.onclick=()=>{da.value=plus(v);da.dispatchEvent(new Event('input'))};ch.append(b)});f2.append(l2,da,ch);
+  const f3=h('div','f'),l3=h('label','','Nota (facoltativa)'),no=h('textarea');no.rows=3;no.value=d.nota||'';no.id='tk_n';l3.htmlFor='tk_n';f3.append(l3,no);
+  const f4=h('div','f'),l4=h('label','','Collegata a (facoltativo)'),rb=h('div',''),q=h('input'),rl=h('div','');q.type='search';q.placeholder='Cerca cliente, lead o opportunità';q.autocomplete='off';q.setAttribute('aria-label','Cerca cliente, lead o opportunità');rl.style.margin='6px 0';f4.append(l4,rb,q,rl);
+  const paintRif=()=>{rb.textContent='';const r=d.rif&&tkRef({rif:d.rif});if(r){const c=h('div','hint');c.style.cssText='display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:12px;padding:8px 10px';c.append(h('span','',r.nome));const rm=h('button','btn ico');rm.type='button';rm.innerHTML=ICONS.x||'×';rm.title=rm.ariaLabel='Togli il collegamento';rm.onclick=()=>{d.rif=null;paintRif()};c.append(rm);rb.append(c);q.hidden=true;rl.hidden=true}else{q.hidden=false;rl.hidden=false}};
+  q.oninput=()=>{rl.textContent='';const s=nrm(q.value.trim());if(s.length<2)return;const R=[];
+    clients.forEach(c=>{if(nrm([fullName(c),c.azienda,c.telefono,c.email].filter(Boolean).join(' ')).includes(s))R.push({tipo:'cliente',id:c.id,n:fullName(c)})});
+    (typeof leads!=='undefined'?leads:[]).forEach(l=>{if(l.stato!=='scartato'&&nrm([lName(l),l.azienda,l.email].filter(Boolean).join(' ')).includes(s))R.push({tipo:'lead',id:l.id,n:'Lead · '+lName(l)})});
+    opps.forEach(o=>{if(nrm(o.titolo||'').includes(s))R.push({tipo:'opp',id:o.id,n:'Opportunità · '+o.titolo})});
+    R.slice(0,8).forEach(r=>{const b=h('button','btn lbl',r.n);b.type='button';b.style.cssText='width:100%;justify-content:flex-start;margin:0 0 4px';b.onclick=()=>{d.rif={tipo:r.tipo,id:r.id};q.value='';rl.textContent='';paintRif()};rl.append(b)});
+    if(!R.length)rl.append(h('div','hint','Nessun risultato.'))};
+  paintRif();
+  const sig=()=>JSON.stringify([ti.value.trim(),da.value,no.value.trim(),d.rif]);
+  const save=()=>{const tt=ti.value.trim();if(!tt){e1.textContent='Scrivi cosa c’è da fare.';e1.hidden=false;ti.classList.add('bad');ti.focus();return}
+    const rec=Object.assign(t||stampNew(d),{titolo:tt,scad:da.value||'',nota:no.value.trim(),rif:d.rif||null,stato:(t&&t.stato)||'aperta'});if(!t)tasks.push(rec);persistT();sh.hidden=true;try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast('Attività salvata.')};
+  const ac=h('div','delw');w.append(f1,f2,f3,f4,ac);
+  if(t){const dn=h('button','btn lbl'+(t.stato==='fatta'?'':' p'));dn.type='button';dn.innerHTML=ICONS.check+(t.stato==='fatta'?'Riapri':'Segna come fatta');dn.style.width='100%';dn.onclick=()=>{tkDone(t,t.stato!=='fatta');sh.hidden=true};
+    const rf=tkRef(t);if(rf){const go=h('button','btn lbl','Apri '+rf.nome);go.type='button';go.style.width='100%';go.onclick=()=>{sh.hidden=true;rf.go()};ac.append(go)}
+    const dl=h('button','btn lbl d');dl.type='button';dl.innerHTML=ICONS.trash+'Elimina';dl.style.width='100%';dl.onclick=()=>askConfirm('Eliminare l’attività «'+t.titolo+'»?','trash','Elimina',()=>{tasks=tasks.filter(z=>z!==t);persistT();sh.hidden=true;try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast('Attività eliminata.')});ac.append(dn,dl)}
+  if(!isNew)try{saveBtn(ac,sig,save)}catch(e){}
+  if(isNew){const sv=h('button','btn p lbl');sv.type='button';sv.innerHTML=ICONS.check+'Salva';sv.style.width='100%';sv.onclick=save;ac.prepend(sv)}
+  try{dirtyBack(x,sig,save,()=>{sh.hidden=true})}catch(e){}
+  ti.oninput=()=>{e1.hidden=true;ti.classList.remove('bad')};if(isNew)setTimeout(()=>{try{ti.focus()}catch(e){}},50)}
+let tkShowDone=false;
+function tkRow(t){const r=h('div','');r.style.cssText='display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:0 0 6px';
+  const cb=h('button','btn ico');cb.type='button';cb.style.flex='none';cb.innerHTML=t.stato==='fatta'?ICONS.check:'';cb.style.borderRadius='50%';cb.style.border='2px solid var(--ink,#fff)';cb.style.opacity=t.stato==='fatta'?'.7':'1';cb.title=cb.ariaLabel=t.stato==='fatta'?'Riapri l’attività':'Segna come fatta';cb.onclick=e=>{e.stopPropagation();tkDone(t,t.stato!=='fatta')};
+  const b=h('button','');b.type='button';b.style.cssText='flex:1;min-width:0;text-align:left;background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer';const rf=tkRef(t);
+  const a=h('b','',t.titolo);a.style.display='block';if(t.stato==='fatta')a.style.textDecoration='line-through';const s=h('span','hint',(t.stato==='fatta'?'Fatta il '+fmtD(t.fatta||''):tkWhen(t))+(rf?' · '+rf.nome:''));s.style.display='block';if(t.stato!=='fatta'&&t.scad&&t.scad<ymd())s.style.color='var(--danger)';
+  b.append(a,s);b.onclick=()=>tkOpen(t);r.append(cb,b);return r}
+function tkListPaint(){const sh=$('tkList');if(!sh)return;const L=sh.querySelector('.tkbody');if(!L)return;L.textContent='';const td=ymd(),op=tkOpen_().sort(tkSort);
+  const grp=[['Scadute',op.filter(t=>t.scad&&t.scad<td)],['Oggi',op.filter(t=>t.scad===td)],['Prossime',op.filter(t=>t.scad&&t.scad>td)],['Senza scadenza',op.filter(t=>!t.scad)]];
+  if(!op.length)L.append(h('div','hint','Nessuna attività aperta. Tocca «Nuova attività» per aggiungerne una.'));
+  grp.forEach(([n,a])=>{if(!a.length)return;const hd=h('div','hint',n+' ('+a.length+')');hd.style.cssText='font-weight:600;margin:12px 0 6px';L.append(hd);a.forEach(t=>L.append(tkRow(t)))});
+  const dn=tasks.filter(t=>t&&t.stato==='fatta').sort((a,b)=>String(b.fatta||'').localeCompare(String(a.fatta||'')));
+  if(dn.length){const tg=h('button','btn lbl',(tkShowDone?'Nascondi':'Mostra')+' le attività fatte ('+dn.length+')');tg.type='button';tg.style.cssText='width:100%;margin-top:12px';tg.onclick=()=>{tkShowDone=!tkShowDone;tkListPaint()};L.append(tg);if(tkShowDone)dn.slice(0,50).forEach(t=>L.append(tkRow(t)))}}
+function tkList(){const {sh,w}=tkShell('tkList','Attività');const ad=h('button','btn p lbl');ad.type='button';ad.innerHTML=ICONS.add+'Nuova attività';ad.style.cssText='width:100%;margin:0 0 6px';ad.onclick=()=>tkOpen(null);const bd=h('div','tkbody');w.append(ad,bd);tkListPaint()}
+function tkPaintClient(){const f=$('tkF'),w=$('tkL');if(!f||!w)return;w.textContent='';if(!editing||$('sheet').hidden){f.hidden=true;return}f.hidden=false;
+  const l=tasks.filter(t=>t&&t.rif&&t.rif.tipo==='cliente'&&t.rif.id===editing.id&&t.stato!=='fatta').sort(tkSort);
+  if(!l.length)w.append(h('div','hint','Nessuna attività aperta per questo cliente.'));l.forEach(t=>w.append(tkRow(t)))}
+$('tkAdd').onclick=()=>{if(editing)tkOpen(null,{tipo:'cliente',id:editing.id})};
+$('hTk').onclick=()=>tkList();
+{const _rl=renderLinked;renderLinked=function(){const r=_rl.apply(this,arguments);try{tkPaintClient()}catch(e){}return r}}
+{const _os=openSheet;openSheet=function(){const r=_os.apply(this,arguments);try{tkPaintClient()}catch(e){}return r}}

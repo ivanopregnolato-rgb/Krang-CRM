@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.40.2"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.40.2|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.41.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.41.0|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -462,7 +462,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
     <div class="sum" id="hSum"></div>
     <div class="wonbox" id="hPipeBox" style="margin:0 0 12px"><div class="wb-h"><b>Pipeline</b></div><div id="hPipe" style="margin-top:8px"></div></div>
     <div class="sum" id="hWon"></div>
-    <div class="hh"><span>Da fare</span><button type="button" id="hMore" hidden></button></div>
+    <div class="hh"><span>Da fare</span><button type="button" id="hTk" class="lnk" style="margin-left:auto;margin-right:10px">Tutte le attività</button><button type="button" id="hMore" hidden></button></div>
     <div id="hTodo"></div>
   </div>
   <div id="list" hidden></div>
@@ -797,6 +797,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   </div>
   <div id="cmCall" hidden><div class="mact"><button class="btn lbl" id="cl_call" type="button"><span data-i="Chiama"></span>Chiama</button><button class="btn lbl" id="cl_reg" type="button"><span data-i="edit"></span>Registra</button></div><div id="callBox" style="margin-top:10px"></div><div id="callList" style="margin-top:10px"></div></div></div>
   <div class="f" id="linkedF" hidden><div id="linked"></div><button class="btn add" id="addOppFor" type="button" aria-label="Nuova opportunità per questo cliente" title="Nuova opportunità per questo cliente"><span data-i="add"></span></button></div>
+  <div class="f" id="tkF" hidden><label>Attività</label><div id="tkL"></div><button class="btn lbl" id="tkAdd" type="button" style="width:100%"><span data-i="add"></span>Aggiungi attività</button></div>
   <div class="btns"><button class="btn d" id="del" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina cliente" title="Elimina cliente"><span data-i="trash"></span></button><button class="btn p" id="save" aria-label="Salva cliente" title="Salva cliente" style="flex:9 1 0"><span data-i="check"></span></button></div>
 </div>
 </div>
@@ -856,6 +857,6 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.40.2"></script>
+<script src="app.js?v=1.41.0"></script>
 </body>
 </html>
