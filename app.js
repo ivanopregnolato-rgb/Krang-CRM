@@ -10668,6 +10668,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.38.1','Importa dalla rubrica: nessun contatto è preselezionato, c’è la barra di ricerca (con Seleziona i visibili) e l’informativa privacy dei contatti importati risulta da inviare.'],
 ['1.38.2','La lista dei contatti caricata dalla rubrica resta sul dispositivo per consentirti di importarli con calma e viene cancellata da sola dopo 3 giorni (oppure subito con «Elimina la lista»). I contatti importati escono dalla lista.'],
 ['1.38.3','Confronto delle anagrafiche duplicate più leggibile: ogni valore è a tutta larghezza, con il testo completo e l’indicazione della scheda di provenienza.'],
+['1.39.0','Duplicati più intelligenti: l’app riconosce anche nomi e cognomi scritti in modo diverso o con piccoli errori (Max e Massimiliano, De Simone e Desimone, Verdi e Verdy, nome e cognome invertiti), aziende simili e indirizzi simili, e per ogni coppia indica una probabilità stimata calcolata sui campi compilati in entrambe le schede.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -10954,30 +10955,51 @@ function guideify(root){
 
 /* ===== Unione anagrafiche (1.37) ===== */
 const DP_SKIP=new Set(['id','cre','creU','privacy','foto','fav','lead','agg','fotoPath']);
-const dpN=s=>nrm(String(s||'')).replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();
+const dpNc=new Map();const dpN=s=>{s=String(s||'');let r=dpNc.get(s);if(r===undefined){r=nrm(s).replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();if(dpNc.size>30000)dpNc.clear();dpNc.set(s,r)}return r};
 const dpCo=s=>dpN(s).replace(/\b(s ?r ?l s|s ?r ?l|s ?p ?a|s ?a ?s|s ?n ?c|snc|srl|spa|sas|ltd|gmbh|ag|sa|inc|llc|e c)\b/g,' ').replace(/\s+/g,' ').trim();
 const dpV=c=>{let v=String(c.piva||'').replace(/[\s.-]/g,'').toUpperCase();if(v.startsWith('IT')&&v.length===13)v=v.slice(2);return v};
-function dpWhy(a,b){
+const dpLev=(a,b)=>{if(a===b)return 0;const m=a.length,n=b.length;if(!m||!n)return Math.max(m,n);let p=Array.from({length:n+1},(_,k)=>k);for(let i=1;i<=m;i++){const c=[i];for(let k=1;k<=n;k++)c[k]=Math.min(p[k]+1,c[k-1]+1,p[k-1]+(a[i-1]===b[k-1]?0:1));p=c}return p[n]};
+const dpRat=(a,b)=>{if(!a||!b)return 0;if(a===b)return 1;if(Math.abs(a.length-b.length)>3)return 0;return 1-dpLev(a,b)/Math.max(a.length,b.length)};
+const dpK=s=>dpN(s).replace(/ /g,'');
+function dpSur(a,b){a=dpK(a);b=dpK(b);if(!a||!b)return 0;if(a===b)return 1;const r=dpRat(a,b);return r>=.8?r:0}
+const DP_NICK=[['max','massimo','massimiliano','massi'],['gianni','giovanni','gianfranco'],['beppe','peppe','giuseppe','giuseppina'],['gigi','luigi','luigia'],['checco','francesco','franco','cesco','francesca'],['fede','federico','federica'],['ale','alessandro','alessandra','sandro','sandra'],['nico','nicola','niccolo'],['toni','tony','antonio','antonella'],['ste','stefano','stefania'],['vale','valerio','valeria','valentino','valentina'],['mimmo','domenico'],['salvo','salvatore'],['cate','caterina','katia'],['andre','andrea'],['lollo','lorenzo'],['dani','daniele','daniela','danilo'],['simo','simone','simona'],['chiara','chia'],['lele','emanuele','emanuela','manuel'],['robi','roberto','roberta'],['umbi','umberto'],['pippo','filippo','giuseppe'],['gabri','gabriele','gabriella'],['marco','marcello']];
+function dpGiv(a,b){a=dpK(a);b=dpK(b);if(!a||!b)return 0;if(a===b)return 1;if(DP_NICK.some(g=>g.includes(a)&&g.includes(b)))return .85;const sh=a.length<b.length?a:b,lo=a.length<b.length?b:a;
+  if(sh.length>=3&&lo.startsWith(sh))return .88;if(sh.length===1&&lo[0]===sh)return .5;const r=dpRat(a,b);return r>=.78?r:0}
+function dpWords(s){return new Set(dpN(s).split(' ').filter(t=>t.length>1&&!/^(via|viale|v|vle|corso|c so|piazza|p za|largo|strada|str|n|snc)$/.test(t)))}
+function dpAdr(a,b){const x=dpWords(a),y=dpWords(b);if(!x.size||!y.size)return null;let i=0;x.forEach(t=>{if(y.has(t))i++});return i/(x.size+y.size-i)}
+const dpDom=u=>dpN(String(u||'').replace(/^https?:\/\//i,'').replace(/^www\./i,'').split('/')[0]).replace(/ /g,'');
+function dpScore(a,b){
+  const both=(x,y)=>String(x||'').trim()&&String(y||'').trim();
   const va=dpV(a),vb=dpV(b);
-  if(va&&vb)return va===vb?['la stessa partita IVA']:null;
-  const r=[],na=dpN(a.nome),ca=dpN(a.cognome),nb=dpN(b.nome),cb=dpN(b.cognome);
-  const nameEq=na&&ca&&na===nb&&ca===cb||na&&ca&&na===cb&&ca===nb;
-  if(nameEq)r.push('lo stesso nome e cognome');
-  else if(ca&&ca===cb&&na&&nb&&(na[0]===nb[0])&&(na.startsWith(nb)||nb.startsWith(na)))r.push('nome e cognome molto simili');
-  const aa=dpCo(a.azienda),ab=dpCo(b.azienda);
-  if(aa&&aa.length>=3&&aa===ab&&a.tipo==='azienda'&&b.tipo==='azienda')r.push('la stessa azienda');
-  if(!r.length&&aa&&aa===ab&&ca&&ca===cb)r.push('stessa azienda e stesso cognome');
-  const ia=dpN(a.indirizzo),ib=dpN(b.indirizzo);
-  if(r.length&&ia.length>=10&&ia===ib)r.push('lo stesso indirizzo');
-  if(!r.length&&ia.length>=10&&ia===ib&&ca&&ca===cb)r.push('lo stesso indirizzo e cognome');
-  return r.length?r:null}
+  if(va&&vb){if(va!==vb)return null;const w=['la stessa partita IVA'];w.p=98;return w}
+  if(a.tipo!==b.tipo&&(a.tipo==='azienda'||b.tipo==='azienda')){const pe=a.tipo==='azienda'?b:a,co=a.tipo==='azienda'?a:b;const tk=x=>dpN(x).split(' ').filter(Boolean).sort().join(' ');
+    if(tk(co.azienda)&&tk(co.azienda)===tk([pe.nome,pe.cognome].filter(Boolean).join(' '))){let p=70;const ad=dpAdr(a.indirizzo,b.indirizzo);if(ad!==null&&ad>=.7)p+=10;if(both(a.sito,b.sito)&&dpDom(a.sito)===dpDom(b.sito))p+=7;const w=['il nome dell’azienda coincide con quello della persona (ditta individuale?)'];if(ad!==null&&ad>=.7)w.push('indirizzo simile');w.p=Math.min(95,p);return w}}
+  const why=[];let sum=0,tot=0;const add=(wt,sim)=>{sum+=wt*sim;tot+=wt};
+  let sur=0,giv=0,hasN=false,swp=false;
+  if(both(a.cognome,b.cognome)||both(a.nome,b.nome)){
+    const s1=dpSur(a.cognome,b.cognome),g1=dpGiv(a.nome,b.nome),s2=dpSur(a.cognome,b.nome),g2=dpGiv(a.nome,b.cognome);
+    if(s2*g2>s1*g1){sur=s2;giv=g2;swp=true}else{sur=s1;giv=g1}
+    if(both(a.cognome,b.cognome)||both(a.cognome,b.nome)){hasN=true;add(25,sur)}
+    if(both(a.nome,b.nome)||both(a.nome,b.cognome))add(15,giv)}
+  if(sur>0&&swp)why.push('nome e cognome invertiti');else if(sur>0){const ex=dpK(a.cognome)===dpK(b.cognome);why.push(ex?(String(a.cognome).trim()===String(b.cognome).trim()?'lo stesso cognome':'lo stesso cognome (scritto in modo diverso: '+a.cognome+' / '+b.cognome+')'):'cognome simile ('+a.cognome+' / '+b.cognome+')')}
+  if(!swp&&giv>0&&giv<1)why.push('nome simile ('+a.nome+' / '+b.nome+')');else if(!swp&&giv===1&&sur>0)why.push('lo stesso nome');
+  const bothCo=a.tipo==='azienda'&&b.tipo==='azienda';let co=0;
+  if(both(a.azienda,b.azienda)){const x=dpCo(a.azienda).replace(/ /g,''),y=dpCo(b.azienda).replace(/ /g,'');co=x&&x===y?1:(x.length>=4&&y.length>=4&&(x.includes(y)||y.includes(x)))?.85:(()=>{const r=dpRat(x,y);return r>=.85?r:0})();add(bothCo?30:20,co);if(co>0)why.push(co===1?'la stessa azienda':'azienda simile ('+a.azienda+' / '+b.azienda+')')}
+  const ev=bothCo?co>=.85:(hasN&&sur>=.8&&(giv>=.5||!both(a.nome,b.nome)&&!both(a.nome,b.cognome)));
+  if(!ev)return null;
+  const ad=dpAdr(a.indirizzo,b.indirizzo);if(ad!==null){add(15,ad>=.7?1:ad>=.4?.5:0);if(ad>=.7)why.push('indirizzo '+(ad>=.99?'uguale':'simile'))}
+  if(both(a.sito,b.sito)){const sm=dpDom(a.sito)&&dpDom(a.sito)===dpDom(b.sito);add(10,sm?1:0);if(sm)why.push('lo stesso sito')}
+  if(both(a.nascita,b.nascita)){const sm=a.nascita===b.nascita;add(10,sm?1:0);if(sm)why.push('la stessa data di nascita')}
+  const p=Math.min(97,Math.round(100*sum/(tot+20)));if(p<55)return null;why.p=p;return why}
+function dpWhy(a,b){return dpScore(a,b)}
 function dpFind(){
-  const ig=new Set((S.dupIgnore||[]));const out=[];
-  for(let i=0;i<clients.length;i++)for(let j=i+1;j<clients.length;j++){
-    const a=clients[i],b=clients[j];if(a.demo||b.demo)continue;
-    if(ig.has(a.id+'|'+b.id)||ig.has(b.id+'|'+a.id))continue;
-    const w=dpWhy(a,b);if(w)out.push({a,b,w})}
-  return out}
+  const ig=new Set((S.dupIgnore||[]));const out=[];const L=clients.filter(c=>!c.demo),B=new Map();
+  const keys=c=>{const k=new Set(),add=(t,v)=>{if(v&&v.length>=3){k.add(t+v.slice(0,3));k.add(t+v.slice(-3))}};add('s',dpK(c.cognome));add('s',dpK(c.nome));add('a',dpCo(c.azienda).replace(/ /g,''));const v=dpV(c);if(v)k.add('v'+v);return k};
+  L.forEach((c,i)=>keys(c).forEach(k=>{let a=B.get(k);if(!a)B.set(k,a=[]);a.push(i)}));
+  const seen=new Set();
+  B.forEach(a=>{if(a.length>400)return;for(let x=0;x<a.length;x++)for(let y=x+1;y<a.length;y++){const i=a[x],j=a[y],id=i*L.length+j;if(seen.has(id))continue;seen.add(id);
+    const A=L[i],C=L[j];if(ig.has(A.id+'|'+C.id)||ig.has(C.id+'|'+A.id))continue;const w=dpWhy(A,C);if(w)out.push({a:A,b:C,w})}});
+  return out.sort((x,y)=>y.w.p-x.w.p)}
 const dpFill=c=>FIELDS.filter(f=>String(c[f]||'').trim()).length+oppsOf(c.id).length*2+((c.wa||[]).length+(c.calls||[]).length)*.5;
 let dpCur=null;
 function dpPaint(){
@@ -10988,7 +11010,7 @@ function dpPaint(){
   L.textContent='';const ps=dpFind();
   if(!ps.length)L.append(h('div','hint','Nessun possibile duplicato trovato. Il controllo usa partita IVA, nome e cognome, azienda e indirizzo (email e telefono sono già univoci).'));
   else{L.append(h('div','hint',ps.length+(ps.length===1?' possibile duplicato':' possibili duplicati')+'. Niente viene unito senza la tua conferma.'));
-    ps.forEach(p=>{const r=h('div','req');r.append(h('b','',fullName(p.a)+'  ↔  '+fullName(p.b)),h('div','','Hanno '+p.w.join(' e ')));
+    ps.forEach(p=>{const r=h('div','req');r.append(h('b','',fullName(p.a)+'  ↔  '+fullName(p.b)),h('div','','Probabilità stimata '+p.w.p+'%: '+p.w.join(', ')));
       const bt=h('div','dual');const o=h('button','btn lbl','Confronta');o.type='button';o.onclick=()=>{const [x,y]=dpFill(p.a)>=dpFill(p.b)?[p.a,p.b]:[p.b,p.a];dpCur={keep:x,drop:y,pick:{}};dpPaint()};
       const n=h('button','btn lbl','Sono diversi');n.type='button';n.onclick=()=>{(S.dupIgnore=S.dupIgnore||[]).push(p.a.id+'|'+p.b.id);saveS();dpPaint()};
       bt.append(o,n);r.append(bt);L.append(r)})}
@@ -11043,11 +11065,11 @@ function dpUndo(u){
   opps.forEach(o=>{if(u.oppIds.includes(o.id))o.clienteId=d.id});leads.forEach(l=>{if(u.leadIds.includes(l.id))l.clienteId=d.id});
   S.mergeUndo=(S.mergeUndo||[]).filter(x=>x.id!==u.id);(S.dupIgnore=S.dupIgnore||[]).push(k.id+'|'+d.id);
   persistO();persistL();persist();saveS();try{render();renderO()}catch(e){}dpPaint();toast('Unione annullata.')}
-function dpFor(c){const ig=new Set(S.dupIgnore||[]);return clients.filter(x=>x!==c&&!x.demo&&!c.demo&&!ig.has(c.id+'|'+x.id)&&!ig.has(x.id+'|'+c.id)).map(x=>({x,w:dpWhy(c,x)})).filter(r=>r.w)}
+function dpFor(c){const ig=new Set(S.dupIgnore||[]);return clients.filter(x=>x!==c&&!x.demo&&!c.demo&&!ig.has(c.id+'|'+x.id)&&!ig.has(x.id+'|'+c.id)).map(x=>({x,w:dpWhy(c,x)})).filter(r=>r.w).sort((x,y)=>y.w.p-x.w.p)}
 function dpBan(c){const B=$('dupBan');if(!B)return;B.textContent='';B.hidden=true;if(!c||!clients.includes(c))return;
   const r=dpFor(c);if(!r.length)return;B.hidden=false;
   const t=h('div','');const i=h('span','ic');i.innerHTML=ICONS.users||'';i.style.cssText='display:inline-block;width:18px;height:18px;vertical-align:-4px;margin-right:6px';t.append(i,h('b','','Possibile duplicato'));B.append(t);
-  r.forEach(({x,w})=>{const d=h('div','req');d.append(h('div','',fullName(x)+': '+w.join(' e ')));const bt=h('div','dual');
+  r.forEach(({x,w})=>{const d=h('div','req');d.append(h('div','',fullName(x)+' (probabilità '+w.p+'%): '+w.join(', ')));const bt=h('div','dual');
     const m=h('button','btn lbl','Confronta e unisci');m.type='button';m.onclick=()=>{$('sheet').hidden=true;try{openSettings()}catch(e){}setSp('dp');const [k,dr]=dpFill(c)>=dpFill(x)?[c,x]:[x,c];dpCur={keep:k,drop:dr,pick:{}};dpPaint()};
     const n=h('button','btn lbl','Non è un duplicato');n.type='button';n.onclick=()=>{(S.dupIgnore=S.dupIgnore||[]).push(c.id+'|'+x.id);saveS();dpBan(c)};bt.append(m,n);d.append(bt);B.append(d)})}
 {const _os=openSheet;openSheet=function(c){const r=_os.apply(this,arguments);try{dpBan(c)}catch(e){}return r}}
