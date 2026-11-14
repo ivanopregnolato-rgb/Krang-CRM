@@ -10701,7 +10701,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.41.0','Nuove attività (task). Ogni attività ha un titolo, una scadenza obbligatoria (i tasti Oggi, Domani e Tra una settimana compilano la data, che resta modificabile) e un collegamento obbligatorio a un cliente, un lead o un’opportunità. Cliente, lead e opportunità hanno un tab Task dove le crei e le gestisci, con un tocco le segni come fatte. In Home, sotto «Da fare», compaiono le attività scadute, quelle di oggi e dei prossimi 3 giorni, e «Tutte le attività» apre l’elenco completo raggruppato per scadenza. Le attività sono cifrate e sincronizzate come gli altri dati e finiscono anche nel backup.'],
 ['1.41.1','Scheda cliente: Contatti, Acquisti e Storia sono riuniti nel tab «Storico», con tre sezioni selezionabili in alto. La ricerca è più intelligente: in Clienti, Lead e Opportunità ogni parola scritta viene cercata in tutti i dati, in qualsiasi ordine. Prima «Mario Rossi» non trovava l’anagrafica mentre «Mario» sì; ora funzionano anche «Rossi Mario», i numeri di telefono scritti con gli spazi e i nomi senza accenti.'],
 ['1.41.2','Layout più arioso nell’elenco clienti (più spazio tra contatore, filtri e ricerca). Nella scheda cliente i cinque tab hanno tutti la stessa larghezza. Nell’opportunità lo scorrimento a destra e a sinistra ora passa tra Dati e Task.'],
-['1.42.0','Promemoria delle attività e calendario. Da Impostazioni → Promemoria attività puoi attivare una notifica il giorno della scadenza, all’ora che scegli (su iPhone serve l’app aggiunta alla schermata Home). Il server non vede titoli né clienti: la notifica dice solo quante attività scadono. Ogni attività, e l’elenco completo, si può inoltre aggiungere al calendario del telefono (Google, Apple o Outlook) con «Aggiungi al calendario» ed «Esporta nel calendario».'],
+['1.42.0','Promemoria delle attività e calendario. Ogni attività può avere anche un’ora (facoltativa): l’avviso arriva a quell’ora e nel calendario diventa un evento di mezz’ora; senza ora resta un evento di tutto il giorno e l’avviso arriva all’ora predefinita. Da Impostazioni → Promemoria attività attivi la notifica e scegli l’ora predefinita (su iPhone serve l’app aggiunta alla schermata Home). Il server non vede titoli né clienti: la notifica dice solo quante attività scadono. Con «Aggiungi al calendario» ed «Esporta nel calendario» porti le attività nel calendario del telefono (Google, Apple o Outlook).'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -11202,18 +11202,20 @@ const tkRef=t=>{const r=t&&t.rif;if(!r)return null;
   if(r.tipo==='opp'){const o=opps.find(x=>x.id===r.id);return o?{nome:'Opportunità · '+o.titolo,go:()=>openOpp(o)}:null}
   return null};
 const tkOpen_=()=>tasks.filter(t=>t&&t.stato!=='fatta');
-const tkSort=(a,b)=>(a.scad||'9999').localeCompare(b.scad||'9999')||String(a.cre||'').localeCompare(String(b.cre||''));
-function tkWhen(t){if(!t.scad)return 'Senza scadenza';const td=ymd();if(t.scad<td)return 'Scaduta il '+fmtD(t.scad);if(t.scad===td)return 'Oggi';const n=Math.round((new Date(t.scad+'T00:00')-new Date(td+'T00:00'))/864e5);return n===1?'Domani':fmtD(t.scad)}
+const tkSort=(a,b)=>((a.scad||'9999')+(a.ora||'')).localeCompare((b.scad||'9999')+(b.ora||''))||String(a.cre||'').localeCompare(String(b.cre||''));
+function tkWhen(t){if(!t.scad)return 'Senza scadenza';const td=ymd(),o=/^\d\d:\d\d$/.test(t.ora||'')?' alle '+t.ora:'';if(t.scad<td)return 'Scaduta il '+fmtD(t.scad);if(t.scad===td)return 'Oggi'+o;const n=Math.round((new Date(t.scad+'T00:00')-new Date(td+'T00:00'))/864e5);return (n===1?'Domani':fmtD(t.scad))+o}
 function tkDone(t,on){t.stato=on?'fatta':'aperta';if(on)t.fatta=ymd();else delete t.fatta;persistT();try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast(on?'Attività completata.':'Attività riaperta.')}
 function tkActions(add,td){const lim=new Date(new Date(td+'T00:00').getTime()+3*864e5);const lm=new Date(lim.getTime()-lim.getTimezoneOffset()*6e4).toISOString().slice(0,10);
   tkOpen_().forEach(t=>{if(!t.scad||t.scad>lm)return;const r=tkRef(t);add(t.scad<td?91:t.scad===td?86:52,'clock',t.titolo,tkWhen(t)+(r?' · '+r.nome:''),()=>tkOpen(t))})}
 function tkShell(id,title,onClose){let sh=$(id);if(!sh){sh=h('div','sheet');sh.id=id;sh.style.zIndex=id==='tkSheet'?7:6;document.body.append(sh)}sh.hidden=false;sh.textContent='';const w=h('div'),top=h('div','top'),x=h('button','btn ico pk');x.type='button';x.title=x.ariaLabel='Chiudi';x.innerHTML=ICONS.back;x.onclick=()=>{if(onClose)onClose();else sh.hidden=true};top.append(h('h2','',title),x);w.append(top);sh.append(w);sh.scrollTop=0;return {sh,w,x}}
-function tkOpen(t,pre,lock){const isNew=!t;const d=t?{...t,rif:t.rif?{...t.rif}:null}:{id:'t'+Date.now().toString(36),titolo:'',scad:'',nota:'',stato:'aperta',rif:pre||null};
+function tkOpen(t,pre,lock){const isNew=!t;const d=t?{...t,rif:t.rif?{...t.rif}:null}:{id:'t'+Date.now().toString(36),titolo:'',scad:'',ora:'',nota:'',stato:'aperta',rif:pre||null};
   const {sh,w,x}=tkShell('tkSheet',isNew?'Nuova attività':'Attività');
   const f1=h('div','f'),l1=h('label','','Cosa c’è da fare'),ti=h('input');ti.value=d.titolo;ti.placeholder='Per esempio: richiamare per il preventivo';ti.autocomplete='off';ti.id='tk_t';l1.htmlFor='tk_t';const e1=h('div','err');e1.hidden=true;f1.append(l1,ti,e1);
   const f2=h('div','f'),l2=h('label','','Scadenza'),da=h('input');da.type='date';da.value=d.scad||'';da.id='tk_d';l2.htmlFor='tk_d';const e2=h('div','err');e2.hidden=true;
   const ch=h('div','');ch.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-top:6px';const plus=n=>{const x=new Date(Date.now()+n*864e5);return new Date(x-x.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
   [['Oggi',0],['Domani',1],['Tra una settimana',7]].forEach(([n,v])=>{const b=h('button','btn lbl',n);b.type='button';b.style.cssText='width:auto;flex:none;padding:6px 12px;min-height:0';b.onclick=()=>{da.value=plus(v);e2.hidden=true;da.classList.remove('bad');da.dispatchEvent(new Event('input',{bubbles:true}))};ch.append(b)});f2.append(l2,da,e2,ch);
+  const fo=h('div','f'),lo=h('label','','Ora (facoltativa)'),oi=h('input'),oh=h('div','hint'),ox=h('button','btn lbl','Togli l’ora');oi.type='time';oi.value=/^\d\d:\d\d$/.test(d.ora||'')?d.ora:'';oi.id='tk_o';lo.htmlFor='tk_o';ox.type='button';ox.style.cssText='width:auto;flex:none;padding:6px 12px;min-height:0;margin-top:6px';
+  const paintO=()=>{ox.hidden=!oi.value;oh.textContent=oi.value?'L’avviso arriva a quest’ora e nel calendario l’attività dura mezz’ora.':'Senza ora, l’avviso arriva all’ora predefinita ('+remHour()+':00) e nel calendario è un evento di tutto il giorno.'};oi.oninput=paintO;ox.onclick=()=>{oi.value='';paintO()};paintO();fo.append(lo,oi,oh,ox);
   const f3=h('div','f'),l3=h('label','','Nota (facoltativa)'),no=h('textarea');no.rows=3;no.value=d.nota||'';no.id='tk_n';l3.htmlFor='tk_n';f3.append(l3,no);
   const f4=h('div','f'),l4=h('label','','Collegata a'),rb=h('div',''),q=h('input'),rl=h('div','');q.type='search';q.placeholder='Cerca cliente, lead o opportunità';q.autocomplete='off';q.setAttribute('aria-label','Cerca cliente, lead o opportunità');rl.style.margin='6px 0';const e4=h('div','err');e4.hidden=true;f4.append(l4,rb,e4,q,rl);
   const paintRif=()=>{rb.textContent='';const r=d.rif&&tkRef({rif:d.rif});if(r){const c=h('div','hint');c.style.cssText='display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:12px;padding:8px 10px';c.append(h('span','',r.nome));if(!lock){const rm=h('button','btn ico');rm.type='button';rm.innerHTML=ICONS.x||'×';rm.title=rm.ariaLabel='Cambia il collegamento';rm.onclick=()=>{d.rif=null;paintRif()};c.append(rm)}rb.append(c);q.hidden=true;rl.hidden=true;e4.hidden=true}else{q.hidden=false;rl.hidden=false}};
@@ -11224,14 +11226,14 @@ function tkOpen(t,pre,lock){const isNew=!t;const d=t?{...t,rif:t.rif?{...t.rif}:
     R.slice(0,8).forEach(r=>{const b=h('button','btn lbl',r.n);b.type='button';b.style.cssText='width:100%;justify-content:flex-start;margin:0 0 4px';b.onclick=()=>{d.rif={tipo:r.tipo,id:r.id};q.value='';rl.textContent='';e4.hidden=true;paintRif()};rl.append(b)});
     if(!R.length)rl.append(h('div','hint','Nessun risultato.'))};
   paintRif();
-  const sig=()=>JSON.stringify([ti.value.trim(),da.value,no.value.trim(),d.rif]);
+  const sig=()=>JSON.stringify([ti.value.trim(),da.value,oi.value,no.value.trim(),d.rif]);
   const save=()=>{const tt=ti.value.trim();let bad=null;e1.hidden=e2.hidden=e4.hidden=true;ti.classList.remove('bad');da.classList.remove('bad');
     if(!tt){e1.textContent='Scrivi cosa c’è da fare.';e1.hidden=false;ti.classList.add('bad');bad=bad||ti}
     if(!da.value||isNaN(new Date(da.value+'T00:00'))){e2.textContent='Scegli la scadenza: puoi usare i tasti rapidi o scrivere la data.';e2.hidden=false;da.classList.add('bad');bad=bad||da}
     if(!(d.rif&&tkRef({rif:d.rif}))){e4.textContent='Collega l’attività a un cliente, un lead o un’opportunità.';e4.hidden=false;bad=bad||q}
     if(bad){bad.scrollIntoView({block:'center'});try{bad.focus({preventScroll:true})}catch(e){}return}
-    const rec=Object.assign(t||stampNew(d),{titolo:tt,scad:da.value||'',nota:no.value.trim(),rif:d.rif||null,stato:(t&&t.stato)||'aperta'});if(!t)tasks.push(rec);persistT();sh.hidden=true;try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast('Attività salvata.')};
-  const ac=h('div','delw');w.append(f1,f2,f3,f4,ac);
+    const rec=Object.assign(t||stampNew(d),{titolo:tt,scad:da.value||'',ora:oi.value||'',nota:no.value.trim(),rif:d.rif||null,stato:(t&&t.stato)||'aperta'});if(!t)tasks.push(rec);persistT();sh.hidden=true;try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast('Attività salvata.')};
+  const ac=h('div','delw');w.append(f1,f2,fo,f3,f4,ac);
   if(t){const dn=h('button','btn lbl'+(t.stato==='fatta'?'':' p'));dn.type='button';dn.innerHTML=ICONS.check+(t.stato==='fatta'?'Riapri':'Segna come fatta');dn.style.width='100%';dn.onclick=()=>{tkDone(t,t.stato!=='fatta');sh.hidden=true};
     const rf=tkRef(t);if(rf){const go=h('button','btn lbl','Apri '+rf.nome);go.type='button';go.style.width='100%';go.onclick=()=>{sh.hidden=true;rf.go()};ac.append(go)}
     const dl=h('button','btn lbl d');dl.type='button';dl.innerHTML=ICONS.trash+'Elimina';dl.style.width='100%';dl.onclick=()=>askConfirm('Eliminare l’attività «'+t.titolo+'»?','trash','Elimina',()=>{tasks=tasks.filter(z=>z!==t);persistT();sh.hidden=true;try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast('Attività eliminata.')});const cb=h('button','btn lbl');cb.type='button';cb.innerHTML=ICONS.clock+'Aggiungi al calendario';cb.style.width='100%';cb.onclick=()=>icsSave('attivita.ics',tkIcs([t]));ac.append(dn,cb,dl)}
@@ -11286,9 +11288,11 @@ function remHour(){const n=parseInt(S&&S.remH,10);return n>=5&&n<=22?n:9}
 function tkIcs(list){const now=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,''),hh=remHour();
   const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//KRANG CRM//IT','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
   list.forEach(t=>{if(!t||!t.scad)return;const n=new Date(t.scad+'T00:00:00Z');if(isNaN(n))return;const s=t.scad.replace(/-/g,'');n.setUTCDate(n.getUTCDate()+1);const e=n.toISOString().slice(0,10).replace(/-/g,'');const rf=tkRef(t);
-    L.push('BEGIN:VEVENT','UID:'+t.id+'@krang-crm','DTSTAMP:'+now,'DTSTART;VALUE=DATE:'+s,'DTEND;VALUE=DATE:'+e,'SUMMARY:'+icsEsc(t.titolo),'TRANSP:TRANSPARENT');
+    const tm=/^\d\d:\d\d$/.test(t.ora||'')?t.ora:'';let st='DTSTART;VALUE=DATE:'+s,en='DTEND;VALUE=DATE:'+e,trig='PT'+hh+'H';
+    if(tm){const f=new Date(t.scad+'T'+tm+':00Z'),g=new Date(f.getTime()+18e5),fm=x=>x.toISOString().slice(0,19).replace(/[-:]/g,'');st='DTSTART:'+fm(f);en='DTEND:'+fm(g);trig='PT0S'}
+    L.push('BEGIN:VEVENT','UID:'+t.id+'@krang-crm','DTSTAMP:'+now,st,en,'SUMMARY:'+icsEsc(t.titolo),tm?'TRANSP:OPAQUE':'TRANSP:TRANSPARENT');
     const ds=[t.nota,rf?rf.nome:''].filter(Boolean).join('\n');if(ds)L.push('DESCRIPTION:'+icsEsc(ds));
-    L.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(t.titolo),'TRIGGER:PT'+hh+'H','END:VALARM','END:VEVENT')});
+    L.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(t.titolo),'TRIGGER:'+trig,'END:VALARM','END:VEVENT')});
   L.push('END:VCALENDAR');return L.map(icsFold).join('\r\n')+'\r\n'}
 async function icsSave(name,text){
   try{const f=new File([text],name,{type:'text/calendar'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e&&e.name==='AbortError')return}
@@ -11317,7 +11321,7 @@ async function pushOff(){
   try{const {sub}=await pushGet();if(sub){const ep=sub.endpoint;await sub.unsubscribe();try{await SB.push.del(ep)}catch(e){}}
     setPushFlag(false);try{if((await SB.push.n())===0)await SB.push.rem([])}catch(e){}}catch(e){setPushFlag(false)}}
 function remList(){const hh=String(remHour()).padStart(2,'0'),now=Date.now()+6e4,o=[];
-  tkOpen_().forEach(t=>{if(!t.scad)return;const d=new Date(t.scad+'T'+hh+':00:00');if(isNaN(d)||d.getTime()<now)return;o.push({k:String(t.id),t:d.toISOString()})});return o.slice(0,500)}
+  tkOpen_().forEach(t=>{if(!t.scad)return;const d=new Date(t.scad+'T'+(/^\d\d:\d\d$/.test(t.ora||'')?t.ora:hh+':00')+':00');if(isNaN(d)||d.getTime()<now)return;o.push({k:String(t.id),t:d.toISOString()})});return o.slice(0,500)}
 let remTm=0,remBusy=false;
 function remSoon(){if(!pushFlag())return;clearTimeout(remTm);remTm=setTimeout(()=>remSync(false),2500)}
 async function remSync(force){if(remBusy||!pushFlag()||!SB.has()||navigator.onLine===false)return;remBusy=true;

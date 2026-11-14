@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
   if (error) return new Response(error.message, { status: 500 });
   let sent = 0, gone = 0;
   for (const r of due || []) {
-    const body = r.n === 1 ? 'Hai un’attività in scadenza oggi.' : 'Hai ' + r.n + ' attività in scadenza oggi.';
+    const body = r.n === 1 ? 'Hai un’attività in scadenza.' : 'Hai ' + r.n + ' attività in scadenza.';
     const payload = JSON.stringify({ t: 'KRANG CRM', b: body, n: r.n });
     for (const s of r.subs || []) {
       try {
