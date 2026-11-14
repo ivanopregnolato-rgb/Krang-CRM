@@ -570,12 +570,7 @@ function paintReq(){
   const pb=$('p_prep');pb.disabled=!ok;{const last=R.slice().reverse().find(r=>r.stato==='inviata');if(last&&ok)autoReq(last);else pullConsents()}
   pb.innerHTML=ICONS.Scrivi+(p.informativa||R.length?'Reinvia informativa':'Invia informativa');pb.onclick=openSend
   $('p_mailhint').textContent=!ok?'Aggiungi e salva un’email del cliente nella scheda Dati.':(!S.azienda?'Imposta il nome azienda in Menu → Impostazioni: è il titolare indicato nell’informativa.':'');
-  ((editing.privacy&&editing.privacy.richieste)||[]).slice().reverse().forEach(r=>{
-    const st=effSt(r),C={inviata:['Inviata','#dde3ee'],completata:['Completata','#b5ebc0'],scaduta:['Scaduta','#f5cad6'],annullata:['Annullata','#dde3ee']}[st];
-    const d=h('div','req'),ch=h('i','chip',C[0]);ch.style.background=C[1];
-    d.append(ch,h('div','','Inviata il '+fmtDT(r.creata+'Z')+' a '+r.email+(r.via&&r.via!=='mailto'?' (da '+provName(r.via)+')':'')),h('div','','Codice '+r.token+(r.ver?', informativa v'+r.ver:'')+(r.stato==='completata'?'. Risposta ricevuta il '+fmtDT(r.ricevuta+'Z')+'.':'. Il link resta valido: il cliente può rispondere quando vuole.')));
-    if(r.consegna){d.append(h('div',r.consegna.stato==='respinta'?'warn':'','Consegna: '+(r.consegna.stato==='respinta'?'email respinta, controlla l’indirizzo':'nessun errore rilevato')+' (verificata il '+fmtDT(r.consegna.verificata+'Z')+')'))}
-    w.append(d)})}
+  w.hidden=true}
 function openSend(){
   if(!editing||!editing.email)return;
   if(!S.azienda){toast('Imposta prima il nome azienda: è il titolare indicato nell’informativa.');openSettings();setErr('st_az','Inserisci il nome dell’azienda.');return}
@@ -638,12 +633,13 @@ function emSave(c,ms,local){if(!c)return 0;const em=c.em=c.em||[],mail=(c.email|
 function paintComm(ths){
   const w=$('comm');w.textContent='';const mail=editing.email.toLowerCase(),ms=[];
   ths.forEach(t=>(t.messages||[]).forEach(m=>ms.push(m)));TM[editing.id]=ms.slice();emSave(editing,ms);try{paintAllC()}catch(e){}
+  infSent(editing,ms).forEach(x=>ms.push({internalDate:x.t,sender:'',subject:x.sub,snippet:x.txt,local:1}));
   ms.sort((a,b)=>+b.internalDate-+a.internalDate);
   if(!ms.length){w.append(h('div','hint','Nessuna email scambiata con '+editing.email+'.'));return}
   w.append(h('div','hint',ms.length+' messaggi, dal più recente. Tocca un messaggio per leggere la conversazione.'));
   ms.forEach(m=>{const inb=String(m.sender||'').toLowerCase().includes(mail),d=h('div','req'),ch=h('i','chip',inb?'Ricevuta':'Inviata');ch.style.background=inb?'#b5ebc0':'#d9d1f3';
     d.tabIndex=0;d.style.cursor='pointer';d.append(ch,h('b','',dec(m.subject)||'(senza oggetto)'),h('div','',fmtDT(+m.internalDate)),h('div','',dec(m.snippet)));
-    d.onclick=()=>openThread(m.threadId);d.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();openThread(m.threadId)}};w.append(d)})}
+    if(m.local){d.style.cursor='default';d.tabIndex=-1}else{d.onclick=()=>openThread(m.threadId);d.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();openThread(m.threadId)}}}w.append(d)})}
 const cmStat=(t,err)=>{const e=$('allSt');if(!e)return;e.textContent=t||'';e.className=err?'err':'hint';e.hidden=!t};
 async function loadComm(){
   paintWa();const w=$('comm'),cl=editing;w.textContent='';cmStat('');
@@ -9441,8 +9437,12 @@ function paintAll(host,items,empty){host.textContent='';items.sort((a,b)=>b.t-a.
     if(m.text){const x=h('div','',m.text.length>300?m.text.slice(0,300)+'…':m.text);x.style.cssText='white-space:pre-wrap;color:var(--ink);font-size:14px;margin-top:4px';d.append(x)}
     if(m.del){const x=h('button','btn ico');x.type='button';x.innerHTML=ICONS.trash;x.setAttribute('aria-label','Elimina la chiamata');x.title='Elimina';x.style.cssText='float:right;width:36px;height:36px;min-height:0;padding:0';x.onclick=e=>{e.stopPropagation();m.del()};d.prepend(x)}
     if(m.go){d.tabIndex=0;d.style.cursor='pointer';d.onclick=m.go;d.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();m.go()}}}host.append(d)})}
+/* informative inviate per email dal CRM: voci del registro messaggi, a meno che Gmail le mostri gia' */
+function infSent(c,ms){const out=[];((c.privacy&&c.privacy.richieste)||[]).forEach(r=>{if(r.stato==='annullata')return;const t=new Date(r.creata+'Z').getTime();if(isNaN(t))return;
+  if((ms||[]).some(m=>Math.abs(+m.internalDate-t)<9e5&&/informativa/i.test(dec(m.subject)||'')))return;
+  out.push({t,sub:'Informativa sulla privacy e richiesta di consensi',txt:'Con il link personale per scegliere i consensi'+(r.ver?' · informativa v'+r.ver:'')+(r.stato==='completata'?' · il cliente ha risposto':'')})});return out}
 function allClient(c){const mail=(c.email||'').toLowerCase(),it=[];(TM[c.id]||[]).forEach(m=>it.push({t:+m.internalDate,kind:'mail',dir:String(m.sender||'').toLowerCase().includes(mail)?'in':'out',title:dec(m.subject)||'(senza oggetto)',text:dec(m.snippet),go:()=>openThread(m.threadId)}));
-  (c.wa||[]).forEach(m=>it.push({t:new Date(m.data).getTime(),kind:'wa',dir:m.dir,text:m.testo}));(c.calls||[]).forEach(k=>it.push({t:new Date(k.data).getTime(),kind:'call',dir:'out',call:k,text:callTxt(k),del:()=>delCall(c,k,false)}));return it}
+  infSent(c,TM[c.id]).forEach(x=>it.push({t:x.t,kind:'mail',dir:'out',title:x.sub,text:x.txt}));(c.wa||[]).forEach(m=>it.push({t:new Date(m.data).getTime(),kind:'wa',dir:m.dir,text:m.testo}));(c.calls||[]).forEach(k=>it.push({t:new Date(k.data).getTime(),kind:'call',dir:'out',call:k,text:callTxt(k),del:()=>delCall(c,k,false)}));return it}
 function allLead(l){const it=[];(l.msgs||[]).forEach(m=>{let t=String(m.testo||'');const ii=t.indexOf(INF_MARK);if(ii>=0)t=t.slice(0,ii).trim()+'\n[+ informativa privacy]';it.push({t:new Date(m.data).getTime(),kind:'mail',dir:m.dir,title:m.oggetto,text:t})});
   (l.wa||[]).forEach(m=>it.push({t:new Date(m.data).getTime(),kind:'wa',dir:m.dir,text:m.testo}));(l.calls||[]).forEach(k=>it.push({t:new Date(k.data).getTime(),kind:'call',dir:'out',call:k,text:callTxt(k),del:()=>delCall(l,k,true)}));return it}
 let lCm='all';
@@ -10808,7 +10808,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.32.3','Chiave di recupero: su iPhone il pulsante «Condividi o salva in…» apre il foglio di condivisione (gestore di password, Note, file) al posto del salvataggio automatico, che Safari non supporta. «Fatto» si sblocca solo dopo una condivisione, una copia o un download riusciti.'],
 ['1.32.4','Conferma dell’indirizzo email alla registrazione: dopo aver creato l’account ricevi una email con un link e puoi accedere solo dopo averlo aperto. Se la email non arriva c’è il pulsante «Rinvia email di conferma».'],
 ['1.32.5','Guida dei primi passi rinnovata: ora sono cinque e in ordine cifratura dei dati, accesso con biometria, profilo dell’azienda, primo cliente e assistente. Tolto il passo sulla posta.'],
-['1.34.1','Tolta la scheda «In attesa di risposta» e il pulsante «Annulla richiesta»: il link dei consensi non scade, quindi non serve più attendere né annullare. L’informativa inviata resta nel registro, e il pulsante è sempre «Reinvia informativa».'],
+['1.34.1','Tolta la scheda «In attesa di risposta» e il pulsante «Annulla richiesta»: il link dei consensi non scade, quindi non serve più attendere né annullare. L’informativa inviata per email ora compare tra i messaggi del cliente (Tutti ed Email), non più nella scheda Privacy, e il pulsante è sempre «Reinvia informativa».'],
 ['1.34.0','La pagina del link personale mostra il nome della tua azienda, l’informativa con versione e data di entrata in vigore e lo stato attuale dei consensi, che il cliente può cambiare quando vuole. Dalla stessa pagina può chiedere una copia dei suoi dati (portabilità) o la cancellazione e anonimizzazione: sono richieste che arrivano nella posta in arrivo e nella scheda Privacy, e che approvi o rifiuti tu entro un mese. Niente avviene da solo.'],
 ['1.33.0','Consensi con un link personale. Quando invii l’informativa per email o WhatsApp, il messaggio contiene un link: il cliente lo apre dal telefono, senza account, sceglie i consensi facoltativi e conferma. La risposta arriva da sola nella scheda Privacy del cliente. Il link resta sempre valido, così il cliente può cambiare o revocare i consensi quando vuole. Non serve più rispondere alla email: sono state tolte la lettura delle risposte dalla posta, la registrazione a mano e le scadenze dei codici. Anche la gestione dello STOP è stata tolta: le campagne partono solo verso chi ha il consenso al marketing e ogni messaggio contiene il link per modificarlo o revocarlo. In Impostazioni → Privacy e conservazione ora c’è l’informativa: puoi leggerla e modificarla se il testo proposto non è corretto, e lo storico mostra ogni versione con il periodo di validità e il numero di clienti a cui è stata fornita. Sul server restano solo le scelte sì/no, la data e un’impronta del link: mai nome o email del cliente.'],
 ]}];
