@@ -10665,6 +10665,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.37.3','Creando una nuova anagrafica serve almeno un recapito: telefono o email.'],
 ['1.37.4','Anche i lead richiedono almeno un recapito: telefono o email. L’email non è più obbligatoria se c’è il telefono.'],
 ['1.38.0','Importa dalla rubrica (Impostazioni → Dati e privacy): scegli un file contatti .vcf, controlla l’anteprima con i duplicati già segnalati e importa i contatti come prospect. Servono almeno telefono o email.'],
+['1.38.1','Importa dalla rubrica: nessun contatto è preselezionato, c’è la barra di ricerca (con Seleziona i visibili) e l’informativa privacy dei contatti importati risulta da inviare.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -11090,20 +11091,28 @@ function vcStatus(r,seen){
 function vcPaint(){
   const L=$('vc_L');L.textContent='';
   if(!vcRows.length){L.append(h('div','hint','Nessun contatto trovato nel file.'));return}
-  const ok=vcRows.filter(x=>!x.st),dup=vcRows.filter(x=>x.st&&x.st[0]==='g').length,nr=vcRows.filter(x=>x.st==='senza recapito').length;
-  L.append(h('div','hint',vcRows.length+' contatti nel file: '+ok.length+' nuovi, '+dup+' già presenti, '+nr+' senza telefono né email (non importabili).'));
-  const go=h('button','btn p lbl');go.type='button';
+  const ok=vcRows.filter(x=>!x.st).length,dup=vcRows.filter(x=>x.st&&x.st[0]==='g').length,nr=vcRows.filter(x=>x.st==='senza recapito').length;
+  L.append(h('div','hint',vcRows.length+' contatti nel file: '+ok+' nuovi, '+dup+' già presenti, '+nr+' senza telefono né email (non importabili). Scegli quali importare.'));
+  const q=h('input');q.type='search';q.placeholder='Cerca per nome, azienda, telefono o email';q.setAttribute('aria-label','Cerca nei contatti');q.autocomplete='off';q.style.cssText='width:100%;margin:6px 0';L.append(q);
+  const bar=h('div','dual'),bAll=h('button','btn lbl','Seleziona i visibili'),bNone=h('button','btn lbl','Deseleziona tutti');bAll.type=bNone.type='button';bar.append(bAll,bNone);L.append(bar);
+  const list=h('div','');list.style.margin='8px 0';L.append(list);const go=h('button','btn p lbl');go.type='button';L.append(go);
   const upd=()=>{const n=vcRows.filter(x=>x.on).length;go.textContent='Importa '+n+(n===1?' contatto':' contatti')+' come prospect';go.disabled=!n};
-  vcRows.slice(0,400).forEach(x=>{const lb=h('label','chk');const cb=document.createElement('input');cb.type='checkbox';cb.checked=x.on;cb.disabled=x.st==='senza recapito';cb.onchange=()=>{x.on=cb.checked;upd()};
-    const sp=h('span','',fullName(x.r));const em=h('em','',[x.r.azienda&&x.r.tipo!=='azienda'?x.r.azienda:'',x.r.telefono,x.r.email,x.st?'— '+x.st:''].filter(Boolean).join(' · '));sp.append(em);lb.append(cb,sp);L.append(lb)});
-  if(vcRows.length>400)L.append(h('div','hint','Sono mostrati i primi 400; gli altri seguono la stessa regola: vengono importati se nuovi.'));
-  go.onclick=()=>vcImport();L.append(go);upd()}
+  let vis=[];
+  const draw=()=>{list.textContent='';const t=nrm(q.value.trim());vis=vcRows.filter(x=>!t||nrm([fullName(x.r),x.r.azienda,x.r.telefono,x.r.email].join(' ')).includes(t));
+    vis.slice(0,200).forEach(x=>{const lb=h('label','chk');const cb=document.createElement('input');cb.type='checkbox';cb.checked=x.on;cb.disabled=x.st==='senza recapito';cb.onchange=()=>{x.on=cb.checked;upd()};
+      const sp=h('span','',fullName(x.r));sp.append(h('em','',[x.r.azienda&&x.r.tipo!=='azienda'?x.r.azienda:'',x.r.telefono,x.r.email,x.st?'— '+x.st:''].filter(Boolean).join(' · ')));lb.append(cb,sp);list.append(lb)});
+    if(!vis.length)list.append(h('div','hint','Nessun contatto corrisponde alla ricerca.'));
+    else if(vis.length>200)list.append(h('div','hint','Mostrati i primi 200 di '+vis.length+': restringi la ricerca per vedere gli altri.'))};
+  q.oninput=draw;
+  bAll.onclick=()=>{vis.forEach(x=>{if(x.st!=='senza recapito')x.on=true});draw();upd()};
+  bNone.onclick=()=>{vcRows.forEach(x=>x.on=false);draw();upd()};
+  go.onclick=()=>vcImport();draw();upd()}
 function vcImport(){
   const sel=vcRows.filter(x=>x.on);if(!sel.length)return;const t0=Date.now();let k=0;
   sel.forEach(x=>{const c=stampNew({id:(t0+k).toString(36)+'c'+k,...x.r,wa:[],agg:new Date().toISOString(),privacy:mkPriv({fonteDati:'interessato',base:'contratto'})});k++;logP(c,'Importato dalla rubrica','creazione');clients.push(c)});
-  persist();try{render()}catch(e){}vcRows=[];$('vc_L').textContent='';$('vc_L').append(h('div','hint',sel.length+(sel.length===1?' contatto importato':' contatti importati')+' come prospect. Ricorda di inviare l’informativa privacy a chi non l’ha ancora ricevuta.'));toast('Contatti importati.')}
+  persist();try{render()}catch(e){}vcRows=[];$('vc_L').textContent='';$('vc_L').append(h('div','hint',sel.length+(sel.length===1?' contatto importato':' contatti importati')+' come prospect. Per tutti l’informativa privacy risulta da inviare: la trovi tra le cose da fare.'));toast('Contatti importati.')}
 $('vc_pick').onclick=()=>$('vc_file').click();
 $('vc_file').onchange=async e=>{const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
   try{const txt=await f.text();const cards=vcParse(txt);const seen={e:new Set,t:new Set};
-    vcRows=cards.map(vcBuild).filter(Boolean).map(r=>{const st=vcStatus(r,seen);if(!st){if(r.email)seen.e.add(r.email);if(r.telefono)seen.t.add(String(r.telefono).slice(-9))}return{r,st,on:!st}});vcPaint()}
+    vcRows=cards.map(vcBuild).filter(Boolean).map(r=>{const st=vcStatus(r,seen);if(!st){if(r.email)seen.e.add(r.email);if(r.telefono)seen.t.add(String(r.telefono).slice(-9))}return{r,st,on:false}});vcPaint()}
   catch(err){toast('Impossibile leggere il file.')}};
