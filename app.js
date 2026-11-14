@@ -9280,7 +9280,9 @@ function lCheck(d){let ok=true;setErr('l_email','');['l_pec','l_piva','l_nascita
     else{d.piva=v;$('l_piva').value=v;const clash=clients.find(c=>(c.piva||'').toUpperCase()===v);if(clash){setErr('l_piva','Partita IVA già registrata per '+fullName(clash)+'.');ok=false}}}
   if(d.nascita){const t=new Date(d.nascita+'T00:00');if(isNaN(t)||t.getFullYear()<1900){setErr('l_nascita','Inserisci una data valida.');ok=false}else if(d.nascita>ymd()){setErr('l_nascita','La data di nascita non può essere nel futuro.');ok=false}}
 if(d.tipo==='azienda'&&!d.azienda){toast('Indica la ragione sociale dell’azienda.');$('l_az').focus();return false}
-  if(!d.email||!mailRe.test(d.email)){setErr('l_email','Inserisci un’email valida.');ok=false}
+  if(!d.email&&!d.telefono){setErr('l_email','Inserisci almeno un recapito: telefono o email.');ok=false}
+  else if(!d.email){}
+  else if(!mailRe.test(d.email)){setErr('l_email','Inserisci un’email valida.');ok=false}
   else if(knownEmail(d.email)){setErr('l_email','Questa email è già in anagrafica clienti.');ok=false}
   else if(leads.some(x=>x!==lCur&&x.email===d.email&&x.stato!=='scartato')){setErr('l_email','Esiste già un lead con questa email.');ok=false}
   return ok}
@@ -10661,6 +10663,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.37.1','Corretto l’elenco delle novità in Info, che non si apriva, e rimesso in ordine cronologico.'],
 ['1.37.2','Nella scheda cliente, «Dettagli e modifica manuale» del tab Privacy resta sempre chiuso: se manca l’informativa, l’avviso compare accanto a «Invierò l’informativa più tardi».'],
 ['1.37.3','Creando una nuova anagrafica serve almeno un recapito: telefono o email.'],
+['1.37.4','Anche i lead richiedono almeno un recapito: telefono o email. L’email non è più obbligatoria se c’è il telefono.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
