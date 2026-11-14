@@ -9418,7 +9418,7 @@ $('st_broDel').onclick=()=>{S.brochure=null;saveS();paintBro()};
 const SPG=[['La tua azienda',[['az','building','Profilo azienda',()=>S.azienda||'Nome, partita IVA, sede e contatti']]],
  ['Comunicazione',[['em','Scrivi','Email',()=>S.replyTo||'Mittente, firma e contatto'],['wa','WhatsApp','WhatsApp',()=>'Messaggi rapidi e paese dei numeri'],['al','clip','Allegati e brochure',()=>'Listino e brochure per le risposte ai lead']]],
  ['Vendite',[['pr','doc','Preventivi',()=>'Validità '+S.qValid+' giorni e condizioni'],['ld','target','Lead',()=>'Pulizia automatica dei lead']]],
- ['Dati e privacy',[['sc','user','Accesso e sicurezza',()=>LOCK.on?'Biometria attiva':'Blocco non attivo'],['pv','shield','Privacy e conservazione',()=>'Durate di conservazione e revisione'],['bk','download','Backup, accessi ed esempi',()=>'Esporta, importa, persone e dati di prova']]]];
+ ['Dati e privacy',[['sc','user','Accesso e sicurezza',()=>LOCK.on?'Biometria attiva':'Blocco non attivo'],['pv','shield','Privacy e conservazione',()=>'Durate di conservazione e revisione'],['dp','users','Anagrafiche duplicate',()=>'Trova e unisci le schede doppie'],['bk','download','Backup, accessi ed esempi',()=>'Esporta, importa, persone e dati di prova']]]];
 const SPN={};SPG.forEach(g=>g[1].forEach(r=>SPN[r[0]]=r[2]));
 (()=>{const cl=document.querySelector('#mSet .sp[data-sp=cl]'),k=[...cl.children],bk=h('div','sp');bk.dataset.sp='bk';bk.hidden=true;k.slice(1).forEach(e=>bk.append(e));cl.after(bk)})();
 let spCur=null;
@@ -9448,7 +9448,7 @@ $('ih_all').onclick=async()=>{const H=S.infHist||[];toast(await copyText('Storic
 $('st_ok').addEventListener('click',()=>setTimeout(()=>{try{infSync();pubRefresh()}catch(e){}},300));
 setTimeout(()=>{try{infSync()}catch(e){}},3000);
 function paintHub(){const H=$('stHub');H.textContent='';SPG.forEach(([t,rows])=>{const g=h('div','shg'),l=h('div','sl');g.append(h('h3','',t),l);rows.forEach(([k,ic,nm,sm])=>{const b=h('button','shr');b.type='button';const i=h('span','ic');i.innerHTML=ICONS[ic]||'';const tx=h('div','tx');let sub='';try{sub=sm()}catch(e){}tx.append(h('b','',nm),h('span','',sub));const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(i,tx,c);b.onclick=()=>setSp(k);l.append(b)});H.append(g)})}
-function setSp(k){if(k==='pv')try{paintInf()}catch(e){}spCur=k||null;document.querySelectorAll('#mSet .sp').forEach(e=>e.hidden=e.dataset.sp!==k);$('stHub').hidden=!!k;if(!k)paintHub();if(k==='sc')try{paintLock()}catch(e){}$('stTitle').textContent=k?SPN[k]:'Impostazioni';$('stBack').setAttribute('aria-label',k?'Indietro':'Chiudi');const sh=$('mSet');if(sh)sh.scrollTop=0}
+function setSp(k){if(k==='pv')try{paintInf()}catch(e){}if(k==='dp'){dpCur=null;try{dpPaint()}catch(e){}}spCur=k||null;document.querySelectorAll('#mSet .sp').forEach(e=>e.hidden=e.dataset.sp!==k);$('stHub').hidden=!!k;if(!k)paintHub();if(k==='sc')try{paintLock()}catch(e){}$('stTitle').textContent=k?SPN[k]:'Impostazioni';$('stBack').setAttribute('aria-label',k?'Indietro':'Chiudi');const sh=$('mSet');if(sh)sh.scrollTop=0}
 
 document.querySelectorAll('#tabs [data-i=inbox]').forEach(e=>e.innerHTML=ICONS.inbox);
 /* ===== motivi per record: chip + ordinamento per priorità ===== */
@@ -10650,6 +10650,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.35.1','Ottimizzazione: l’app controlla gli aggiornamenti ogni 45 secondi (prima 15) e solo quando è visibile, con meno richieste, batteria e traffico. Sul database: regole di accesso più veloci, indice sui consensi (tolto quello inutilizzato sugli errori) e pulizia settimanale automatica di utilizzi, vecchie risposte e record cancellati da oltre 12 mesi.'],
 ['1.36.0','Lead da fonti esterne: in Impostazioni > Lead puoi creare una chiave per ogni sorgente (sito web, Zapier, Make…) e ricevere i contatti che inviano direttamente tra i lead, con la fonte «API». I dati vengono cifrati subito con una chiave tua e solo l’app li apre; se il contatto esiste già (stessa email, telefono o indirizzo) la richiesta viene aggiunta alla sua scheda, nella Storia del cliente o nelle note del lead, invece di creare un doppione e ogni sorgente si revoca con un tocco.'],
 ['1.36.1','Le chiavi dei lead da fonti esterne restano consultabili: accanto a ogni sorgente c’è il tasto Mostra, che riapre la chiave e l’esempio di chiamata. Le chiavi sono conservate nelle impostazioni cifrate; quelle create con la 1.36.0 vanno rifatte.'],
+['1.37.0','Nuova funzione Anagrafiche duplicate (Impostazioni → Dati e privacy): l’app trova le schede doppie per partita IVA, nome e cognome, azienda o indirizzo, le confronta affiancate e le unisce solo dopo la tua conferma. Opportunità, messaggi, chiamate, storia e consensi confluiscono nella scheda principale; l’unione si può annullare per 30 giorni.'],
 ['1.34.1','Magazzino: con nessun prodotto gestito ora si vede l’elenco dei prodotti da attivare con il +, e il messaggio non rimanda più a una sezione che non esiste. Il tema Neon è ora l’aspetto predefinito (si cambia da Impostazioni → Aspetto). Tolta la scheda «In attesa di risposta» e il pulsante «Annulla richiesta»: il link dei consensi non scade, quindi non serve più attendere né annullare. L’informativa inviata per email ora compare tra i messaggi del cliente (Tutti ed Email), non più nella scheda Privacy, e il pulsante è sempre «Reinvia informativa».'],
 ['1.34.0','La pagina del link personale mostra il nome della tua azienda, l’informativa con versione e data di entrata in vigore e lo stato attuale dei consensi, che il cliente può cambiare quando vuole. Dalla stessa pagina può chiedere una copia dei suoi dati (portabilità) o la cancellazione e anonimizzazione: sono richieste che arrivano nella posta in arrivo e nella scheda Privacy, e che approvi o rifiuti tu entro un mese. Niente avviene da solo.'],
 ['1.33.0','Consensi con un link personale. Quando invii l’informativa per email o WhatsApp, il messaggio contiene un link: il cliente lo apre dal telefono, senza account, sceglie i consensi facoltativi e conferma. La risposta arriva da sola nella scheda Privacy del cliente. Il link resta sempre valido, così il cliente può cambiare o revocare i consensi quando vuole. Non serve più rispondere alla email: sono state tolte la lettura delle risposte dalla posta, la registrazione a mano e le scadenze dei codici. Anche la gestione dello STOP è stata tolta: le campagne partono solo verso chi ha il consenso al marketing e ogni messaggio contiene il link per modificarlo o revocarlo. In Impostazioni → Privacy e conservazione ora c’è l’informativa: puoi leggerla e modificarla se il testo proposto non è corretto, e lo storico mostra ogni versione con il periodo di validità e il numero di clienti a cui è stata fornita. Sul server restano solo le scelte sì/no, la data e un’impronta del link: mai nome o email del cliente.'],
@@ -10936,3 +10937,94 @@ function guideify(root){
     }catch(e){}finally{busy=false}};
   try{if(typeof SB!=='undefined'&&SB.alog){const a=SB.alog;SB.alog=function(kind){const r=a.apply(this,arguments);if(kind==='login')setTimeout(()=>window.checkUpdate(),2500);return r}}}catch(e){}
   setTimeout(()=>{if(!document.documentElement.classList.contains('noauth'))window.checkUpdate()},4000)}
+
+/* ===== Unione anagrafiche (1.37) ===== */
+const DP_SKIP=new Set(['id','cre','creU','privacy','foto','fav','lead','agg','fotoPath']);
+const dpN=s=>nrm(String(s||'')).replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();
+const dpCo=s=>dpN(s).replace(/\b(s ?r ?l s|s ?r ?l|s ?p ?a|s ?a ?s|s ?n ?c|snc|srl|spa|sas|ltd|gmbh|ag|sa|inc|llc|e c)\b/g,' ').replace(/\s+/g,' ').trim();
+const dpV=c=>{let v=String(c.piva||'').replace(/[\s.-]/g,'').toUpperCase();if(v.startsWith('IT')&&v.length===13)v=v.slice(2);return v};
+function dpWhy(a,b){
+  const va=dpV(a),vb=dpV(b);
+  if(va&&vb)return va===vb?['la stessa partita IVA']:null;
+  const r=[],na=dpN(a.nome),ca=dpN(a.cognome),nb=dpN(b.nome),cb=dpN(b.cognome);
+  const nameEq=na&&ca&&na===nb&&ca===cb||na&&ca&&na===cb&&ca===nb;
+  if(nameEq)r.push('lo stesso nome e cognome');
+  else if(ca&&ca===cb&&na&&nb&&(na[0]===nb[0])&&(na.startsWith(nb)||nb.startsWith(na)))r.push('nome e cognome molto simili');
+  const aa=dpCo(a.azienda),ab=dpCo(b.azienda);
+  if(aa&&aa.length>=3&&aa===ab&&a.tipo==='azienda'&&b.tipo==='azienda')r.push('la stessa azienda');
+  if(!r.length&&aa&&aa===ab&&ca&&ca===cb)r.push('stessa azienda e stesso cognome');
+  const ia=dpN(a.indirizzo),ib=dpN(b.indirizzo);
+  if(r.length&&ia.length>=10&&ia===ib)r.push('lo stesso indirizzo');
+  if(!r.length&&ia.length>=10&&ia===ib&&ca&&ca===cb)r.push('lo stesso indirizzo e cognome');
+  return r.length?r:null}
+function dpFind(){
+  const ig=new Set((S.dupIgnore||[]));const out=[];
+  for(let i=0;i<clients.length;i++)for(let j=i+1;j<clients.length;j++){
+    const a=clients[i],b=clients[j];if(a.demo||b.demo)continue;
+    if(ig.has(a.id+'|'+b.id)||ig.has(b.id+'|'+a.id))continue;
+    const w=dpWhy(a,b);if(w)out.push({a,b,w})}
+  return out}
+const dpFill=c=>FIELDS.filter(f=>String(c[f]||'').trim()).length+oppsOf(c.id).length*2+((c.wa||[]).length+(c.calls||[]).length)*.5;
+let dpCur=null;
+function dpPaint(){
+  const L=$('dp_L'),C=$('dp_C'),U=$('dp_U');if(!L)return;
+  S.mergeUndo=(S.mergeUndo||[]).filter(u=>Date.now()-new Date(u.d).getTime()<30*864e5);
+  C.hidden=!dpCur;L.hidden=!!dpCur;$('dp_UW').hidden=!!dpCur;
+  if(dpCur){dpPaintCmp();return}
+  L.textContent='';const ps=dpFind();
+  if(!ps.length)L.append(h('div','hint','Nessun possibile duplicato trovato. Il controllo usa partita IVA, nome e cognome, azienda e indirizzo (email e telefono sono già univoci).'));
+  else{L.append(h('div','hint',ps.length+(ps.length===1?' possibile duplicato':' possibili duplicati')+'. Niente viene unito senza la tua conferma.'));
+    ps.forEach(p=>{const r=h('div','req');r.append(h('b','',fullName(p.a)+'  ↔  '+fullName(p.b)),h('div','','Hanno '+p.w.join(' e ')));
+      const bt=h('div','dual');const o=h('button','btn lbl','Confronta');o.type='button';o.onclick=()=>{const [x,y]=dpFill(p.a)>=dpFill(p.b)?[p.a,p.b]:[p.b,p.a];dpCur={keep:x,drop:y,pick:{}};dpPaint()};
+      const n=h('button','btn lbl','Sono diversi');n.type='button';n.onclick=()=>{(S.dupIgnore=S.dupIgnore||[]).push(p.a.id+'|'+p.b.id);saveS();dpPaint()};
+      bt.append(o,n);r.append(bt);L.append(r)})}
+  U.textContent='';const us=(S.mergeUndo||[]).slice().reverse();
+  if(!us.length)U.append(h('div','hint','Nessuna unione negli ultimi 30 giorni.'));
+  us.forEach(u=>{const r=h('div','req');r.append(h('b','',u.dropName+' → '+u.keepName),h('div','',fmtD(u.d.slice(0,10))+' · annullabile fino al '+fmtD(ymd(new Date(new Date(u.d).getTime()+30*864e5)))));
+    const b=h('button','btn lbl','Annulla unione');b.type='button';b.onclick=()=>askConfirm('Annullare l’unione e ripristinare «'+u.dropName+'» come anagrafica separata?','x','Annulla unione',()=>dpUndo(u));r.append(b);U.append(r)})}
+function dpPaintCmp(){
+  const C=$('dp_C'),{keep,drop,pick}=dpCur;C.textContent='';
+  C.append(h('div','hint','Resta l’anagrafica «'+fullName(keep)+'»: ci confluiscono opportunità, storia, messaggi e consensi di «'+fullName(drop)+'», che poi viene rimossa (puoi annullare entro 30 giorni).'));
+  const sw=h('button','btn lbl','Scambia principale');sw.type='button';sw.onclick=()=>{dpCur={keep:drop,drop:keep,pick:{}};dpPaint()};C.append(sw);
+  const lab={nome:'Nome',cognome:'Cognome',azienda:'Azienda',ruolo:'Ruolo',nascita:'Nascita',piva:'Partita IVA',pec:'PEC',paese:'Paese',telefono:'Telefono',email:'Email',sito:'Sito web',indirizzo:'Indirizzo',note:'Note'};
+  let diff=0;FIELDS.forEach(f=>{const a=String(keep[f]||'').trim(),b=String(drop[f]||'').trim();if(!b||a===b)return;
+    if(!a){C.append(h('div','hint',lab[f]+': verrà aggiunto «'+b.slice(0,80)+'»'));return}
+    if(f==='note'){C.append(h('div','hint','Note: le due note vengono unite.'));return}
+    diff++;const w=h('div','f');w.append(h('label','',lab[f]));const row=h('div','dual');
+    [['a',a],['b',b]].forEach(([k,v])=>{const bt=h('button','btn lbl'+((pick[f]||'a')===k?' p':''),(((pick[f]||'a')===k)?'✓ ':'')+v.slice(0,60));bt.type='button';bt.onclick=()=>{pick[f]=k;dpPaintCmp()};row.append(bt)});w.append(row);C.append(w)});
+  const no=oppsOf(drop.id).length;C.append(h('div','hint','Vengono spostate '+no+(no===1?' opportunità':' opportunità')+' e '+((drop.wa||[]).length+(drop.calls||[]).length)+' tra messaggi e chiamate.'));
+  const go=h('button','btn p lbl','Unisci anagrafiche');go.type='button';go.onclick=()=>askConfirm('Unire «'+fullName(drop)+'» in «'+fullName(keep)+'»?','check','Unisci',()=>dpMerge(keep,drop,pick));
+  const bk=h('button','btn lbl','Indietro');bk.type='button';bk.onclick=()=>{dpCur=null;dpPaint()};C.append(go,bk)}
+const dpClone=o=>JSON.parse(JSON.stringify(o));
+function dpPriv(k,d){
+  const a=k.privacy=k.privacy||mkPriv(),b=d.privacy;if(!b)return;
+  const later=(x,y)=>String(x&&x.d||'')>=String(y&&y.d||'')?x:y;
+  a.cons=a.cons||{};Object.keys(b.cons||{}).forEach(c=>{a.cons[c]=a.cons[c]?later(a.cons[c],b.cons[c]):b.cons[c]});
+  const seen=new Set((a.log||[]).map(x=>JSON.stringify(x)));a.log=(a.log||[]).concat((b.log||[]).filter(x=>!seen.has(JSON.stringify(x)))).sort((x,y)=>String(x.d).localeCompare(String(y.d)));
+  const sr=new Set((a.richieste||[]).map(x=>JSON.stringify(x)));a.richieste=(a.richieste||[]).concat((b.richieste||[]).filter(x=>!sr.has(JSON.stringify(x))));
+  if(!a.informativa&&b.informativa){a.informativa=true;a.infData=b.infData;a.infModo=b.infModo;a.infVer=b.infVer}
+  ['lk','lkH','lkOk','lkS','conserva','port','anon'].forEach(f=>{if(!a[f]&&b[f])a[f]=b[f]})}
+function dpMerge(keep,drop,pick){
+  const oppIds=oppsOf(drop.id).map(o=>o.id),leadIds=leads.filter(l=>l.clienteId===drop.id).map(l=>l.id);
+  const u={id:'u'+Date.now().toString(36),d:new Date().toISOString(),keepId:keep.id,keepName:fullName(keep),dropName:fullName(drop),keepBefore:dpClone({...keep,foto:''}),fotoSet:false,drop:dpClone(drop.foto&&drop.foto.length>8e4?{...drop,foto:''}:drop),oppIds,leadIds};
+  FIELDS.forEach(f=>{if(f==='note')return;const a=String(keep[f]||'').trim(),b=String(drop[f]||'').trim();if(b&&(!a||(a!==b&&pick[f]==='b')))keep[f]=drop[f]});
+  const na=String(keep.note||'').trim(),nb=String(drop.note||'').trim();if(nb&&na!==nb)keep.note=na?na+'\n\n— Dall’anagrafica «'+fullName(drop)+'» —\n'+nb:nb;
+  if(!keep.foto&&drop.foto){keep.foto=drop.foto;u.fotoSet=true}
+  keep.fav=!!(keep.fav||drop.fav);
+  if(!keep.lead&&drop.lead)keep.lead=drop.lead;
+  Object.keys(drop).forEach(f=>{if(DP_SKIP.has(f)||FIELDS.includes(f)||f[0]==='_')return;const x=keep[f],y=drop[f];
+    if(Array.isArray(y)){const base=Array.isArray(x)?x:[];const seen=new Set(base.map(e=>e&&e.id!==undefined?'i'+e.id:JSON.stringify(e)));keep[f]=base.concat(y.filter(e=>!seen.has(e&&e.id!==undefined?'i'+e.id:JSON.stringify(e))))}
+    else if(x===undefined||x===''||x===null)keep[f]=y});
+  dpPriv(keep,drop);logP(keep,'Unione con l’anagrafica «'+fullName(drop)+'»','unione');
+  opps.forEach(o=>{if(o.clienteId===drop.id)o.clienteId=keep.id});leads.forEach(l=>{if(l.clienteId===drop.id)l.clienteId=keep.id});
+  keep.agg=new Date().toISOString();clients=clients.filter(c=>c!==drop);
+  (S.mergeUndo=S.mergeUndo||[]).push(u);S.mergeUndo=S.mergeUndo.slice(-20);
+  persistO();persistL();persist();purgeLog('unione','manuale',drop.id);saveS();dpCur=null;
+  try{render();renderO()}catch(e){}dpPaint();toast('Anagrafiche unite. Puoi annullare l’unione per 30 giorni.')}
+function dpUndo(u){
+  const k=clients.find(c=>c.id===u.keepId);if(!k){toast('L’anagrafica principale non esiste più: impossibile annullare.');return}
+  const foto=u.fotoSet?'':k.foto;Object.keys(k).forEach(x=>delete k[x]);Object.assign(k,dpClone(u.keepBefore),{foto});
+  const d=dpClone(u.drop);if(clients.some(c=>c.id===d.id)){toast('Anagrafica già ripristinata.');return}clients.push(d);
+  opps.forEach(o=>{if(u.oppIds.includes(o.id))o.clienteId=d.id});leads.forEach(l=>{if(u.leadIds.includes(l.id))l.clienteId=d.id});
+  S.mergeUndo=(S.mergeUndo||[]).filter(x=>x.id!==u.id);(S.dupIgnore=S.dupIgnore||[]).push(k.id+'|'+d.id);
+  persistO();persistL();persist();saveS();try{render();renderO()}catch(e){}dpPaint();toast('Unione annullata.')}
