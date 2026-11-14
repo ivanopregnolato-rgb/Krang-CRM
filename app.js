@@ -10667,6 +10667,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.38.0','Importa dalla rubrica (Impostazioni → Dati e privacy): scegli un file contatti .vcf, controlla l’anteprima con i duplicati già segnalati e importa i contatti come prospect. Servono almeno telefono o email.'],
 ['1.38.1','Importa dalla rubrica: nessun contatto è preselezionato, c’è la barra di ricerca (con Seleziona i visibili) e l’informativa privacy dei contatti importati risulta da inviare.'],
 ['1.38.2','La lista dei contatti caricata dalla rubrica resta sul dispositivo per consentirti di importarli con calma e viene cancellata da sola dopo 3 giorni (oppure subito con «Elimina la lista»). I contatti importati escono dalla lista.'],
+['1.38.3','Confronto delle anagrafiche duplicate più leggibile: ogni valore è a tutta larghezza, con il testo completo e l’indicazione della scheda di provenienza.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -10997,14 +10998,15 @@ function dpPaint(){
     const b=h('button','btn lbl','Annulla unione');b.type='button';b.onclick=()=>askConfirm('Annullare l’unione e ripristinare «'+u.dropName+'» come anagrafica separata?','x','Annulla unione',()=>dpUndo(u));r.append(b);U.append(r)})}
 function dpPaintCmp(){
   const C=$('dp_C'),{keep,drop,pick}=dpCur;C.textContent='';
-  C.append(h('div','hint','Resta l’anagrafica «'+fullName(keep)+'»: ci confluiscono opportunità, storia, messaggi e consensi di «'+fullName(drop)+'», che poi viene rimossa (puoi annullare entro 30 giorni).'));
+  const dt=c=>[c.azienda&&c.tipo!=='azienda'?c.azienda:'',c.telefono,c.email].filter(Boolean).join(' · ')||'nessun dettaglio';C.append(h('div','hint','Resta la scheda principale «'+fullName(keep)+'» ('+dt(keep)+'). Ci confluiscono opportunità, storia, messaggi e consensi di «'+fullName(drop)+'» ('+dt(drop)+'), che poi viene rimossa. Puoi annullare entro 30 giorni.'));
   const sw=h('button','btn lbl','Scambia principale');sw.type='button';sw.onclick=()=>{dpCur={keep:drop,drop:keep,pick:{}};dpPaint()};C.append(sw);
   const lab={nome:'Nome',cognome:'Cognome',azienda:'Azienda',ruolo:'Ruolo',nascita:'Nascita',piva:'Partita IVA',pec:'PEC',paese:'Paese',telefono:'Telefono',email:'Email',sito:'Sito web',indirizzo:'Indirizzo',note:'Note'};
   let diff=0;FIELDS.forEach(f=>{const a=String(keep[f]||'').trim(),b=String(drop[f]||'').trim();if(!b||a===b)return;
     if(!a){C.append(h('div','hint',lab[f]+': verrà aggiunto «'+b.slice(0,80)+'»'));return}
     if(f==='note'){C.append(h('div','hint','Note: le due note vengono unite.'));return}
-    diff++;const w=h('div','f');w.append(h('label','',lab[f]));const row=h('div','dual');
-    [['a',a],['b',b]].forEach(([k,v])=>{const bt=h('button','btn lbl'+((pick[f]||'a')===k?' p':''),(((pick[f]||'a')===k)?'✓ ':'')+v.slice(0,60));bt.type='button';bt.onclick=()=>{pick[f]=k;dpPaintCmp()};row.append(bt)});w.append(row);C.append(w)});
+    diff++;const w=h('div','f');w.append(h('label','',lab[f]));const row=h('div','');row.style.cssText='display:flex;flex-direction:column;gap:6px';
+    [['a',a,'Scheda principale'],['b',b,'Altra scheda']].forEach(([k,v,cap])=>{const sel=(pick[f]||'a')===k;const bt=h('button','btn lbl'+(sel?' p':''));bt.type='button';bt.style.cssText='height:auto;min-height:48px;padding:10px 14px;white-space:normal;overflow-wrap:anywhere;word-break:break-word;text-align:left;justify-content:flex-start;align-items:flex-start;flex-direction:column;gap:2px;line-height:1.3';
+      const t=h('span','',(sel?'✓\u00A0':'')+v);t.style.cssText='display:block;font-weight:600';const c=h('span','',cap);c.style.cssText='display:block;font-size:12px;font-weight:400;opacity:.75';bt.append(t,c);bt.onclick=()=>{pick[f]=k;dpPaintCmp()};row.append(bt)});w.append(row);C.append(w)});
   const no=oppsOf(drop.id).length;C.append(h('div','hint','Vengono spostate '+no+(no===1?' opportunità':' opportunità')+' (con acquisti e preventivi) e '+((drop.wa||[]).length+(drop.calls||[]).length)+' tra messaggi e chiamate.'));
   const go=h('button','btn p lbl','Unisci anagrafiche');go.type='button';go.onclick=()=>askConfirm('Unire «'+fullName(drop)+'» in «'+fullName(keep)+'»?','check','Unisci',()=>dpMerge(keep,drop,pick));
   const bk=h('button','btn lbl','Indietro');bk.type='button';bk.onclick=()=>{dpCur=null;dpPaint()};C.append(go,bk)}
