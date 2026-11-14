@@ -10684,6 +10684,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.39.0','Duplicati più intelligenti: l’app riconosce anche nomi e cognomi scritti in modo diverso o con piccoli errori (Max e Massimiliano, De Simone e Desimone, Verdi e Verdy, nome e cognome invertiti), aziende simili e indirizzi simili, e per ogni coppia indica una probabilità stimata calcolata sui campi compilati in entrambe le schede.'],
 ['1.39.1','Nuovo passo nei Primi passi: «I prodotti a catalogo» spiega come inserirli, come collegarli alle opportunità e come funziona lo scarico dal magazzino. In Aiuto è stata tolta la voce «Manuale utente» (in arrivo).'],
 ['1.40.0','Correzioni dopo la prova con utenti. Importa dalla rubrica: «Seleziona i visibili» non include più i contatti già presenti (non si creano più schede doppie) e dopo l’import la pagina non chiede più di salvare. Cambiando il prezzo a catalogo, il valore delle opportunità aperte si aggiorna anche in elenco e in Home; se l’opportunità ha un preventivo inviato o accettato resta invece il prezzo promesso al cliente, e nella scheda compare «Aggiorna ai prezzi attuali». Il cambio di fase mostra subito Salva. Nella scheda Lead, premendo Salva si va direttamente al campo da correggere.'],
+['1.40.1','Importa dalla rubrica: i contatti che non si possono importare ora sono raggruppati in fondo all’elenco con il motivo scritto chiaro. «Già in anagrafica» indica anche con quale scheda coincidono e perché (stessa email, stesso telefono o stesso nome); «Senza telefono né email» spiega cosa manca.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -11133,19 +11134,26 @@ function vcStatus(r,seen){
   if(r.telefono&&r.telefono.length>=6&&(clients.some(c=>c.telefono&&dg(c.telefono)===dg(r.telefono))||seen.t.has(dg(r.telefono))))return 'già presente (telefono)';
   const n=dpN(r.nome),c=dpN(r.cognome);if(n&&c&&clients.some(x=>dpN(x.nome)===n&&dpN(x.cognome)===c))return 'già presente (nome)';
   return ''}
+function vcMatch(r){const dg=x=>String(x||'').replace(/\D/g,'').slice(-9);let c=null,w='';
+  if(r.email&&(c=clients.find(x=>x.email&&x.email.toLowerCase()===r.email.toLowerCase())))w='stessa email';
+  else if(r.telefono&&r.telefono.length>=6&&(c=clients.find(x=>x.telefono&&dg(x.telefono)===dg(r.telefono))))w='stesso telefono';
+  else{const n=dpN(r.nome),k=dpN(r.cognome);if(n&&k&&(c=clients.find(x=>dpN(x.nome)===n&&dpN(x.cognome)===k)))w='stesso nome'}
+  return c?{c,w}:null}
 function vcPaint(){
   const L=$('vc_L');L.textContent='';
   if(!vcRows.length){L.append(h('div','hint','Nessun contatto trovato nel file.'));return}
   const ok=vcRows.filter(x=>!x.st).length,dup=vcRows.filter(x=>x.st&&x.st[0]==='g').length,nr=vcRows.filter(x=>x.st==='senza recapito').length;
-  L.append(h('div','hint',vcRows.length+' contatti nel file: '+ok+' nuovi, '+dup+' già presenti, '+nr+' senza telefono né email (non importabili). Scegli quali importare.'));
+  L.append(h('div','hint',vcRows.length+' contatti nel file: '+ok+' nuovi, '+dup+' già in anagrafica (non importabili, li trovi in fondo all’elenco), '+nr+' senza telefono né email (non importabili). Scegli tra i nuovi quali importare.'));
   const q=h('input');q.type='search';q.placeholder='Cerca per nome, azienda, telefono o email';q.setAttribute('aria-label','Cerca nei contatti');q.autocomplete='off';q.style.cssText='width:100%;margin:6px 0';L.append(q);
   const bar=h('div','dual'),bAll=h('button','btn lbl','Seleziona i visibili'),bNone=h('button','btn lbl','Deseleziona tutti');bAll.type=bNone.type='button';bar.append(bAll,bNone);L.append(bar);
   const list=h('div','');list.style.margin='8px 0';L.append(list);const go=h('button','btn p lbl');go.type='button';L.append(go);
   const upd=()=>{const n=vcRows.filter(x=>x.on).length;go.textContent='Importa '+n+(n===1?' contatto':' contatti')+' come prospect';go.disabled=!n};
   let vis=[];
   const draw=()=>{list.textContent='';const t=nrm(q.value.trim());vis=vcRows.filter(x=>!t||nrm([fullName(x.r),x.r.azienda,x.r.telefono,x.r.email].join(' ')).includes(t));
-    vis.slice(0,200).forEach(x=>{const lb=h('label','chk');const cb=document.createElement('input');cb.type='checkbox';cb.checked=x.on;cb.disabled=!!x.st;if(x.st)x.on=false,cb.checked=false;cb.onchange=()=>{x.on=cb.checked;vcSave();upd()};
-      const sp=h('span','',fullName(x.r));sp.append(h('em','',[x.r.azienda&&x.r.tipo!=='azienda'?x.r.azienda:'',x.r.telefono,x.r.email,x.st?'— '+x.st:''].filter(Boolean).join(' · ')));lb.append(cb,sp);list.append(lb)});
+    const grp=x=>!x.st?0:x.st==='senza recapito'?2:1;vis=vis.map((x,i)=>[x,i]).sort((a,b)=>grp(a[0])-grp(b[0])||a[1]-b[1]).map(a=>a[0]);let lastG=-1;
+    vis.slice(0,200).forEach(x=>{const g=grp(x);if(g!==lastG){lastG=g;if(g>0){const n=vis.filter(y=>grp(y)===g).length;const hd=h('div','hint',g===1?'Già in anagrafica ('+n+'): non si importano per non creare doppioni.':'Senza telefono né email ('+n+'): non si possono importare.');hd.style.cssText='margin:12px 0 4px;font-weight:600';list.append(hd)}}
+      const lb=h('label','chk');if(g>0)lb.style.opacity='.6';const cb=document.createElement('input');cb.type='checkbox';cb.checked=x.on;cb.disabled=!!x.st;if(x.st)x.on=false,cb.checked=false;cb.onchange=()=>{x.on=cb.checked;vcSave();upd()};
+      const sp=h('span','',fullName(x.r));const mt=g===1?vcMatch(x.r):null;sp.append(h('em','',[x.r.azienda&&x.r.tipo!=='azienda'?x.r.azienda:'',x.r.telefono,x.r.email].filter(Boolean).join(' · ')));if(g===1)sp.append(h('em','','Già presente'+(mt?' come '+fullName(mt.c)+' ('+mt.w+')':'')));if(g===2)sp.append(h('em','','Manca un recapito'));lb.append(cb,sp);list.append(lb)});
     if(!vis.length)list.append(h('div','hint','Nessun contatto corrisponde alla ricerca.'));
     else if(vis.length>200)list.append(h('div','hint','Mostrati i primi 200 di '+vis.length+': restringi la ricerca per vedere gli altri.'))};
   q.oninput=draw;
