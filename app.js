@@ -10748,6 +10748,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.0','Nuova disposizione: «Altro» è ora una pagina vera, non più un menu a comparsa. Raccoglie Attività, Prodotti, Analytics, Marketing, Impostazioni, Aiuto e Info in due riquadri, con la barra in basso sempre visibile. Inoltre lo scorrimento di lato nella scheda cliente segue l’ordine delle linguette.'],
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
+['1.47.2','Nuova disposizione: cerchio per spuntare le attività nel Riepilogo cliente, un po’ di margine in alto nella Home. Promemoria push: la sincronizzazione col server si riallinea da sola ad ogni apertura.'],
 ['1.47.1','Nuova disposizione: «Primi passi» torna in alto nella Home, sopra «Da fare», come nel layout classico.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
@@ -11384,11 +11385,12 @@ function remList(){const hh=String(remHour()).padStart(2,'0'),now=Date.now()+6e4
   tkOpen_().forEach(t=>{if(!t.scad)return;const d=new Date(t.scad+'T'+(/^\d\d:\d\d$/.test(t.ora||'')?t.ora:hh+':00')+':00');if(isNaN(d)||d.getTime()<now)return;o.push({k:String(t.id),t:d.toISOString()})});return o.slice(0,500)}
 let remTm=0,remBusy=false;
 function remSoon(){if(!pushFlag())return;clearTimeout(remTm);remTm=setTimeout(()=>remSync(false),2500)}
+let remLast=0;function remHeal(){if(!pushFlag()||Date.now()-remLast<6e4)return;remLast=Date.now();remSync(true)}
 async function remSync(force){if(remBusy||!pushFlag()||!SB.has()||navigator.onLine===false)return;remBusy=true;
   try{nkIdb();const l=remList(),T={};tkOpen_().forEach(t=>{const rf=tkRef(t);T[String(t.id)]=[t.titolo,rf?rf.nome:'']});const sg=JSON.stringify([l,l.map(x=>T[x.k]),S.remShow!==false,String(nkGet()).slice(0,8)]);let last='';try{last=localStorage.getItem(REMK)||''}catch(e){}if(!force&&sg===last)return;for(const x of l)x.b=await remBlob(T[x.k][0],T[x.k][1]);await SB.push.rem(l);try{localStorage.setItem(REMK,sg)}catch(e){}}catch(e){}finally{remBusy=false}}
 async function pushCheck(){if(!pushFlag()||!pushOk()||!SB.has())return;
   if(Notification.permission!=='granted'){setPushFlag(false);return}
-  try{const {reg,sub}=await pushGet();if(!reg)return;if(!sub){const n=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:vapidKey()});await SB.push.save(subKeys(n))}else await SB.push.save(subKeys(sub));remSoon()}catch(e){}}
+  try{const {reg,sub}=await pushGet();if(!reg)return;if(!sub){const n=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:vapidKey()});await SB.push.save(subKeys(n))}else await SB.push.save(subKeys(sub));remSoon();remHeal()}catch(e){}}
 function ntPaint(){const ok=pushOk(),on=pushFlag()&&ok&&Notification.permission==='granted',hint=$('nt_h'),b=$('nt_bl');if(!hint)return;
   const inst=isIOSd()&&!isStandalone(),st=$('nt_st');
   hint.textContent=!ok?'Questo browser non supporta le notifiche. Su iPhone servono iOS 16.4 o successivo e l’app aggiunta alla schermata Home.':inst?'Su iPhone aggiungi prima l’app alla schermata Home (Condividi → Aggiungi a Home) e riaprila da lì: solo così iOS consente le notifiche.':on?'Ricevi un avviso quando un’attività scade, anche con l’app chiusa. Funziona su tutti i dispositivi dove li attivi.':'Ricevi un avviso quando un’attività scade, anche con l’app chiusa. Ci vogliono pochi secondi: tocca il pulsante e consenti le notifiche.';
@@ -11404,7 +11406,7 @@ $('nt_test').onclick=async()=>{try{const {reg}=await pushGet();if(!reg)throw 0;a
 try{navigator.serviceWorker&&navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.go==='tk')tkList()})}catch(e){}
 setTimeout(()=>{try{if(/[?&]go=tk\b/.test(location.search)){history.replaceState(null,'',location.pathname);tkList()}}catch(e){}},1800);
 setTimeout(()=>{try{pushCheck()}catch(e){}},6000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)try{remSoon()}catch(e){}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)try{remSoon();remHeal()}catch(e){}});
 
 
 /* ===== installa l'app: pulsante dove il browser lo consente, guida passo passo altrove (1.42.3) ===== */
@@ -11448,7 +11450,7 @@ window.paintSum=function(){const c=editing,w=$('sumF');if(!w)return;w.textConten
   const sec=t=>w.append(h('div','sh',t));
   const pv=c.privacy;if(!pv||!pv.informativa){const al=h('div','scard al');al.append(h('b','late','Informativa privacy da inviare'),h('small','','Senza informativa non puoi mandare comunicazioni commerciali.'));const bt=h('button','btn p lbl');bt.type='button';bt.innerHTML=ICONS.Scrivi+'Apri Privacy';bt.onclick=()=>setPane('priv');al.append(bt);w.append(al)}
   const tk=tkForRef({tipo:'cliente',id:c.id}).filter(t=>t.stato!=='fatta').sort((a,b)=>String(a.scad||'9').localeCompare(String(b.scad||'9')));
-  sec('Prossime attività');const tc=h('div','scard');if(tk.length)tk.slice(0,4).forEach(t=>tc.append(row(t.titolo||'Attività',tkWhen(t),'',()=>tkOpen(t),!!t.scad&&t.scad<ymd())));else tc.append(h('div','empty','Nessuna attività aperta.'));w.append(tc);
+  sec('Prossime attività');const tc=h('div','scard');if(tk.length)tk.slice(0,4).forEach(t=>{const r=row(t.titolo||'Attività',tkWhen(t),'',()=>tkOpen(t),!!t.scad&&t.scad<ymd());const ck=h('span','tkc');ck.setAttribute('role','button');ck.title=ck.ariaLabel='Segna come fatta';ck.onclick=e=>{e.stopPropagation();tkDone(t,true)};r.prepend(ck);tc.append(r)});else tc.append(h('div','empty','Nessuna attività aperta.'));w.append(tc);
   const op=(typeof opps!=='undefined'?opps:[]).filter(o=>o.clienteId===c.id&&o.fase!=='vinta'&&o.fase!=='persa');
   sec('Opportunità aperte');const oc=h('div','scard');if(op.length)op.forEach(o=>{const f=FASI.find(x=>x[0]===o.fase);oc.append(row(o.titolo||'Opportunità',(f?f[1]:'')+(o.prob!=null?' · '+o.prob+'%':''),eur(o.valore),()=>openOpp(o)))});else oc.append(h('div','empty','Nessuna opportunità aperta.'));w.append(oc);
   sec('Contatti');const cc=h('div','scard');[['Telefono',c.telefono&&(dial(c.paese)+' '+c.telefono)],['Email',c.email],['Indirizzo',c.indirizzo],['Sito',c.sito]].forEach(([k,v])=>{if(v){const r=h('div','srow l');r.append(h('small','',k),h('span','sv',v));cc.append(r)}});const eb=h('button','srow l');eb.type='button';eb.innerHTML='<b style="color:#4fc3ff">Modifica i dati</b>';eb.onclick=()=>setPane('dati');cc.append(eb);w.append(cc)};
