@@ -10748,6 +10748,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.0','Nuova disposizione: «Altro» è ora una pagina vera, non più un menu a comparsa. Raccoglie Attività, Prodotti, Analytics, Marketing, Impostazioni, Aiuto e Info in due riquadri, con la barra in basso sempre visibile. Inoltre lo scorrimento di lato nella scheda cliente segue l’ordine delle linguette.'],
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
+['1.47.7','Con una scheda aperta la pagina sotto non scorre più: sparisce la barra di scorrimento che compariva nelle schede cliente con pochi dati.'],
 ['1.47.6','Nuova disposizione: nella scheda del lead «Converti», «Scarta» ed «Elimina» compaiono solo nel Riepilogo; nelle schede a scorrimento la barra di scorrimento non si vede più.'],
 ['1.47.5','Nuova disposizione: nelle schede cliente, lead e opportunità la barra delle sezioni scorre da sola per mostrare e centrare la voce corrente (prima Privacy poteva restare nascosta a destra).'],
 ['1.47.4','Nuova disposizione: scheda del lead allineata a quella del cliente (stato e sorgente, tasti Chiama/Email/WhatsApp/Task, scheda Riepilogo con richiesta, task e contatti); più spazio sopra «Scorri una scheda…» in Lead e Clienti.'],
@@ -11495,3 +11496,7 @@ window.paintMore=function(){const w=$('moreView');if(!w)return;w.textContent='';
 /* schede a scorrimento: la voce corrente resta al centro della barra (cliente, lead, opportunità) */
 (function(){const mid=bar=>{const b=bar.querySelector('button.on');if(!b||bar.scrollWidth<=bar.clientWidth+2)return;const r=bar.getBoundingClientRect(),q=b.getBoundingClientRect(),x=bar.scrollLeft+(q.left-r.left)-(r.width-q.width)/2;try{bar.scrollTo({left:Math.max(0,x),behavior:'smooth'})}catch(e){bar.scrollLeft=Math.max(0,x)}};
   ['cTabs','lTabs','oTabs'].forEach(id=>{const bar=document.getElementById(id);if(!bar)return;let t=0;const go=()=>{clearTimeout(t);t=setTimeout(()=>mid(bar),30)};new MutationObserver(go).observe(bar,{attributes:true,attributeFilter:['class'],subtree:true});new MutationObserver(go).observe(bar.closest('.sheet')||bar,{attributes:true,attributeFilter:['hidden']})})})();
+
+/* con una scheda aperta la pagina sotto non scorre (e non mostra la sua barra di scorrimento) */
+(function(){const upd=()=>{const open=[...document.querySelectorAll('.sheet')].some(s=>!s.hidden);document.documentElement.classList.toggle('sh-open',open)};
+  let t=0;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(upd,20)}).observe(document.body,{subtree:true,attributes:true,attributeFilter:['hidden'],childList:true});upd()})();
