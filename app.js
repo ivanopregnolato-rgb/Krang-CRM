@@ -9468,6 +9468,10 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
   SB.e2e.invite(n,$('tm_s').value).then(code=>{$('tm_n').value='';const lk=location.origin+location.pathname+'#invito='+encodeURIComponent(code),bx=$('tm_K');bx.hidden=false;bx.textContent='';bx.append(h('b','','Invito per '+n),h('div','hint','Mandagli questo link: vale 7 giorni e si usa una sola volta.'));
     const k=h('input');k.readOnly=true;k.value=lk;k.style.cssText='width:100%;margin:6px 0;font-size:12px';bx.append(k);
     const c1=h('button','btn lbl','Copia link'),c2=h('button','btn lbl','Condividi');c1.type=c2.type='button';c1.onclick=()=>{navigator.clipboard.writeText(lk).then(()=>toast('Link copiato.')).catch(()=>k.select())};c2.onclick=()=>{if(navigator.share)navigator.share({title:'Invito a KRANG CRM',text:'Ti invito a lavorare sul mio CRM: apri il link per accettare.',url:lk}).catch(()=>{});else c1.click()};bx.append(c1,c2);paintTeam()}).catch(err=>{toast(err&&err.code==='locked'?'Sblocca prima i dati con la tua password.':'Impossibile creare l’invito ora.')}).finally(()=>{b.disabled=false})});
+
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#tm_acc');if(!b)return;let c=$('tm_ic').value.trim();const m=/invito=([^&\s]+)/.exec(c);if(m)c=decodeURIComponent(m[1]);const pw=$('tm_ip').value;
+  if(!c){setErr('tm_ic','Incolla il link o il codice che hai ricevuto.');return}setErr('tm_ic','');if(!pw){setErr('tm_ip','Scrivi la tua password di accesso.');return}setErr('tm_ip','');b.disabled=true;
+  SB.e2e.acceptInvite(c,pw).then(()=>{toast('Invito accettato: ricarico.');setTimeout(()=>location.reload(),600)}).catch(er=>{setErr('tm_ic',er&&er.code==='used'?'Questo account ha già dei dati: crea un account nuovo per l’invito.':'Invito non valido, scaduto o già usato.')}).finally(()=>{b.disabled=false})});
 /* link di invito: il codice resta in questo browser fino all'accesso */
 try{const m=/[#&]invito=([^&]+)/.exec(location.hash||'');if(m){localStorage.setItem('crm-invite',decodeURIComponent(m[1]));history.replaceState(null,'',location.pathname+location.search)}}catch(e){}
 
@@ -10535,7 +10539,7 @@ const SB=(()=>{
   async linkUser(tok){const r=await fetch(U+'/auth/v1/user',{headers:{apikey:K,Authorization:'Bearer '+tok}});if(!r.ok)throw Object.assign(new Error('link'),{code:'otp_expired'});return (await r.json()).email||''},
   async linkPassword(tok,password){const hd={apikey:K,Authorization:'Bearer '+tok,'Content-Type':'application/json'};const r=await fetch(U+'/auth/v1/user',{method:'PUT',headers:hd,body:JSON.stringify({password})});let j=null;try{j=await r.json()}catch(e){}if(!r.ok)throw mkErr(r,j);try{await fetch(U+'/auth/v1/logout?scope=global',{method:'POST',headers:hd})}catch(e){}ses=null;save()},
   /* dopo l'accesso: se cambia utente (o primo accesso) il dispositivo riparte vuoto, poi arriva tutto dal cloud */
-  enter(pw){const id=uid();let prev='';try{prev=localStorage.getItem(UK)||''}catch(e){}const fresh=prev!==id;if(fresh){wipe();try{localStorage.setItem(UK,id)}catch(e){}}
+  enter(pw){const id=uid();let prev='',inv0='';try{prev=localStorage.getItem(UK)||'';inv0=localStorage.getItem('crm-invite')||''}catch(e){}const fresh=prev!==id;if(fresh){wipe();try{localStorage.setItem(UK,id);if(inv0)localStorage.setItem('crm-invite',inv0)}catch(e){}}
    const fin=()=>{if(fresh){location.reload();return}document.documentElement.classList.remove('noauth');CLOUD.on=true;cloudGate()};
    if(!pw){fin();return}
    e2e.pendingInvite().then(inv=>inv?e2e.acceptInvite(inv,pw).then(async()=>{await e2e.clearInvite();toast('Invito accettato: lavori sul CRM del titolare.');return{}}).catch(async er=>{await e2e.clearInvite();toast(er&&er.message?er.message.charAt(0).toUpperCase()+er.message.slice(1)+'.':'Invito non accettato.');return e2e.auto(pw)}):e2e.auto(pw)).then(r=>{r=r||{};
@@ -10796,6 +10800,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.52.4','Invito collaboratore: il primo accesso ritrova il codice anche dopo la pulizia del dispositivo. Se non viene accettato in automatico, puoi incollare il link in Impostazioni → Collaboratori.'],
 ['1.52.3','Invito collaboratore: il codice non si perde più se crei l’account e confermi l’email da un altro browser o dall’app installata.'],
 ['1.52.2','Registrazione: se la password viene rifiutata, l’app dice il motivo reale (troppo corta, troppo semplice o già comparsa in violazioni di dati).'],
 ['1.52.1','Impostazioni: il pulsante «Salva modifiche» non compare più per un attimo all’apertura.'],
