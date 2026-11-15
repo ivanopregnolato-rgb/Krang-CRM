@@ -10248,6 +10248,7 @@ const wState=()=>{let enc=false;try{enc=SB.e2e.state()==='ready'}catch(e){}retur
  {k:'az',ic:'building',t:'Il profilo della tua azienda',d:'Nome, partita IVA e firma delle email',done:!!(S.azienda&&S.azienda.trim())},
  {k:'cl',ic:'users',t:'Il tuo primo cliente',d:'Scrivi i dati o fotografa un biglietto da visita',done:clients.length>0},
  {k:'pr',ic:'box',t:'I prodotti a catalogo',d:'Inseriscili e collegali alle opportunità',done:prods.length>0},
+ {k:'no',ic:'clock',t:'I promemoria sul telefono',d:'Una notifica quando un’attività scade',done:(()=>{try{return pushFlag()&&Notification.permission==='granted'}catch(e){return false}})()},
  {k:'as',ic:'chat',t:'L’assistente',d:'Chiedi come si fa una cosa: risponde in pochi secondi',done:!!S.askSeen}]};
 function paintWel(){const w=$('hWel');if(!w)return;w.textContent='';if(S.welcomeOff)return;const st=wState(),n=st.filter(x=>x.done).length;if(n===st.length)return;
   const b=h('button','wcard');b.type='button';const i=h('span','ic');i.innerHTML=ICONS.compass;const tx=h('div','tx');const bar=h('div','wbar'),f=h('i');f.style.width=Math.round(n/st.length*100)+'%';bar.append(f);
@@ -10285,6 +10286,17 @@ function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=
     const a=h('button','btn p lbl');a.type='button';a.innerHTML=ICONS.box+'<span>Aggiungi un prodotto</span>';a.onclick=()=>{closeWel();setTab('prod');openProd(null)};
     const c=h('button','btn lbl');c.type='button';c.innerHTML=ICONS.tag+'<span>Vai alle opportunità</span>';c.onclick=()=>{closeWel();setTab('opp')};
     B.append(a,c,back());return}
+  if(view==='no'){
+    const ios=isIOSd(),inst=isStandalone(),ok=pushOk();
+    B.append(h('h3','','I promemoria sul telefono'),h('p','wsub','Ricevi una notifica quando un’attività scade, anche con l’app chiusa. Quattro passi.'));
+    const p=(t)=>{const d=h('p','wtx');d.innerHTML=t;B.append(d)};
+    p('<b>1. Aggiungi l’app alla schermata Home.</b> '+(ios?(inst?'Fatto: stai usando l’app dalla schermata Home.':'Su iPhone è indispensabile: in Safari tocca «Condividi» → «Aggiungi a Home», poi riapri KRANG da lì.'):'Su iPhone serve iOS 16.4 o successivo e l’app aggiunta alla schermata Home (Condividi → Aggiungi a Home). Su Android e computer puoi saltare questo passo.'));
+    p('<b>2. Attiva i promemoria.</b> In Impostazioni → Promemoria attività tocca «Attiva i promemoria» e consenti le notifiche quando il telefono lo chiede.');
+    p('<b>3. Prova la notifica.</b> Nella stessa pagina apri «Prova e diagnosi», tocca «Notifica di prova» e controlla che compaia. Se non arriva, verifica che nelle impostazioni del telefono le notifiche di KRANG siano consentite e che non sia attiva una modalità Concentrazione (per esempio Sonno).');
+    p('<b>4. Scegli quando.</b> Ogni attività può avere un’ora: l’avviso arriva a quell’ora. Senza ora, arriva all’ora predefinita che scegli nella stessa pagina. Nella notifica compaiono titolo e cliente; se non vuoi che si leggano a telefono bloccato, spegni «Titolo e cliente nella notifica».');
+    if(!ok){const d=h('p','wtx');d.innerHTML='<b>Nota:</b> questo browser non supporta le notifiche.';B.append(d)}
+    const a=h('button','btn p lbl');a.type='button';a.innerHTML=ICONS.clock+'<span>Apri i promemoria</span>';a.onclick=()=>{closeWel();openSettings();setSp('nt')};
+    B.append(a,back());return}
   if(view==='cr'){
     let ready=false,can=false;try{ready=SB.e2e.state()==='ready';can=!!(SB.has&&SB.has())}catch(e){}
     B.append(h('h3','','La cifratura dei dati'));
@@ -10297,7 +10309,7 @@ function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=
     if(!ready&&can){const g=h('button','btn lbl');g.type='button';g.innerHTML=ICONS.shield+'<span>Attiva ora</span>';g.onclick=()=>{S.cryptoOk=true;saveS();closeWel();CLOUD.started=false;cloudGate()};B.append(g)}
     B.append(back());return}
   const st=wState(),n=st.filter(x=>x.done).length;
-  B.append(h('h3','','Benvenuto in KRANG CRM'),h('p','wsub',n===st.length?'Hai completato i primi passi.':['','','','Tre','Quattro','Cinque','Sei'][st.length]+' passi per iniziare. Puoi saltarli e tornare qui dal menu, voce Aiuto.'));
+  B.append(h('h3','','Benvenuto in KRANG CRM'),h('p','wsub',n===st.length?'Hai completato i primi passi.':['','','','Tre','Quattro','Cinque','Sei','Sette'][st.length]+' passi per iniziare. Puoi saltarli e tornare qui dal menu, voce Aiuto.'));
   const g=h('div','shg'),l=h('div','sl');
   st.forEach(x=>{const b=h('button','shr wlr');b.type='button';const i=h('span','ic');i.innerHTML=x.done?ICONS.check:ICONS[x.ic];if(x.done)i.classList.add('ok');const tx=h('div','tx');tx.append(h('b','',x.t),h('span','',x.d));const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(i,tx,c);
     b.onclick=()=>{if(x.k==='az'){closeWel();openSettings();setSp('az')}else if(x.k==='sc'){closeWel();openSettings();setSp('sc')}else if(x.k==='as'){closeWel();openAsk()}else openWel(x.k)};l.append(b)});
@@ -10704,6 +10716,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.41.2','Layout più arioso nell’elenco clienti (più spazio tra contatore, filtri e ricerca). Nella scheda cliente i cinque tab hanno tutti la stessa larghezza. Nell’opportunità lo scorrimento a destra e a sinistra ora passa tra Dati e Task.'],
 ['1.42.0','Promemoria delle attività e calendario. Ogni attività può avere anche un’ora (facoltativa): l’avviso arriva a quell’ora e nel calendario diventa un evento di mezz’ora; senza ora resta un evento di tutto il giorno e l’avviso arriva all’ora predefinita. Da Impostazioni → Promemoria attività attivi la notifica e scegli l’ora predefinita (su iPhone serve l’app aggiunta alla schermata Home). Nella notifica compaiono il titolo dell’attività e il cliente collegato: viaggiano cifrati e li legge solo il tuo dispositivo, il server non lo vede (da Impostazioni puoi nasconderlo, e la notifica dirà solo che hai un’attività in scadenza). Con «Aggiungi al calendario» ed «Esporta nel calendario» porti le attività nel calendario del telefono (Google, Apple o Outlook).'],
 ['1.42.1','Promemoria: in Impostazioni → Promemoria attività c’è «Prova l’invio dal server» e una riga di diagnosi che mostra se la notifica è arrivata al telefono e come è stata gestita.'],
+['1.42.2','Attività e promemoria più chiari: scadenza e ora sono affiancate, i comandi in fondo sono più ordinati e la pagina Promemoria è stata ridisegnata. Non compare più la richiesta di salvare quando non hai modificato nulla. Nella guida dei primi passi c’è ora il passo «I promemoria sul telefono».'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -11213,14 +11226,17 @@ function tkShell(id,title,onClose){let sh=$(id);if(!sh){sh=h('div','sheet');sh.i
 function tkOpen(t,pre,lock){const isNew=!t;const d=t?{...t,rif:t.rif?{...t.rif}:null}:{id:'t'+Date.now().toString(36),titolo:'',scad:'',ora:'',nota:'',stato:'aperta',rif:pre||null};
   const {sh,w,x}=tkShell('tkSheet',isNew?'Nuova attività':'Attività');
   const f1=h('div','f'),l1=h('label','','Cosa c’è da fare'),ti=h('input');ti.value=d.titolo;ti.placeholder='Per esempio: richiamare per il preventivo';ti.autocomplete='off';ti.id='tk_t';l1.htmlFor='tk_t';const e1=h('div','err');e1.hidden=true;f1.append(l1,ti,e1);
-  const f2=h('div','f'),l2=h('label','','Scadenza'),da=h('input');da.type='date';da.value=d.scad||'';da.id='tk_d';l2.htmlFor='tk_d';const e2=h('div','err');e2.hidden=true;
-  const ch=h('div','');ch.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-top:6px';const plus=n=>{const x=new Date(Date.now()+n*864e5);return new Date(x-x.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
-  [['Oggi',0],['Domani',1],['Tra una settimana',7]].forEach(([n,v])=>{const b=h('button','btn lbl',n);b.type='button';b.style.cssText='width:auto;flex:none;padding:6px 12px;min-height:0';b.onclick=()=>{da.value=plus(v);e2.hidden=true;da.classList.remove('bad');da.dispatchEvent(new Event('input',{bubbles:true}))};ch.append(b)});f2.append(l2,da,e2,ch);
-  const fo=h('div','f'),lo=h('label','','Ora (facoltativa)'),oi=h('input'),oh=h('div','hint'),ox=h('button','btn lbl','Togli l’ora');oi.type='time';oi.value=/^\d\d:\d\d$/.test(d.ora||'')?d.ora:'';oi.id='tk_o';lo.htmlFor='tk_o';ox.type='button';ox.style.cssText='width:auto;flex:none;padding:6px 12px;min-height:0;margin-top:6px';
-  const paintO=()=>{ox.hidden=!oi.value;oh.textContent=oi.value?'L’avviso arriva a quest’ora e nel calendario l’attività dura mezz’ora.':'Senza ora, l’avviso arriva all’ora predefinita ('+remHour()+':00) e nel calendario è un evento di tutto il giorno.'};oi.oninput=paintO;ox.onclick=()=>{oi.value='';paintO()};paintO();fo.append(lo,oi,oh,ox);
+  const f2=h('div','f'),gr=h('div',''),cd=h('div',''),co=h('div',''),l2=h('label','','Scadenza'),da=h('input');gr.style.cssText='display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:10px';
+  da.type='date';da.value=d.scad||'';da.id='tk_d';l2.htmlFor='tk_d';const e2=h('div','err');e2.hidden=true;cd.append(l2,da);
+  const lo=h('label','','Ora (facoltativa)'),oi=h('input'),oh=h('div','hint'),ox=h('button','','Togli l’ora');oi.type='time';oi.value=/^\d\d:\d\d$/.test(d.ora||'')?d.ora:'';oi.id='tk_o';lo.htmlFor='tk_o';co.append(lo,oi);gr.append(cd,co);
+  const ch=h('div','');ch.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-top:8px';const plus=n=>{const x=new Date(Date.now()+n*864e5);return new Date(x-x.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+  [['Oggi',0],['Domani',1],['Tra una settimana',7]].forEach(([n,v])=>{const b=h('button','btn lbl',n);b.type='button';b.style.cssText='width:auto;flex:none;padding:6px 12px;min-height:0';b.onclick=()=>{da.value=plus(v);e2.hidden=true;da.classList.remove('bad');da.dispatchEvent(new Event('input',{bubbles:true}))};ch.append(b)});
+  ox.type='button';ox.style.cssText='background:none;border:0;padding:0 0 0 6px;color:var(--acc,#f9a553);text-decoration:underline;font:inherit;cursor:pointer';
+  const paintO=()=>{oh.textContent=oi.value?'Avviso e calendario a quest’ora (l’attività dura mezz’ora). ':'Senza ora: avviso alle '+remHour()+':00 ed evento di tutto il giorno nel calendario.';if(oi.value)oh.append(ox)};oi.oninput=paintO;ox.onclick=()=>{oi.value='';paintO()};paintO();oh.style.marginTop='8px';
+  f2.append(gr,e2,ch,oh);
   const f3=h('div','f'),l3=h('label','','Nota (facoltativa)'),no=h('textarea');no.rows=3;no.value=d.nota||'';no.id='tk_n';l3.htmlFor='tk_n';f3.append(l3,no);
   const f4=h('div','f'),l4=h('label','','Collegata a'),rb=h('div',''),q=h('input'),rl=h('div','');q.type='search';q.placeholder='Cerca cliente, lead o opportunità';q.autocomplete='off';q.setAttribute('aria-label','Cerca cliente, lead o opportunità');rl.style.margin='6px 0';const e4=h('div','err');e4.hidden=true;f4.append(l4,rb,e4,q,rl);
-  const paintRif=()=>{rb.textContent='';const r=d.rif&&tkRef({rif:d.rif});if(r){const c=h('div','hint');c.style.cssText='display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:12px;padding:8px 10px';c.append(h('span','',r.nome));if(!lock){const rm=h('button','btn ico');rm.type='button';rm.innerHTML=ICONS.x||'×';rm.title=rm.ariaLabel='Cambia il collegamento';rm.onclick=()=>{d.rif=null;paintRif()};c.append(rm)}rb.append(c);q.hidden=true;rl.hidden=true;e4.hidden=true}else{q.hidden=false;rl.hidden=false}};
+  const paintRif=()=>{rb.textContent='';const r=d.rif&&tkRef({rif:d.rif});if(r){const c=h('div','');c.style.cssText='display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:14px;padding:6px 6px 6px 14px;font-size:16px;font-weight:600';c.append(h('span','',r.nome));if(!lock){const rm=h('button','btn ico');rm.type='button';rm.innerHTML=ICONS.x||'×';rm.title=rm.ariaLabel='Cambia il collegamento';rm.onclick=()=>{d.rif=null;paintRif()};c.append(rm)}rb.append(c);q.hidden=true;rl.hidden=true;e4.hidden=true}else{q.hidden=false;rl.hidden=false}};
   q.oninput=()=>{rl.textContent='';const s=nrm(q.value.trim());if(s.length<2)return;const R=[];
     clients.forEach(c=>{if(nrm([fullName(c),c.azienda,c.telefono,c.email].filter(Boolean).join(' ')).includes(s))R.push({tipo:'cliente',id:c.id,n:fullName(c)})});
     (typeof leads!=='undefined'?leads:[]).forEach(l=>{if(l.stato!=='scartato'&&nrm([lName(l),l.azienda,l.email].filter(Boolean).join(' ')).includes(s))R.push({tipo:'lead',id:l.id,n:'Lead · '+lName(l)})});
@@ -11235,10 +11251,13 @@ function tkOpen(t,pre,lock){const isNew=!t;const d=t?{...t,rif:t.rif?{...t.rif}:
     if(!(d.rif&&tkRef({rif:d.rif}))){e4.textContent='Collega l’attività a un cliente, un lead o un’opportunità.';e4.hidden=false;bad=bad||q}
     if(bad){bad.scrollIntoView({block:'center'});try{bad.focus({preventScroll:true})}catch(e){}return}
     const rec=Object.assign(t||stampNew(d),{titolo:tt,scad:da.value||'',ora:oi.value||'',nota:no.value.trim(),rif:d.rif||null,stato:(t&&t.stato)||'aperta'});if(!t)tasks.push(rec);persistT();sh.hidden=true;try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast('Attività salvata.')};
-  const ac=h('div','delw');w.append(f1,f2,fo,f3,f4,ac);
+  const ac=h('div','delw');w.append(f1,f2,f3,f4,ac);
   if(t){const dn=h('button','btn lbl'+(t.stato==='fatta'?'':' p'));dn.type='button';dn.innerHTML=ICONS.check+(t.stato==='fatta'?'Riapri':'Segna come fatta');dn.style.width='100%';dn.onclick=()=>{tkDone(t,t.stato!=='fatta');sh.hidden=true};
-    const rf=tkRef(t);if(rf){const go=h('button','btn lbl','Apri '+rf.nome);go.type='button';go.style.width='100%';go.onclick=()=>{sh.hidden=true;rf.go()};ac.append(go)}
-    const dl=h('button','btn lbl d');dl.type='button';dl.innerHTML=ICONS.trash+'Elimina';dl.style.width='100%';dl.onclick=()=>askConfirm('Eliminare l’attività «'+t.titolo+'»?','trash','Elimina',()=>{tasks=tasks.filter(z=>z!==t);persistT();sh.hidden=true;try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast('Attività eliminata.')});const cb=h('button','btn lbl');cb.type='button';cb.innerHTML=ICONS.clock+'Aggiungi al calendario';cb.style.width='100%';cb.onclick=()=>icsSave('attivita.ics',tkIcs([t]));ac.append(dn,cb,dl)}
+    const row=h('div','');row.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:8px';
+    const rf=tkRef(t);if(rf){const go=h('button','btn lbl','Apri '+rf.nome);go.type='button';go.style.cssText='min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';go.onclick=()=>{sh.hidden=true;rf.go()};row.append(go)}
+    const cb=h('button','btn lbl');cb.type='button';cb.innerHTML=ICONS.clock+'<span>Nel calendario</span>';cb.onclick=()=>icsSave('attivita.ics',tkIcs([t]));row.append(cb);
+    const dl=h('button','btn lbl d');dl.type='button';dl.innerHTML=ICONS.trash+'Elimina';dl.style.cssText='width:100%;margin-top:8px';dl.onclick=()=>askConfirm('Eliminare l’attività «'+t.titolo+'»?','trash','Elimina',()=>{tasks=tasks.filter(z=>z!==t);persistT();sh.hidden=true;try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast('Attività eliminata.')});
+    ac.append(dn,row,dl)}
   if(!isNew)try{saveBtn(ac,sig,save)}catch(e){}
   if(isNew){const sv=h('button','btn p lbl');sv.type='button';sv.innerHTML=ICONS.check+'Salva';sv.style.width='100%';sv.onclick=save;ac.prepend(sv)}
   try{dirtyBack(x,sig,save,()=>{sh.hidden=true})}catch(e){}
@@ -11339,8 +11358,10 @@ async function pushCheck(){if(!pushFlag()||!pushOk()||!SB.has())return;
   if(Notification.permission!=='granted'){setPushFlag(false);return}
   try{const {reg,sub}=await pushGet();if(!reg)return;if(!sub){const n=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:vapidKey()});await SB.push.save(subKeys(n))}else await SB.push.save(subKeys(sub));remSoon()}catch(e){}}
 function ntPaint(){const ok=pushOk(),on=pushFlag()&&ok&&Notification.permission==='granted',hint=$('nt_h'),b=$('nt_bl');if(!hint)return;
-  hint.textContent=!ok?'Questo browser non supporta le notifiche. Su iPhone servono iOS 16.4 o successivo e l’app aggiunta alla schermata Home.':isIOSd()&&!isStandalone()?'Su iPhone aggiungi prima l’app alla schermata Home (Condividi → Aggiungi a Home) e riaprila da lì: solo così iOS consente le notifiche.':on?'Promemoria attivi su questo dispositivo: ricevi un avviso il giorno della scadenza di ogni attività aperta.':'Ricevi un avviso il giorno della scadenza di ogni attività aperta, anche a app chiusa.';
-  b.textContent=on?'Disattiva i promemoria':'Attiva i promemoria';$('nt_btn').disabled=!ok;$('nt_hf').hidden=!on;$('nt_test').hidden=!on;const sel=$('nt_hr');if(sel)sel.value=String(remHour());$('nt_sh').checked=S.remShow!==false;$('nt_shf').hidden=!on;$('nt_srv').hidden=!on;$('nt_diag').hidden=!on;if(on)ntDiag()}
+  const inst=isIOSd()&&!isStandalone(),st=$('nt_st');
+  hint.textContent=!ok?'Questo browser non supporta le notifiche. Su iPhone servono iOS 16.4 o successivo e l’app aggiunta alla schermata Home.':inst?'Su iPhone aggiungi prima l’app alla schermata Home (Condividi → Aggiungi a Home) e riaprila da lì: solo così iOS consente le notifiche.':on?'Ricevi un avviso quando un’attività scade, anche con l’app chiusa. Funziona su tutti i dispositivi dove li attivi.':'Ricevi un avviso quando un’attività scade, anche con l’app chiusa. Ci vogliono pochi secondi: tocca il pulsante e consenti le notifiche.';
+  st.textContent=!ok?'Non disponibili su questo dispositivo':on?'● Attivi su questo dispositivo':'Non attivi';st.style.color=on?'var(--ok,#4ade80)':'var(--muted,#9fb3c8)';
+  b.textContent=on?'Disattiva i promemoria':'Attiva i promemoria';$('nt_btn').disabled=!ok;$('nt_btn').classList.toggle('p',!on);$('nt_opts').hidden=!on;const sel=$('nt_hr');if(sel)sel.value=String(remHour());$('nt_sh').checked=S.remShow!==false;if(on)ntDiag()}
 async function ntDiag(){const el=$('nt_diag');try{const L=await kget('log','last');el.textContent=L?'Ultima notifica ricevuta dal server: '+new Date(L.t).toLocaleString('it-IT')+' · dati '+(L.dati===true?'ok':L.dati)+' · titolo '+L.dec+' · mostrata: '+L.mostra:'Nessuna notifica dal server ricevuta finora su questo dispositivo.'}catch(e){el.textContent=''}}
 $('nt_btn').onclick=async()=>{const on=pushFlag()&&pushOk()&&Notification.permission==='granted';$('nt_btn').disabled=true;try{if(on){await pushOff();toast('Promemoria disattivati su questo dispositivo.')}else if(await pushOn())toast('Promemoria attivati.')}finally{ntPaint()}};
 $('nt_sh').onchange=()=>{S.remShow=$('nt_sh').checked;try{saveS()}catch(e){}remSync(true)};
