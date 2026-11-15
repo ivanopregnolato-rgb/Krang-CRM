@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.47.8"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.47.8|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.48.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.48.0|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -299,7 +299,7 @@ html.sh-open,html.sh-open body{overflow:hidden;overscroll-behavior:none}
 .oc.off{opacity:.55}
 #tabs button{flex-direction:column;gap:2px;height:52px;padding:0 2px;min-width:0;font-size:11.5px}
 #tabs button svg{width:20px;height:20px}
-.greet{margin:4px 0 12px}
+.greet{margin:4px 0 12px;display:flex;align-items:flex-start;gap:12px}.gtx{flex:1;min-width:0}#hLogo{flex:none;width:56px;height:56px;object-fit:contain;background:#fff;border-radius:14px;padding:6px;box-shadow:0 2px 8px rgba(0,0,0,.25)}#hLogo[hidden]{display:none}.lgo{display:flex;align-items:center;gap:12px}.lgo #lgoBtn{width:72px;height:72px;flex:none;border-radius:16px;border:1px dashed var(--line);background:#fff center/contain no-repeat;display:grid;place-items:center;color:#2d2b55;padding:0;min-height:0}.lgo #lgoBtn svg{width:26px;height:26px}
 .greet b{display:block;font-size:20px;font-weight:700}
 .greet span{color:var(--muted);font-size:14px}
 .qa{display:flex;justify-content:space-between;gap:10px;margin:0 0 14px}
@@ -680,7 +680,7 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
     <button class="btn p lbl" id="addBtn" aria-label="Nuovo cliente" title="Nuovo cliente"><span data-i="add"></span><span id="addLbl">Nuovo cliente</span></button>
   </div>
   <div id="homeView">
-    <div class="greet"><b id="hGreet"></b><span id="hDate"></span></div>
+    <div class="greet"><div class="gtx"><b id="hGreet"></b><span id="hDate"></span></div><img id="hLogo" alt="" hidden></div>
     <div id="hWel"></div>
     <div class="hh lb-only" id="hVend"><span>Vendite</span></div>
     <div class="sum" id="hSum"></div>
@@ -846,6 +846,7 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
   <div class="top"><h2 id="stTitle">Impostazioni</h2><button class="btn ico pk" id="stBack" type="button" aria-label="Chiudi" title="Chiudi"><span data-i="back"></span></button></div>
   <div id="stHub"></div>
 <div class="sp" data-sp="az">
+  <div class="f"><label>Logo</label><div class="lgo"><button id="lgoBtn" type="button" aria-label="Carica il logo" title="Carica il logo"></button><div style="flex:1;min-width:0"><button class="btn lbl" id="lgoDel" type="button" hidden style="width:100%;margin:0"><span data-i="trash"></span>Rimuovi logo</button><div class="hint" id="lgoH">Facoltativo. Se lo carichi, compare nella Home accanto al saluto. Meglio un file quadrato o con sfondo trasparente.</div></div></div><input id="lgoFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></div>
   <div class="f"><label for="st_az">Nome azienda</label><input id="st_az" autocomplete="off"><div class="hint">Viene inserito in tutte le comunicazioni: informativa privacy, promemoria, oggetti, firma e nome del mittente.</div><div class="err" id="err-st_az" hidden></div></div>
   <div class="f"><label for="st_piva">Partita IVA</label><input id="st_piva" autocomplete="off"></div>
   <div class="f"><label for="st_ind">Indirizzo della sede</label><input id="st_ind" autocomplete="off"></div>
@@ -1145,6 +1146,6 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.47.8"></script>
+<script src="app.js?v=1.48.0"></script>
 </body>
 </html>

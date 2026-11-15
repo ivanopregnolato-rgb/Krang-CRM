@@ -8902,6 +8902,7 @@ function actions(){const A=[],noInf=[],td=ymd(),add=(pri,ic,title,sub,go)=>A.pus
 function infoBtn(el,text){el.style.position='relative';const b=document.createElement('button');b.type='button';b.className='ib';b.setAttribute('aria-label','Informazioni');b.title='Informazioni';b.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>';let tip=null;
   b.onclick=e=>{e.stopPropagation();if(tip){tip.remove();tip=null;b.classList.remove('on');return}tip=document.createElement('div');tip.className='itip';tip.textContent=text;el.append(tip);b.classList.add('on')};el.append(b)}
 function renderH(){
+  try{paintLogo()}catch(e){}
   const hr=new Date().getHours(),op=(()=>{try{return localStorage.getItem('crm-op')||''}catch(e){return''}})();
   try{paintWel()}catch(e){}
   $('hGreet').textContent=(hr<13?'Buongiorno':hr<18?'Buon pomeriggio':'Buonasera')+(op?', '+op:'');
@@ -10748,6 +10749,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.0','Nuova disposizione: «Altro» è ora una pagina vera, non più un menu a comparsa. Raccoglie Attività, Prodotti, Analytics, Marketing, Impostazioni, Aiuto e Info in due riquadri, con la barra in basso sempre visibile. Inoltre lo scorrimento di lato nella scheda cliente segue l’ordine delle linguette.'],
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
+['1.48.0','Profilo azienda: puoi caricare il logo (Impostazioni → Azienda). Se presente, compare nella Home accanto al saluto. Viene ridimensionato sul telefono e sincronizzato con le altre impostazioni.'],
 ['1.47.8','Il pulsante tondo della Home (nuovo task) e gli altri pulsanti di aggiunta mostrano un semplice «+» invece dell’icona della persona.'],
 ['1.47.7','Con una scheda aperta la pagina sotto non scorre più: sparisce la barra di scorrimento che compariva nelle schede cliente con pochi dati.'],
 ['1.47.6','Nuova disposizione: nella scheda del lead «Converti», «Scarta» ed «Elimina» compaiono solo nel Riepilogo; nelle schede a scorrimento la barra di scorrimento non si vede più.'],
@@ -11501,3 +11503,18 @@ window.paintMore=function(){const w=$('moreView');if(!w)return;w.textContent='';
 /* con una scheda aperta la pagina sotto non scorre (e non mostra la sua barra di scorrimento) */
 (function(){const upd=()=>{const open=[...document.querySelectorAll('.sheet')].some(s=>!s.hidden);document.documentElement.classList.toggle('sh-open',open)};
   let t=0;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(upd,20)}).observe(document.body,{subtree:true,attributes:true,attributeFilter:['hidden'],childList:true});upd()})();
+
+/* logo aziendale: ridimensionato sul telefono (max 320 px), salvato nelle impostazioni, mostrato nella Home */
+window.paintLogo=function(){const u=okImg(S.logo||''),hl=$('hLogo'),b=$('lgoBtn'),d=$('lgoDel');
+  if(hl){hl.hidden=!u;if(u){if(hl.getAttribute('src')!==u)hl.src=u;hl.alt=S.azienda?'Logo di '+S.azienda:'Logo'}else hl.removeAttribute('src')}
+  if(b){b.style.backgroundImage=u?"url('"+u+"')":'';b.innerHTML=u?'':ICONS.camera}if(d)d.hidden=!u};
+async function logoFromFile(f){let url;try{const im=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=url=URL.createObjectURL(f)});
+  let w0=im.naturalWidth||im.width||320,h0=im.naturalHeight||im.height||320;if(!w0||!h0){w0=h0=320}
+  for(const mx of[320,240,160]){const k=Math.min(1,mx/Math.max(w0,h0)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(w0*k));c.height=Math.max(1,Math.round(h0*k));c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    let d=c.toDataURL('image/webp',.9);if(!/^data:image\/webp/.test(d))d=c.toDataURL('image/png');if(d.length<140000)return d}
+  return ''}finally{if(url)URL.revokeObjectURL(url)}}
+$('lgoBtn').onclick=()=>$('lgoFile').click();
+$('lgoDel').onclick=()=>{delete S.logo;saveS();paintLogo();toast('Logo rimosso.')};
+$('lgoFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{const d=await logoFromFile(f);if(!d||!okImg(d)){toast('Immagine non utilizzabile o troppo pesante.');return}S.logo=d;saveS();paintLogo();toast('Logo salvato.')}catch(err){toast('Immagine non leggibile.')}};
+try{paintLogo()}catch(e){}
