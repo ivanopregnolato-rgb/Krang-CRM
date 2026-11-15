@@ -398,7 +398,8 @@ function renderO(){
   if(oView==='list')opps.filter(o=>(!oFilt||o.fase===oFilt)&&om(o)).sort((a,b)=>rsScore(oReasons(b))-rsScore(oReasons(a))||fIdx(a.fase)-fIdx(b.fase)||(a.data||'9').localeCompare(b.data||'9')).forEach(o=>L.append(oCard(o,false)));
   else FASI.filter(f=>!oFilt||f[0]===oFilt).forEach(f=>{const col=h('div','col'),items=opps.filter(o=>o.fase===f[0]&&om(o)).sort((a,b)=>rsScore(oReasons(b))-rsScore(oReasons(a)));const hd=h('h3');hd.style.background=f[3];hd.append(h('span','',f[1]),h('span','',items.length+' · '+eur(sum(items))));col.append(hd);items.forEach(o=>col.append(oCard(o,true)));K.append(col)})}
 try{trackF()}catch(e){}
-function setTab(v){tab=v;document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+function paintTabs(mo){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.x==='more'?(mo||!document.querySelector('#tabs [data-v="'+tab+'"]')):(!mo&&b.dataset.v===tab)))}
+function setTab(v){tab=v;paintTabs(false);
   const c=v==='clienti';$('homeView').hidden=v!=='home';$('oppView').hidden=v!=='opp';$('prodView').hidden=v!=='prod';$('leadView').hidden=v!=='lead';$('list').hidden=!c;$('q').hidden=!c;$('qRow').hidden=!c;$('cFilt').hidden=!c;$('count').hidden=!c;$('cfRow').hidden=!c;document.querySelector('.bar').hidden=true;
   $('title').textContent={home:'Home',clienti:'Clienti',lead:'Lead',opp:'Opportunità',prod:'Prodotti'}[v];
   const l={home:'',clienti:'Nuovo cliente',lead:'Nuovo lead',opp:'Nuova opportunità',prod:'Nuovo prodotto'}[v];$('addBtn').setAttribute('aria-label',l);$('addBtn').title=l;$('addLbl').textContent=l;if(v==='prod')renderP();if(v==='home')renderH();if(c)render();if(v==='lead')renderL()}
@@ -10130,8 +10131,8 @@ window.openLst=l=>{const L=l?JSON.parse(JSON.stringify(l)):{id:'l'+Date.now().to
   back.onclick=()=>{if(sig()===s0){$('cpqEd').hidden=true;return}$('mDirty').hidden=false;$('dC').onclick=()=>{$('mDirty').hidden=true};$('dN').onclick=()=>{$('mDirty').hidden=true;$('cpqEd').hidden=true};$('dY').onclick=()=>{$('mDirty').hidden=true;doSave()}}};
 }
 setTimeout(()=>{try{runBday()}catch(e){}try{runJr()}catch(e){}},900);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>{try{runBday()}catch(e){}try{runJr()}catch(e){}},1200)});
-{const mb=$('menuBtn'),mn=$('appMenu'),bk=$('amBack');const close=()=>{mn.hidden=true;bk.hidden=true;mb.setAttribute('aria-expanded','false')};
- mb.onclick=()=>{const o=mn.hidden;mn.hidden=!o;bk.hidden=!o;mb.setAttribute('aria-expanded',String(o));if(o)mn.querySelector('button').focus()};bk.onclick=close;
+{const mb=$('menuBtn'),mn=$('appMenu'),bk=$('amBack');const close=()=>{mn.hidden=true;bk.hidden=true;mb.setAttribute('aria-expanded','false');paintTabs(false)};
+ mb.onclick=()=>{const o=mn.hidden;mn.hidden=!o;bk.hidden=!o;mb.setAttribute('aria-expanded',String(o));paintTabs(o);if(o)mn.querySelector('button').focus()};bk.onclick=close;
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!mn.hidden){close();mb.focus()}});
  mn.onclick=e=>{const b=e.target.closest('button');if(!b)return;close();({home:()=>setTab('home'),tk:()=>tkList(),an:()=>openAn(),prod:()=>setTab('prod'),mkt:()=>setTab('mkt'),set:()=>{openSettings();paintBro()},info:()=>openInfo(),help:()=>openHelp()})[b.dataset.m]()}}
 
@@ -10736,7 +10737,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.42.2','Attività e promemoria più chiari: scadenza e ora sono affiancate, i comandi in fondo sono più ordinati e la pagina Promemoria è stata ridisegnata. Non compare più la richiesta di salvare quando non hai modificato nulla. Nella guida dei primi passi c’è ora il passo «I promemoria sul telefono».'],
 ['1.42.3','Installa l’app dalle Impostazioni: dove il browser lo consente (Android, Chrome, Edge) compare il pulsante «Installa l’app»; su iPhone e negli altri casi una guida passo passo spiega come aggiungere KRANG alla schermata Home. Se l’app è già installata lo indica.'],
 ['1.43.0','Nuova disposizione in prova: in Impostazioni › Aspetto › Disposizione puoi scegliere «Nuova». Le sezioni passano in basso, a portata di pollice, con la voce «Altro» per attività, prodotti e impostazioni; la Home mostra prima le cose da fare; l’elenco clienti è più compatto e il pulsante «Nuovo» è in basso a destra. La disposizione classica resta quella predefinita. Nel menu c’è ora anche la voce «Attività».'],
-['1.43.1','Nuova disposizione: sistemata la grafica dell’elenco clienti (sotto le schede comparivano delle strisce colorate).'],
+['1.43.1','Nuova disposizione: sistemata la grafica dell’elenco clienti (sotto le schede comparivano delle strisce colorate) e la voce «Altro» ora si evidenzia quando apri il menu o una sua pagina.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
