@@ -10418,6 +10418,8 @@ const SB=(()=>{
   /* a ogni accesso con password: la chiave dei dati è protetta dalla password dell'account, senza che l'utente scelga nulla */
   /* inviti: il codice protegge la chiave dei dati, il server non la legge */
   isCollab:()=>WS.role==='collab',ws:()=>({owner:WS.o,scope:WS.scope,name:WS.name,role:WS.role}),
+  async pendingInvite(){let c='';try{c=localStorage.getItem('crm-invite')||''}catch(e){}if(c)return c;try{const u=await js('/auth/v1/user',{auth:1});return(u&&u.user_metadata&&u.user_metadata.kcrm_inv)||''}catch(e){return ''}},
+  async clearInvite(){try{localStorage.removeItem('crm-invite')}catch(e){}try{await js('/auth/v1/user',{method:'PUT',auth:1,json:{data:{kcrm_inv:null}}})}catch(e){}},
   async invite(name,scope){if(WS.role==='collab'||!E.raw)throw lockErr();const code=rkNew(),salt=rnd(16),w=b64(salt)+'.'+await wrap(E.raw,await kek(rkNorm(code),salt,RIT));
    await js('/rest/v1/team_invites',{method:'POST',auth:1,headers:{Prefer:'return=minimal'},json:{code_h:await sha256hex(rkNorm(code)),owner:uid(),name:String(name||'').slice(0,60),scope:scope==='own'?'own':'all',wrapped:w}});return code},
   async team(){return js('/rest/v1/team_members?owner=eq.'+uid()+'&select=member,name,scope,created&order=created.asc',{auth:1})},
@@ -10522,7 +10524,7 @@ const SB=(()=>{
  async function fb(row){await js('/rest/v1/assistant_feedback',{method:'POST',auth:true,headers:{Prefer:'return=minimal'},json:row})}
  return{db,uid,e2e,fb,ai,vies,csearch,usage,push,consent,leadApi,alog,arecent,logoutAll,did,setCap:t=>{capTok=t||''},email:()=>ses&&ses.user?ses.user.email:'',has:()=>!!ses,msg,wipe,
   async signIn(email,password){setSes(await js('/auth/v1/token?grant_type=password',{method:'POST',json:Object.assign({email,password},sec())}))},
-  async signUp(email,password){const j=await js('/auth/v1/signup',{method:'POST',json:Object.assign({email,password},sec())});if(j&&j.access_token){setSes(j);return true}return false},
+  async signUp(email,password){let inv='';try{inv=localStorage.getItem('crm-invite')||''}catch(e){}const j=await js('/auth/v1/signup',{method:'POST',json:Object.assign({email,password},inv?{data:{kcrm_inv:inv}}:{},sec())});if(j&&j.access_token){setSes(j);return true}return false},
   recover:email=>js('/auth/v1/recover',{method:'POST',json:Object.assign({email},sec())}),
   resend:email=>js('/auth/v1/resend',{method:'POST',json:Object.assign({type:'signup',email},sec())}),
   async logout(){try{if(ses)await raw('/auth/v1/logout?scope=local',{method:'POST',auth:1})}catch(e){}ses=null;save()},
@@ -10536,8 +10538,7 @@ const SB=(()=>{
   enter(pw){const id=uid();let prev='';try{prev=localStorage.getItem(UK)||''}catch(e){}const fresh=prev!==id;if(fresh){wipe();try{localStorage.setItem(UK,id)}catch(e){}}
    const fin=()=>{if(fresh){location.reload();return}document.documentElement.classList.remove('noauth');CLOUD.on=true;cloudGate()};
    if(!pw){fin();return}
-   let inv='';try{inv=localStorage.getItem('crm-invite')||''}catch(e){}
-   (inv?e2e.acceptInvite(inv,pw).then(()=>{try{localStorage.removeItem('crm-invite')}catch(e){}toast('Invito accettato: lavori sul CRM del titolare.');return{}}).catch(er=>{try{localStorage.removeItem('crm-invite')}catch(e){}toast(er&&er.message?er.message.charAt(0).toUpperCase()+er.message.slice(1)+'.':'Invito non accettato.');return e2e.auto(pw)}):e2e.auto(pw)).then(r=>{r=r||{};
+   e2e.pendingInvite().then(inv=>inv?e2e.acceptInvite(inv,pw).then(async()=>{await e2e.clearInvite();toast('Invito accettato: lavori sul CRM del titolare.');return{}}).catch(async er=>{await e2e.clearInvite();toast(er&&er.message?er.message.charAt(0).toUpperCase()+er.message.slice(1)+'.':'Invito non accettato.');return e2e.auto(pw)}):e2e.auto(pw)).then(r=>{r=r||{};
     if(r.locked){E2EUI.open('locked',{pw,done:fin});return}
     if(r.rk){E2EUI.showRk(r.rk,fin);return}
     fin()}).catch(()=>fin())},
@@ -10795,6 +10796,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.52.3','Invito collaboratore: il codice non si perde più se crei l’account e confermi l’email da un altro browser o dall’app installata.'],
 ['1.52.2','Registrazione: se la password viene rifiutata, l’app dice il motivo reale (troppo corta, troppo semplice o già comparsa in violazioni di dati).'],
 ['1.52.1','Impostazioni: il pulsante «Salva modifiche» non compare più per un attimo all’apertura.'],
 ['1.52.0','Collaboratori (in prova): in Impostazioni → Collaboratori il titolare invita chi lavora con lui con un link; il collaboratore accede ai dati del titolare.'],
