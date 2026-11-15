@@ -440,7 +440,6 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] .cfl{overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 [data-lay="b"] .cfl::-webkit-scrollbar{display:none}
 [data-lay="b"] .cfl button{height:44px;padding:0 16px;font-size:15px;flex:none}
-[data-lay="b"] #list .swp{margin-bottom:8px}
 [data-lay="b"] #list .row{margin:0;padding:10px 12px;gap:12px}
 [data-lay="b"] #list .row .av{width:44px;height:44px;font-size:16px;border-radius:14px}
 [data-lay="b"] #list .row em:not(.warn):not(:has(.flag)){display:none}
@@ -475,6 +474,28 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] #sheet .btns{position:sticky;bottom:0;z-index:2;background:var(--bg);padding:10px 0 4px;margin-top:14px;border-top:1px solid var(--line)}
 [data-lay="b"] #sheet #acts{display:none!important}
 [data-lay="b"] #sumF .sacts{display:none}
+/* scheda Dati come da progetto */
+.fg[hidden]{display:none!important}
+[data-lay="b"] #fgP>.gt::before{content:"Persona"}[data-lay="b"] #sheet.t-az #fgP>.gt::before{content:"Referente"}
+[data-lay="b"] #sheet.t-az label[for=azienda]::after{content:" (obbligatorio)";color:#ffa24d;font-weight:600}
+[data-lay="b"] #sheet .cph{margin:0 0 10px}[data-lay="b"] #sheet .cph .av.big{width:64px;height:64px;min-height:0;border-radius:18px}
+[data-lay="b"] #sheet .f label{font-size:14px;color:var(--muted)}
+[data-lay="b"]:is([data-tpl="neon"],[data-tpl="notte"]) #sheet :is(input,select,textarea):not([type=checkbox]):not([type=file]),[data-lay="b"]:is([data-tpl="neon"],[data-tpl="notte"]) :is(#lSheet,#oSheet) :is(input,select,textarea):not([type=checkbox]):not([type=file]){background:#06203f;border:1.5px solid #6688bb;border-radius:14px;min-height:50px}
+[data-lay="b"]:is([data-tpl="neon"],[data-tpl="notte"]) #sheet #seg{background:#06203f;border:1px solid var(--line);border-radius:14px;padding:4px;gap:4px}
+[data-lay="b"] #sheet #seg button{min-height:44px;border-radius:10px;font-weight:650}
+[data-lay="b"] #sheet #seg button:not(.on){background:none;color:var(--muted)}
+/* icone nell'elenco Da fare */
+[data-lay="b"] .todo .pth[data-ic=clock]{background:none!important;border:2px solid var(--muted);border-radius:50%}[data-lay="b"] .todo .pth[data-ic=clock] svg{display:none}
+[data-lay="b"] .todo .pth:is([data-ic=shield],[data-ic=alert]){background:#ffd98a!important;color:#3a2a00}
+[data-lay="b"] .todo .pth:is([data-ic=box],[data-ic=scarico]){background:#4fc3ff!important;color:#052a44}
+[data-lay="b"] .todo .pth:is([data-ic=Scrivi],[data-ic=doc],[data-ic=plus],[data-ic=gift]){background:#ffa24d!important;color:#1d1b3f}
+[data-lay="b"] .todo .chv{color:var(--muted)}
+/* elenco clienti: un solo riquadro con righe separate */
+[data-lay="b"] #list{border:1px solid var(--line);border-radius:18px;background:var(--surface);overflow:hidden}
+[data-lay="b"] #list .swp{margin:0;border-radius:0;border-top:1px solid var(--line)}
+[data-lay="b"] #list .swp:first-child{border-top:0}
+[data-lay="b"] #list .row{background:var(--surface);border:0;box-shadow:none;border-radius:0}
+[data-lay="b"] #list:empty{display:none}
 [data-lay="b"] #tabs button{font-size:11px;letter-spacing:-.01em;padding:0 1px}
 [data-lay="b"] #tkList .tkx{border-radius:16px}
 
@@ -860,16 +881,20 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
   <div id="dupBan" class="hint" hidden style="border:1px solid var(--line);border-radius:12px;padding:10px;margin:0 0 10px"></div>
   <div class="photo cph"><button class="av big" id="photoBtn" type="button" aria-label="Foto del cliente" title="Foto del cliente"></button><div class="acts" id="acts" hidden></div><button class="btn ico" id="photoDel" type="button" hidden aria-label="Rimuovi foto" title="Rimuovi foto"><span data-i="x"></span></button></div>
   <input type="file" id="photoFile" accept="image/*" hidden>
-<div class="fg"><div class="gt lb-only">Anagrafica</div>
+<div id="fgAP">
+<div class="fg" id="fgP"><div class="gt lb-only"></div>
   <div class="two">
     <div class="f"><label for="nome">Nome</label><input id="nome" autocomplete="off"></div>
     <div class="f"><label for="cognome">Cognome</label><input id="cognome" autocomplete="off"></div>
   </div>
+  <div class="f"><label for="ruolo">Ruolo</label><input id="ruolo"></div>
+  <div class="f"><label for="nascita">Data di nascita</label><input id="nascita" type="date"><div class="err" id="err-nascita" hidden></div><div class="hint" id="nascitaH"></div></div>
+</div>
+<div class="fg" id="fgA"><div class="gt lb-only">Azienda</div>
   <div class="f"><label for="azienda">Azienda</label><input id="azienda"></div>
   <div class="f" id="pecF" hidden><label for="pec">PEC</label><input id="pec" type="email" inputmode="email" autocomplete="off" placeholder="nome@pec.azienda.it"><div class="err" id="err-pec" hidden></div></div>
   <div class="f" id="pivaF" hidden><label for="piva">Partita IVA</label><input id="piva" inputmode="text" autocomplete="off"><div class="err" id="err-piva" hidden></div></div>
-  <div class="f"><label for="ruolo">Ruolo</label><input id="ruolo"></div>
-  <div class="f"><label for="nascita">Data di nascita</label><input id="nascita" type="date"><div class="err" id="err-nascita" hidden></div><div class="hint" id="nascitaH"></div></div>
+</div>
 </div>
 <div class="fg"><div class="gt lb-only">Contatti</div>
   <div class="f"><label for="telefono">Telefono</label><div class="tel"><button type="button" class="pcode" id="paeseBtn" aria-label="Prefisso internazionale"></button><select id="paese" aria-label="Prefisso internazionale" hidden></select><input id="telefono" type="tel" inputmode="tel" autocomplete="off"></div><div class="err" id="err-telefono" hidden></div></div>
