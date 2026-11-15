@@ -1,5 +1,5 @@
 /* disposizione scelta in Impostazioni > Aspetto: applicata subito per evitare sfarfallii */
-try{if(localStorage.getItem('crm-lay')==='b')document.documentElement.setAttribute('data-lay','b')}catch(e){}
+try{if(localStorage.getItem('crm-lay')!=='a')document.documentElement.setAttribute('data-lay','b')}catch(e){document.documentElement.setAttribute('data-lay','b')}
 /* installazione: il browser (Chrome, Edge, Samsung) offre l'evento solo se l'app è installabile */
 window.__bip=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();window.__bip=e;try{instPaint()}catch(x){}});addEventListener('appinstalled',()=>{window.__bip=null;try{instPaint();toast('App installata.')}catch(x){}});
 try{guideify(document)}catch(e){}
@@ -10570,9 +10570,9 @@ const SB=(()=>{
     b.append(sw,tx);if(cur===t[0]){const ck=h('span');ck.innerHTML=ICONS.check;ck.style.cssText='flex:none;width:26px;height:26px;color:var(--ink)';b.append(ck)}
     b.onclick=()=>setTpl(t[0]);tl.append(b)});tl.append(h('div','hint','La scelta vale solo su questo dispositivo.'))};
   const layF=h('div','f'),layL=h('div');layL.style.cssText='display:grid;gap:12px;margin-top:8px';
-  const LAY=[['','Classica','Sezioni in alto e menu nell’angolo: la disposizione di sempre.'],['b','Nuova (in prova)','Sezioni in basso, a portata di pollice. La Home mostra prima le cose da fare, l’elenco clienti è più compatto e il pulsante «Nuovo» è in basso a destra.']];
+  const LAY=[['','Classica','Sezioni in alto e menu nell’angolo: la disposizione di sempre.'],['b','Nuova','Sezioni in basso, a portata di pollice. La Home mostra prima le cose da fare, l’elenco clienti è più compatto e il pulsante «Nuovo» è in basso a destra.']];
   const curLay=()=>document.documentElement.getAttribute('data-lay')==='b'?'b':'';
-  const setLay=v=>{try{v?localStorage.setItem('crm-lay',v):localStorage.removeItem('crm-lay')}catch(e){}const d=document.documentElement;v?d.setAttribute('data-lay',v):d.removeAttribute('data-lay');paintLay()};
+  const setLay=v=>{try{localStorage.setItem('crm-lay',v||'a')}catch(e){}const d=document.documentElement;v?d.setAttribute('data-lay',v):d.removeAttribute('data-lay');paintLay()};
   const paintLay=()=>{layL.textContent='';const cur=curLay();LAY.forEach(t=>{const b=h('button','');b.type='button';b.setAttribute('aria-pressed',String(cur===t[0]));
     b.style.cssText='display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:12px 14px;border-radius:18px;background:var(--surface);color:var(--ink);cursor:pointer;border:2px solid '+(cur===t[0]?'var(--act)':'var(--line)');
     const sw=h('span');sw.style.cssText='flex:none;width:44px;height:64px;border-radius:10px;padding:5px;display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);background:var(--bg)';
@@ -10751,6 +10751,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.0','Nuova disposizione: «Altro» è ora una pagina vera, non più un menu a comparsa. Raccoglie Attività, Prodotti, Analytics, Marketing, Impostazioni, Aiuto e Info in due riquadri, con la barra in basso sempre visibile. Inoltre lo scorrimento di lato nella scheda cliente segue l’ordine delle linguette.'],
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
+['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
 ['1.48.3','Tema Neon: i contatori (numeri sulle voci di menu e sulle schede di cliente, lead, opportunità) sono arancioni con scritta blu, in entrambi i layout.'],
 ['1.48.2','Nuova disposizione: il «+» della Home ha la stessa icona, dimensione e posizione di quello delle altre pagine.'],
 ['1.48.1','Il logo aziendale compare anche nell’intestazione dei preventivi e del listino prezzi in PDF, e nell’anteprima del preventivo.'],

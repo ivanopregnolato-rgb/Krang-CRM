@@ -11,3 +11,4 @@
  /* font: caricato senza bloccare la pagina (niente gestori inline) */
  var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap';document.head.appendChild(l);
 })();
+try{if(localStorage.getItem('crm-lay')!=='a')document.documentElement.setAttribute('data-lay','b')}catch(e){document.documentElement.setAttribute('data-lay','b')}
