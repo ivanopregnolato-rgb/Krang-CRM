@@ -445,6 +445,28 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] #list .row .av{width:44px;height:44px;font-size:16px;border-radius:14px}
 [data-lay="b"] #list .row em:not(.warn):not(:has(.flag)){display:none}
 [data-lay="b"] #list>.hint{display:none}
+/* tab sottolineate anche su lead e opportunità */
+[data-lay="b"] :is(#lTabs,#oTabs){display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:0;margin:0 0 14px;box-shadow:none}
+[data-lay="b"] :is(#lTabs,#oTabs)::-webkit-scrollbar{display:none}
+[data-lay="b"] :is(#lTabs,#oTabs) button{flex:none;flex-direction:row;gap:6px;height:46px;min-height:46px;padding:0 14px;background:none!important;border:0;border-bottom:3px solid transparent;border-radius:0;font-size:15px;font-weight:600;width:auto}
+[data-lay="b"] :is(#lTabs,#oTabs) button.on{color:var(--ink);border-bottom-color:#ffa24d}
+[data-lay="b"] :is(#lTabs,#oTabs) button [data-i],[data-lay="b"] :is(#lTabs,#oTabs) button svg{display:none}
+[data-lay="b"] :is(#lTabs,#oTabs) .cnt{position:static;margin-left:2px}
+/* intestazioni di gruppo nei moduli */
+[data-lay="b"] :is(.f,.two):has(>#telefono,#telefono)::before,[data-lay="b"] .two:has(#nome)::before,[data-lay="b"] .f:has(#note)::before,[data-lay="b"] .f:has(#l_email)::before,[data-lay="b"] .two:has(#l_nome)::before,[data-lay="b"] .f:has(#l_rich)::before,[data-lay="b"] .f:has(#o_titolo)::before,[data-lay="b"] .two:has(#o_valore)::before,[data-lay="b"] .f:has(#o_prod)::before{display:block;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.75;margin:18px 2px 8px}
+[data-lay="b"] .two:has(#nome)::before,[data-lay="b"] .two:has(#l_nome)::before,[data-lay="b"] .two:has(#o_valore)::before{grid-column:1/-1}
+[data-lay="b"] .two:has(#nome)::before{content:"Anagrafica"}
+[data-lay="b"] .f:has(#telefono)::before{content:"Contatti"}
+[data-lay="b"] .f:has(#note)::before{content:"Note"}
+[data-lay="b"] .two:has(#l_nome)::before{content:"Anagrafica"}
+[data-lay="b"] .f:has(#l_email)::before{content:"Contatti"}
+[data-lay="b"] .f:has(#l_rich)::before{content:"Richiesta"}
+[data-lay="b"] .f:has(#o_titolo)::before{content:"Opportunità";margin-top:4px}
+[data-lay="b"] .two:has(#o_valore)::before{content:"Valore e tempi"}
+[data-lay="b"] .f:has(#o_prod)::before{content:"Prodotti e preventivi"}
+[data-lay="b"] #tabs button{font-size:11px;letter-spacing:-.01em;padding:0 1px}
+[data-lay="b"] #tkList .tkx{border-radius:16px}
+
 [data-lay="b"] #cTabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:0;margin:0 0 14px;box-shadow:none}
 [data-lay="b"] #cTabs::-webkit-scrollbar{display:none}
 [data-lay="b"] #cTabs button{flex:none;flex-direction:row;gap:6px;height:46px;min-height:46px;padding:0 12px;background:none!important;border:0;border-bottom:3px solid transparent;border-radius:0;font-size:15px;font-weight:600;color:var(--mut,inherit);width:auto}
