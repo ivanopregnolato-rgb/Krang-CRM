@@ -10760,6 +10760,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.50.6','La foto nella scheda cliente torna alla dimensione di prima (84 px) anche con il nuovo layout.'],
 ['1.50.5','Nell’elenco dei lead il nome non compare più due volte quando coincide con il titolo della scheda.'],
 ['1.50.4','Nell’elenco dei lead l’etichetta della sorgente ha un colore diverso per ogni sorgente (form web, email, manuale e le altre). I contatori sulla scheda attiva hanno i colori invertiti (blu con numero arancione) in tutte le barre con sfondo arancione.'],
 ['1.50.3','Il «+» è identico ovunque: stessa posizione, stessa dimensione e perfettamente centrato nel cerchio, anche dentro le schede Opportunità e Task del cliente.'],
