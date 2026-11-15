@@ -452,18 +452,15 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] :is(#lTabs,#oTabs) button.on{color:var(--ink);border-bottom-color:#ffa24d}
 [data-lay="b"] :is(#lTabs,#oTabs) button [data-i],[data-lay="b"] :is(#lTabs,#oTabs) button svg{display:none}
 [data-lay="b"] :is(#lTabs,#oTabs) .cnt{position:static;margin-left:2px}
-/* intestazioni di gruppo nei moduli */
-[data-lay="b"] :is(.f,.two):has(>#telefono,#telefono)::before,[data-lay="b"] .two:has(#nome)::before,[data-lay="b"] .f:has(#note)::before,[data-lay="b"] .f:has(#l_email)::before,[data-lay="b"] .two:has(#l_nome)::before,[data-lay="b"] .f:has(#l_rich)::before,[data-lay="b"] .f:has(#o_titolo)::before,[data-lay="b"] .two:has(#o_valore)::before,[data-lay="b"] .f:has(#o_prod)::before{display:block;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.75;margin:18px 2px 8px}
-[data-lay="b"] .two:has(#nome)::before,[data-lay="b"] .two:has(#l_nome)::before,[data-lay="b"] .two:has(#o_valore)::before{grid-column:1/-1}
-[data-lay="b"] .two:has(#nome)::before{content:"Anagrafica"}
-[data-lay="b"] .f:has(#telefono)::before{content:"Contatti"}
-[data-lay="b"] .f:has(#note)::before{content:"Note"}
-[data-lay="b"] .two:has(#l_nome)::before{content:"Anagrafica"}
-[data-lay="b"] .f:has(#l_email)::before{content:"Contatti"}
-[data-lay="b"] .f:has(#l_rich)::before{content:"Richiesta"}
-[data-lay="b"] .f:has(#o_titolo)::before{content:"Opportunità";margin-top:4px}
-[data-lay="b"] .two:has(#o_valore)::before{content:"Valore e tempi"}
-[data-lay="b"] .f:has(#o_prod)::before{content:"Prodotti e preventivi"}
+/* gruppi dei moduli come riquadri */
+.fg{display:contents}.gt{display:none}
+[data-lay="b"] .fg{display:block;border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:6px 14px 6px;margin:0 0 14px}
+[data-lay="b"] .fg>.gt{display:block;font-size:17px;font-weight:800;margin:10px 0 6px}
+[data-lay="b"] .fg>.f:last-child{margin-bottom:8px}
+[data-lay="b"] :is(#sum,#sum2){display:flex;overflow-x:auto;scrollbar-width:none;gap:8px;margin:8px 0}
+[data-lay="b"] :is(#sum,#sum2)::-webkit-scrollbar{display:none}
+[data-lay="b"] :is(#sum,#sum2)>*{flex:none;min-width:128px;padding:8px 10px}
+[data-lay="b"] #sum2{margin-top:0}
 [data-lay="b"] #tabs button{font-size:11px;letter-spacing:-.01em;padding:0 1px}
 [data-lay="b"] #tkList .tkx{border-radius:16px}
 
@@ -847,6 +844,7 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
   <div id="dupBan" class="hint" hidden style="border:1px solid var(--line);border-radius:12px;padding:10px;margin:0 0 10px"></div>
   <div class="photo cph"><button class="av big" id="photoBtn" type="button" aria-label="Foto del cliente" title="Foto del cliente"></button><div class="acts" id="acts" hidden></div><button class="btn ico" id="photoDel" type="button" hidden aria-label="Rimuovi foto" title="Rimuovi foto"><span data-i="x"></span></button></div>
   <input type="file" id="photoFile" accept="image/*" hidden>
+<div class="fg"><div class="gt lb-only">Anagrafica</div>
   <div class="two">
     <div class="f"><label for="nome">Nome</label><input id="nome" autocomplete="off"></div>
     <div class="f"><label for="cognome">Cognome</label><input id="cognome" autocomplete="off"></div>
@@ -856,12 +854,17 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
   <div class="f" id="pivaF" hidden><label for="piva">Partita IVA</label><input id="piva" inputmode="text" autocomplete="off"><div class="err" id="err-piva" hidden></div></div>
   <div class="f"><label for="ruolo">Ruolo</label><input id="ruolo"></div>
   <div class="f"><label for="nascita">Data di nascita</label><input id="nascita" type="date"><div class="err" id="err-nascita" hidden></div><div class="hint" id="nascitaH"></div></div>
+</div>
+<div class="fg"><div class="gt lb-only">Contatti</div>
   <div class="f"><label for="telefono">Telefono</label><div class="tel"><button type="button" class="pcode" id="paeseBtn" aria-label="Prefisso internazionale"></button><select id="paese" aria-label="Prefisso internazionale" hidden></select><input id="telefono" type="tel" inputmode="tel" autocomplete="off"></div><div class="err" id="err-telefono" hidden></div></div>
   <div class="f"><label for="email">Email</label><input id="email" type="email" autocomplete="off"><div class="err" id="err-email" hidden></div></div>
   <div class="f"><label for="sito">Sito web</label><input id="sito"></div>
   <div class="f addr"><label for="indirizzo">Indirizzo</label><div class="arow"><textarea id="indirizzo" rows="2" style="resize:none;min-height:0" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="addrList"></textarea><a id="mapBtn" class="mapb" target="_blank" rel="noopener" hidden title="Apri nella app Mappe" aria-label="Apri nella app Mappe"></a></div><div id="addrList" class="sug" role="listbox" hidden></div></div>
   <div id="mapThumb" class="mapt" hidden style="margin:-4px 0 12px"></div>
+</div>
+<div class="fg"><div class="gt lb-only">Note</div>
   <div class="f"><label for="note">Note</label><textarea id="note" rows="4"></textarea></div>
+</div>
   <div id="privF" class="pane-hide">
   <div class="req" id="p_sum"></div>
   <div class="f" id="p_laterW" hidden><label class="chk"><input type="checkbox" id="p_later"><span>Invierò l’informativa più tardi<em>Salvi il cliente ora: l’informativa resterà da inviare e comparirà tra le cose da fare.</em></span></label><div class="err" id="err-p_later" hidden></div></div>
@@ -911,18 +914,24 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 <div class="lp" data-lp="dati">
   <div class="f" id="l_pasteBox"><label for="l_paste">Incolla l’email o il messaggio del form</label><textarea id="l_paste" rows="4" placeholder="Incolla qui il testo: nome, email e richiesta vengono ricavati da soli"></textarea><button class="btn lbl" id="l_ext" type="button" style="margin-top:8px"><span data-i="search"></span> Ricava i dati</button><div class="hint" id="l_exth"></div></div>
   <div class="seg" id="l_seg" role="group" aria-label="Tipo di contatto"><button type="button" class="on" data-t="persona"><span data-i="user"></span>Persona</button><button type="button" data-t="azienda"><span data-i="building"></span>Azienda</button></div>
+<div class="fg"><div class="gt lb-only">Anagrafica</div>
   <div class="two"><div class="f"><label for="l_nome">Nome</label><input id="l_nome" autocomplete="off"></div><div class="f"><label for="l_cognome">Cognome</label><input id="l_cognome" autocomplete="off"></div></div>
-  <div class="f"><label for="l_email">Email</label><input id="l_email" type="email" inputmode="email" autocomplete="off"><div class="err" id="err-l_email" hidden></div></div>
-  <div class="f"><label for="l_tel">Telefono</label><div class="tel"><button type="button" class="pcode" id="l_paeseBtn" aria-label="Prefisso internazionale"></button><select id="l_paese" hidden></select><input id="l_tel" type="tel" inputmode="tel" autocomplete="off"></div></div>
   <div class="f" id="l_azF"><label for="l_az">Azienda</label><input id="l_az" autocomplete="off"></div>
   <div class="f" id="l_pecF" hidden><label for="l_pec">PEC</label><input id="l_pec" type="email" inputmode="email" autocomplete="off" placeholder="nome@pec.azienda.it"><div class="err" id="err-l_pec" hidden></div></div>
   <div class="f" id="l_pivaF" hidden><label for="l_piva">Partita IVA</label><input id="l_piva" inputmode="text" autocomplete="off"><div class="err" id="err-l_piva" hidden></div></div>
   <div class="f"><label for="l_ruolo">Ruolo</label><input id="l_ruolo" autocomplete="off"></div>
   <div class="f"><label for="l_nascita">Data di nascita</label><input id="l_nascita" type="date"><div class="err" id="err-l_nascita" hidden></div></div>
+</div>
+<div class="fg"><div class="gt lb-only">Contatti</div>
+  <div class="f"><label for="l_email">Email</label><input id="l_email" type="email" inputmode="email" autocomplete="off"><div class="err" id="err-l_email" hidden></div></div>
+  <div class="f"><label for="l_tel">Telefono</label><div class="tel"><button type="button" class="pcode" id="l_paeseBtn" aria-label="Prefisso internazionale"></button><select id="l_paese" hidden></select><input id="l_tel" type="tel" inputmode="tel" autocomplete="off"></div></div>
   <div class="f"><label for="l_sito">Sito web</label><input id="l_sito" autocomplete="off"></div>
   <div class="f"><label for="l_ind">Indirizzo</label><textarea id="l_ind" rows="2" style="resize:none;min-height:0" autocomplete="off"></textarea></div>
+</div>
+<div class="fg"><div class="gt lb-only">Richiesta e note</div>
   <div class="f"><label for="l_rich">Richiesta</label><textarea id="l_rich" rows="5"></textarea></div>
   <div class="f"><label for="l_note">Note</label><textarea id="l_note" rows="3"></textarea></div>
+</div>
 </div>
 <div class="lp" data-lp="priv" hidden>
   <div id="l_pst"></div>
@@ -949,16 +958,24 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
   <div class="top"><h2 id="oTitle">Nuova opportunità</h2><button class="btn ico pk" id="oClose" type="button" aria-label="Chiudi" title="Chiudi"><span data-i="back"></span></button></div>
   <div class="tabs" id="oTabs"><button type="button" class="on" data-op="dati"><span data-i="target"></span>Dati</button><button type="button" data-op="tk"><span data-i="check"></span>Task<span class="cnt" id="oTkCnt"></span></button></div>
   <div class="f" id="oTkF" hidden></div>
+<div class="fg"><div class="gt lb-only">Opportunità</div>
   <div class="f"><label for="o_titolo">Titolo</label><input id="o_titolo" autocomplete="off"><div class="err" id="err-o_titolo" hidden></div></div>
   <div class="f"><label for="o_cliente">Cliente</label><select id="o_cliente"></select><button type="button" class="qrow" id="o_cl" hidden></button><div class="hint" id="o_clh"></div><div class="err" id="err-o_cliente" hidden></div></div>
   <div class="f"><label>Fase</label><div class="chips" id="o_fasi"></div></div>
   <div class="f" id="o_kpiW" hidden><label>Anzianità</label><div id="o_kpi" class="hint" style="margin:0"></div></div>
+</div>
+<div class="fg"><div class="gt lb-only">Valore e tempi</div>
   <div class="two"><div class="f"><label for="o_valore">Valore (€)</label><input id="o_valore" inputmode="decimal" autocomplete="off"><div class="err" id="err-o_valore" hidden></div></div><div class="f"><label for="o_prob">Probabilità (%)</label><input id="o_prob" inputmode="numeric" autocomplete="off"><div class="err" id="err-o_prob" hidden></div></div></div>
   <div class="two"><div class="f"><label for="o_data">Chiusura prevista</label><input id="o_data" type="date"></div><div class="f"><label for="o_fonte">Fonte</label><select id="o_fonte"></select></div></div>
+</div>
+<div class="fg"><div class="gt lb-only">Prodotti e preventivi</div>
   <div class="f"><label>Prodotti</label><div id="o_prod"></div><div class="dual"><button class="btn add" id="o_addCat" type="button" aria-label="Aggiungi dal catalogo" title="Aggiungi dal catalogo"><span data-i="box"></span></button><button class="btn add" id="o_addProd" type="button" aria-label="Aggiungi riga libera" title="Aggiungi riga libera"><span data-i="add"></span></button></div><div class="tot" id="o_tot"></div></div>
   <div class="f"><label>Preventivi</label><div id="o_quotes"></div><button class="btn lbl" id="o_addQ" type="button" aria-label="Nuovo preventivo" title="Nuovo preventivo" style="margin-top:8px"><span data-i="doc"></span> Nuovo preventivo</button><div class="hint" id="o_qhint"></div></div>
   <div class="f"><label>Allegati</label><div id="o_att"></div><button class="btn add" id="o_addAtt" type="button" aria-label="Aggiungi allegato" title="Aggiungi allegato"><span data-i="clip"></span></button><input type="file" id="o_file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" hidden><div class="hint">Massimo 500 KB per file. Le foto vengono ridimensionate.</div><div class="err" id="err-o_att" hidden></div></div>
+</div>
+<div class="fg"><div class="gt lb-only">Note</div>
   <div class="f"><label for="o_note">Note</label><textarea id="o_note" rows="3"></textarea></div>
+</div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
 <script src="app.js?v=1.44.0"></script>
