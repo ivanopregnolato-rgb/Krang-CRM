@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.44.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.44.0|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.45.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.45.0|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -451,7 +451,7 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] :is(#lTabs,#oTabs) button{flex:none;flex-direction:row;gap:6px;height:46px;min-height:46px;padding:0 14px;background:none!important;border:0;border-bottom:3px solid transparent;border-radius:0;font-size:15px;font-weight:600;width:auto}
 [data-lay="b"] :is(#lTabs,#oTabs) button.on{color:var(--ink);border-bottom-color:#ffa24d}
 [data-lay="b"] :is(#lTabs,#oTabs) button [data-i],[data-lay="b"] :is(#lTabs,#oTabs) button svg{display:none}
-[data-lay="b"] :is(#lTabs,#oTabs) .cnt{position:static;margin-left:2px}
+[data-lay="b"] :is(#lTabs,#oTabs) .cnt{position:static;margin:0 0 0 2px}
 /* gruppi dei moduli come riquadri */
 .fg{display:contents}.gt{display:none}
 [data-lay="b"] .fg{display:block;border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:6px 14px 6px;margin:0 0 14px}
@@ -461,6 +461,20 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] :is(#sum,#sum2)::-webkit-scrollbar{display:none}
 [data-lay="b"] :is(#sum,#sum2)>*{flex:none;min-width:128px;padding:8px 10px}
 [data-lay="b"] #sum2{margin-top:0}
+/* scheda cliente: testata, azioni sempre visibili, linguette fisse, barra Salva */
+[data-lay="b"] #sheetTitle .cst{display:none}
+[data-lay="b"] #qSub{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:15px;opacity:.95;flex-wrap:wrap}
+[data-lay="b"] #qSub:empty{display:none}
+[data-lay="b"] #qAct{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 6px}
+[data-lay="b"] #qAct:empty{display:none}
+[data-lay="b"] #qAct button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:64px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+[data-lay="b"] #qAct svg{width:22px;height:22px;color:#ffa24d;stroke:#ffa24d}
+[data-lay="b"] #sheet #cTabs{position:sticky;top:-12px;z-index:2;background:var(--bg);margin-top:6px;padding-top:6px}
+[data-lay="b"] #cTabs [data-p=sum]{order:0}[data-lay="b"] #cTabs [data-p=dati]{order:1}[data-lay="b"] #cTabs [data-p=tk]{order:2}[data-lay="b"] #cTabs [data-p=opp]{order:3}[data-lay="b"] #cTabs [data-p=priv]{order:4}[data-lay="b"] #cTabs [data-p=st]{order:5}
+[data-lay="b"] :is(#sheet,#lSheet,#oSheet){bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+[data-lay="b"] #sheet .btns{position:sticky;bottom:0;z-index:2;background:var(--bg);padding:10px 0 4px;margin-top:14px;border-top:1px solid var(--line)}
+[data-lay="b"] #sheet #acts{display:none!important}
+[data-lay="b"] #sumF .sacts{display:none}
 [data-lay="b"] #tabs button{font-size:11px;letter-spacing:-.01em;padding:0 1px}
 [data-lay="b"] #tkList .tkx{border-radius:16px}
 
@@ -482,7 +496,7 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] #sumF .srow small{display:block;font-size:13px;opacity:.8}
 [data-lay="b"] #sumF .srow .sv{margin-left:auto;font-weight:700;white-space:nowrap}
 [data-lay="b"] #sumF .srow.l{justify-content:space-between;min-height:48px}[data-lay="b"] #sumF .srow.l small{font-size:14px}
-[data-lay="b"] #cTabs .cnt{position:static;margin-left:2px}
+[data-lay="b"] #cTabs .cnt{position:static;margin:0 0 0 2px}
 [data-lay="b"] #sumF .late{color:#ff8fa8}
 [data-lay="b"] #sumF .empty{padding:14px;opacity:.75;font-size:14px}
 
@@ -836,6 +850,8 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 <div class="sheet" id="sheet" hidden>
 <div>
   <div class="top"><h2 id="sheetTitle">Nuovo cliente</h2><button class="btn ico pk" id="close" aria-label="Chiudi" title="Chiudi"><span data-i="back"></span></button></div>
+  <div id="qSub" class="lb-only"></div>
+  <div id="qAct" class="lb-only"></div>
   <div class="tabs" id="cTabs"><button type="button" class="lb-only" data-p="sum">Riepilogo</button><button type="button" class="on" data-p="dati" title="Dati" aria-label="Dati"><span data-i="user"></span>Dati</button><button type="button" data-p="opp" title="Opportunità" aria-label="Opportunità"><span data-i="target"></span>Opportunità<span class="cnt" id="cCnt"></span></button><button type="button" data-p="tk" title="Task" aria-label="Task"><span data-i="check"></span>Task<span class="cnt" id="cTkCnt"></span></button><button type="button" data-p="priv" title="Privacy" aria-label="Privacy"><span data-i="shield"></span>Privacy</button><button type="button" data-p="st" title="Storico" aria-label="Storico"><span data-i="route"></span>Storico</button></div>
   <div class="msg" id="msg" hidden></div>
   <div id="sumF" class="pane-hide"></div>
@@ -978,6 +994,6 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.44.0"></script>
+<script src="app.js?v=1.45.0"></script>
 </body>
 </html>

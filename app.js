@@ -137,7 +137,7 @@ function openSheet(c,data){
     a.hidden=!a.children.length}
   showMsg(data?'Dati letti dal biglietto. Controllali e salva.':'');
   $('sheet').hidden=false;$('sheet').scrollTop=0;
-  if(document.documentElement.dataset.lay==='b')setPane(c&&!data?'sum':'dati');
+  if(document.documentElement.dataset.lay==='b'){paintHead(c);setPane(c&&!data?'sum':'dati')}
 }
 $('close').onclick=()=>{$('sheet').hidden=true};
 $('ml_x').onclick=()=>{$('mLaunch').hidden=true};
@@ -404,7 +404,7 @@ function setTab(v){tab=v;paintTabs(false);
   const c=v==='clienti';$('homeView').hidden=v!=='home';$('oppView').hidden=v!=='opp';$('prodView').hidden=v!=='prod';$('leadView').hidden=v!=='lead';$('list').hidden=!c;$('q').hidden=!c;$('qRow').hidden=!c;$('cFilt').hidden=!c;$('count').hidden=!c;$('cfRow').hidden=!c;document.querySelector('.bar').hidden=true;
   $('title').textContent={home:'Home',clienti:'Clienti',lead:'Lead',opp:'Opportunità',prod:'Prodotti'}[v];
   const l={home:'',clienti:'Nuovo cliente',lead:'Nuovo lead',opp:'Nuova opportunità',prod:'Nuovo prodotto'}[v];$('addBtn').setAttribute('aria-label',l);$('addBtn').title=l;$('addLbl').textContent=l;if(v==='prod')renderP();if(v==='home')renderH();if(c)render();if(v==='lead')renderL()}
-$('tabs').onclick=e=>{const b=e.target.closest('button');if(b){if(b.dataset.x==='more'){e.stopPropagation();$('menuBtn').click();return}if(b.dataset.v==='opp'){oFilt='';setTab('opp');renderO();return}setTab(b.dataset.v)}};
+$('tabs').onclick=e=>{const b=e.target.closest('button');if(b){if(document.documentElement.dataset.lay==='b')['sheet','lSheet','oSheet'].forEach(i=>{const x=$(i);if(x)x.hidden=true});if(b.dataset.x==='more'){e.stopPropagation();$('menuBtn').click();return}if(b.dataset.v==='opp'){oFilt='';setTab('opp');renderO();return}setTab(b.dataset.v)}};
 $('vList').onclick=()=>{oView='list';renderO()};$('vKan').onclick=()=>{oView='kan';renderO()};
 FONTI.forEach(f=>{const o=h('option','',f);o.value=f;$('o_fonte').append(o)});
 function paintFasi(){const w=$('o_fasi');w.textContent='';FASI.forEach(f=>{const b=h('button','',f[1]);b.type='button';b.style.background=f[3];b.classList.toggle('on',oD.fase===f[0]);b.onclick=()=>{oD.fase=f[0];$('o_prob').value=f[2];setErr('o_prob','');paintFasi();w.dispatchEvent(new Event('input',{bubbles:true}))};w.append(b)})}
@@ -463,7 +463,7 @@ let cSub='comm';
 function setPane(p){if(p==='comm'||p==='tr'||p==='tp'){cSub=p;p='st'}if(p==='priv'){try{$('p_det').open=false;setErr('p_later','')}catch(e){}}
  if(p==='st'&&cSub==='comm'&&editing&&editing.id&&waUnread(editing)){const a=waLast(editing);editing.waSeen=a.data;try{persist()}catch(e){}setTimeout(()=>{try{paintBadges()}catch(e){}},0)}
 document.querySelectorAll('#cTabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));document.querySelectorAll('#stSeg button').forEach(b=>b.classList.toggle('on',b.dataset.s===cSub));$('sheet').classList.toggle('np-dati',p!=='dati');
-  [...$('sheet').firstElementChild.children].forEach(el=>{if(el.classList.contains('top')||el.id==='cTabs')return;const sub=x=>cSub===x?'st':'-';const k=el.id==='linkedF'?'opp':el.id==='tkF'?'tk':el.id==='privF'?'priv':el.id==='sumF'?'sum':el.id==='stSeg'?'st':el.id==='commF'?sub('comm'):el.id==='tpF'?sub('tp'):el.id==='trF'?sub('tr'):el.id==='msg'?'*':el.classList.contains('btns')?'dati,priv':el.classList.contains('delw')?'*':'dati';el.classList.toggle('pane-hide',k!=='*'&&!k.split(',').includes(p))});if(p==='sum'&&window.paintSum)paintSum()}
+  [...$('sheet').firstElementChild.children].forEach(el=>{if(el.classList.contains('top')||el.id==='cTabs')return;const sub=x=>cSub===x?'st':'-';const k=el.id==='linkedF'?'opp':el.id==='tkF'?'tk':el.id==='privF'?'priv':el.id==='sumF'?'sum':el.id==='stSeg'?'st':el.id==='commF'?sub('comm'):el.id==='tpF'?sub('tp'):el.id==='trF'?sub('tr'):el.id==='msg'||el.id==='qSub'||el.id==='qAct'?'*':el.classList.contains('btns')?'dati,priv':el.classList.contains('delw')?'*':'dati';el.classList.toggle('pane-hide',k!=='*'&&!k.split(',').includes(p))});if(p==='sum'&&window.paintSum)paintSum()}
 function stLoad(){if(cSub==='comm')loadComm();else if(cSub==='tp')paintTouch();else if(cSub==='tr')paintTr()}
 $('cTabs').onclick=e=>{const b=e.target.closest('button');if(b){setPane(b.dataset.p);if(b.dataset.p==='st')stLoad();if(b.dataset.p==='tk')tkPaintAll()}};
 $('stSeg').onclick=e=>{const b=e.target.closest('button');if(b){setPane(b.dataset.s);stLoad()}};
@@ -10740,6 +10740,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.43.0','Nuova disposizione in prova: in Impostazioni › Aspetto › Disposizione puoi scegliere «Nuova». Le sezioni passano in basso, a portata di pollice, con la voce «Altro» per attività, prodotti e impostazioni; la Home mostra prima le cose da fare; l’elenco clienti è più compatto e il pulsante «Nuovo» è in basso a destra. La disposizione classica resta quella predefinita. Nel menu c’è ora anche la voce «Attività».'],
 ['1.43.1','Nuova disposizione: sistemata la grafica dell’elenco clienti (sotto le schede comparivano delle strisce colorate) e la voce «Altro» ora si evidenzia quando apri il menu o una sua pagina.'],
 ['1.44.0','Nuova disposizione: la scheda cliente si apre sul «Riepilogo» (chiama, email, WhatsApp e nuova attività a portata di dito, avviso privacy, prossime attività, opportunità aperte e contatti) e le sezioni, anche di lead e opportunità, diventano linguette sottolineate con i moduli divisi in riquadri (Anagrafica, Contatti, Note…) e statistiche delle opportunità in una riga scorrevole. Corretti l’elenco clienti e la voce «Altro» della barra in basso.'],
+['1.45.0','Nuova disposizione, scheda cliente più vicina al progetto: testata con stato e referente, pulsanti Chiama / Email / WhatsApp / Attività sempre visibili, linguette fisse in ordine Riepilogo, Dati, Attività, Opportunità, Privacy, Storico, barra «Salva» fissa in basso e barra di navigazione sempre visibile sotto le schede.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -11437,15 +11438,19 @@ window.paintSum=function(){const c=editing,w=$('sumF');if(!w)return;w.textConten
   const mkB=(ic,lab,fn)=>{const b=h('button');b.type='button';b.innerHTML=ICONS[ic]+'<span>'+lab+'</span>';b.onclick=fn;return b};
   const row=(t,sub,val,fn,late)=>{const b=h('button','srow');b.type='button';const d=h('div');d.append(h('b','',t));const sm=h('small',late?'late':'',sub);d.append(sm);b.append(d);if(val){b.append(h('span','sv',val))}b.onclick=fn;return b};
   const sec=t=>w.append(h('div','sh',t));
-  const A=h('div','sacts');
-  if(c.telefono)A.append(mkB('Chiama','Chiama',()=>launch('tel:'+telHref(c),telHref(c),c)));
-  if(c.email)A.append(mkB('Scrivi','Email',()=>openCompose(c)));
-  if(c.telefono)A.append(mkB('WhatsApp','WhatsApp',()=>openWa(c)));
-  A.append(mkB('check','Attività',()=>tkOpen(null,{tipo:'cliente',id:c.id},true)));
-  w.append(A);
   const pv=c.privacy;if(!pv||!pv.informativa){const al=h('div','scard al');al.append(h('b','late','Informativa privacy da inviare'),h('small','','Senza informativa non puoi mandare comunicazioni commerciali.'));const bt=h('button','btn p lbl');bt.type='button';bt.innerHTML=ICONS.Scrivi+'Apri Privacy';bt.onclick=()=>setPane('priv');al.append(bt);w.append(al)}
   const tk=tkForRef({tipo:'cliente',id:c.id}).filter(t=>t.stato!=='fatta').sort((a,b)=>String(a.scad||'9').localeCompare(String(b.scad||'9')));
   sec('Prossime attività');const tc=h('div','scard');if(tk.length)tk.slice(0,4).forEach(t=>tc.append(row(t.titolo||'Attività',tkWhen(t),'',()=>tkOpen(t),!!t.scad&&t.scad<ymd())));else tc.append(h('div','empty','Nessuna attività aperta.'));w.append(tc);
   const op=(typeof opps!=='undefined'?opps:[]).filter(o=>o.clienteId===c.id&&o.fase!=='vinta'&&o.fase!=='persa');
   sec('Opportunità aperte');const oc=h('div','scard');if(op.length)op.forEach(o=>{const f=FASI.find(x=>x[0]===o.fase);oc.append(row(o.titolo||'Opportunità',(f?f[1]:'')+(o.prob!=null?' · '+o.prob+'%':''),eur(o.valore),()=>openOpp(o)))});else oc.append(h('div','empty','Nessuna opportunità aperta.'));w.append(oc);
   sec('Contatti');const cc=h('div','scard');[['Telefono',c.telefono&&(dial(c.paese)+' '+c.telefono)],['Email',c.email],['Indirizzo',c.indirizzo],['Sito',c.sito]].forEach(([k,v])=>{if(v){const r=h('div','srow l');r.append(h('small','',k),h('span','sv',v));cc.append(r)}});const eb=h('button','srow l');eb.type='button';eb.innerHTML='<b style="color:#4fc3ff">Modifica i dati</b>';eb.onclick=()=>setPane('dati');cc.append(eb);w.append(cc)};
+
+window.paintHead=function(c){const sub=$('qSub'),qa=$('qAct');if(!sub||!qa)return;sub.textContent='';qa.textContent='';
+  const tb=document.querySelector('#cTabs [data-p=tk]');if(tb)[...tb.childNodes].forEach(n=>{if(n.nodeType===3&&/Task|Attivit/.test(n.textContent))n.textContent='Attività'});
+  if(!c||!c.id)return;
+  sub.append(stChip(c));const t=c.tipo==='azienda'?[[c.nome,c.cognome].filter(Boolean).join(' '),'referente'].filter(Boolean).join(', '):[c.ruolo,c.azienda].filter(Boolean).join(', ');if(t)sub.append(h('span','',t));
+  const mk=(ic,lab,fn)=>{const b=h('button');b.type='button';b.innerHTML=ICONS[ic]+'<span>'+lab+'</span>';b.onclick=fn;qa.append(b)};
+  if(c.telefono)mk('Chiama','Chiama',()=>launch('tel:'+telHref(c),telHref(c),c));
+  if(c.email)mk('Scrivi','Email',()=>openCompose(c));
+  if(c.telefono)mk('WhatsApp','WhatsApp',()=>openWa(c));
+  mk('check','Attività',()=>tkOpen(null,{tipo:'cliente',id:c.id},true))};
