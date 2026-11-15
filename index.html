@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.51.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.51.0|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.52.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.52.0|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -941,6 +941,14 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
    <div class="f" style="margin-top:8px"><input id="st_laN" maxlength="60" placeholder="Nome della sorgente, es. Sito web" aria-label="Nome della sorgente" autocomplete="off"><div class="err" id="err-st_laN" hidden></div></div><button class="btn p lbl" id="st_laAdd" type="button"><span data-i="add"></span>Crea chiave</button>
    <div id="st_laK" class="hint" hidden style="border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px"></div></div>
 </div>
+<div class="sp" data-sp="tm" hidden>
+  <div id="tm_ow"><div class="hint">Invita chi lavora con te: vedrà e modificherà i dati di questo CRM. Il collaboratore apre il link, crea il suo accesso e accetta. Il link vale 7 giorni e si usa una sola volta.</div><div id="tm_L"></div>
+   <div class="f" style="margin-top:8px"><label for="tm_n">Nome del collaboratore</label><input id="tm_n" maxlength="60" autocomplete="off"><div class="err" id="err-tm_n" hidden></div></div>
+   <div class="f"><label for="tm_s">Cosa può vedere</label><select id="tm_s"><option value="all">Tutto</option><option value="own">Solo i clienti assegnati a lui</option></select></div>
+   <button class="btn p lbl" id="tm_add" type="button"><span data-i="add"></span>Crea invito</button>
+   <div id="tm_K" class="hint" hidden style="border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px"></div></div>
+  <div id="tm_co" class="hint" hidden></div>
+</div>
 <div class="sp" data-sp="wa" hidden>
   <div class="f"><label for="st_wpaese">Paese predefinito dei numeri</label><select id="st_wpaese"></select><div class="hint">Serve per i numeri scritti senza prefisso internazionale (lead compresi).</div></div>
   <div class="f"><label>Informativa nei messaggi ai lead</label><select id="st_winf"><option value="full">Testo completo</option><option value="short">Versione breve</option><option value="none">Nessuna (decido caso per caso)</option></select></div>
@@ -1176,6 +1184,6 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.51.0"></script>
+<script src="app.js?v=1.52.0"></script>
 </body>
 </html>

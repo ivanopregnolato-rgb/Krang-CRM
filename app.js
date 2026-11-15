@@ -672,7 +672,7 @@ const firma=()=>tpl(S.firma||'Cordiali saluti\n{azienda}').replace(/\n{3,}/g,'\n
 const INFO_SUBJ=()=>'Informativa sulla privacy'+(az()?' – '+az():'')+' e richiesta di consensi';
 const TEMPLATES=[['Ringraziamento','Grazie per il nostro incontro – {azienda}','grazie per il tempo dedicatoci. Restiamo a disposizione per qualsiasi chiarimento.'],['Preventivo','Il nostro preventivo – {azienda}','come concordato le invio il nostro preventivo. Resto a disposizione per ogni chiarimento.'],['Seguito','Aggiornamento sulla nostra conversazione – {azienda}','volevo sapere se ha avuto modo di valutare la nostra proposta.']];
 function aliasHint(){$('st_aliashint').textContent='Il nome mostrato al destinatario dipende dal programma di posta che usi. Il nome azienda compare comunque in oggetto, testo e firma.'}
-function openSettings(){setSp(null);try{paintCloud();paintDrive()}catch(e){}try{laHide();paintLaSet()}catch(e){}paintWaSet();$('st_qv').value=S.qValid;$('st_qc').value=S.qCond;$('st_ls').value=S.lead.scartati;$('st_ln').value=S.lead.nuovi;$('st_linf').checked=S.lead.inf!==false;['st_qv','st_ls','st_ln'].forEach(k=>setErr(k,''));try{paintBro()}catch(e){}$('st_piva').value=S.piva||'';$('st_ind').value=S.indirizzo||'';$('st_tel').value=S.telefono||'';$('st_sito').value=S.sito||'';$('st_az').value=S.azienda;$('st_alias').value=S.alias;$('st_firma').value=S.firma;$('st_rt').value=S.replyTo;['contratto','contatti','marketing','profilazione','comunicazioni'].forEach(k=>{$('st_r_'+k).value=S.ret[k];setErr('st_r_'+k,'')});['st_rt','st_az'].forEach(k=>setErr(k,''));aliasHint();$('mSet').hidden=false;stTouched=false;stBase=stSig();setTimeout(()=>{if(!stTouched)stBase=stSig()},900)}
+function openSettings(){setSp(null);try{paintCloud();paintDrive()}catch(e){}try{laHide();paintLaSet()}catch(e){}try{paintTeam()}catch(e){}paintWaSet();$('st_qv').value=S.qValid;$('st_qc').value=S.qCond;$('st_ls').value=S.lead.scartati;$('st_ln').value=S.lead.nuovi;$('st_linf').checked=S.lead.inf!==false;['st_qv','st_ls','st_ln'].forEach(k=>setErr(k,''));try{paintBro()}catch(e){}$('st_piva').value=S.piva||'';$('st_ind').value=S.indirizzo||'';$('st_tel').value=S.telefono||'';$('st_sito').value=S.sito||'';$('st_az').value=S.azienda;$('st_alias').value=S.alias;$('st_firma').value=S.firma;$('st_rt').value=S.replyTo;['contratto','contatti','marketing','profilazione','comunicazioni'].forEach(k=>{$('st_r_'+k).value=S.ret[k];setErr('st_r_'+k,'')});['st_rt','st_az'].forEach(k=>setErr(k,''));aliasHint();$('mSet').hidden=false;stTouched=false;stBase=stSig();setTimeout(()=>{if(!stTouched)stBase=stSig()},900)}
 ['st_az','st_alias'].forEach(id=>$(id).addEventListener('input',aliasHint));
 let stTouched=false,stBase='';
 const stSig=()=>[...$('mSet').querySelectorAll('input:not([type=file]):not([data-ns]),select:not([data-ns]),textarea')].filter(e=>!e.closest('[data-sp="vc"]')).map(e=>e.type==='checkbox'?(e.checked?1:0):e.value).join('\u0001');
@@ -9449,11 +9449,28 @@ const SPG=[['La tua azienda',[['az','building','Profilo azienda',()=>S.azienda||
  ['App',[['in','download','Installa l’app',()=>(typeof instLabel==='function'?instLabel():''),()=>isStandalone()]]],
  ['Notifiche',[['nt','clock','Promemoria task',()=>(typeof pushLabel==='function'?pushLabel():'')]]],
  ['Comunicazione',[['em','Scrivi','Email',()=>S.replyTo||'Mittente, firma e contatto'],['wa','WhatsApp','WhatsApp',()=>'Messaggi rapidi e paese dei numeri'],['al','clip','Allegati e brochure',()=>'Listino e brochure per le risposte ai lead']]],
+ ['Squadra',[['tm','users','Collaboratori',()=>{try{const w=SB.e2e.ws();return w.role==='collab'?'Lavori sul CRM di '+(w.name||'un titolare'):'Invita chi lavora con te'}catch(e){return ''}}]]],
  ['Vendite',[['pr','doc','Preventivi',()=>'Validità '+S.qValid+' giorni e condizioni'],['ld','target','Lead',()=>'Pulizia automatica dei lead']]],
  ['Dati e privacy',[['sc','user','Accesso e sicurezza',()=>LOCK.on?'Biometria attiva':'Blocco non attivo'],['pv','shield','Privacy e conservazione',()=>'Durate di conservazione e revisione'],['vc','user','Importa dalla rubrica',()=>'Da un file contatti (.vcf)'],['dp','users','Anagrafiche duplicate',()=>'Trova e unisci le schede doppie'],['bk','download','Backup, accessi ed esempi',()=>'Esporta, importa, persone e dati di prova']]]];
 const SPN={};SPG.forEach(g=>g[1].forEach(r=>SPN[r[0]]=r[2]));
 (()=>{const cl=document.querySelector('#mSet .sp[data-sp=cl]'),k=[...cl.children],bk=h('div','sp');bk.dataset.sp='bk';bk.hidden=true;k.slice(1).forEach(e=>bk.append(e));cl.after(bk)})();
 let spCur=null;
+/* collaboratori: inviti e gestione (Impostazioni → Collaboratori) */
+async function paintTeam(){const ow=$('tm_ow'),co=$('tm_co');if(!ow)return;let w={role:'owner'};try{w=SB.e2e.ws()}catch(e){}
+  if(w.role==='collab'){ow.hidden=true;co.hidden=false;co.textContent='Lavori sul CRM del titolare'+(w.name?' (accesso a nome di '+w.name+')':'')+'. '+(w.scope==='own'?'Vedi i clienti assegnati a te.':'Vedi tutti i dati.')+' Le impostazioni sensibili sono gestite dal titolare.';return}
+  co.hidden=true;ow.hidden=false;const L=$('tm_L');L.textContent='';let T=[];try{T=await SB.e2e.team()}catch(e){L.append(h('div','hint','Elenco non disponibile ora.'));return}
+  if(!T.length){L.append(h('div','hint','Nessun collaboratore.'));return}
+  T.forEach(m=>{const r=h('div','shr');r.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 0';const t=h('div','tx');t.style.flex='1';t.append(h('b','',m.name||'Collaboratore'),h('div','hint','Dal '+fmtD(String(m.created).slice(0,10))));
+    const sel=h('select');sel.setAttribute('aria-label','Cosa vede '+(m.name||'il collaboratore'));[['all','Tutto'],['own','Solo suoi']].forEach(o=>{const op=h('option','',o[1]);op.value=o[0];sel.append(op)});sel.value=m.scope;sel.style.cssText='flex:none;width:auto;min-width:96px';sel.onchange=()=>SB.e2e.setScope(m.member,sel.value).then(()=>toast('Visibilità aggiornata.')).catch(()=>toast('Impossibile aggiornare ora.'));
+    const b=h('button','btn','Rimuovi');b.type='button';b.onclick=()=>askConfirm('Rimuovere '+(m.name||'il collaboratore')+'? Perde subito l’accesso ai dati.','trash','Rimuovi',()=>SB.e2e.removeMember(m.member).then(()=>{toast('Collaboratore rimosso.');paintTeam()}).catch(()=>toast('Impossibile rimuovere ora.')));
+    r.append(t,sel,b);L.append(r)})}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#tm_add');if(!b)return;const n=$('tm_n').value.trim();if(!n){setErr('tm_n','Scrivi il nome del collaboratore.');return}setErr('tm_n','');b.disabled=true;
+  SB.e2e.invite(n,$('tm_s').value).then(code=>{$('tm_n').value='';const lk=location.origin+location.pathname+'#invito='+encodeURIComponent(code),bx=$('tm_K');bx.hidden=false;bx.textContent='';bx.append(h('b','','Invito per '+n),h('div','hint','Mandagli questo link: vale 7 giorni e si usa una sola volta.'));
+    const k=h('input');k.readOnly=true;k.value=lk;k.style.cssText='width:100%;margin:6px 0;font-size:12px';bx.append(k);
+    const c1=h('button','btn lbl','Copia link'),c2=h('button','btn lbl','Condividi');c1.type=c2.type='button';c1.onclick=()=>{navigator.clipboard.writeText(lk).then(()=>toast('Link copiato.')).catch(()=>k.select())};c2.onclick=()=>{if(navigator.share)navigator.share({title:'Invito a KRANG CRM',text:'Ti invito a lavorare sul mio CRM: apri il link per accettare.',url:lk}).catch(()=>{});else c1.click()};bx.append(c1,c2);paintTeam()}).catch(err=>{toast(err&&err.code==='locked'?'Sblocca prima i dati con la tua password.':'Impossibile creare l’invito ora.')}).finally(()=>{b.disabled=false})});
+/* link di invito: il codice resta in questo browser fino all'accesso */
+try{const m=/[#&]invito=([^&]+)/.exec(location.hash||'');if(m){localStorage.setItem('crm-invite',decodeURIComponent(m[1]));history.replaceState(null,'',location.pathname+location.search)}}catch(e){}
+
 /* informativa privacy: lettura, modifica e storico delle versioni (Impostazioni → Privacy e conservazione) */
 function paintInf(){const e=$('st_infh');if(!e)return;if(!S.azienda){e.textContent='Imposta prima il nome dell’azienda: è il titolare indicato nell’informativa.';return}
   const v=infSync(),H=S.infHist||[],l=H[H.length-1],c=S.inf&&S.inf.custom;
@@ -10373,7 +10390,10 @@ const SB=(()=>{
  async function kek(secret,salt,it){const m=await crypto.subtle.importKey('raw',te.encode(secret),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:it,hash:'SHA-256'},m,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
  async function wrap(raw,key){const iv=rnd(12),ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,raw)),o=new Uint8Array(12+ct.length);o.set(iv);o.set(ct,12);return b64(o)}
  async function unwrap(t,key){const u=unb64(t);return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:u.subarray(0,12)},key,u.subarray(12)))}
- const aad=(col,id)=>te.encode(uid()+'|'+col+'|'+id);
+ /* squadra: un collaboratore lavora sui dati del titolare (WS.o = id del titolare) */
+ const WS={o:'',scope:'all',name:'',role:'owner'};const wid=()=>WS.o||uid();
+ async function loadWS(){try{const r=await js('/rest/v1/team_members?member=eq.'+uid()+'&select=owner,scope,name&limit=1',{auth:1});if(r&&r[0]){WS.o=r[0].owner;WS.scope=r[0].scope||'all';WS.name=r[0].name||'';WS.role='collab'}else{WS.o='';WS.scope='all';WS.role='owner'}}catch(e){if(e&&e.code==='offline')throw e}}
+ const aad=(col,id)=>te.encode(wid()+'|'+col+'|'+id);
  async function encJ(col,id,obj){if(!E.dk)throw lockErr();const iv=rnd(12),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:aad(col,String(id))},E.dk,te.encode(JSON.stringify(obj)));return{_e:1,i:b64(iv),c:b64(new Uint8Array(ct))}}
  async function decJ(col,id,d){if(!E.dk)throw lockErr();return JSON.parse(td.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(d.i),additionalData:aad(col,String(id))},E.dk,unb64(d.c))))}
  const rkNew=()=>{const u=rnd(20);let bits=0,v=0,t='';for(const x of u){v=((v<<8)|x)&0xfffff;bits+=8;while(bits>=5){t+=B32[(v>>>(bits-5))&31];bits-=5}v&=(1<<bits)-1}return t.match(/.{4}/g).join('-')};
@@ -10387,7 +10407,7 @@ const SB=(()=>{
    for(let i=0;i<all.length;i+=100)await js('/storage/v1/object/media',{method:'DELETE',auth:1,json:{prefixes:all.slice(i,i+100)}})}}
  const e2e={
   state:()=>E.dk?'ready':'locked',
-  async init(){if(E.dk)return 'ready';try{const o=JSON.parse(localStorage.getItem(LK)||'null');if(o&&o.u===uid()&&o.k){await setDK(unb64(o.k),false);return 'ready'}}catch(e){}
+  async init(){try{await loadWS()}catch(e){}if(E.dk)return 'ready';try{const o=JSON.parse(localStorage.getItem(LK)||'null');if(o&&o.u===uid()&&o.k){await setDK(unb64(o.k),false);return 'ready'}}catch(e){}
    try{return await fetchBundle()?'locked':'none'}catch(e){return e.code==='offline'?'offline':'error'}},
   async setupPrepare(pass){const raw=rnd(32),rk=rkNew();E.prep={raw,rk,b:await mkBundle(pass,rk,raw)};return rk},
   async setupCommit(){if(!E.prep)throw new Error('prep');if(await fetchBundle())throw Object.assign(new Error('esiste'),{code:'exists'});await putBundle(E.prep.b);await setDK(E.prep.raw,true);E.prep=null},
@@ -10396,6 +10416,19 @@ const SB=(()=>{
   async setPass(pass){if(!E.raw)throw lockErr();const b=E.bundle||await fetchBundle(),s=rnd(16);await putBundle(Object.assign({},b,{it:IT,s:b64(s),w:await wrap(E.raw,await kek(pass,s,IT))}))},
   async changePass(cur,nw){await rawByPass(cur);await e2e.setPass(nw)},
   /* a ogni accesso con password: la chiave dei dati è protetta dalla password dell'account, senza che l'utente scelga nulla */
+  /* inviti: il codice protegge la chiave dei dati, il server non la legge */
+  isCollab:()=>WS.role==='collab',ws:()=>({owner:WS.o,scope:WS.scope,name:WS.name,role:WS.role}),
+  async invite(name,scope){if(WS.role==='collab'||!E.raw)throw lockErr();const code=rkNew(),salt=rnd(16),w=b64(salt)+'.'+await wrap(E.raw,await kek(rkNorm(code),salt,RIT));
+   await js('/rest/v1/team_invites',{method:'POST',auth:1,headers:{Prefer:'return=minimal'},json:{code_h:await sha256hex(rkNorm(code)),owner:uid(),name:String(name||'').slice(0,60),scope:scope==='own'?'own':'all',wrapped:w}});return code},
+  async team(){return js('/rest/v1/team_members?owner=eq.'+uid()+'&select=member,name,scope,created&order=created.asc',{auth:1})},
+  async setScope(member,scope){await js('/rest/v1/team_members?owner=eq.'+uid()+'&member=eq.'+member,{method:'PATCH',auth:1,headers:{Prefer:'return=minimal'},json:{scope:scope==='own'?'own':'all'}})},
+  async removeMember(member){await js('/rest/v1/team_members?owner=eq.'+uid()+'&member=eq.'+member,{method:'DELETE',auth:1,headers:{Prefer:'return=minimal'}})},
+  async acceptInvite(code,pass){if(!uid())throw new Error('nessuna sessione');
+   const own=await js('/rest/v1/records?user_id=eq.'+uid()+'&select=id&limit=1',{auth:1});if(own&&own.length)throw Object.assign(new Error('account già in uso'),{code:'used'});
+   let r;try{r=await js('/rest/v1/rpc/accept_invite',{method:'POST',auth:1,json:{h:await sha256hex(rkNorm(code))}})}catch(e){throw Object.assign(new Error('invito non valido o scaduto'),{code:'badinv'})}
+   r=Array.isArray(r)?r[0]:r;if(!r||!r.wrapped)throw Object.assign(new Error('invito non valido'),{code:'badinv'});
+   const p=String(r.wrapped).split('.');let raw;try{raw=await unwrap(p[1],await kek(rkNorm(code),unb64(p[0]),RIT))}catch(e){throw Object.assign(new Error('invito non valido'),{code:'badinv'})}
+   await putBundle(await mkBundle(pass,rkNew(),raw));await setDK(raw,true);await loadWS();return WS.name||''},
   async auto(pass){const st=await e2e.init();
    if(st==='none'){const rk=await e2e.setupPrepare(pass);await e2e.setupCommit();return{rk}}
    if(st==='ready'){try{await rawByPass(pass)}catch(e){if(e&&e.code==='badpass')await e2e.setPass(pass);else if(e&&e.code!=='nokey')throw e}return{}}
@@ -10418,19 +10451,19 @@ const SB=(()=>{
     const stem=n=>n.replace(/-[^-]*\.(enc|jpg)$/,''),enc=new Set(names.filter(n=>/\.enc$/.test(n)).map(stem)),old=names.filter(n=>/\.jpg$/.test(n)&&enc.has(stem(n))).map(n=>uid()+'/'+c+'/'+n);
     for(let i=0;i<old.length;i+=100)await js('/storage/v1/object/media',{method:'DELETE',auth:1,json:{prefixes:old.slice(i,i+100)}})}}};
  async function upBlob(p,body){const T=['application/octet-stream','image/jpeg'];for(let i=0;i<T.length;i++){const r=await raw('/storage/v1/object/media/'+p,{method:'POST',auth:1,headers:{'Content-Type':T[i],'x-upsert':'true'},body});if(r.ok)return;let j=null;try{j=await r.json()}catch(e){}const er=mkErr(r,j);if(i===T.length-1||!/mime|type/i.test(er.message||''))throw er}}
- async function upFoto(col,id,du){const hh=hs(du),p=uid()+'/'+col+'/'+safe(id)+'-'+safe(hh)+'.enc';
+ async function upFoto(col,id,du){const hh=hs(du),p=wid()+'/'+col+'/'+safe(id)+'-'+safe(hh)+'.enc';
   if(!PH[p]){if(!E.dk)throw lockErr();const bl=await (await fetch(du)).blob(),iv=rnd(12),ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:te.encode(p)},E.dk,await bl.arrayBuffer()));await upBlob(p,new Blob([iv,ct]));PH[p]=du}
   return [p,hh]}
- const okPath=p=>typeof p==='string'&&p.indexOf(uid()+'/')===0&&/^[\w-]+\/[\w-]+\/[\w.-]+$/.test(p)&&p.indexOf('..')<0;
+ const okPath=p=>typeof p==='string'&&p.indexOf(wid()+'/')===0&&/^[\w-]+\/[\w-]+\/[\w.-]+$/.test(p)&&p.indexOf('..')<0;
  async function dlFoto(p){if(!okPath(p))return '';if(PH[p])return PH[p];try{const r=await raw('/storage/v1/object/authenticated/media/'+p,{auth:1});if(!r.ok)return '';let bl=await r.blob();if(/\.enc$/.test(p)){if(!E.dk)return '';const u8=new Uint8Array(await bl.arrayBuffer());bl=new Blob([await crypto.subtle.decrypt({name:'AES-GCM',iv:u8.subarray(0,12),additionalData:te.encode(p)},E.dk,u8.subarray(12))],{type:'image/jpeg'})}const u=okImg(await b2d(bl));if(u)PH[p]=u;return u}catch(e){return ''}}
  async function put(col,id,data){const d=Object.assign({},data);delete d._u;delete d._by;
   if(okImg(d.foto)){const [p,hh]=await upFoto(col,id,d.foto);d.fotoPath=p;d.fotoH=hh;delete d.foto}else{delete d.foto;delete d.fotoPath;delete d.fotoH}
-  await js('/rest/v1/records?on_conflict=user_id,col,id',{method:'POST',auth:1,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},json:[{user_id:uid(),col,id:String(id),data:await encJ(col,id,d),deleted:false}]})}
- const del=(col,id)=>js('/rest/v1/records?on_conflict=user_id,col,id',{method:'POST',auth:1,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},json:[{user_id:uid(),col,id:String(id),data:{},deleted:true}]});
+  await js('/rest/v1/records?on_conflict=user_id,col,id',{method:'POST',auth:1,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},json:[{user_id:wid(),col,id:String(id),data:await encJ(col,id,d),deleted:false}]})}
+ const del=(col,id)=>js('/rest/v1/records?on_conflict=user_id,col,id',{method:'POST',auth:1,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},json:[{user_id:wid(),col,id:String(id),data:{},deleted:true}]});
  async function inflate(row,col){const rd=row.data||{};const d=rd._e===1?await decJ(col,String(row.id),rd):Object.assign({},rd);if(d.fotoPath){const u=await dlFoto(d.fotoPath);delete d.fotoPath;delete d.fotoH;if(u)d.foto=u}return d}
  /* lettura periodica (ogni 45 s, solo con l'app visibile, e al ritorno sull'app) */
  function watch(col,onRows,onErr){let stop=false,last='1970-01-01T00:00:00+00:00',first=true,busy=false;
-  async function pull(){if(stop||busy||document.hidden)return;busy=true;try{let all=[];for(;;){const q='/rest/v1/records?col=eq.'+col+'&updated_at=gt.'+encodeURIComponent(last)+'&order=updated_at.asc&limit=500&select=id,data,deleted,updated_at';const rows=await js(q,{auth:1});all=all.concat(rows);if(rows.length)last=rows[rows.length-1].updated_at;if(rows.length<500)break}
+  async function pull(){if(stop||busy||document.hidden)return;busy=true;try{let all=[];for(;;){const q='/rest/v1/records?user_id=eq.'+wid()+'&col=eq.'+col+'&updated_at=gt.'+encodeURIComponent(last)+'&order=updated_at.asc&limit=500&select=id,data,deleted,updated_at';const rows=await js(q,{auth:1});all=all.concat(rows);if(rows.length)last=rows[rows.length-1].updated_at;if(rows.length<500)break}
     if(stop)return;if(all.length||first){await onRows(all,first);first=false}}catch(e){if(onErr)onErr(e)}finally{busy=false}}
   pull();const t=setInterval(pull,45000),vis=()=>{if(!document.hidden)pull()};document.addEventListener('visibilitychange',vis);
   return()=>{stop=true;clearInterval(t);document.removeEventListener('visibilitychange',vis)}}
@@ -10502,7 +10535,8 @@ const SB=(()=>{
   enter(pw){const id=uid();let prev='';try{prev=localStorage.getItem(UK)||''}catch(e){}const fresh=prev!==id;if(fresh){wipe();try{localStorage.setItem(UK,id)}catch(e){}}
    const fin=()=>{if(fresh){location.reload();return}document.documentElement.classList.remove('noauth');CLOUD.on=true;cloudGate()};
    if(!pw){fin();return}
-   e2e.auto(pw).then(r=>{r=r||{};
+   let inv='';try{inv=localStorage.getItem('crm-invite')||''}catch(e){}
+   (inv?e2e.acceptInvite(inv,pw).then(()=>{try{localStorage.removeItem('crm-invite')}catch(e){}toast('Invito accettato: lavori sul CRM del titolare.');return{}}).catch(er=>{try{localStorage.removeItem('crm-invite')}catch(e){}toast(er&&er.message?er.message.charAt(0).toUpperCase()+er.message.slice(1)+'.':'Invito non accettato.');return e2e.auto(pw)}):e2e.auto(pw)).then(r=>{r=r||{};
     if(r.locked){E2EUI.open('locked',{pw,done:fin});return}
     if(r.rk){E2EUI.showRk(r.rk,fin);return}
     fin()}).catch(()=>fin())},
@@ -10760,6 +10794,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.52.0','Collaboratori (in prova): in Impostazioni → Collaboratori il titolare invita chi lavora con lui con un link; il collaboratore accede ai dati del titolare.'],
 ['1.51.0','In Impostazioni → Lead puoi scegliere il colore dell’etichetta di ogni sorgente: tocca il cerchietto colorato accanto al nome.'],
 ['1.50.6','La foto nella scheda cliente torna alla dimensione di prima (84 px) anche con il nuovo layout.'],
 ['1.50.5','Nell’elenco dei lead il nome non compare più due volte quando coincide con il titolo della scheda.'],
