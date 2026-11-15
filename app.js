@@ -1,3 +1,5 @@
+/* disposizione scelta in Impostazioni > Aspetto: applicata subito per evitare sfarfallii */
+try{if(localStorage.getItem('crm-lay')==='b')document.documentElement.setAttribute('data-lay','b')}catch(e){}
 /* installazione: il browser (Chrome, Edge, Samsung) offre l'evento solo se l'app è installabile */
 window.__bip=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();window.__bip=e;try{instPaint()}catch(x){}});addEventListener('appinstalled',()=>{window.__bip=null;try{instPaint();toast('App installata.')}catch(x){}});
 try{guideify(document)}catch(e){}
@@ -400,7 +402,7 @@ function setTab(v){tab=v;document.querySelectorAll('#tabs button').forEach(b=>b.
   const c=v==='clienti';$('homeView').hidden=v!=='home';$('oppView').hidden=v!=='opp';$('prodView').hidden=v!=='prod';$('leadView').hidden=v!=='lead';$('list').hidden=!c;$('q').hidden=!c;$('qRow').hidden=!c;$('cFilt').hidden=!c;$('count').hidden=!c;$('cfRow').hidden=!c;document.querySelector('.bar').hidden=true;
   $('title').textContent={home:'Home',clienti:'Clienti',lead:'Lead',opp:'Opportunità',prod:'Prodotti'}[v];
   const l={home:'',clienti:'Nuovo cliente',lead:'Nuovo lead',opp:'Nuova opportunità',prod:'Nuovo prodotto'}[v];$('addBtn').setAttribute('aria-label',l);$('addBtn').title=l;$('addLbl').textContent=l;if(v==='prod')renderP();if(v==='home')renderH();if(c)render();if(v==='lead')renderL()}
-$('tabs').onclick=e=>{const b=e.target.closest('button');if(b){if(b.dataset.v==='opp'){oFilt='';setTab('opp');renderO();return}setTab(b.dataset.v)}};
+$('tabs').onclick=e=>{const b=e.target.closest('button');if(b){if(b.dataset.x==='more'){e.stopPropagation();$('menuBtn').click();return}if(b.dataset.v==='opp'){oFilt='';setTab('opp');renderO();return}setTab(b.dataset.v)}};
 $('vList').onclick=()=>{oView='list';renderO()};$('vKan').onclick=()=>{oView='kan';renderO()};
 FONTI.forEach(f=>{const o=h('option','',f);o.value=f;$('o_fonte').append(o)});
 function paintFasi(){const w=$('o_fasi');w.textContent='';FASI.forEach(f=>{const b=h('button','',f[1]);b.type='button';b.style.background=f[3];b.classList.toggle('on',oD.fase===f[0]);b.onclick=()=>{oD.fase=f[0];$('o_prob').value=f[2];setErr('o_prob','');paintFasi();w.dispatchEvent(new Event('input',{bubbles:true}))};w.append(b)})}
@@ -10131,7 +10133,7 @@ setTimeout(()=>{try{runBday()}catch(e){}try{runJr()}catch(e){}},900);document.ad
 {const mb=$('menuBtn'),mn=$('appMenu'),bk=$('amBack');const close=()=>{mn.hidden=true;bk.hidden=true;mb.setAttribute('aria-expanded','false')};
  mb.onclick=()=>{const o=mn.hidden;mn.hidden=!o;bk.hidden=!o;mb.setAttribute('aria-expanded',String(o));if(o)mn.querySelector('button').focus()};bk.onclick=close;
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!mn.hidden){close();mb.focus()}});
- mn.onclick=e=>{const b=e.target.closest('button');if(!b)return;close();({home:()=>setTab('home'),an:()=>openAn(),prod:()=>setTab('prod'),mkt:()=>setTab('mkt'),set:()=>{openSettings();paintBro()},info:()=>openInfo(),help:()=>openHelp()})[b.dataset.m]()}}
+ mn.onclick=e=>{const b=e.target.closest('button');if(!b)return;close();({home:()=>setTab('home'),tk:()=>tkList(),an:()=>openAn(),prod:()=>setTab('prod'),mkt:()=>setTab('mkt'),set:()=>{openSettings();paintBro()},info:()=>openInfo(),help:()=>openHelp()})[b.dataset.m]()}}
 
 
 /* ===== password dei backup (cifratura dei file esportati) ===== */
@@ -10559,8 +10561,20 @@ const SB=(()=>{
     const tx=h('span');tx.style.cssText='flex:1;min-width:0;display:grid;gap:2px';const n=h('b','',t[1]);n.style.fontSize='16px';const ds=h('span','',t[2]);ds.style.cssText='font-size:13px;color:var(--muted)';tx.append(n,ds);
     b.append(sw,tx);if(cur===t[0]){const ck=h('span');ck.innerHTML=ICONS.check;ck.style.cssText='flex:none;width:26px;height:26px;color:var(--ink)';b.append(ck)}
     b.onclick=()=>setTpl(t[0]);tl.append(b)});tl.append(h('div','hint','La scelta vale solo su questo dispositivo.'))};
-  tf.append(h('label','','Aspetto'),tl);tpg.append(tf);up.after(tpg);paintTp();
-  SPG[0][1].push(['tp','layers','Aspetto','Modello di colore dell’app']);SPN.tp='Aspetto';
+  const layF=h('div','f'),layL=h('div');layL.style.cssText='display:grid;gap:12px;margin-top:8px';
+  const LAY=[['','Classica','Sezioni in alto e menu nell’angolo: la disposizione di sempre.'],['b','Nuova (in prova)','Sezioni in basso, a portata di pollice. La Home mostra prima le cose da fare, l’elenco clienti è più compatto e il pulsante «Nuovo» è in basso a destra.']];
+  const curLay=()=>document.documentElement.getAttribute('data-lay')==='b'?'b':'';
+  const setLay=v=>{try{v?localStorage.setItem('crm-lay',v):localStorage.removeItem('crm-lay')}catch(e){}const d=document.documentElement;v?d.setAttribute('data-lay',v):d.removeAttribute('data-lay');paintLay()};
+  const paintLay=()=>{layL.textContent='';const cur=curLay();LAY.forEach(t=>{const b=h('button','');b.type='button';b.setAttribute('aria-pressed',String(cur===t[0]));
+    b.style.cssText='display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:12px 14px;border-radius:18px;background:var(--surface);color:var(--ink);cursor:pointer;border:2px solid '+(cur===t[0]?'var(--act)':'var(--line)');
+    const sw=h('span');sw.style.cssText='flex:none;width:44px;height:64px;border-radius:10px;padding:5px;display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);background:var(--bg)';
+    const bar=h('span');bar.style.cssText='height:9px;border-radius:4px;background:var(--act)';const body=h('span');body.style.cssText='flex:1;border-radius:4px;background:var(--surface);border:1px solid var(--line)';t[0]?sw.append(body,bar):sw.append(bar,body);
+    const tx=h('span');tx.style.cssText='flex:1;min-width:0;display:grid;gap:2px';const n=h('b','',t[1]);n.style.fontSize='16px';const ds=h('span','',t[2]);ds.style.cssText='font-size:13px;color:var(--muted)';tx.append(n,ds);
+    b.append(sw,tx);if(cur===t[0]){const ck=h('span');ck.innerHTML=ICONS.check;ck.style.cssText='flex:none;width:26px;height:26px;color:var(--ink)';b.append(ck)}
+    b.onclick=()=>setLay(t[0]);layL.append(b)});layL.append(h('div','hint','La scelta vale solo su questo dispositivo. Puoi tornare alla disposizione classica quando vuoi.'))};
+  layF.append(h('label','','Disposizione'),layL);paintLay();
+  tf.append(h('label','','Colori'),tl);tpg.append(layF,tf);up.after(tpg);paintTp();
+  SPG[0][1].push(['tp','layers','Aspetto','Colori e disposizione']);SPN.tp='Aspetto';
   const em0=setSp;setSp=function(k){if(k==='us')paintUs();if(k==='ac'){em.textContent='Connesso come '+(SB.email()||'—');try{paintE2()}catch(e){}}return em0.apply(this,arguments)};
   bo.onclick=()=>askConfirm('Uscire da questo dispositivo? I dati vengono rimossi da qui ma restano nel tuo account.','user','Esci',async()=>{try{await Promise.all(Object.keys(CSPEC).map(k=>cloudFlush(k)))}catch(e){}cloudStop();await SB.logout();SB.wipe();SB.forget();location.reload()});
   bd.onclick=()=>askConfirm('Eliminare definitivamente il tuo account? Clienti, opportunità, prodotti, foto e tutto il resto vengono cancellati dal cloud e da questo dispositivo, compreso il blocco con Face ID o impronta. Non si può annullare.','trash','Elimina tutto',async()=>{try{cloudStop();await SB.removeAccount();SB.wipe();SB.forget();/* l'account non c'è più: anche il blocco biometrico di questo dispositivo va tolto */LOCK={};try{localStorage.removeItem('crm-lock-v1');localStorage.removeItem('crm-lock-try')}catch(e){}location.reload()}catch(e){toast('Eliminazione non riuscita: '+SB.msg(e))}});
@@ -10721,6 +10735,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.42.1','Promemoria: in Impostazioni → Promemoria attività c’è «Prova l’invio dal server» e una riga di diagnosi che mostra se la notifica è arrivata al telefono e come è stata gestita.'],
 ['1.42.2','Attività e promemoria più chiari: scadenza e ora sono affiancate, i comandi in fondo sono più ordinati e la pagina Promemoria è stata ridisegnata. Non compare più la richiesta di salvare quando non hai modificato nulla. Nella guida dei primi passi c’è ora il passo «I promemoria sul telefono».'],
 ['1.42.3','Installa l’app dalle Impostazioni: dove il browser lo consente (Android, Chrome, Edge) compare il pulsante «Installa l’app»; su iPhone e negli altri casi una guida passo passo spiega come aggiungere KRANG alla schermata Home. Se l’app è già installata lo indica.'],
+['1.43.0','Nuova disposizione in prova: in Impostazioni › Aspetto › Disposizione puoi scegliere «Nuova». Le sezioni passano in basso, a portata di pollice, con la voce «Altro» per attività, prodotti e impostazioni; la Home mostra prima le cose da fare; l’elenco clienti è più compatto e il pulsante «Nuovo» è in basso a destra. La disposizione classica resta quella predefinita. Nel menu c’è ora anche la voce «Attività».'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -11407,3 +11422,7 @@ function instPaint(){const B=$('in_body'),S0=$('in_st');if(!B||!S0)return;B.text
     P('<b>1.</b> Cerca nella barra degli indirizzi l’icona di installazione (un monitor con una freccia), oppure apri il menu del browser.');
     P('<b>2.</b> Scegli <b>«Installa KRANG CRM»</b> e conferma.');
     P('<span style="opacity:.8">Funziona con Chrome ed Edge. Safari sul Mac: menu File → «Aggiungi al Dock».</span>')}}
+
+/* disposizione nuova: etichette dei pulsanti «Nuovo» e nuova attività dalla Home */
+[['cAdd','Nuovo cliente'],['lAdd','Nuovo lead'],['oAdd','Nuova opportunità'],['pAdd','Nuovo prodotto']].forEach(([i,t])=>{const b=$(i);if(b)b.dataset.fl=t});
+{const f=$('hFab');if(f)f.onclick=()=>tkOpen(null)}
