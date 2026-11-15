@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.49.1"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.49.1|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.50.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.50.0|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -299,7 +299,7 @@ html.sh-open,html.sh-open body{overflow:hidden;overscroll-behavior:none}
 .oc.off{opacity:.55}
 #tabs button{flex-direction:column;gap:2px;height:52px;padding:0 2px;min-width:0;font-size:11.5px}
 #tabs button svg{width:20px;height:20px}
-.greet{margin:4px 0 12px;display:flex;align-items:flex-start;gap:12px}.gtx{flex:1;min-width:0}#hLogo{flex:none;width:56px;height:56px;object-fit:contain;background:#fff;border-radius:14px;padding:6px;box-shadow:0 2px 8px rgba(0,0,0,.25)}#hLogo[hidden]{display:none}.lgo{display:flex;align-items:center;gap:12px}.lgo #lgoBtn{width:72px;height:72px;flex:none;border-radius:16px;border:1px dashed var(--line);background:#fff center/contain no-repeat;display:grid;place-items:center;color:#2d2b55;padding:0;min-height:0}.lgo #lgoBtn svg{width:26px;height:26px}
+.greet{margin:4px 0 12px;display:flex;align-items:flex-start;gap:12px}.gtx{flex:1;min-width:0}#hLogo{flex:none;width:76px;height:76px;object-fit:contain;background:#fff;border-radius:14px;padding:6px;box-shadow:0 2px 8px rgba(0,0,0,.25)}#hLogo[hidden]{display:none}.lgo{display:flex;align-items:center;gap:12px}.lgo #lgoBtn{width:72px;height:72px;flex:none;border-radius:16px;border:1px dashed var(--line);background:#fff center/contain no-repeat;display:grid;place-items:center;color:#2d2b55;padding:0;min-height:0}.lgo #lgoBtn svg{width:26px;height:26px}
 .greet b{display:block;font-size:20px;font-weight:700}
 .greet span{color:var(--muted);font-size:14px}
 .qa{display:flex;justify-content:space-between;gap:10px;margin:0 0 14px}
@@ -500,6 +500,18 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] #qAct svg{width:22px;height:22px;color:#ffa24d;stroke:#ffa24d}
 [data-lay="b"] #sheet #cTabs{position:sticky;top:-12px;z-index:2;background:var(--bg);margin-top:6px;padding-top:6px}
 [data-lay="b"] #cTabs [data-p=sum]{order:0}[data-lay="b"] #cTabs [data-p=dati]{order:1}[data-lay="b"] #cTabs [data-p=tk]{order:2}[data-lay="b"] #cTabs [data-p=opp]{order:3}[data-lay="b"] #cTabs [data-p=priv]{order:4}[data-lay="b"] #cTabs [data-p=st]{order:5}
+[data-lay="b"] .sheet{bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+/* «+» nelle schede: stesso pulsante tondo delle liste */
+[data-lay="b"] #addOppFor,[data-lay="b"] .sheet .btn.pls,[data-lay="b"] #tkList .btn.pls{position:fixed;right:16px;bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:3;width:54px;height:54px;min-height:54px;margin:0;border-radius:50%;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+[data-lay="b"] #addOppFor,[data-lay="b"] .sheet .btn.pls,[data-lay="b"] #tkList .btn.pls{background:#ffa24d;color:#2d2b55;border:0}
+[data-lay="b"] #addOppFor svg,[data-lay="b"] .btn.pls svg{width:24px;height:24px;color:#2d2b55}
+[data-lay="b"] :is(#sheet,#lSheet,#oSheet)>div{padding-bottom:88px}
+/* Prodotti: sezioni come schede a sottolineatura, sempre con il testo */
+[data-lay="b"] #pSeg{display:flex;gap:0;background:none!important;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:0;margin:4px 0 12px;box-shadow:none}
+[data-lay="b"] #pSeg button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:44px;border:0;border-radius:0;background:none!important;color:var(--muted);font-weight:700;font-size:15px;box-shadow:none;padding:0 6px;min-width:0}
+[data-lay="b"] #pSeg button .lb{display:inline!important;max-width:none}
+[data-lay="b"] #pSeg button svg{width:18px;height:18px}
+[data-lay="b"] #pSeg button.on{color:var(--ink);box-shadow:inset 0 -3px 0 #ffa24d}
 [data-lay="b"] :is(#sheet,#lSheet,#oSheet){bottom:calc(64px + env(safe-area-inset-bottom,0px))}
 [data-lay="b"] :is(#sheet,#lSheet,#oSheet,#qSheet){scrollbar-width:none;-ms-overflow-style:none}
 [data-lay="b"] :is(#sheet,#lSheet,#oSheet,#qSheet)::-webkit-scrollbar{display:none;width:0;height:0}
@@ -1149,6 +1161,6 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.49.1"></script>
+<script src="app.js?v=1.50.0"></script>
 </body>
 </html>
