@@ -56,3 +56,6 @@ grant execute on function public.claim_reminders() to service_role;
 -- Titolo opzionale nella notifica: arriva già cifrato dall'app (chiave solo sui dispositivi dell'utente).
 alter table public.reminders add column if not exists blob text;
 -- (set_reminders e claim_reminders sono stati aggiornati per gestire "blob"; vedi migrazione promemoria_titolo_cifrato)
+
+-- Prelievo a lotti (migrazione claim_reminders_a_lotti): al massimo p_limit promemoria per chiamata, il resto al minuto dopo.
+-- I promemoria più vecchi di 36 ore vengono chiusi senza invio. Controllo pianificato ogni minuto (pg_cron).
