@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.50.2"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.50.2|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.50.3"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.50.3|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -509,7 +509,8 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 /* «+» nelle schede: stesso pulsante tondo delle liste */
 [data-lay="b"] #addOppFor,[data-lay="b"] .sheet .btn.pls,[data-lay="b"] #tkList .btn.pls{position:fixed;right:16px;bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:3;width:54px;height:54px;min-height:54px;margin:0;border-radius:50%;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 [data-lay="b"] #addOppFor,[data-lay="b"] .sheet .btn.pls,[data-lay="b"] #tkList .btn.pls{background:#ffa24d;color:#2d2b55;border:0}
-[data-lay="b"] #addOppFor svg,[data-lay="b"] .btn.pls svg{width:24px;height:24px;color:#2d2b55}
+[data-lay="b"] #addOppFor,[data-lay="b"] .sheet .btn.pls,[data-lay="b"] #tkList .btn.pls{display:flex!important;align-items:center;justify-content:center;gap:0;padding:0!important;margin:0!important;line-height:0}
+[data-lay="b"] #addOppFor svg,[data-lay="b"] .btn.pls svg{display:block;margin:0;flex:none;width:24px;height:24px;color:#2d2b55}
 [data-lay="b"] :is(#sheet,#lSheet,#oSheet)>div{padding-bottom:88px}
 /* Prodotti: sezioni come schede a sottolineatura, sempre con il testo */
 [data-lay="b"] :is(#pSeg,#pMag .seg){display:flex;gap:0;background:none!important;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:0;margin:4px 0 12px;box-shadow:none}
@@ -1172,6 +1173,6 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.50.2"></script>
+<script src="app.js?v=1.50.3"></script>
 </body>
 </html>
