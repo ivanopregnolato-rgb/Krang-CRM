@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.47.3"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.47.3|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.47.4"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.47.4|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -463,7 +463,8 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] #list .row{margin:0;padding:10px 12px;gap:12px}
 [data-lay="b"] #list .row .av{width:44px;height:44px;font-size:16px;border-radius:14px}
 [data-lay="b"] #list .row em:not(.warn):not(:has(.flag)){display:none}
-[data-lay="b"] #list>.hint{display:none}
+[data-lay="b"] #list>.hint{margin:6px 2px 14px;font-size:13px}
+[data-lay="b"] #leadList>.hint,[data-lay="b"] #lList>.hint{margin:0;padding:12px 14px 14px;font-size:13px}
 /* tab sottolineate anche su lead e opportunità */
 [data-lay="b"] :is(#lTabs,#oTabs){display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:0;margin:0 0 14px;box-shadow:none}
 [data-lay="b"] :is(#lTabs,#oTabs)::-webkit-scrollbar{display:none}
@@ -486,6 +487,13 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] #qSub:empty{display:none}
 [data-lay="b"] #qAct{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 6px}
 [data-lay="b"] #qAct:empty{display:none}
+[data-lay="b"] #l_src{border:0;border-radius:0;background:none!important;color:var(--muted)!important;padding:0 2px;margin:-4px 0 12px;font-size:16px}
+[data-lay="b"] #l_acts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 6px;justify-content:stretch}
+[data-lay="b"] #l_acts[hidden]{display:none}
+[data-lay="b"] #l_acts button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:64px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+[data-lay="b"] #l_acts svg{width:22px;height:22px;color:#ffa24d;stroke:#ffa24d}
+[data-lay="b"] #l_sumF .lri{padding:14px;font-size:16px;line-height:1.4;white-space:pre-wrap}
+[data-lay="b"] #lSheet #l_seg{margin-top:0}
 [data-lay="b"] #qAct button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:64px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 [data-lay="b"] #qAct svg{width:22px;height:22px;color:#ffa24d;stroke:#ffa24d}
 [data-lay="b"] #sheet #cTabs{position:sticky;top:-12px;z-index:2;background:var(--bg);margin-top:6px;padding-top:6px}
@@ -586,24 +594,40 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] #cTabs button.on{color:var(--ink);border-bottom-color:#ffa24d}
 [data-lay="b"] #cTabs button [data-i],[data-lay="b"] #cTabs button svg{display:none}
 [data-lay="b"] #sumF{display:grid;gap:12px}
+[data-lay="b"] #l_sumF{display:grid;gap:12px}
 [data-lay="b"] #sumF .sh{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.75;margin:10px 2px 0}
+[data-lay="b"] #l_sumF .sh{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.75;margin:10px 2px 0}
 [data-lay="b"] #sumF .sacts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+[data-lay="b"] #l_sumF .sacts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 [data-lay="b"] #sumF .sacts button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:64px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+[data-lay="b"] #l_sumF .sacts button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:64px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 [data-lay="b"] #sumF .sacts svg{width:22px;height:22px}
+[data-lay="b"] #l_sumF .sacts svg{width:22px;height:22px}
 [data-lay="b"] #sumF .scard{border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow:hidden}
+[data-lay="b"] #l_sumF .scard{border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow:hidden}
 [data-lay="b"] #sumF .scard.al{border-color:#ff8fa8;padding:14px;display:grid;gap:8px}
+[data-lay="b"] #l_sumF .scard.al{border-color:#ff8fa8;padding:14px;display:grid;gap:8px}
 [data-lay="b"] #sumF .srow{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 14px;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+[data-lay="b"] #l_sumF .srow{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 14px;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
 [data-lay="b"] #sumF .srow:first-child{border-top:0}
+[data-lay="b"] #l_sumF .srow:first-child{border-top:0}
 .tkc{display:none}
 [data-lay="b"] #sumF .tkc{display:block;flex:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--muted,#9fb3c8)}
+[data-lay="b"] #l_sumF .tkc{display:block;flex:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--muted,#9fb3c8)}
 [data-lay="b"] #homeView>.greet{padding-top:14px}
 [data-lay="b"] #sumF .srow b{display:block;font-size:16px}
+[data-lay="b"] #l_sumF .srow b{display:block;font-size:16px}
 [data-lay="b"] #sumF .srow small{display:block;font-size:13px;opacity:.8}
+[data-lay="b"] #l_sumF .srow small{display:block;font-size:13px;opacity:.8}
 [data-lay="b"] #sumF .srow .sv{margin-left:auto;font-weight:700;white-space:nowrap}
+[data-lay="b"] #l_sumF .srow .sv{margin-left:auto;font-weight:700;white-space:nowrap}
 [data-lay="b"] #sumF .srow.l{justify-content:space-between;min-height:48px}[data-lay="b"] #sumF .srow.l small{font-size:14px}
+[data-lay="b"] #l_sumF .srow.l{justify-content:space-between;min-height:48px}[data-lay="b"] #l_sumF .srow.l small{font-size:14px}
 [data-lay="b"] #cTabs .cnt{position:static;margin:0 0 0 2px}
 [data-lay="b"] #sumF .late{color:#ff8fa8}
+[data-lay="b"] #l_sumF .late{color:#ff8fa8}
 [data-lay="b"] #sumF .empty{padding:14px;opacity:.75;font-size:14px}
+[data-lay="b"] #l_sumF .empty{padding:14px;opacity:.75;font-size:14px}
 
 </style>
 </head>
@@ -1047,7 +1071,8 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
   <div class="top"><h2 id="lTitle">Nuovo lead</h2><button class="btn ico pk" id="lClose" type="button" aria-label="Chiudi" title="Chiudi"><span data-i="back"></span></button></div>
   <div class="qbn" id="l_src" hidden></div>
   <div class="acts" id="l_acts" hidden></div>
-  <div class="tabs" id="lTabs" role="tablist"><button type="button" class="on" data-lp="dati"><span data-i="user"></span>Dati</button><button type="button" data-lp="tk"><span data-i="check"></span>Task<span class="cnt" id="lTkCnt"></span></button><button type="button" data-lp="priv"><span data-i="shield"></span>Privacy</button><button type="button" data-lp="msg"><span data-i="Scrivi"></span>Contatti<i class="bdg" id="l_bdg" hidden></i></button><button type="button" data-lp="tp"><span data-i="route"></span>Storia</button></div>
+  <div class="tabs" id="lTabs" role="tablist"><button type="button" class="lb-only" data-lp="sum"><span data-i="list"></span>Riepilogo</button><button type="button" class="on" data-lp="dati"><span data-i="user"></span>Dati</button><button type="button" data-lp="tk"><span data-i="check"></span>Task<span class="cnt" id="lTkCnt"></span></button><button type="button" data-lp="priv"><span data-i="shield"></span>Privacy</button><button type="button" data-lp="msg"><span data-i="Scrivi"></span>Contatti<i class="bdg" id="l_bdg" hidden></i></button><button type="button" data-lp="tp"><span data-i="route"></span>Storia</button></div>
+<div class="lp" data-lp="sum" hidden><div id="l_sumF"></div></div>
 <div class="lp" data-lp="dati">
   <div class="f" id="l_pasteBox"><label for="l_paste">Incolla l’email o il messaggio del form</label><textarea id="l_paste" rows="4" placeholder="Incolla qui il testo: nome, email e richiesta vengono ricavati da soli"></textarea><button class="btn lbl" id="l_ext" type="button" style="margin-top:8px"><span data-i="search"></span> Ricava i dati</button><div class="hint" id="l_exth"></div></div>
   <div class="seg" id="l_seg" role="group" aria-label="Tipo di contatto"><button type="button" class="on" data-t="persona"><span data-i="user"></span>Persona</button><button type="button" data-t="azienda"><span data-i="building"></span>Azienda</button></div>
@@ -1115,6 +1140,6 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.47.3"></script>
+<script src="app.js?v=1.47.4"></script>
 </body>
 </html>

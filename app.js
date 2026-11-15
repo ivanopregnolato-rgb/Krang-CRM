@@ -9261,7 +9261,7 @@ function renderL(){window.paintSub&&paintSub();
     b.append(av,t);b.onclick=()=>openLead(l);w.append(swipeRow(b,l,{open:openLead,mail:()=>{openLead(l);setLTab('msg');setLCm('mail');$('l_reply').onclick()},wa:()=>{openLead(l);setLTab('msg');setLCm('wa');$('l_wa').onclick()}}))});if(rows.length)w.prepend(h('div','hint','Scorri una scheda: a destra chiami, a sinistra scrivi una email o un WhatsApp.'))}
 function paintLActs(l){const a=$('l_acts');a.textContent='';a.hidden=!l;if(!l)return;const tel=l.telefono&&l.telefono.replace(/\D/g,'');
   [['Chiama',tel,()=>launch('tel:'+telHref(l),l.telefono,l)],['Scrivi',l.email,()=>{setLTab('msg');setLCm('mail');$('l_reply').onclick()}],['WhatsApp',tel,()=>{setLTab('msg');setLCm('wa');$('l_wa').onclick()}]]
-  .forEach(([n,ok,fn])=>{if(!ok)return;const x=document.createElement('a');x.innerHTML=ICONS[n];x.setAttribute('aria-label',n);x.title=n;x.href='#';x.onclick=ev=>{ev.preventDefault();fn()};a.append(x)});a.hidden=!a.children.length}
+  .forEach(([n,ok,fn])=>{if(!ok)return;if(document.documentElement.dataset.lay==='b'){const x=h('button');x.type='button';x.innerHTML=ICONS[n]+'<span>'+({Scrivi:'Email'}[n]||n)+'</span>';x.onclick=fn;a.append(x);return}const x=document.createElement('a');x.innerHTML=ICONS[n];x.setAttribute('aria-label',n);x.title=n;x.href='#';x.onclick=ev=>{ev.preventDefault();fn()};a.append(x)});if(document.documentElement.dataset.lay==='b'){const t=h('button');t.type='button';t.innerHTML=ICONS.check+'<span>Task</span>';t.onclick=()=>tkOpen(null,{tipo:'lead',id:l.id},true);a.append(t)}a.hidden=!a.children.length}
 function openLead(l){
   try{paintCre('lSheet',l,'lead')}catch(e){}
   lCur=l||null;const d=l||{};
@@ -9271,13 +9271,13 @@ function openLead(l){
   $('lTitle').textContent=l?lName(l):'Nuovo lead';
   $('l_pasteBox').hidden=!!l;$('l_act').style.gridTemplateColumns='repeat(2,minmax(0,1fr))';setLCm('all');paintLM();paintLActs(l);
   const done=l&&l.stato!=='nuovo',src=$('l_src');src.hidden=!l;
-  if(l){const st=l.stato==='convertito'?'Convertito in prospect':l.stato==='scartato'?'Scartato':'Nuovo';src.textContent=st+' · '+({web:'form web',email:'email',manuale:'inserito a mano'}[l.fonte]||'')+' · '+fmtD(ymd(new Date(l.data)));src.style.background=l.stato==='convertito'?'#b9e6d3':l.stato==='scartato'?'var(--line)':'#ffd9b0'}
+  if(l){const st=l.stato==='convertito'?'Convertito in prospect':l.stato==='scartato'?'Scartato':'Nuovo';src.textContent=[st,({web:'Form web',email:'Email',manuale:'Inserito a mano'}[l.fonte]||String(l.fonte||'').replace(/^API:\s*/,'')),fmtD(ymd(new Date(l.data)))].filter(Boolean).join(' · ');src.style.background=l.stato==='convertito'?'#b9e6d3':l.stato==='scartato'?'var(--line)':'#ffd9b0'}
   $('l_ripr').hidden=!(l&&l.stato==='scartato');$('l_conv').hidden=!!(l&&l.stato==='convertito');$('l_scarta').hidden=!l||l.stato!=='nuovo';$('l_del').hidden=!l;$('l_reply').hidden=!l;
   if(l&&l.stato==='convertito'){$('l_conv').hidden=true}
-  $('lSheet').hidden=false}
+  $('lSheet').hidden=false;if(document.documentElement.dataset.lay==='b'&&l){try{paintLSum()}catch(e){}setLTab('sum')}}
 $('lClose').onclick=()=>{$('lSheet').hidden=true};
 let lTipo='persona';
-function setLTab(k){if(k==='tp'&&lCur)setTimeout(()=>paintTouch(true,lCur),0);document.querySelectorAll('#lTabs button').forEach(b=>b.classList.toggle('on',b.dataset.lp===k));document.querySelectorAll('#lSheet .lp').forEach(e=>e.hidden=e.dataset.lp!==k)}
+function setLTab(k){if(k==='sum'&&window.paintLSum&&lCur)try{paintLSum()}catch(e){}if(k==='tp'&&lCur)setTimeout(()=>paintTouch(true,lCur),0);document.querySelectorAll('#lTabs button').forEach(b=>b.classList.toggle('on',b.dataset.lp===k));document.querySelectorAll('#lSheet .lp').forEach(e=>e.hidden=e.dataset.lp!==k)}
 $('lTabs').onclick=e=>{const b=e.target.closest('button');if(b){setLTab(b.dataset.lp);if(b.dataset.lp==='msg'&&lCur){const mm=lMsgs(lCur)[0];if(mm&&mm.dir==='in'&&lUnread(lCur)){lCur.msgSeen=+mm.data||tsOf(mm.data);try{persistL()}catch(e){}setTimeout(()=>{try{paintBadges()}catch(e){}},0)}}}};
 function paintLP(){const w=$('l_pst');w.textContent='';const l=lCur;if(!l)return;const ok=!!l.inf,c=h('i','chip',ok?'Informativa fornita il '+fmtD(l.inf.d)+' · '+l.inf.via:'Informativa da inviare');c.style.background=ok?'#b5ebc0':'#f5cad6';w.append(c);
   $('l_pinfE').lastChild.textContent=ok?'Reinvia via email':'Via email';$('l_pinfW').lastChild.textContent=ok?'Reinvia via WhatsApp':'Via WhatsApp'}
@@ -10748,6 +10748,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.0','Nuova disposizione: «Altro» è ora una pagina vera, non più un menu a comparsa. Raccoglie Attività, Prodotti, Analytics, Marketing, Impostazioni, Aiuto e Info in due riquadri, con la barra in basso sempre visibile. Inoltre lo scorrimento di lato nella scheda cliente segue l’ordine delle linguette.'],
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
+['1.47.4','Nuova disposizione: scheda del lead allineata a quella del cliente (stato e sorgente, tasti Chiama/Email/WhatsApp/Task, scheda Riepilogo con richiesta, task e contatti); più spazio sopra «Scorri una scheda…» in Lead e Clienti.'],
 ['1.47.3','Registro errori: ignora i falsi allarmi iniettati dai browser (Firefox per iPhone, estensioni portafoglio); gli errori di script esterni senza dettagli sono registrati a parte come «esterno». «Attività» torna a chiamarsi «Task» ovunque; l’avviso di un nuovo lead dall’API indica la sorgente (es. «1 nuovo lead da Form Web»); i pulsanti «Nuovo…» diventano un semplice «+» in un cerchio.'],
 ['1.47.2','Nuova disposizione: cerchio per spuntare le attività nel Riepilogo cliente, un po’ di margine in alto nella Home. Promemoria push: la sincronizzazione col server si riallinea da sola ad ogni apertura.'],
 ['1.47.1','Nuova disposizione: «Primi passi» torna in alto nella Home, sopra «Da fare», come nel layout classico.'],
@@ -11454,7 +11455,16 @@ window.paintSum=function(){const c=editing,w=$('sumF');if(!w)return;w.textConten
   sec('Prossimi task');const tc=h('div','scard');if(tk.length)tk.slice(0,4).forEach(t=>{const r=row(t.titolo||'Task',tkWhen(t),'',()=>tkOpen(t),!!t.scad&&t.scad<ymd());const ck=h('span','tkc');ck.setAttribute('role','button');ck.title=ck.ariaLabel='Segna come fatta';ck.onclick=e=>{e.stopPropagation();tkDone(t,true)};r.prepend(ck);tc.append(r)});else tc.append(h('div','empty','Nessun task aperto.'));w.append(tc);
   const op=(typeof opps!=='undefined'?opps:[]).filter(o=>o.clienteId===c.id&&o.fase!=='vinta'&&o.fase!=='persa');
   sec('Opportunità aperte');const oc=h('div','scard');if(op.length)op.forEach(o=>{const f=FASI.find(x=>x[0]===o.fase);oc.append(row(o.titolo||'Opportunità',(f?f[1]:'')+(o.prob!=null?' · '+o.prob+'%':''),eur(o.valore),()=>openOpp(o)))});else oc.append(h('div','empty','Nessuna opportunità aperta.'));w.append(oc);
-  sec('Contatti');const cc=h('div','scard');[['Telefono',c.telefono&&(dial(c.paese)+' '+c.telefono)],['Email',c.email],['Indirizzo',c.indirizzo],['Sito',c.sito]].forEach(([k,v])=>{if(v){const r=h('div','srow l');r.append(h('small','',k),h('span','sv',v));cc.append(r)}});const eb=h('button','srow l');eb.type='button';eb.innerHTML='<b style="color:#4fc3ff">Modifica i dati</b>';eb.onclick=()=>setPane('dati');cc.append(eb);w.append(cc)};
+  sec('Contatti');const cc=h('div','scard');[['Telefono',c.telefono&&(/^\+/.test(c.telefono)?c.telefono:dial(c.paese)+' '+c.telefono)],['Email',c.email],['Indirizzo',c.indirizzo],['Sito',c.sito]].forEach(([k,v])=>{if(v){const r=h('div','srow l');r.append(h('small','',k),h('span','sv',v));cc.append(r)}});const eb=h('button','srow l');eb.type='button';eb.innerHTML='<b style="color:#4fc3ff">Modifica i dati</b>';eb.onclick=()=>setPane('dati');cc.append(eb);w.append(cc)};
+
+window.paintLSum=function(){const l=lCur,w=$('l_sumF');if(!w)return;w.textContent='';if(!l)return;
+  const row=(t,sub,fn,late)=>{const b=h('button','srow');b.type='button';const d=h('div');d.append(h('b','',t));d.append(h('small',late?'late':'',sub));b.append(d);b.onclick=fn;return b};
+  const sec=t=>w.append(h('div','sh',t));
+  if(!l.inf){const al=h('div','scard al');al.append(h('b','late','Informativa privacy da inviare'),h('small','','Senza informativa non puoi mandare comunicazioni commerciali.'));const bt=h('button','btn p lbl');bt.type='button';bt.innerHTML=ICONS.Scrivi+'Apri Privacy';bt.onclick=()=>setLTab('priv');al.append(bt);w.append(al)}
+  if(l.richiesta){sec('Richiesta');const rc=h('div','scard');rc.append(h('div','lri',l.richiesta));w.append(rc)}
+  const tk=tkForRef({tipo:'lead',id:l.id}).filter(t=>t.stato!=='fatta').sort((a,b)=>String(a.scad||'9').localeCompare(String(b.scad||'9')));
+  sec('Prossimi task');const tc=h('div','scard');if(tk.length)tk.slice(0,4).forEach(t=>{const r=row(t.titolo||'Task',tkWhen(t),()=>tkOpen(t),!!t.scad&&t.scad<ymd());const ck=h('span','tkc');ck.setAttribute('role','button');ck.title=ck.ariaLabel='Segna come fatta';ck.onclick=e=>{e.stopPropagation();tkDone(t,true)};r.prepend(ck);tc.append(r)});else tc.append(h('div','empty','Nessun task aperto.'));w.append(tc);
+  sec('Contatti');const cc=h('div','scard');[['Azienda',l.azienda],['Ruolo',l.ruolo],['Telefono',l.telefono&&(/^\+/.test(l.telefono)?l.telefono:dial(l.paese)+' '+l.telefono)],['Email',l.email],['Indirizzo',l.indirizzo],['Sito',l.sito]].forEach(([k,v])=>{if(v){const r=h('div','srow l');r.append(h('small','',k),h('span','sv',v));cc.append(r)}});const eb=h('button','srow l');eb.type='button';eb.innerHTML='<b style="color:#4fc3ff">Modifica i dati</b>';eb.onclick=()=>setLTab('dati');cc.append(eb);w.append(cc)};
 
 window.paintHead=function(c){const sub=$('qSub'),qa=$('qAct');if(!sub||!qa)return;sub.textContent='';qa.textContent='';
   const tb=document.querySelector('#cTabs [data-p=tk]');if(tb)[...tb.childNodes].forEach(n=>{if(n.nodeType===3&&/Task|Attivit/.test(n.textContent))n.textContent='Task'});
