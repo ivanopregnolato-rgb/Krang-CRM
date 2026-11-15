@@ -9254,6 +9254,8 @@ async function extractLead(raw){
     if(js&&typeof js==='object'){const o=Object.assign({},fb);['nome','cognome','telefono','azienda','richiesta'].forEach(k=>{if(js[k])o[k]=String(js[k]).trim()});if(js.email&&mailRe.test(String(js.email).trim()))o.email=String(js.email).trim().toLowerCase();o.enquiry=js.enquiry!==false;return o}
   }catch(e){}
   return fb}
+const L_SRC_COL={web:['Form web','#bfe0f8'],email:['Email','#c9f0c8'],manuale:['Manuale','#f7d6e6']},L_SRC_PAL=['#e3d4fb','#ffe9a8','#b8ece6','#ffd0c2','#d9e6a8','#c7d3ff'];
+function lSrcChip(l){const f=String(l.fonte||'');if(L_SRC_COL[f])return L_SRC_COL[f];if(!f)return['Lead','#e1e6f0'];let n=0;for(const c of f.toLowerCase())n=(n*31+c.charCodeAt(0))>>>0;return[f.replace(/^API:\s*/i,''),L_SRC_PAL[n%L_SRC_PAL.length]]}
 function renderL(){window.paintSub&&paintSub();
   const w=$('lList');w.textContent='';const F=$('lFilt');F.textContent='';
   const cnt=k=>leads.filter(l=>l.stato===k).length;
@@ -9262,7 +9264,7 @@ function renderL(){window.paintSub&&paintSub();
   if(!rows.length){w.append(h('div','hint',lqv?'Nessun lead trovato.':lFilter==='nuovo'?(document.documentElement.dataset.lay==='b'?'Nessun lead da valutare.':'Nessun lead da valutare. Tocca l’icona di aggiornamento per cercare richieste nelle email da indirizzi non in anagrafica, oppure + per inserirne uno.'):'Nessun lead in questa sezione.'));return}
   rows.forEach(l=>{const b=h('button','row');b.type='button';
     const av=h('div','av',inits(lName(l)));av.style.background='#ffd9b0';
-    const t=h('div','tx'),n=h('b','',lName(l));const ch=h('i','cst',{web:'Form web',email:'Email',manuale:'Manuale'}[l.fonte]||'Lead');ch.style.background='#bfe0f8';n.append(ch);
+    const t=h('div','tx'),n=h('b','',lName(l));const sc=lSrcChip(l),ch=h('i','cst',sc[0]);ch.style.background=sc[1];ch.style.color='#1d1b3f';n.append(ch);
     const sp=h('span','',l.tipo==='azienda'?[[l.nome,l.cognome].filter(Boolean).join(' ')].filter(Boolean).join(''):l.azienda||'');if(!sp.textContent)sp.hidden=true;const ex=[];
     if(l.telefono){const p=h('em');const fe=flagEl(l.paese||(S.wa&&S.wa.paese)||'IT');fe.classList.add('sm');p.append(fe,' '+dial(l.paese||(S.wa&&S.wa.paese)||'IT')+' '+l.telefono);ex.push(p)}
     if(l.email)ex.push(h('em','',l.email));
@@ -10758,7 +10760,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
-['1.50.4','I contatori sulla scheda attiva hanno i colori invertiti (blu con numero arancione) in tutte le barre con sfondo arancione.'],
+['1.50.4','Nell’elenco dei lead l’etichetta della sorgente ha un colore diverso per ogni sorgente (form web, email, manuale e le altre). I contatori sulla scheda attiva hanno i colori invertiti (blu con numero arancione) in tutte le barre con sfondo arancione.'],
 ['1.50.3','Il «+» è identico ovunque: stessa posizione, stessa dimensione e perfettamente centrato nel cerchio, anche dentro le schede Opportunità e Task del cliente.'],
 ['1.50.2','Le liste a scelta hanno la stessa altezza dei campi di testo in tutta l’app, e nelle schede Prodotto e Impostazioni i campi hanno lo stesso aspetto delle altre schede.'],
 ['1.50.1','Nuova disposizione: il «+» dei listini è il pulsante tondo in basso a destra come nelle altre liste; anche le sezioni Giacenze e Movimenti del magazzino hanno testo e sottolineatura.'],
