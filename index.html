@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.47.7"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.47.7|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.47.8"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.47.8|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -677,7 +677,7 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
     <div class="srow" id="qRow"><input class="search" id="q" type="search" placeholder="Cerca nome, azienda, telefono…" aria-label="Cerca"><button class="btn addIc scanIc" id="cScan" type="button" aria-label="Scansiona un biglietto da visita" title="Scansiona un biglietto da visita"><span data-i="camera"></span></button><button class="btn p addIc" id="cAdd" type="button" aria-label="Nuova anagrafica" title="Nuova anagrafica"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
   </header>
   <div class="bar">
-    <button class="btn p lbl" id="addBtn" aria-label="Nuovo cliente" title="Nuovo cliente"><span data-i="plus"></span><span id="addLbl">Nuovo cliente</span></button>
+    <button class="btn p lbl" id="addBtn" aria-label="Nuovo cliente" title="Nuovo cliente"><span data-i="add"></span><span id="addLbl">Nuovo cliente</span></button>
   </div>
   <div id="homeView">
     <div class="greet"><b id="hGreet"></b><span id="hDate"></span></div>
@@ -690,7 +690,7 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
     <div id="hTodo"></div>
     <div class="hh lb-only" id="hWatchH" hidden><span>Da tenere d’occhio</span></div>
     <div id="hWatch" class="lb-only"></div>
-    <button class="btn p lbl lb-only" id="hFab" type="button" aria-label="Nuovo task" title="Nuovo task"><span data-i="plus"></span><span class="fl">Nuovo task</span></button>
+    <button class="btn p lbl lb-only" id="hFab" type="button" aria-label="Nuovo task" title="Nuovo task"><span data-i="add"></span><span class="fl">Nuovo task</span></button>
   </div>
   <div id="list" hidden></div>
   <div id="moreView" hidden></div>
@@ -907,7 +907,7 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
   <div class="two"><div class="f"><label for="st_ls">Scartati: elimina dopo (giorni)</label><input id="st_ls" inputmode="numeric" autocomplete="off"><div class="err" id="err-st_ls" hidden></div></div><div class="f"><label for="st_ln">Nuovi: elimina dopo (mesi)</label><input id="st_ln" inputmode="numeric" autocomplete="off"><div class="err" id="err-st_ln" hidden></div></div></div>
   <div class="f"><label class="chk"><input type="checkbox" id="st_linf"><span>Includi l’informativa privacy nelle risposte ai lead<em>Proposta attiva: puoi toglierla caso per caso.</em></span></label></div>
   <div class="f"><label>Lead da fonti esterne (API)</label><div class="hint">Collega sito web, Zapier, Make o altri strumenti: i contatti che inviano arrivano qui tra i lead, cifrati. Crea una chiave per ogni sorgente.</div><div id="st_laL"></div>
-   <div class="f" style="margin-top:8px"><input id="st_laN" maxlength="60" placeholder="Nome della sorgente, es. Sito web" aria-label="Nome della sorgente" autocomplete="off"><div class="err" id="err-st_laN" hidden></div></div><button class="btn p lbl" id="st_laAdd" type="button"><span data-i="plus"></span>Crea chiave</button>
+   <div class="f" style="margin-top:8px"><input id="st_laN" maxlength="60" placeholder="Nome della sorgente, es. Sito web" aria-label="Nome della sorgente" autocomplete="off"><div class="err" id="err-st_laN" hidden></div></div><button class="btn p lbl" id="st_laAdd" type="button"><span data-i="add"></span>Crea chiave</button>
    <div id="st_laK" class="hint" hidden style="border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px"></div></div>
 </div>
 <div class="sp" data-sp="wa" hidden>
@@ -1145,6 +1145,6 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.47.7"></script>
+<script src="app.js?v=1.47.8"></script>
 </body>
 </html>
