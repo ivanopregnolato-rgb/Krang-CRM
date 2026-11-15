@@ -8732,6 +8732,7 @@ function paintStati(){const w=$('q_stato');w.textContent='';const bi=$('q_info')
    if(ex)al.append(h('div','','Preventivo scaduto il '+fmtD(qExp(qW))+'. Crea un nuovo preventivo o aggiorna la validità.'));
    if(st){const m=h('div','',(st===1?'Un prezzo non è aggiornato':st+' prezzi non sono aggiornati')+': catalogo o listino sono cambiati dopo la creazione.');m.style.flex='1 1 180px';al.append(m)}}STATI.forEach(s=>{const b=h('button','',s[1]);b.type='button';b.style.background=s[2];b.classList.toggle('on',qW.stato===s[0]);b.onclick=()=>{qW.stato=s[0];if(s[0]==='inviato'&&!qW.inviato)qW.inviato=ymd();paintStati()};w.append(b)})}
 function paintDoc(){const d=$('qDoc');d.textContent='';const c=clients.find(x=>x.id===qO.clienteId),t=qTot(qW.righe),val=Math.max(0,parseInt(qW.validita,10)||0);
+  {const u=okImg(S.logo||'');if(u){const im=h('img');im.src=u;im.alt='';im.style.cssText='display:block;max-height:48px;max-width:150px;margin:0 0 8px;object-fit:contain';d.append(im)}}
   d.append(h('h3','',S.azienda||'La tua azienda'),h('div','m','Preventivo n. '+qW.num+' del '+fmtD(qW.data)+(val?' · valido fino al '+fmtD(addDays(qW.data,val)):'')));
   d.append(h('p','','Spett.le '+(c?(c.tipo==='azienda'&&c.azienda?c.azienda:fullName(c)):'Cliente')+(c&&c.indirizzo?'\n'+c.indirizzo:'')));
   d.append(h('p','',qO.titolo));
@@ -8772,7 +8773,7 @@ $('qWa').onclick=async()=>{if(!saveQuote())return;const c=clients.find(x=>x.id==
   if(!shared){if(!(await savePdf(u8,name))){toast('PDF non salvato: invio annullato.');return}
     launch('https://wa.me/'+waNum(c)+'?text='+encodeURIComponent(txt),txt);toast(markSent(qC,'Allega il PDF salvato nella chat di WhatsApp. Preventivo impostato su “Inviato”.','WhatsApp'))}
   (c.wa=c.wa||[]).push({id:waId(),dir:'out',data:new Date().toISOString(),testo:txt+' [PDF '+name+']',fonte:'app'});persist();if(shared)toast(markSent(qC,'Preventivo condiviso. Impostato su “Inviato”.','WhatsApp'))};
-function pdfDoc(){const W=595,H=842,pages=[];let cur=null;
+function pdfDoc(){const W=595,H=842,pages=[];let cur=null,used=false;
   const enc=t=>{let o='';for(const ch of String(t)){let c=ch.charCodeAt(0);if(ch==='€')c=128;else if(ch==='’'||ch==='‘')c=39;else if(ch==='“'||ch==='”')c=34;else if(ch==='–'||ch==='—')c=45;else if(ch==='·')c=183;else if(c>255)c=63;if(c<32)c=32;o+=String.fromCharCode(c)}return o};
   const esc=t=>enc(t).replace(/[\\()]/g,m=>'\\'+m);
   const wd=(t,sz,b)=>{let w=0;for(const ch of enc(t))w+=" il.,:;'|!tfjI".includes(ch)?.28:'mwMW'.includes(ch)?.82:/[A-Z]/.test(ch)?.68:/[0-9\x80]/.test(ch)?.556:.52;return w*sz*(b?1.05:1)};
@@ -8780,11 +8781,12 @@ function pdfDoc(){const W=595,H=842,pages=[];let cur=null;
     text(x,y,t,sz,b,al,g){if(!t&&t!==0)return;t=String(t);if(al==='r')x-=wd(t,sz,b);else if(al==='c')x-=wd(t,sz,b)/2;cur.push((g==null?'0.12':g)+' g BT /'+(b?'F2':'F1')+' '+sz+' Tf '+x.toFixed(1)+' '+(H-y).toFixed(1)+' Td ('+esc(t)+') Tj ET')},
     line(x1,y1,x2,y2,g,w){cur.push((g==null?'0.8':g)+' G '+(w||.6)+' w '+x1+' '+(H-y1)+' m '+x2+' '+(H-y2)+' l S')},
     rect(x,y,w,h,g){cur.push(g+' rg '+x+' '+(H-y-h)+' '+w+' '+h+' re f')},
+    logo(x,y,mh){const J=window.LOGOJ;if(!J)return 0;const k=Math.min(mh/J.h,150/J.w),w=J.w*k,hh=J.h*k;used=true;cur.push('q '+w.toFixed(1)+' 0 0 '+hh.toFixed(1)+' '+x+' '+(H-y-hh).toFixed(1)+' cm /Im1 Do Q');return w+12},
     wrap(t,w,sz,b){const out=[];String(t).split('\n').forEach(par=>{let l='';par.split(/\s+/).filter(Boolean).forEach(wr=>{const tr=l?l+' '+wr:wr;if(wd(tr,sz,b)<=w||!l)l=tr;else{out.push(l);l=wr}});out.push(l)});return out},
     build(){pages.forEach((c,i)=>{cur=c;D.text(W/2,H-24,'Pagina '+(i+1)+' di '+pages.length,8,0,'c',.5)});
       const objs=[];const add=b=>objs.push(b)-1;
-      add('<< /Type /Catalog /Pages 2 0 R >>');add(null);add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
-      const kids=[];pages.forEach(c=>{const st=c.join('\n'),ci=objs.length+1,pi=objs.length;add('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+W+' '+H+'] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents '+(ci+1)+' 0 R >>');add('<< /Length '+st.length+' >>\nstream\n'+st+'\nendstream');kids.push((pi+1)+' 0 R')});
+      add('<< /Type /Catalog /Pages 2 0 R >>');add(null);add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');{const J=window.LOGOJ;add(used&&J?'<< /Type /XObject /Subtype /Image /Width '+J.w+' /Height '+J.h+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+J.s.length+' >>\nstream\n'+J.s+'\nendstream':'<< >>')}
+      const kids=[];pages.forEach(c=>{const st=c.join('\n'),ci=objs.length+1,pi=objs.length;add('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+W+' '+H+'] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << /Im1 5 0 R >> >> /Contents '+(ci+1)+' 0 R >>');add('<< /Length '+st.length+' >>\nstream\n'+st+'\nendstream');kids.push((pi+1)+' 0 R')});
       objs[1]='<< /Type /Pages /Kids ['+kids.join(' ')+'] /Count '+kids.length+' >>';
       let out='%PDF-1.4\n',off=[];objs.forEach((o,i)=>{off.push(out.length);out+=(i+1)+' 0 obj\n'+o+'\nendobj\n'});
       const x=out.length;out+='xref\n0 '+(objs.length+1)+'\n0000000000 65535 f \n'+off.map(o=>String(o).padStart(10,'0')+' 00000 n \n').join('')+'trailer\n<< /Size '+(objs.length+1)+' /Root 1 0 R >>\nstartxref\n'+x+'\n%%EOF';
@@ -8811,7 +8813,7 @@ function priceListPdf(cli){const LS=(()=>{try{return cli?listinoFor(cli):null}ca
   let y=50;D.page();
   const head=()=>{D.text(L,y+8,'Prodotto',8.5,1,'l',.35);D.text(330,y+8,'Unità',8.5,1,'r',.35);D.text(415,y+8,'Prezzo IVA escl.',8.5,1,'r',.35);D.text(R-70,y+8,'IVA',8.5,1,'r',.35);D.text(R,y+8,'Prezzo IVA incl.',8.5,1,'r',.35);D.line(L,y+14,R,y+14,.55,.8);y+=24};
   D.rect(0,0,595,6,'0.65 0.86 0.78');
-  D.text(L,y+10,S.azienda||'La tua azienda',17,1);sedeLines(D,L,y+30,300,2);D.text(R,y+10,'LISTINO PREZZI',13,1,'r',.35);D.text(R,y+26,(LS?LS.nome+' · ':'')+'aggiornato al '+fmtD(ymd()),10,0,'r');
+  const lo=D.logo(L,y-2,48);D.text(L+lo,y+10,S.azienda||'La tua azienda',17,1);sedeLines(D,L+lo,y+30,300-lo,2);D.text(R,y+10,'LISTINO PREZZI',13,1,'r',.35);D.text(R,y+26,(LS?LS.nome+' · ':'')+'aggiornato al '+fmtD(ymd()),10,0,'r');
   y+=64;D.line(L,y,R,y,.85,.8);y+=20;head();let cat=null;
   list.forEach(p=>{const nl=D.wrap(p.nome,250,10,1),h=nl.length*13+12,hc=(p.categoria||'')!==cat?22:0;if(y+h+hc>BOT){D.page();y=50;head()}
     if(hc){cat=p.categoria||'';D.text(L,y+4,cat||'Altri prodotti',9.5,1,'l',.4);y+=hc}
@@ -8827,7 +8829,7 @@ function quotePdf(){const D=pdfDoc(),c=clients.find(x=>x.id===qO.clienteId),t=qT
   const need=n=>{if(y+n>BOT){D.page();y=TOP;head()}};
   const head=()=>{D.text(L,y+8,'Descrizione',8.5,1,'l',.35);D.text(300,y+8,'Qtà',8.5,1,'r',.35);D.text(360,y+8,'Prezzo',8.5,1,'r',.35);D.text(395,y+8,'Sc. %',8.5,1,'r',.35);D.text(430,y+8,'IVA',8.5,1,'r',.35);D.text(R,y+8,'Importo',8.5,1,'r',.35);D.line(L,y+14,R,y+14,.55,.8);y+=24};
   D.rect(0,0,595,6,'0.65 0.86 0.78');
-  D.text(L,y+10,S.azienda||'La tua azienda',17,1);sedeLines(D,L,y+30,300,3);
+  const lo=D.logo(L,y-2,48);D.text(L+lo,y+10,S.azienda||'La tua azienda',17,1);sedeLines(D,L+lo,y+30,300-lo,3);
   D.text(R,y+10,'PREVENTIVO',13,1,'r',.35);D.text(R,y+26,'n. '+qW.num,10,0,'r');D.text(R,y+40,'del '+fmtD(qW.data),10,0,'r');if(val)D.text(R,y+54,'valido fino al '+fmtD(addDays(qW.data,val)),9,0,'r',.4);
   y+=84;D.line(L,y,R,y,.85,.8);y+=22;
   D.text(L,y,'Spett.le',8.5,0,'l',.5);y+=14;
@@ -10749,6 +10751,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.0','Nuova disposizione: «Altro» è ora una pagina vera, non più un menu a comparsa. Raccoglie Attività, Prodotti, Analytics, Marketing, Impostazioni, Aiuto e Info in due riquadri, con la barra in basso sempre visibile. Inoltre lo scorrimento di lato nella scheda cliente segue l’ordine delle linguette.'],
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
+['1.48.1','Il logo aziendale compare anche nell’intestazione dei preventivi e del listino prezzi in PDF, e nell’anteprima del preventivo.'],
 ['1.48.0','Profilo azienda: puoi caricare il logo (Impostazioni → Azienda). Se presente, compare nella Home accanto al saluto. Viene ridimensionato sul telefono e sincronizzato con le altre impostazioni.'],
 ['1.47.8','Il pulsante tondo della Home (nuovo task) e gli altri pulsanti di aggiunta mostrano un semplice «+» invece dell’icona della persona.'],
 ['1.47.7','Con una scheda aperta la pagina sotto non scorre più: sparisce la barra di scorrimento che compariva nelle schede cliente con pochi dati.'],
@@ -11505,7 +11508,9 @@ window.paintMore=function(){const w=$('moreView');if(!w)return;w.textContent='';
   let t=0;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(upd,20)}).observe(document.body,{subtree:true,attributes:true,attributeFilter:['hidden'],childList:true});upd()})();
 
 /* logo aziendale: ridimensionato sul telefono (max 320 px), salvato nelle impostazioni, mostrato nella Home */
-window.paintLogo=function(){const u=okImg(S.logo||''),hl=$('hLogo'),b=$('lgoBtn'),d=$('lgoDel');
+let logoKey='';
+function logoPrep(u){if(u===logoKey)return;logoKey=u;window.LOGOJ=null;if(!u)return;const im=new Image();im.onload=()=>{try{if(u!==logoKey)return;const k=Math.min(1,400/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.naturalWidth*k));c.height=Math.max(1,Math.round(im.naturalHeight*k));const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);const d=c.toDataURL('image/jpeg',.9);if(/^data:image\/jpeg;base64,/.test(d))window.LOGOJ={s:atob(d.split(',')[1]),w:c.width,h:c.height}}catch(e){}};im.src=u}
+window.paintLogo=function(){const u=okImg(S.logo||'');logoPrep(u),hl=$('hLogo'),b=$('lgoBtn'),d=$('lgoDel');
   if(hl){hl.hidden=!u;if(u){if(hl.getAttribute('src')!==u)hl.src=u;hl.alt=S.azienda?'Logo di '+S.azienda:'Logo'}else hl.removeAttribute('src')}
   if(b){b.style.backgroundImage=u?"url('"+u+"')":'';b.innerHTML=u?'':ICONS.camera}if(d)d.hidden=!u};
 async function logoFromFile(f){let url;try{const im=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=url=URL.createObjectURL(f)});
