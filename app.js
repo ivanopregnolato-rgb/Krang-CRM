@@ -10744,6 +10744,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.43.1','Nuova disposizione: sistemata la grafica dell’elenco clienti (sotto le schede comparivano delle strisce colorate) e la voce «Altro» ora si evidenzia quando apri il menu o una sua pagina.'],
 ['1.44.0','Nuova disposizione: la scheda cliente si apre sul «Riepilogo» (chiama, email, WhatsApp e nuova attività a portata di dito, avviso privacy, prossime attività, opportunità aperte e contatti) e le sezioni, anche di lead e opportunità, diventano linguette sottolineate con i moduli divisi in riquadri (Anagrafica, Contatti, Note…) e statistiche delle opportunità in una riga scorrevole. Corretti l’elenco clienti e la voce «Altro» della barra in basso.'],
 ['1.45.0','Nuova disposizione, scheda cliente più vicina al progetto: testata con stato e referente, pulsanti Chiama / Email / WhatsApp / Attività sempre visibili, linguette fisse in ordine Riepilogo, Dati, Attività, Opportunità, Privacy, Storico, barra «Salva» fissa in basso e barra di navigazione sempre visibile sotto le schede. La scheda Dati ha i riquadri Azienda / Referente (o Persona) e Contatti, i campi più scuri come nel progetto e le icone di Home e delle azioni rapide con i colori del progetto; l’elenco clienti è un unico riquadro con righe separate. Anche la Home («Da fare», «Da tenere d’occhio», «Primi passi» compatti, titolo e riepilogo del giorno), gli elenchi di opportunità e attività, la linguetta Privacy e i filtri dello Storico seguono il progetto.'],
+['1.45.1','Nuova disposizione: scorrendo di lato nella scheda cliente le sezioni seguono ora l’ordine delle linguette (Riepilogo, Dati, Attività, Opportunità, Privacy, Storico).'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -10971,7 +10972,7 @@ function guideify(root){
 {const _oc=openCompose;openCompose=function(c){const r=_oc.apply(this,arguments);try{if(!$('mCompose').hidden&&c&&c.id&&!cmpQ&&!cmpLeadRef)cmpExtras(c)}catch(e){}return r}}
 /* ===== scorrimento orizzontale (swipe): tra i tab di pagine e schede; verso destra in qualsiasi scheda = freccia indietro ===== */
 {const vis=el=>!!el&&!el.hidden&&el.getClientRects().length>0;
- const btns=sel=>{const bar=document.querySelector(sel);return bar?[...bar.querySelectorAll('button')].filter(b=>!b.hidden&&!b.disabled&&vis(b)):[]};
+ const btns=sel=>{const bar=document.querySelector(sel);return bar?[...bar.querySelectorAll('button')].filter(b=>!b.hidden&&!b.disabled&&vis(b)).sort((x,y)=>(+getComputedStyle(x).order||0)-(+getComputedStyle(y).order||0)):[]};
  const cur=l=>l.findIndex(b=>b.classList.contains('on'));
  const noSw=t=>{for(let e=t;e&&e!==document.body;e=e.parentElement){if(e.matches&&e.matches('input,textarea,select,[contenteditable="true"],canvas,.nosw,.crChip,.crGhost'))return true;const o=getComputedStyle(e).overflowX;if((o==='auto'||o==='scroll')&&e.scrollWidth>e.clientWidth+2)return true}return false};
  const open=()=>[...document.querySelectorAll('.sheet,.modal')].some(vis)||vis($('appMenu'));
