@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.50.1"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.50.1|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.50.2"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.50.2|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -654,6 +654,12 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 /* contatori: arancione con testo blu (tema neon, entrambi i layout) */
 :root[data-tpl="neon"] #tabs button.on .cnt{box-shadow:0 0 0 1.5px #0b2a5b}
 :root[data-tpl="neon"] .cnt,:root[data-tpl="neon"] .cnt.al,:root[data-tpl="neon"] .cnt.bd,:root[data-tpl="neon"] .bdg,:root[data-tpl="neon"] .seg button .cnt,:root[data-tpl="neon"] .tabs button.on .cnt,:root[data-tpl="neon"] #tabs .cnt,:root[data-tpl="neon"] #tabs button.on .cnt{background:#ffa24d!important;color:#0b2a5b!important;font-weight:800}
+/* campi uniformi: liste a scelta alte come i campi di testo, in tutta l'app */
+select:not([multiple]),input[type=date],input[type=time],input[type=datetime-local]{min-height:48px;box-sizing:border-box}
+.f input[type=date],.f input[type=time],.crow input[type=date]{height:48px}
+[data-lay="b"] select:not([multiple]){min-height:50px}
+[data-lay="b"]:is([data-tpl="neon"],[data-tpl="notte"]) .sheet :is(input,select,textarea):not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]){background:#06203f;border:1.5px solid #6688bb;border-radius:14px;min-height:50px}
+[data-lay="b"]:is([data-tpl="neon"],[data-tpl="notte"]) .sheet textarea{min-height:0}
 </style>
 </head>
 <body>
@@ -1166,6 +1172,6 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.50.1"></script>
+<script src="app.js?v=1.50.2"></script>
 </body>
 </html>
