@@ -379,7 +379,7 @@ function oCard(o,kan){
   if(kan){const mv=h('div','mv');[[-1,'chevL','Fase precedente'],[1,'chevR','Fase successiva']].forEach(([d,ic,lb])=>{const b=h('button');b.type='button';b.innerHTML=ICONS[ic];b.setAttribute('aria-label',lb);b.disabled=fIdx(o.fase)+d<0||fIdx(o.fase)+d>=FASI.length;b.onclick=e=>{e.stopPropagation();move(o,d)};mv.append(b)});c.append(mv)}
   return c}
 function renderO(){
-  if(tab==='home')renderH();
+  if(tab==='home')renderH();window.paintSub&&paintSub();
   if(!$('sheet').hidden)renderLinked();
   const open=opps.filter(o=>o.fase!=='vinta'&&o.fase!=='persa');
   const sum=(a,f=o=>o.valore)=>a.reduce((s,o)=>s+(+f(o)||0),0);
@@ -403,7 +403,7 @@ function paintTabs(mo){document.querySelectorAll('#tabs button').forEach(b=>b.cl
 function setTab(v){tab=v;paintTabs(false);
   const c=v==='clienti';$('homeView').hidden=v!=='home';$('oppView').hidden=v!=='opp';$('prodView').hidden=v!=='prod';$('leadView').hidden=v!=='lead';$('list').hidden=!c;$('q').hidden=!c;$('qRow').hidden=!c;$('cFilt').hidden=!c;$('count').hidden=!c;$('cfRow').hidden=!c;document.querySelector('.bar').hidden=true;
   $('title').textContent={home:'Home',clienti:'Clienti',lead:'Lead',opp:'Opportunità',prod:'Prodotti'}[v];
-  const l={home:'',clienti:'Nuovo cliente',lead:'Nuovo lead',opp:'Nuova opportunità',prod:'Nuovo prodotto'}[v];$('addBtn').setAttribute('aria-label',l);$('addBtn').title=l;$('addLbl').textContent=l;if(v==='prod')renderP();if(v==='home')renderH();if(c)render();if(v==='lead')renderL()}
+  const l={home:'',clienti:'Nuovo cliente',lead:'Nuovo lead',opp:'Nuova opportunità',prod:'Nuovo prodotto'}[v];$('addBtn').setAttribute('aria-label',l);$('addBtn').title=l;$('addLbl').textContent=l;if(v==='prod')renderP();if(v==='home')renderH();if(c)render();window.paintSub&&paintSub();if(v==='lead')renderL()}
 $('tabs').onclick=e=>{const b=e.target.closest('button');if(b){if(document.documentElement.dataset.lay==='b')['sheet','lSheet','oSheet'].forEach(i=>{const x=$(i);if(x)x.hidden=true});if(b.dataset.x==='more'){e.stopPropagation();$('menuBtn').click();return}if(b.dataset.v==='opp'){oFilt='';setTab('opp');renderO();return}setTab(b.dataset.v)}};
 $('vList').onclick=()=>{oView='list';renderO()};$('vKan').onclick=()=>{oView='kan';renderO()};
 FONTI.forEach(f=>{const o=h('option','',f);o.value=f;$('o_fonte').append(o)});
@@ -564,6 +564,7 @@ function paintPrivSum(){
   const inf=$('p_inf').checked,infD=$('p_infdata').value,infM=$('p_infmodo').value;
   const row=(ok,title,sub,tone)=>{const r=document.createElement('div');r.className='ps-r';const ic=document.createElement('span');ic.className='ps-i '+tone;ic.textContent=tone==='ok'?'✓':tone==='wait'?'…':tone==='warn'?'!':'–';const t=document.createElement('div');t.className='ps-t';const b=document.createElement('b');b.textContent=title;t.append(b);if(sub){const e=document.createElement('span');e.textContent=sub;t.append(e)}r.append(ic,t);return r};
   const hd=document.createElement('div');hd.className='ps-h';hd.textContent='Stato attuale';sm.append(hd);
+  if(document.documentElement.dataset.lay==='b'&&!inf&&!pend){const al=document.createElement('div');al.className='ps-al';const t1=document.createElement('b');t1.textContent='Informativa privacy da inviare';const t2=document.createElement('span');t2.textContent='Senza informativa non puoi mandare comunicazioni commerciali.';const bt=document.createElement('button');bt.type='button';bt.className='btn p lbl';bt.innerHTML=ICONS.Scrivi+'Invia informativa';bt.onclick=()=>$('p_prep').click();al.append(t1,t2,bt);sm.before(al);al.dataset.f='1';[...document.querySelectorAll('.ps-al')].forEach(x=>{if(x!==al)x.remove()})}else document.querySelectorAll('.ps-al').forEach(x=>x.remove());
   sm.append(inf?row(1,'Informativa privacy','Fornita'+(infD?' il '+fmtD(infD):'')+(infM?' · '+infM:''),'ok'):pend?row(1,'Informativa privacy','Inviata il '+fmtD(String(pend.creata).slice(0,10))+' (la trovi nei messaggi): il cliente può confermare dal link','wait'):row(1,'Informativa privacy','Da inviare','no'));
   CONS.forEach(k=>{const on=$('c_'+k).checked,c=p.cons[k]||{v:false,d:''},same=!!c.v===on;
     sm.append(row(1,CLABEL[k],on?'Consenso prestato'+(same&&c.d?' il '+fmtD(c.d):''):(c.d&&same?'Revocato il '+fmtD(c.d):'Non prestato'),on?'ok':'no'))});
@@ -8922,7 +8923,9 @@ function renderH(){
    if(cm)lg.firstChild.after(cm);box.append(hd,chips,vals,tr,lg);infoBtn(box,'Valore delle opportunità vinte nel periodo scelto (il periodo vale solo per le vinte). La parte colorata della barra è il margine. Le etichette confrontano con lo stesso numero di giorni precedenti, solo se i tuoi dati partono prima di quel periodo.');if(!wp.length)box.append(h('div','hint','Nessuna opportunità vinta in questo periodo.'));$('hWon').textContent='';$('hWon').append(box)}
   const A=actions(),T=$('hTodo');T.textContent='';const show=hAll?A:A.slice(0,5);
   if(!A.length)T.append(h('div','empty','Tutto in ordine: nessuna azione consigliata.'));
-  show.forEach(a=>{const r=h('div','qrow todo'),t=h('div','tx'),ic=pthumb(null,true);ic.innerHTML=ICONS[a.ic]||ICONS.alert;ic.style.background=a.pri>=80?'var(--pink)':a.pri>=60?'var(--warm)':'var(--lilac)';ic.dataset.ic=a.ic;goOn(r,a.go);t.append(h('b','',a.title),h('span','',a.sub));const cv=h('span','chv');cv.innerHTML=ICONS.chevR;r.append(ic,t,cv);T.append(r)});
+  const LB=document.documentElement.dataset.lay==='b',WT=$('hWatch');if(WT)WT.textContent='';
+  show.forEach(a=>{const r=h('div','qrow todo'),t=h('div','tx'),ic=pthumb(null,true);ic.innerHTML=ICONS[a.ic]||ICONS.alert;ic.style.background=a.pri>=80?'var(--pink)':a.pri>=60?'var(--warm)':'var(--lilac)';ic.dataset.ic=a.ic;goOn(r,a.go);t.append(h('b','',a.title),h('span','',a.sub));const cv=h('span','chv');cv.innerHTML=ICONS.chevR;r.append(ic,t,cv);((LB&&WT&&a.ic!=='clock')?WT:T).append(r)});
+  {const wh=$('hWatchH');if(wh)wh.hidden=!(LB&&WT&&WT.children.length);if(LB){const td=ymd();let n=0;try{n=tasks.filter(x=>x&&x.stato!=='fatta'&&x.scad&&x.scad<=td).length}catch(e){}$('hDate').textContent+=n?' · '+n+(n===1?' cosa da fare':' cose da fare')+' oggi':''}}
   const mo=$('hMore');mo.hidden=A.length<=5;mo.textContent=hAll?'Mostra meno':'Mostra tutte ('+A.length+')';mo.onclick=()=>{hAll=!hAll;renderH()};
   const P=$('hPipe');P.textContent='';const FA=FASI.filter(f=>f[0]!=='vinta'&&f[0]!=='persa'),mx=Math.max(1,...FA.map(f=>sm(opps.filter(o=>o.fase===f[0]),o=>o.valore)));
   FA.forEach(f=>{const it=opps.filter(o=>o.fase===f[0]),v=sm(it,o=>o.valore),b=h('button','pbar');b.type='button';b.onclick=()=>{oFilt=f[0];setTab('opp');renderO();window.scrollTo(0,0)};const tr=h('div','tr'),bar=h('i');bar.style.width=(it.length?Math.max(4,v/mx*100):0)+'%';bar.style.background=f[3];tr.append(bar);const lb=h('span','',f[1]+' ');lb.append(h('small','','('+it.length+')'));const mr=sm(it,o=>mg(o).mar),em=h('em','',eur(v));em.append(h('small','','margine '+eur(mr)));b.setAttribute('aria-label',f[1]+': '+it.length+' opportunità, valore '+eur(v)+', margine '+eur(mr));b.append(lb,tr,em);P.append(b)});
@@ -9242,7 +9245,7 @@ async function extractLead(raw){
     if(js&&typeof js==='object'){const o=Object.assign({},fb);['nome','cognome','telefono','azienda','richiesta'].forEach(k=>{if(js[k])o[k]=String(js[k]).trim()});if(js.email&&mailRe.test(String(js.email).trim()))o.email=String(js.email).trim().toLowerCase();o.enquiry=js.enquiry!==false;return o}
   }catch(e){}
   return fb}
-function renderL(){
+function renderL(){window.paintSub&&paintSub();
   const w=$('lList');w.textContent='';const F=$('lFilt');F.textContent='';
   const cnt=k=>leads.filter(l=>l.stato===k).length;
   [['nuovo','Nuovi'],['convertito','Convertiti'],['scartato','Scartati']].forEach(([k,l])=>{const b=document.createElement('button');b.type='button';b.textContent=l+' '+cnt(k);b.classList.toggle('on',lFilter===k);b.onclick=()=>{lFilter=k;renderL()};F.append(b)});
@@ -10740,7 +10743,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.43.0','Nuova disposizione in prova: in Impostazioni › Aspetto › Disposizione puoi scegliere «Nuova». Le sezioni passano in basso, a portata di pollice, con la voce «Altro» per attività, prodotti e impostazioni; la Home mostra prima le cose da fare; l’elenco clienti è più compatto e il pulsante «Nuovo» è in basso a destra. La disposizione classica resta quella predefinita. Nel menu c’è ora anche la voce «Attività».'],
 ['1.43.1','Nuova disposizione: sistemata la grafica dell’elenco clienti (sotto le schede comparivano delle strisce colorate) e la voce «Altro» ora si evidenzia quando apri il menu o una sua pagina.'],
 ['1.44.0','Nuova disposizione: la scheda cliente si apre sul «Riepilogo» (chiama, email, WhatsApp e nuova attività a portata di dito, avviso privacy, prossime attività, opportunità aperte e contatti) e le sezioni, anche di lead e opportunità, diventano linguette sottolineate con i moduli divisi in riquadri (Anagrafica, Contatti, Note…) e statistiche delle opportunità in una riga scorrevole. Corretti l’elenco clienti e la voce «Altro» della barra in basso.'],
-['1.45.0','Nuova disposizione, scheda cliente più vicina al progetto: testata con stato e referente, pulsanti Chiama / Email / WhatsApp / Attività sempre visibili, linguette fisse in ordine Riepilogo, Dati, Attività, Opportunità, Privacy, Storico, barra «Salva» fissa in basso e barra di navigazione sempre visibile sotto le schede. La scheda Dati ha i riquadri Azienda / Referente (o Persona) e Contatti, i campi più scuri come nel progetto e le icone di Home e delle azioni rapide con i colori del progetto; l’elenco clienti è un unico riquadro con righe separate.'],
+['1.45.0','Nuova disposizione, scheda cliente più vicina al progetto: testata con stato e referente, pulsanti Chiama / Email / WhatsApp / Attività sempre visibili, linguette fisse in ordine Riepilogo, Dati, Attività, Opportunità, Privacy, Storico, barra «Salva» fissa in basso e barra di navigazione sempre visibile sotto le schede. La scheda Dati ha i riquadri Azienda / Referente (o Persona) e Contatti, i campi più scuri come nel progetto e le icone di Home e delle azioni rapide con i colori del progetto; l’elenco clienti è un unico riquadro con righe separate. Anche la Home («Da fare», «Da tenere d’occhio», «Primi passi» compatti, titolo e riepilogo del giorno), gli elenchi di opportunità e attività, la linguetta Privacy e i filtri dello Storico seguono il progetto.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -11287,7 +11290,7 @@ function tkOpen(t,pre,lock){const isNew=!t;const d=t?{...t,rif:t.rif?{...t.rif}:
   try{dirtyBack(x,sig,save,()=>{sh.hidden=true})}catch(e){}
   ti.oninput=()=>{e1.hidden=true;ti.classList.remove('bad')};da.oninput=()=>{e2.hidden=true;da.classList.remove('bad')};if(isNew)setTimeout(()=>{try{ti.focus()}catch(e){}},50)}
 let tkShowDone=false;
-function tkRow(t){const r=h('div','');r.style.cssText='display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:0 0 6px';
+function tkRow(t){const r=h('div','tkr');r.style.cssText='display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:0 0 6px';
   const cb=h('button','btn ico');cb.type='button';cb.style.flex='none';cb.innerHTML=t.stato==='fatta'?ICONS.check:'';cb.style.borderRadius='50%';cb.style.border='2px solid var(--ink,#fff)';cb.style.opacity=t.stato==='fatta'?'.7':'1';cb.title=cb.ariaLabel=t.stato==='fatta'?'Riapri l’attività':'Segna come fatta';cb.onclick=e=>{e.stopPropagation();tkDone(t,t.stato!=='fatta')};
   const b=h('button','');b.type='button';b.style.cssText='flex:1;min-width:0;text-align:left;background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer';const rf=tkRef(t);
   const a=h('b','',t.titolo);a.style.display='block';if(t.stato==='fatta')a.style.textDecoration='line-through';const s=h('span','hint',(t.stato==='fatta'?'Fatta il '+fmtD(t.fatta||''):tkWhen(t))+(rf?' · '+rf.nome:''));s.style.display='block';if(t.stato!=='fatta'&&t.scad&&t.scad<ymd())s.style.color='var(--danger)';
@@ -11295,10 +11298,10 @@ function tkRow(t){const r=h('div','');r.style.cssText='display:flex;gap:10px;ali
 function tkListPaint(){const sh=$('tkList');if(!sh)return;const L=sh.querySelector('.tkbody');if(!L)return;L.textContent='';const td=ymd(),op=tkOpen_().sort(tkSort);
   const grp=[['Scadute',op.filter(t=>t.scad&&t.scad<td)],['Oggi',op.filter(t=>t.scad===td)],['Prossime',op.filter(t=>t.scad&&t.scad>td)],['Senza scadenza',op.filter(t=>!t.scad)]];
   if(!op.length)L.append(h('div','hint','Nessuna attività aperta. Tocca «Nuova attività» per aggiungerne una.'));
-  grp.forEach(([n,a])=>{if(!a.length)return;const hd=h('div','hint',n+' ('+a.length+')');hd.style.cssText='font-weight:600;margin:12px 0 6px';L.append(hd);a.forEach(t=>L.append(tkRow(t)))});
+  grp.forEach(([n,a])=>{if(!a.length)return;const hd=h('div','hint tkh',n+' ('+a.length+')');hd.style.cssText='font-weight:600;margin:12px 0 6px';L.append(hd);const g=h('div','tkg');a.forEach(t=>g.append(tkRow(t)));L.append(g)});
   const dn=tasks.filter(t=>t&&t.stato==='fatta').sort((a,b)=>String(b.fatta||'').localeCompare(String(a.fatta||'')));
-  if(dn.length){const tg=h('button','btn lbl',(tkShowDone?'Nascondi':'Mostra')+' le attività fatte ('+dn.length+')');tg.type='button';tg.style.cssText='width:100%;margin-top:12px';tg.onclick=()=>{tkShowDone=!tkShowDone;tkListPaint()};L.append(tg);if(tkShowDone)dn.slice(0,50).forEach(t=>L.append(tkRow(t)))}}
-function tkList(){const {sh,w}=tkShell('tkList','Attività');const ad=h('button','btn p lbl');ad.type='button';ad.innerHTML=ICONS.add+'Nuova attività';ad.style.cssText='width:100%;margin:0 0 6px';ad.onclick=()=>tkOpen(null);const bd=h('div','tkbody');w.append(ad);if(tkOpen_().some(t=>t.scad)){const ex=h('button','btn lbl');ex.type='button';ex.innerHTML=ICONS.clock+'Esporta nel calendario';ex.style.cssText='width:100%;margin:0 0 6px';ex.onclick=()=>icsSave('attivita-krang.ics',tkIcs(tkOpen_().filter(t=>t.scad).sort(tkSort)));w.append(ex)}w.append(bd);tkListPaint()}
+  if(dn.length){const tg=h('button','btn lbl',(tkShowDone?'Nascondi':'Mostra')+' le attività fatte ('+dn.length+')');tg.type='button';tg.style.cssText='width:100%;margin-top:12px';tg.onclick=()=>{tkShowDone=!tkShowDone;tkListPaint()};L.append(tg);if(tkShowDone){const g=h('div','tkg');dn.slice(0,50).forEach(t=>g.append(tkRow(t)));L.append(g)}}}
+function tkList(){const {sh,w}=tkShell('tkList','Attività');const ad=h('button','btn p lbl');ad.type='button';ad.innerHTML=ICONS.add+'Nuova attività';ad.id='tkAdd';ad.style.cssText='width:100%;margin:0 0 6px';ad.onclick=()=>tkOpen(null);const bd=h('div','tkbody');w.append(ad);if(tkOpen_().some(t=>t.scad)){const ex=h('button','btn lbl');ex.type='button';ex.innerHTML=ICONS.clock+'Esporta nel calendario';ex.style.cssText='width:100%;margin:0 0 6px';ex.onclick=()=>icsSave('attivita-krang.ics',tkIcs(tkOpen_().filter(t=>t.scad).sort(tkSort)));w.append(ex)}w.append(bd);tkListPaint()}
 function tkPaintClient(){tkPaintAll()}
 $('hTk').onclick=()=>tkList();
 
@@ -11454,3 +11457,9 @@ window.paintHead=function(c){const sub=$('qSub'),qa=$('qAct');if(!sub||!qa)retur
   if(c.email)mk('Scrivi','Email',()=>openCompose(c));
   if(c.telefono)mk('WhatsApp','WhatsApp',()=>openWa(c));
   mk('check','Attività',()=>tkOpen(null,{tipo:'cliente',id:c.id},true))};
+
+window.paintSub=function(){const e=$('pSub');if(!e)return;let t='';try{
+  if(tab==='lead'){const n=leads.filter(l=>l.stato==='nuovo').length;t=n?n+(n===1?' richiesta da valutare':' richieste da valutare'):'Nessuna richiesta da valutare'}
+  else if(tab==='opp'){const o=opps.filter(x=>x.fase!=='vinta'&&x.fase!=='persa');if(o.length)t=o.length+(o.length===1?' aperta':' aperte')+' · '+eur(o.reduce((s,x)=>s+(+x.valore||0),0))+' · ponderato '+eur(o.reduce((s,x)=>s+(+x.valore||0)*(+x.prob||0)/100,0))}
+  else if(tab==='clienti'){}
+}catch(err){}e.textContent=t};

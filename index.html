@@ -427,13 +427,27 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] #cAdd,[data-lay="b"] #lAdd,[data-lay="b"] #oAdd,[data-lay="b"] #pAdd,[data-lay="b"] #hFab{position:fixed;right:16px;bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:3;width:auto;height:54px;min-height:54px;padding:0 18px 0 14px;border-radius:18px;display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 [data-lay="b"] #cAdd::after,[data-lay="b"] #lAdd::after,[data-lay="b"] #oAdd::after,[data-lay="b"] #pAdd::after{content:attr(data-fl)}
 [data-lay="b"] #homeView:not([hidden]){display:flex;flex-direction:column}
-[data-lay="b"] #homeView>*{order:5}
+[data-lay="b"] #homeView>*{order:7}
 [data-lay="b"] #homeView>.greet{order:0}
-[data-lay="b"] #homeView>.hh:not(#hVend){order:1;margin-top:6px}
+[data-lay="b"] #homeView>#hDoH{order:1;margin-top:6px}
 [data-lay="b"] #homeView>#hTodo{order:2}
 [data-lay="b"] #homeView>#hWel{order:3;margin-top:6px}
-[data-lay="b"] #homeView>#hVend{order:4}
-[data-lay="b"] .greet b{font-size:17px}
+[data-lay="b"] #homeView>#hWatchH{order:4}
+[data-lay="b"] #homeView>#hWatch{order:5}
+[data-lay="b"] #homeView>#hVend{order:6}
+[data-lay="b"] .greet b{font-size:32px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+[data-lay="b"] .greet span{font-size:16px}
+[data-lay="b"] .app:has(#homeView:not([hidden])) #title{display:none}
+[data-lay="b"] :is(#hTodo,#hWatch){border:1px solid var(--line);border-radius:18px;background:var(--surface);overflow:hidden}
+[data-lay="b"] :is(#hTodo,#hWatch):empty{display:none}
+[data-lay="b"] :is(#hTodo,#hWatch) .qrow{margin:0;border:0;border-top:1px solid var(--line);border-radius:0;min-height:64px;background:none}
+[data-lay="b"] :is(#hTodo,#hWatch) .qrow:first-child{border-top:0}
+[data-lay="b"] #hDoH button.lnk{color:#4fc3ff}
+[data-lay="b"] .wcard{background:none!important;border:1.5px dashed var(--line)!important;color:var(--ink)!important;padding:8px 12px;min-height:56px}
+[data-lay="b"] .wcard .tx{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap;color:var(--ink)}
+[data-lay="b"] .wcard .tx span{color:var(--muted)!important}[data-lay="b"] .wcard .tx span::before{content:"· "}
+[data-lay="b"] .wcard .wbar,[data-lay="b"] .wcard .wx{display:none}
+[data-lay="b"] .wcard::after{content:"›";font-size:26px;color:var(--muted);margin-left:auto}
 [data-lay="b"] .hh{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 [data-lay="b"] .hh button{text-transform:none;letter-spacing:0;font-size:14px;min-height:44px;padding:0 4px}
 [data-lay="b"] .wcard{min-height:52px;padding:8px 12px;margin-bottom:4px}
@@ -496,6 +510,42 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] #list .swp:first-child{border-top:0}
 [data-lay="b"] #list .row{background:var(--surface);border:0;box-shadow:none;border-radius:0}
 [data-lay="b"] #list:empty{display:none}
+/* sottotitoli, elenchi a riquadro unico, attività */
+[data-lay="b"] #pSub{margin:-4px 2px 12px;color:var(--muted);font-size:16px}[data-lay="b"] #pSub:empty{display:none}
+[data-lay="b"] :is(#sum,#sum2){display:none}
+[data-lay="b"] #oList,[data-lay="b"] #leadList,[data-lay="b"] #lList{border:1px solid var(--line);border-radius:18px;background:var(--surface);overflow:hidden}
+[data-lay="b"] #oList:empty{display:none}
+[data-lay="b"] #oList .oc{display:grid;grid-template-columns:auto 1fr auto;column-gap:8px;align-items:center;margin:0;border:0;border-top:1px solid var(--line);border-radius:0;background:none;padding:12px 14px;box-shadow:none}
+[data-lay="b"] #oList .oc:first-child{border-top:0}
+[data-lay="b"] #oList .oc>b{grid-column:1/3;grid-row:1;font-size:17px}
+[data-lay="b"] #oList .oc>.om{grid-column:3;grid-row:1/3;text-align:right;display:block}
+[data-lay="b"] #oList .oc>.chip{grid-column:1;grid-row:2;justify-self:start}
+[data-lay="b"] #oList .oc>span:first-of-type{grid-column:2;grid-row:2}
+[data-lay="b"] #oList .oc>:not(b):not(.om):not(.chip):not(span:first-of-type){display:none}
+[data-lay="b"] #oList .oc>.om em{display:block;font-size:13px}
+[data-lay="b"] #tkList .tkg{border:1px solid var(--line);border-radius:18px;background:var(--surface);overflow:hidden}
+[data-lay="b"] #tkList .tkr{border:0!important;border-top:1px solid var(--line)!important;border-radius:0!important;margin:0!important;padding:12px 14px!important;min-height:64px}
+[data-lay="b"] #tkList .tkg>.tkr:first-child{border-top:0!important}
+[data-lay="b"] #tkList .tkh{font-size:12px!important;font-weight:800!important;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+[data-lay="b"] #tkList #tkAdd{position:fixed;right:16px;bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:6;width:auto!important;height:54px;padding:0 18px 0 14px;border-radius:18px;margin:0!important;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+[data-lay="b"] .wcard::after{flex:none;line-height:1}
+[data-lay="b"] .wcard .ic{background:#4fc3ff!important;color:#052a44!important}
+.tkg{display:contents}
+/* privacy: avviso e tabella stato */
+[data-lay="b"] .ps-h,[data-lay="b"] .ps-i{display:none}
+[data-lay="b"] .psum{padding:0;border-radius:18px;overflow:hidden}
+[data-lay="b"] .ps-r{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid var(--line)}
+[data-lay="b"] .ps-r:first-of-type{border-top:0}
+[data-lay="b"] .ps-t{display:contents}
+[data-lay="b"] .ps-t b{font-weight:500;color:var(--muted);font-size:15px}
+[data-lay="b"] .ps-t span{font-weight:700;text-align:right;font-size:15px;max-width:55%}
+[data-lay="b"] .ps-al{border:1.5px solid #ff8fa5;border-radius:18px;padding:14px;margin:0 0 12px;display:grid;gap:8px;background:var(--surface)}
+[data-lay="b"] .ps-al b{color:#ff8fa5;font-size:17px}
+[data-lay="b"] .wcard::after{content:"";width:9px;height:9px;border-right:2.5px solid var(--muted);border-top:2.5px solid var(--muted);transform:rotate(45deg);margin:0 6px 0 auto;font-size:0}
+[data-lay="b"] #p_mailF .btn.p{display:none}
+[data-lay="b"] :is(#stSeg,#cmSeg){display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;background:none!important;border:0!important;padding:0!important;margin:0 0 12px}
+[data-lay="b"] :is(#stSeg,#cmSeg) button{flex:none;width:auto;min-height:44px;padding:0 16px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600}
+[data-lay="b"] :is(#stSeg,#cmSeg) button.on{background:#ffa24d;border-color:#ffa24d;color:#1d1b3f}
 [data-lay="b"] #tabs button{font-size:11px;letter-spacing:-.01em;padding:0 1px}
 [data-lay="b"] #tkList .tkx{border-radius:16px}
 
@@ -555,6 +605,7 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
   <header>
     <div class="stk">
     <div class="hrow"><button class="btn ico" id="menuBtn" type="button" aria-label="Menu" aria-haspopup="true" aria-expanded="false" title="Menu"><span data-i="menu"></span></button><h1 id="title">Clienti</h1></div>
+  <div id="pSub" class="lb-only"></div>
     <div id="amBack" hidden></div><div class="amenu" id="appMenu" role="menu" hidden><button type="button" role="menuitem" data-m="home"><span data-i="home"></span>Home</button><button type="button" role="menuitem" data-m="tk"><span data-i="check"></span>Attività</button><button type="button" role="menuitem" data-m="an"><span data-i="analytics"></span>Analytics <span class="beta">Beta</span></button><button type="button" role="menuitem" data-m="prod"><span data-i="box"></span>Prodotti</button><button type="button" role="menuitem" data-m="mkt"><span data-i="mega"></span>Marketing <span class="beta">Beta</span></button><hr class="amsep"><button type="button" role="menuitem" data-m="set"><span data-i="gear"></span>Impostazioni</button><hr class="amsep"><button type="button" role="menuitem" data-m="help"><span data-i="help"></span>Aiuto</button><hr class="amsep"><button type="button" role="menuitem" data-m="info"><span data-i="info"></span>Info</button></div>
     <div class="tabs" id="tabs"><button type="button" class="on" data-v="home"><span data-i="home"></span>Home</button><button type="button" data-v="clienti"><span data-i="users"></span>Clienti</button><button type="button" data-v="lead"><span data-i="inbox"></span>Lead</button><button type="button" data-v="opp"><span data-i="target"></span>Opportunità</button><button type="button" data-x="more" class="lb-only" aria-haspopup="true"><span data-i="menu"></span>Altro</button></div>
     </div>
@@ -572,8 +623,10 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
     <div class="sum" id="hSum"></div>
     <div class="wonbox" id="hPipeBox" style="margin:0 0 12px"><div class="wb-h"><b>Pipeline</b></div><div id="hPipe" style="margin-top:8px"></div></div>
     <div class="sum" id="hWon"></div>
-    <div class="hh"><span>Da fare</span><button type="button" id="hTk" class="lnk" style="margin-left:auto;margin-right:10px">Tutte le attività</button><button type="button" id="hMore" hidden></button></div>
+    <div class="hh" id="hDoH"><span>Da fare</span><button type="button" id="hTk" class="lnk" style="margin-left:auto;margin-right:10px">Tutte le attività</button><button type="button" id="hMore" hidden></button></div>
     <div id="hTodo"></div>
+    <div class="hh lb-only" id="hWatchH" hidden><span>Da tenere d’occhio</span></div>
+    <div id="hWatch" class="lb-only"></div>
     <button class="btn p lbl lb-only" id="hFab" type="button"><span data-i="plus"></span>Nuova attività</button>
   </div>
   <div id="list" hidden></div>
