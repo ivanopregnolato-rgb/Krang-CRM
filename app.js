@@ -9436,7 +9436,7 @@ $('st_broDel').onclick=()=>{S.brochure=null;saveS();paintBro()};
 
 const SPG=[['La tua azienda',[['az','building','Profilo azienda',()=>S.azienda||'Nome, partita IVA, sede e contatti']]],
  ['App',[['in','download','Installa l’app',()=>(typeof instLabel==='function'?instLabel():''),()=>isStandalone()]]],
- ['Notifiche',[['nt','clock','Promemoria attività',()=>(typeof pushLabel==='function'?pushLabel():'')]]],
+ ['Notifiche',[['nt','clock','Promemoria task',()=>(typeof pushLabel==='function'?pushLabel():'')]]],
  ['Comunicazione',[['em','Scrivi','Email',()=>S.replyTo||'Mittente, firma e contatto'],['wa','WhatsApp','WhatsApp',()=>'Messaggi rapidi e paese dei numeri'],['al','clip','Allegati e brochure',()=>'Listino e brochure per le risposte ai lead']]],
  ['Vendite',[['pr','doc','Preventivi',()=>'Validità '+S.qValid+' giorni e condizioni'],['ld','target','Lead',()=>'Pulizia automatica dei lead']]],
  ['Dati e privacy',[['sc','user','Accesso e sicurezza',()=>LOCK.on?'Biometria attiva':'Blocco non attivo'],['pv','shield','Privacy e conservazione',()=>'Durate di conservazione e revisione'],['vc','user','Importa dalla rubrica',()=>'Da un file contatti (.vcf)'],['dp','users','Anagrafiche duplicate',()=>'Trova e unisci le schede doppie'],['bk','download','Backup, accessi ed esempi',()=>'Esporta, importa, persone e dati di prova']]]];
@@ -10258,7 +10258,7 @@ const wState=()=>{let enc=false;try{enc=SB.e2e.state()==='ready'}catch(e){}retur
  {k:'az',ic:'building',t:'Il profilo della tua azienda',d:'Nome, partita IVA e firma delle email',done:!!(S.azienda&&S.azienda.trim())},
  {k:'cl',ic:'users',t:'Il tuo primo cliente',d:'Scrivi i dati o fotografa un biglietto da visita',done:clients.length>0},
  {k:'pr',ic:'box',t:'I prodotti a catalogo',d:'Inseriscili e collegali alle opportunità',done:prods.length>0},
- {k:'no',ic:'clock',t:'I promemoria sul telefono',d:'Una notifica quando un’attività scade',done:(()=>{try{return pushFlag()&&Notification.permission==='granted'}catch(e){return false}})()},
+ {k:'no',ic:'clock',t:'I promemoria sul telefono',d:'Una notifica quando un task scade',done:(()=>{try{return pushFlag()&&Notification.permission==='granted'}catch(e){return false}})()},
  {k:'as',ic:'chat',t:'L’assistente',d:'Chiedi come si fa una cosa: risponde in pochi secondi',done:!!S.askSeen}]};
 function paintWel(){const w=$('hWel');if(!w)return;w.textContent='';if(S.welcomeOff)return;const st=wState(),n=st.filter(x=>x.done).length;if(n===st.length)return;
   const b=h('button','wcard');b.type='button';const i=h('span','ic');i.innerHTML=ICONS.compass;const tx=h('div','tx');const bar=h('div','wbar'),f=h('i');f.style.width=Math.round(n/st.length*100)+'%';bar.append(f);
@@ -10298,12 +10298,12 @@ function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=
     B.append(a,c,back());return}
   if(view==='no'){
     const ios=isIOSd(),inst=isStandalone(),ok=pushOk();
-    B.append(h('h3','','I promemoria sul telefono'),h('p','wsub','Ricevi una notifica quando un’attività scade, anche con l’app chiusa. Quattro passi.'));
+    B.append(h('h3','','I promemoria sul telefono'),h('p','wsub','Ricevi una notifica quando un task scade, anche con l’app chiusa. Quattro passi.'));
     const p=(t)=>{const d=h('p','wtx');d.innerHTML=t;B.append(d)};
     p('<b>1. Aggiungi l’app alla schermata Home.</b> '+(ios?(inst?'Fatto: stai usando l’app dalla schermata Home.':'Su iPhone è indispensabile: in Safari tocca «Condividi» → «Aggiungi a Home», poi riapri KRANG da lì.'):'Su iPhone serve iOS 16.4 o successivo e l’app aggiunta alla schermata Home (Condividi → Aggiungi a Home). Su Android e computer puoi saltare questo passo.'));
-    p('<b>2. Attiva i promemoria.</b> In Impostazioni → Promemoria attività tocca «Attiva i promemoria» e consenti le notifiche quando il telefono lo chiede.');
+    p('<b>2. Attiva i promemoria.</b> In Impostazioni → Promemoria task tocca «Attiva i promemoria» e consenti le notifiche quando il telefono lo chiede.');
     p('<b>3. Prova la notifica.</b> Nella stessa pagina apri «Prova e diagnosi», tocca «Notifica di prova» e controlla che compaia. Se non arriva, verifica che nelle impostazioni del telefono le notifiche di KRANG siano consentite e che non sia attiva una modalità Concentrazione (per esempio Sonno).');
-    p('<b>4. Scegli quando.</b> Ogni attività può avere un’ora: l’avviso arriva a quell’ora. Senza ora, arriva all’ora predefinita che scegli nella stessa pagina. Nella notifica compaiono titolo e cliente; se non vuoi che si leggano a telefono bloccato, spegni «Titolo e cliente nella notifica».');
+    p('<b>4. Scegli quando.</b> Ogni task può avere un’ora: l’avviso arriva a quell’ora. Senza ora, arriva all’ora predefinita che scegli nella stessa pagina. Nella notifica compaiono titolo e cliente; se non vuoi che si leggano a telefono bloccato, spegni «Titolo e cliente nella notifica».');
     if(!ok){const d=h('p','wtx');d.innerHTML='<b>Nota:</b> questo browser non supporta le notifiche.';B.append(d)}
     const a=h('button','btn p lbl');a.type='button';a.innerHTML=ICONS.clock+'<span>Apri i promemoria</span>';a.onclick=()=>{closeWel();openSettings();setSp('nt')};
     B.append(a);if(!inst){const ib=h('button','btn lbl');ib.type='button';ib.innerHTML=ICONS.download+'<span>Come installare l’app</span>';ib.onclick=()=>{closeWel();openSettings();setSp('in')};B.append(ib)}B.append(back());return}
@@ -10748,7 +10748,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.0','Nuova disposizione: «Altro» è ora una pagina vera, non più un menu a comparsa. Raccoglie Attività, Prodotti, Analytics, Marketing, Impostazioni, Aiuto e Info in due riquadri, con la barra in basso sempre visibile. Inoltre lo scorrimento di lato nella scheda cliente segue l’ordine delle linguette.'],
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
-['1.47.3','Registro errori: ignora i falsi allarmi iniettati dai browser (Firefox per iPhone, estensioni portafoglio); gli errori di script esterni senza dettagli sono registrati a parte come «esterno».'],
+['1.47.3','Registro errori: ignora i falsi allarmi iniettati dai browser (Firefox per iPhone, estensioni portafoglio); gli errori di script esterni senza dettagli sono registrati a parte come «esterno». «Attività» torna a chiamarsi «Task» ovunque; i pulsanti «Nuovo…» diventano un semplice «+» in un cerchio.'],
 ['1.47.2','Nuova disposizione: cerchio per spuntare le attività nel Riepilogo cliente, un po’ di margine in alto nella Home. Promemoria push: la sincronizzazione col server si riallinea da sola ad ogni apertura.'],
 ['1.47.1','Nuova disposizione: «Primi passi» torna in alto nella Home, sopra «Da fare», come nel layout classico.'],
 ]}];
@@ -11242,7 +11242,7 @@ $('vc_file').onchange=async e=>{const f=e.target.files&&e.target.files[0];e.targ
 /* ===== Attività (task): cose da fare con scadenza, collegate a cliente, lead o opportunità ===== */
 const TKEY='crm-task-v1';
 let tasks=[];try{tasks=JSON.parse(localStorage.getItem(TKEY)||'[]')}catch(e){}
-function persistT(){try{stampMods(tasks,'t')}catch(e){}try{localStorage.setItem(TKEY,JSON.stringify(tasks))}catch(e){toast('Spazio pieno: impossibile salvare le attività.')}try{cloudPush('tk')}catch(e){}try{dPush()}catch(e){}try{remSoon()}catch(e){}}
+function persistT(){try{stampMods(tasks,'t')}catch(e){}try{localStorage.setItem(TKEY,JSON.stringify(tasks))}catch(e){toast('Spazio pieno: impossibile salvare i task.')}try{cloudPush('tk')}catch(e){}try{dPush()}catch(e){}try{remSoon()}catch(e){}}
 CSPEC.tk={col:'attivita',arr:()=>tasks,set:v=>{tasks=v},save:()=>{try{localStorage.setItem(TKEY,JSON.stringify(tasks))}catch(e){}},heavy:{},after:()=>{try{remSoon()}catch(e){}try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}try{if($('tkList')&&!$('tkList').hidden)tkListPaint()}catch(e){}}};
 try{tasks.forEach(t=>{if(t&&t.id!=null)MODS['t'+t.id]=modSig(t)})}catch(e){}
 const tkRef=t=>{const r=t&&t.rif;if(!r)return null;
@@ -11253,12 +11253,12 @@ const tkRef=t=>{const r=t&&t.rif;if(!r)return null;
 const tkOpen_=()=>tasks.filter(t=>t&&t.stato!=='fatta');
 const tkSort=(a,b)=>((a.scad||'9999')+(a.ora||'')).localeCompare((b.scad||'9999')+(b.ora||''))||String(a.cre||'').localeCompare(String(b.cre||''));
 function tkWhen(t){if(!t.scad)return 'Senza scadenza';const td=ymd(),o=/^\d\d:\d\d$/.test(t.ora||'')?' alle '+t.ora:'';if(t.scad<td)return 'Scaduta il '+fmtD(t.scad);if(t.scad===td)return 'Oggi'+o;const n=Math.round((new Date(t.scad+'T00:00')-new Date(td+'T00:00'))/864e5);return (n===1?'Domani':fmtD(t.scad))+o}
-function tkDone(t,on){t.stato=on?'fatta':'aperta';if(on)t.fatta=ymd();else delete t.fatta;persistT();try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast(on?'Attività completata.':'Attività riaperta.')}
+function tkDone(t,on){t.stato=on?'fatta':'aperta';if(on)t.fatta=ymd();else delete t.fatta;persistT();try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast(on?'Task completato.':'Attività riaperta.')}
 function tkActions(add,td){const lim=new Date(new Date(td+'T00:00').getTime()+3*864e5);const lm=new Date(lim.getTime()-lim.getTimezoneOffset()*6e4).toISOString().slice(0,10);
   tkOpen_().forEach(t=>{if(!t.scad||t.scad>lm)return;const r=tkRef(t);add(t.scad<td?91:t.scad===td?86:52,'clock',t.titolo,tkWhen(t)+(r?' · '+r.nome:''),()=>tkOpen(t))})}
 function tkShell(id,title,onClose){let sh=$(id);if(!sh){sh=h('div','sheet');sh.id=id;sh.style.zIndex=id==='tkSheet'?7:6;document.body.append(sh)}sh.hidden=false;sh.textContent='';const w=h('div'),top=h('div','top'),x=h('button','btn ico pk');x.type='button';x.title=x.ariaLabel='Chiudi';x.innerHTML=ICONS.back;x.onclick=()=>{if(onClose)onClose();else sh.hidden=true};top.append(h('h2','',title),x);w.append(top);sh.append(w);sh.scrollTop=0;return {sh,w,x}}
 function tkOpen(t,pre,lock){const isNew=!t;const d=t?{...t,rif:t.rif?{...t.rif}:null}:{id:'t'+Date.now().toString(36),titolo:'',scad:'',ora:'',nota:'',stato:'aperta',rif:pre||null};
-  const {sh,w,x}=tkShell('tkSheet',isNew?'Nuova attività':'Attività');
+  const {sh,w,x}=tkShell('tkSheet',isNew?'Nuovo task':'Task');
   const f1=h('div','f'),l1=h('label','','Cosa c’è da fare'),ti=h('input');ti.value=d.titolo;ti.placeholder='Per esempio: richiamare per il preventivo';ti.autocomplete='off';ti.id='tk_t';l1.htmlFor='tk_t';const e1=h('div','err');e1.hidden=true;f1.append(l1,ti,e1);
   const f2=h('div','f'),gr=h('div',''),cd=h('div',''),co=h('div',''),l2=h('label','','Scadenza'),da=h('input');gr.style.cssText='display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:10px';
   da.type='date';da.value=d.scad||'';da.id='tk_d';l2.htmlFor='tk_d';const e2=h('div','err');e2.hidden=true;cd.append(l2,da);
@@ -11266,7 +11266,7 @@ function tkOpen(t,pre,lock){const isNew=!t;const d=t?{...t,rif:t.rif?{...t.rif}:
   const ch=h('div','');ch.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-top:8px';const plus=n=>{const x=new Date(Date.now()+n*864e5);return new Date(x-x.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
   [['Oggi',0],['Domani',1],['Tra una settimana',7]].forEach(([n,v])=>{const b=h('button','btn lbl',n);b.type='button';b.style.cssText='width:auto;flex:none;padding:6px 12px;min-height:0';b.onclick=()=>{da.value=plus(v);e2.hidden=true;da.classList.remove('bad');da.dispatchEvent(new Event('input',{bubbles:true}))};ch.append(b)});
   ox.type='button';ox.style.cssText='background:none;border:0;padding:0 0 0 6px;color:var(--acc,#f9a553);text-decoration:underline;font:inherit;cursor:pointer';
-  const paintO=()=>{oh.textContent=oi.value?'Avviso e calendario a quest’ora (l’attività dura mezz’ora). ':'Senza ora: avviso alle '+remHour()+':00 ed evento di tutto il giorno nel calendario.';if(oi.value)oh.append(ox)};oi.oninput=paintO;ox.onclick=()=>{oi.value='';paintO()};paintO();oh.style.marginTop='8px';
+  const paintO=()=>{oh.textContent=oi.value?'Avviso e calendario a quest’ora (il task dura mezz’ora). ':'Senza ora: avviso alle '+remHour()+':00 ed evento di tutto il giorno nel calendario.';if(oi.value)oh.append(ox)};oi.oninput=paintO;ox.onclick=()=>{oi.value='';paintO()};paintO();oh.style.marginTop='8px';
   f2.append(gr,e2,ch,oh);
   const f3=h('div','f'),l3=h('label','','Nota (facoltativa)'),no=h('textarea');no.rows=3;no.value=d.nota||'';no.id='tk_n';l3.htmlFor='tk_n';f3.append(l3,no);
   const f4=h('div','f'),l4=h('label','','Collegata a'),rb=h('div',''),q=h('input'),rl=h('div','');q.type='search';q.placeholder='Cerca cliente, lead o opportunità';q.autocomplete='off';q.setAttribute('aria-label','Cerca cliente, lead o opportunità');rl.style.margin='6px 0';const e4=h('div','err');e4.hidden=true;f4.append(l4,rb,e4,q,rl);
@@ -11282,15 +11282,15 @@ function tkOpen(t,pre,lock){const isNew=!t;const d=t?{...t,rif:t.rif?{...t.rif}:
   const save=()=>{const tt=ti.value.trim();let bad=null;e1.hidden=e2.hidden=e4.hidden=true;ti.classList.remove('bad');da.classList.remove('bad');
     if(!tt){e1.textContent='Scrivi cosa c’è da fare.';e1.hidden=false;ti.classList.add('bad');bad=bad||ti}
     if(!da.value||isNaN(new Date(da.value+'T00:00'))){e2.textContent='Scegli la scadenza: puoi usare i tasti rapidi o scrivere la data.';e2.hidden=false;da.classList.add('bad');bad=bad||da}
-    if(!(d.rif&&tkRef({rif:d.rif}))){e4.textContent='Collega l’attività a un cliente, un lead o un’opportunità.';e4.hidden=false;bad=bad||q}
+    if(!(d.rif&&tkRef({rif:d.rif}))){e4.textContent='Collega il task a un cliente, un lead o un’opportunità.';e4.hidden=false;bad=bad||q}
     if(bad){bad.scrollIntoView({block:'center'});try{bad.focus({preventScroll:true})}catch(e){}return}
-    const rec=Object.assign(t||stampNew(d),{titolo:tt,scad:da.value||'',ora:oi.value||'',nota:no.value.trim(),rif:d.rif||null,stato:(t&&t.stato)||'aperta'});if(!t)tasks.push(rec);persistT();sh.hidden=true;try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast('Attività salvata.')};
+    const rec=Object.assign(t||stampNew(d),{titolo:tt,scad:da.value||'',ora:oi.value||'',nota:no.value.trim(),rif:d.rif||null,stato:(t&&t.stato)||'aperta'});if(!t)tasks.push(rec);persistT();sh.hidden=true;try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast('Task salvato.')};
   const ac=h('div','delw');w.append(f1,f2,f3,f4,ac);
   if(t){const dn=h('button','btn lbl'+(t.stato==='fatta'?'':' p'));dn.type='button';dn.innerHTML=ICONS.check+(t.stato==='fatta'?'Riapri':'Segna come fatta');dn.style.width='100%';dn.onclick=()=>{tkDone(t,t.stato!=='fatta');sh.hidden=true};
     const row=h('div','');row.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:8px';
     const rf=tkRef(t);if(rf){const go=h('button','btn lbl','Apri '+rf.nome);go.type='button';go.style.cssText='min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';go.onclick=()=>{sh.hidden=true;rf.go()};row.append(go)}
     const cb=h('button','btn lbl');cb.type='button';cb.innerHTML=ICONS.clock+'<span>Nel calendario</span>';cb.onclick=()=>icsSave('attivita.ics',tkIcs([t]));row.append(cb);
-    const dl=h('button','btn lbl d');dl.type='button';dl.innerHTML=ICONS.trash+'Elimina';dl.style.cssText='width:100%;margin-top:8px';dl.onclick=()=>askConfirm('Eliminare l’attività «'+t.titolo+'»?','trash','Elimina',()=>{tasks=tasks.filter(z=>z!==t);persistT();sh.hidden=true;try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast('Attività eliminata.')});
+    const dl=h('button','btn lbl d');dl.type='button';dl.innerHTML=ICONS.trash+'Elimina';dl.style.cssText='width:100%;margin-top:8px';dl.onclick=()=>askConfirm('Eliminare il task «'+t.titolo+'»?','trash','Elimina',()=>{tasks=tasks.filter(z=>z!==t);persistT();sh.hidden=true;try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast('Task eliminato.')});
     ac.append(dn,row,dl)}
   if(!isNew)try{saveBtn(ac,sig,save)}catch(e){}
   if(isNew){const sv=h('button','btn p lbl');sv.type='button';sv.innerHTML=ICONS.check+'Salva';sv.style.width='100%';sv.onclick=save;ac.prepend(sv)}
@@ -11298,28 +11298,28 @@ function tkOpen(t,pre,lock){const isNew=!t;const d=t?{...t,rif:t.rif?{...t.rif}:
   ti.oninput=()=>{e1.hidden=true;ti.classList.remove('bad')};da.oninput=()=>{e2.hidden=true;da.classList.remove('bad')};if(isNew)setTimeout(()=>{try{ti.focus()}catch(e){}},50)}
 let tkShowDone=false;
 function tkRow(t){const r=h('div','tkr');r.style.cssText='display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:0 0 6px';
-  const cb=h('button','btn ico');cb.type='button';cb.style.flex='none';cb.innerHTML=t.stato==='fatta'?ICONS.check:'';cb.style.borderRadius='50%';cb.style.border='2px solid var(--ink,#fff)';cb.style.opacity=t.stato==='fatta'?'.7':'1';cb.title=cb.ariaLabel=t.stato==='fatta'?'Riapri l’attività':'Segna come fatta';cb.onclick=e=>{e.stopPropagation();tkDone(t,t.stato!=='fatta')};
+  const cb=h('button','btn ico');cb.type='button';cb.style.flex='none';cb.innerHTML=t.stato==='fatta'?ICONS.check:'';cb.style.borderRadius='50%';cb.style.border='2px solid var(--ink,#fff)';cb.style.opacity=t.stato==='fatta'?'.7':'1';cb.title=cb.ariaLabel=t.stato==='fatta'?'Riapri il task':'Segna come fatta';cb.onclick=e=>{e.stopPropagation();tkDone(t,t.stato!=='fatta')};
   const b=h('button','');b.type='button';b.style.cssText='flex:1;min-width:0;text-align:left;background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer';const rf=tkRef(t);
   const a=h('b','',t.titolo);a.style.display='block';if(t.stato==='fatta')a.style.textDecoration='line-through';const s=h('span','hint',(t.stato==='fatta'?'Fatta il '+fmtD(t.fatta||''):tkWhen(t))+(rf?' · '+rf.nome:''));s.style.display='block';if(t.stato!=='fatta'&&t.scad&&t.scad<ymd())s.style.color='var(--danger)';
   b.append(a,s);b.onclick=()=>tkOpen(t);r.append(cb,b);return r}
 function tkListPaint(){const sh=$('tkList');if(!sh)return;const L=sh.querySelector('.tkbody');if(!L)return;L.textContent='';const td=ymd(),op=tkOpen_().sort(tkSort);
   const grp=[['Scadute',op.filter(t=>t.scad&&t.scad<td)],['Oggi',op.filter(t=>t.scad===td)],['Prossime',op.filter(t=>t.scad&&t.scad>td)],['Senza scadenza',op.filter(t=>!t.scad)]];
-  if(!op.length)L.append(h('div','hint','Nessuna attività aperta. Tocca «Nuova attività» per aggiungerne una.'));
+  if(!op.length)L.append(h('div','hint','Nessun task aperto. Tocca «Nuovo task» per aggiungerne uno.'));
   grp.forEach(([n,a])=>{if(!a.length)return;const hd=h('div','hint tkh',n+' ('+a.length+')');hd.style.cssText='font-weight:600;margin:12px 0 6px';L.append(hd);const g=h('div','tkg');a.forEach(t=>g.append(tkRow(t)));L.append(g)});
   const dn=tasks.filter(t=>t&&t.stato==='fatta').sort((a,b)=>String(b.fatta||'').localeCompare(String(a.fatta||'')));
-  if(dn.length){const tg=h('button','btn lbl',(tkShowDone?'Nascondi':'Mostra')+' le attività fatte ('+dn.length+')');tg.type='button';tg.style.cssText='width:100%;margin-top:12px';tg.onclick=()=>{tkShowDone=!tkShowDone;tkListPaint()};L.append(tg);if(tkShowDone){const g=h('div','tkg');dn.slice(0,50).forEach(t=>g.append(tkRow(t)));L.append(g)}}}
-function tkList(){const {sh,w}=tkShell('tkList','Attività');const ad=h('button','btn p lbl');ad.type='button';ad.innerHTML=ICONS.add+'Nuova attività';ad.id='tkAdd';ad.style.cssText='width:100%;margin:0 0 6px';ad.onclick=()=>tkOpen(null);const bd=h('div','tkbody');w.append(ad);if(tkOpen_().some(t=>t.scad)){const ex=h('button','btn lbl');ex.type='button';ex.innerHTML=ICONS.clock+'Esporta nel calendario';ex.style.cssText='width:100%;margin:0 0 6px';ex.onclick=()=>icsSave('attivita-krang.ics',tkIcs(tkOpen_().filter(t=>t.scad).sort(tkSort)));w.append(ex)}w.append(bd);tkListPaint()}
+  if(dn.length){const tg=h('button','btn lbl',(tkShowDone?'Nascondi':'Mostra')+' i task fatti ('+dn.length+')');tg.type='button';tg.style.cssText='width:100%;margin-top:12px';tg.onclick=()=>{tkShowDone=!tkShowDone;tkListPaint()};L.append(tg);if(tkShowDone){const g=h('div','tkg');dn.slice(0,50).forEach(t=>g.append(tkRow(t)));L.append(g)}}}
+function tkList(){const {sh,w}=tkShell('tkList','Task');const ad=h('button','btn p pls');ad.type='button';ad.ariaLabel=ad.title='Nuovo task';ad.innerHTML=ICONS.add+'<span class="pl">Nuovo task</span>';ad.id='tkAdd';ad.style.cssText='margin:0 0 6px auto';ad.onclick=()=>tkOpen(null);const bd=h('div','tkbody');w.append(ad);if(tkOpen_().some(t=>t.scad)){const ex=h('button','btn lbl');ex.type='button';ex.innerHTML=ICONS.clock+'Esporta nel calendario';ex.style.cssText='width:100%;margin:0 0 6px';ex.onclick=()=>icsSave('attivita-krang.ics',tkIcs(tkOpen_().filter(t=>t.scad).sort(tkSort)));w.append(ex)}w.append(bd);tkListPaint()}
 function tkPaintClient(){tkPaintAll()}
 $('hTk').onclick=()=>tkList();
 
 function tkForRef(rif){return tasks.filter(t=>t&&t.rif&&t.rif.tipo===rif.tipo&&t.rif.id===rif.id)}
 function tkPanel(host,rif,what){host.textContent='';
-  if(!rif){host.append(h('div','hint','Salva prima '+what+': poi potrai aggiungere le attività collegate.'));return 0}
-  const ad=h('button','btn p lbl');ad.type='button';ad.innerHTML=ICONS.add+'Nuova attività';ad.style.cssText='width:100%;margin:0 0 10px';ad.onclick=()=>tkOpen(null,rif,true);host.append(ad);
+  if(!rif){host.append(h('div','hint','Salva prima '+what+': poi potrai aggiungere le task collegati.'));return 0}
+  const ad=h('button','btn p pls');ad.type='button';ad.ariaLabel=ad.title='Nuovo task';ad.innerHTML=ICONS.add+'<span class="pl">Nuovo task</span>';ad.style.cssText='margin:0 0 10px auto';ad.onclick=()=>tkOpen(null,rif,true);host.append(ad);
   const all=tkForRef(rif),op=all.filter(t=>t.stato!=='fatta').sort(tkSort),dn=all.filter(t=>t.stato==='fatta').sort((a,b)=>String(b.fatta||'').localeCompare(String(a.fatta||'')));
-  if(!op.length)host.append(h('div','hint',dn.length?'Nessuna attività aperta.':'Nessuna attività per questo record.'));
+  if(!op.length)host.append(h('div','hint',dn.length?'Nessun task aperto.':'Nessun task per questo record.'));
   op.forEach(t=>host.append(tkRow(t)));
-  if(dn.length){const tg=h('button','btn lbl',(host._sd?'Nascondi':'Mostra')+' le attività fatte ('+dn.length+')');tg.type='button';tg.style.cssText='width:100%;margin-top:8px';tg.onclick=()=>{host._sd=!host._sd;tkPanel(host,rif,what)};host.append(tg);if(host._sd)dn.slice(0,50).forEach(t=>host.append(tkRow(t)))}
+  if(dn.length){const tg=h('button','btn lbl',(host._sd?'Nascondi':'Mostra')+' i task fatti ('+dn.length+')');tg.type='button';tg.style.cssText='width:100%;margin-top:8px';tg.onclick=()=>{host._sd=!host._sd;tkPanel(host,rif,what)};host.append(tg);if(host._sd)dn.slice(0,50).forEach(t=>host.append(tkRow(t)))}
   return op.length}
 function tkPaintAll(){const cnt=(id,n)=>{const e=$(id);if(e)e.textContent=n||''};
   try{const tb=document.querySelector('#cTabs [data-p=tk]');if(tb){const sv=!!(typeof editing!=='undefined'&&editing&&editing.id);{const sb=document.querySelector('#cTabs [data-p=sum]');if(sb)sb.hidden=!sv}tb.hidden=!sv;if(!sv&&tb.classList.contains('on'))setPane('dati')}}catch(e){}
@@ -11336,7 +11336,7 @@ $('oTabs').onclick=e=>{const b=e.target.closest('button');if(b)setOTab(b.dataset
 {const _oo=openOpp;openOpp=function(){const r=_oo.apply(this,arguments);try{setOTab('dati');tkPaintAll()}catch(e){}return r}}
 {const _sl=setLTab;setLTab=function(k){const r=_sl.apply(this,arguments);if(k==='tk')try{tkPaintAll()}catch(e){}return r}}
 
-/* ===== calendario (.ics) e promemoria push delle attività (1.42.0) ===== */
+/* ===== calendario (.ics) e promemoria push dei task (1.42.0) ===== */
 const icsEsc=s=>String(s||'').replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/([,;])/g,'\\$1');
 const icsFold=l=>{const o=[];let s=l;while(s.length>73){o.push(s.slice(0,73));s=' '+s.slice(73)}o.push(s);return o.join('\r\n')};
 function remHour(){const n=parseInt(S&&S.remH,10);return n>=5&&n<=22?n:9}
@@ -11351,7 +11351,7 @@ function tkIcs(list){const now=new Date().toISOString().replace(/[-:]/g,'').repl
   L.push('END:VCALENDAR');return L.map(icsFold).join('\r\n')+'\r\n'}
 async function icsSave(name,text){
   try{const f=new File([text],name,{type:'text/calendar'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e&&e.name==='AbortError')return}
-  const u=URL.createObjectURL(new Blob([text],{type:'text/calendar'})),a=document.createElement('a');a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4e4);toast('Apri il file per aggiungere le attività al calendario.')}
+  const u=URL.createObjectURL(new Blob([text],{type:'text/calendar'})),a=document.createElement('a');a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4e4);toast('Apri il file per aggiungere i task al calendario.')}
 
 const VAPID_PUB='BNutLzHGcx2wCOQTS62VIi7iq4DZjxvZ1PS0WwrWprGEuBbxvVbnleAEIHSB3HM67pwRLFa5IxCHMZpOLSC0kAI',PUSHK='crm-push-v1',REMK='crm-rem-sig';
 const pushOk=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window&&location.protocol==='https:';
@@ -11394,7 +11394,7 @@ async function pushCheck(){if(!pushFlag()||!pushOk()||!SB.has())return;
   try{const {reg,sub}=await pushGet();if(!reg)return;if(!sub){const n=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:vapidKey()});await SB.push.save(subKeys(n))}else await SB.push.save(subKeys(sub));remSoon();remHeal()}catch(e){}}
 function ntPaint(){const ok=pushOk(),on=pushFlag()&&ok&&Notification.permission==='granted',hint=$('nt_h'),b=$('nt_bl');if(!hint)return;
   const inst=isIOSd()&&!isStandalone(),st=$('nt_st');
-  hint.textContent=!ok?'Questo browser non supporta le notifiche. Su iPhone servono iOS 16.4 o successivo e l’app aggiunta alla schermata Home.':inst?'Su iPhone aggiungi prima l’app alla schermata Home (Condividi → Aggiungi a Home) e riaprila da lì: solo così iOS consente le notifiche.':on?'Ricevi un avviso quando un’attività scade, anche con l’app chiusa. Funziona su tutti i dispositivi dove li attivi.':'Ricevi un avviso quando un’attività scade, anche con l’app chiusa. Ci vogliono pochi secondi: tocca il pulsante e consenti le notifiche.';
+  hint.textContent=!ok?'Questo browser non supporta le notifiche. Su iPhone servono iOS 16.4 o successivo e l’app aggiunta alla schermata Home.':inst?'Su iPhone aggiungi prima l’app alla schermata Home (Condividi → Aggiungi a Home) e riaprila da lì: solo così iOS consente le notifiche.':on?'Ricevi un avviso quando un task scade, anche con l’app chiusa. Funziona su tutti i dispositivi dove li attivi.':'Ricevi un avviso quando un task scade, anche con l’app chiusa. Ci vogliono pochi secondi: tocca il pulsante e consenti le notifiche.';
   {const o=$('nt_inst');if(o)o.remove();if(inst||!isStandalone()&&ok&&isIOSd()){const bi=h('button','btn lbl');bi.id='nt_inst';bi.type='button';bi.style.cssText='width:100%;margin-top:10px';bi.innerHTML=ICONS.download+'<span>Come installare l’app</span>';bi.onclick=()=>setSp('in');$('nt_btn').after(bi)}}
   st.textContent=!ok?'Non disponibili su questo dispositivo':on?'● Attivi su questo dispositivo':'Non attivi';st.style.color=on?'var(--ok,#4ade80)':'var(--muted,#9fb3c8)';
   b.textContent=on?'Disattiva i promemoria':'Attiva i promemoria';$('nt_btn').disabled=!ok;$('nt_btn').classList.toggle('p',!on);$('nt_opts').hidden=!on;const sel=$('nt_hr');if(sel)sel.value=String(remHour());$('nt_sh').checked=S.remShow!==false;if(on)ntDiag()}
@@ -11451,20 +11451,20 @@ window.paintSum=function(){const c=editing,w=$('sumF');if(!w)return;w.textConten
   const sec=t=>w.append(h('div','sh',t));
   const pv=c.privacy;if(!pv||!pv.informativa){const al=h('div','scard al');al.append(h('b','late','Informativa privacy da inviare'),h('small','','Senza informativa non puoi mandare comunicazioni commerciali.'));const bt=h('button','btn p lbl');bt.type='button';bt.innerHTML=ICONS.Scrivi+'Apri Privacy';bt.onclick=()=>setPane('priv');al.append(bt);w.append(al)}
   const tk=tkForRef({tipo:'cliente',id:c.id}).filter(t=>t.stato!=='fatta').sort((a,b)=>String(a.scad||'9').localeCompare(String(b.scad||'9')));
-  sec('Prossime attività');const tc=h('div','scard');if(tk.length)tk.slice(0,4).forEach(t=>{const r=row(t.titolo||'Attività',tkWhen(t),'',()=>tkOpen(t),!!t.scad&&t.scad<ymd());const ck=h('span','tkc');ck.setAttribute('role','button');ck.title=ck.ariaLabel='Segna come fatta';ck.onclick=e=>{e.stopPropagation();tkDone(t,true)};r.prepend(ck);tc.append(r)});else tc.append(h('div','empty','Nessuna attività aperta.'));w.append(tc);
+  sec('Prossimi task');const tc=h('div','scard');if(tk.length)tk.slice(0,4).forEach(t=>{const r=row(t.titolo||'Task',tkWhen(t),'',()=>tkOpen(t),!!t.scad&&t.scad<ymd());const ck=h('span','tkc');ck.setAttribute('role','button');ck.title=ck.ariaLabel='Segna come fatta';ck.onclick=e=>{e.stopPropagation();tkDone(t,true)};r.prepend(ck);tc.append(r)});else tc.append(h('div','empty','Nessun task aperto.'));w.append(tc);
   const op=(typeof opps!=='undefined'?opps:[]).filter(o=>o.clienteId===c.id&&o.fase!=='vinta'&&o.fase!=='persa');
   sec('Opportunità aperte');const oc=h('div','scard');if(op.length)op.forEach(o=>{const f=FASI.find(x=>x[0]===o.fase);oc.append(row(o.titolo||'Opportunità',(f?f[1]:'')+(o.prob!=null?' · '+o.prob+'%':''),eur(o.valore),()=>openOpp(o)))});else oc.append(h('div','empty','Nessuna opportunità aperta.'));w.append(oc);
   sec('Contatti');const cc=h('div','scard');[['Telefono',c.telefono&&(dial(c.paese)+' '+c.telefono)],['Email',c.email],['Indirizzo',c.indirizzo],['Sito',c.sito]].forEach(([k,v])=>{if(v){const r=h('div','srow l');r.append(h('small','',k),h('span','sv',v));cc.append(r)}});const eb=h('button','srow l');eb.type='button';eb.innerHTML='<b style="color:#4fc3ff">Modifica i dati</b>';eb.onclick=()=>setPane('dati');cc.append(eb);w.append(cc)};
 
 window.paintHead=function(c){const sub=$('qSub'),qa=$('qAct');if(!sub||!qa)return;sub.textContent='';qa.textContent='';
-  const tb=document.querySelector('#cTabs [data-p=tk]');if(tb)[...tb.childNodes].forEach(n=>{if(n.nodeType===3&&/Task|Attivit/.test(n.textContent))n.textContent='Attività'});
+  const tb=document.querySelector('#cTabs [data-p=tk]');if(tb)[...tb.childNodes].forEach(n=>{if(n.nodeType===3&&/Task|Attivit/.test(n.textContent))n.textContent='Task'});
   if(!c||!c.id)return;
   sub.append(stChip(c));const t=c.tipo==='azienda'?[[c.nome,c.cognome].filter(Boolean).join(' '),'referente'].filter(Boolean).join(', '):[c.ruolo,c.azienda].filter(Boolean).join(', ');if(t)sub.append(h('span','',t));
   const mk=(ic,lab,fn)=>{const b=h('button');b.type='button';b.innerHTML=ICONS[ic]+'<span>'+lab+'</span>';b.onclick=fn;qa.append(b)};
   if(c.telefono)mk('Chiama','Chiama',()=>launch('tel:'+telHref(c),telHref(c),c));
   if(c.email)mk('Scrivi','Email',()=>openCompose(c));
   if(c.telefono)mk('WhatsApp','WhatsApp',()=>openWa(c));
-  mk('check','Attività',()=>tkOpen(null,{tipo:'cliente',id:c.id},true))};
+  mk('check','Task',()=>tkOpen(null,{tipo:'cliente',id:c.id},true))};
 
 window.paintSub=function(){const e=$('pSub');if(!e)return;let t='';try{
   if(tab==='lead'){const n=leads.filter(l=>l.stato==='nuovo').length;t=n?n+(n===1?' richiesta da valutare':' richieste da valutare'):'Nessuna richiesta da valutare'}
@@ -11476,6 +11476,6 @@ window.paintSub=function(){const e=$('pSub');if(!e)return;let t='';try{
 window.paintMore=function(){const w=$('moreView');if(!w)return;w.textContent='';
   let nt=0;try{nt=tasks.filter(x=>x&&x.stato!=='fatta').length}catch(e){}
   const item=(ic,t,sub,m,beta)=>{const r=h('button','qrow');r.type='button';const th=h('div','pth');th.innerHTML=ICONS[ic]||'';const tx=h('div','tx'),b=h('b','',t);if(beta){const bt=h('span','beta','Beta');b.append(bt)}tx.append(b,h('span','',sub));const cv=h('span','chv');cv.innerHTML=ICONS.chevR;r.append(th,tx,cv);r.onclick=()=>{const x=document.querySelector('#appMenu [data-m='+m+']');if(x)x.click()};return r};
-  const c1=h('div','mcard');c1.append(item('check','Attività',nt?nt+(nt===1?' aperta':' aperte'):'Nessuna aperta','tk'),item('box','Prodotti','Catalogo, listini e magazzino','prod'),item('analytics','Analytics','Andamento delle vendite','an',1),item('mega','Marketing','Messaggi a gruppi di clienti','mkt',1));
+  const c1=h('div','mcard');c1.append(item('check','Task',nt?nt+(nt===1?' aperta':' aperte'):'Nessuna aperta','tk'),item('box','Prodotti','Catalogo, listini e magazzino','prod'),item('analytics','Analytics','Andamento delle vendite','an',1),item('mega','Marketing','Messaggi a gruppi di clienti','mkt',1));
   const c2=h('div','mcard');c2.append(item('gear','Impostazioni','Azienda, promemoria, privacy, backup','set'),item('help','Aiuto e primi passi','Guida e assistente','help'),item('info','Info','Versione e novità','info'));
   w.append(c1,c2)};
