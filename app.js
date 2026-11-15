@@ -10467,8 +10467,8 @@ const SB=(()=>{
   const clean=s=>String(s==null?'':s).replace(/[\x00-\x1f]+/g,' ').replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g,'[email]').replace(/https?:\/\/[^\s)'"]+/g,u=>{try{const x=new URL(u);return x.origin+x.pathname.replace(/[0-9a-f-]{16,}/gi,'…')}catch(e){return '[url]'}}).replace(/\+?\d[\d\s().-]{6,}\d/g,'[num]').replace(/\s+/g,' ').trim();
   window.logErr=async(kind,msg,src,stack)=>{try{if(!ses)return;const m=clean(msg).slice(0,300);if(!m)return;const key=kind+m;const n=(seen.get(key)||0)+1;seen.set(key,n);if(n>2)return;if(Date.now()-t0>6e5){t0=Date.now();sent=0}if(++sent>8)return;
    await js('/rest/v1/app_errors',{method:'POST',auth:true,headers:{Prefer:'return=minimal'},json:{kind,msg:m,src:clean(src).slice(0,120)||null,stack:clean(stack).slice(0,800)||null,tab:String((document.getElementById('title')||{}).textContent||'').trim().slice(0,30)||null,app_ver:((document.querySelector('meta[name=app-version]')||{}).content||'').split('|')[0].slice(0,20),device:dev()}})}catch(e){}};
-  window.addEventListener('error',e=>{if(e.target&&e.target!==window&&(e.target.src||e.target.href))return;logErr('js',e.message,(e.filename||'').split('/').pop()+':'+(e.lineno||0)+':'+(e.colno||0),e.error&&e.error.stack)});
-  window.addEventListener('unhandledrejection',e=>{const r=e.reason;const m=r&&r.message?r.message:String(r);logErr(/fetch|network|rete/i.test(m)?'rete':'promise',m,'',r&&r.stack)})}
+  window.addEventListener('error',e=>{if(e.target&&e.target!==window&&(e.target.src||e.target.href))return;if(!e.filename||/__firefox__|window\.ethereum|webkit\.messageHandlers/.test(e.message||''))return;logErr('js',e.message,(e.filename||'').split('/').pop()+':'+(e.lineno||0)+':'+(e.colno||0),e.error&&e.error.stack)});
+  window.addEventListener('unhandledrejection',e=>{const r=e.reason;const m=r&&r.message?r.message:String(r);if(/__firefox__|window\.ethereum/.test(m))return;logErr(/fetch|network|rete/i.test(m)?'rete':'promise',m,'',r&&r.stack)})}
  const arecent=()=>js('/rest/v1/access_log?select=created_at,device_id,device,kind&order=created_at.desc&limit=20',{auth:true});
  async function logoutAll(){try{if(ses)await raw('/auth/v1/logout?scope=global',{method:'POST',auth:1})}catch(e){}ses=null;save()}
  const ai=body=>js('/functions/v1/assistant-ai',{method:'POST',auth:true,json:body});
@@ -10748,6 +10748,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.0','Nuova disposizione: «Altro» è ora una pagina vera, non più un menu a comparsa. Raccoglie Attività, Prodotti, Analytics, Marketing, Impostazioni, Aiuto e Info in due riquadri, con la barra in basso sempre visibile. Inoltre lo scorrimento di lato nella scheda cliente segue l’ordine delle linguette.'],
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
+['1.47.3','Registro errori: non registra più i falsi allarmi generati dai browser (Firefox per iPhone, estensioni portafoglio), che non dipendono dall’app.'],
 ['1.47.2','Nuova disposizione: cerchio per spuntare le attività nel Riepilogo cliente, un po’ di margine in alto nella Home. Promemoria push: la sincronizzazione col server si riallinea da sola ad ogni apertura.'],
 ['1.47.1','Nuova disposizione: «Primi passi» torna in alto nella Home, sopra «Da fare», come nel layout classico.'],
 ]}];
