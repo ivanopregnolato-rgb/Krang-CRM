@@ -1,3 +1,5 @@
+/* installazione: il browser (Chrome, Edge, Samsung) offre l'evento solo se l'app è installabile */
+window.__bip=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();window.__bip=e;try{instPaint()}catch(x){}});addEventListener('appinstalled',()=>{window.__bip=null;try{instPaint();toast('App installata.')}catch(x){}});
 try{guideify(document)}catch(e){}
 const KEY='crm-clienti-v1';
 const FIELDS=['nome','cognome','azienda','ruolo','nascita','piva','pec','paese','telefono','email','sito','indirizzo','note'];
@@ -9426,6 +9428,7 @@ $('st_broFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';i
 $('st_broDel').onclick=()=>{S.brochure=null;saveS();paintBro()};
 
 const SPG=[['La tua azienda',[['az','building','Profilo azienda',()=>S.azienda||'Nome, partita IVA, sede e contatti']]],
+ ['App',[['in','download','Installa l’app',()=>(typeof instLabel==='function'?instLabel():''),()=>isStandalone()]]],
  ['Notifiche',[['nt','clock','Promemoria attività',()=>(typeof pushLabel==='function'?pushLabel():'')]]],
  ['Comunicazione',[['em','Scrivi','Email',()=>S.replyTo||'Mittente, firma e contatto'],['wa','WhatsApp','WhatsApp',()=>'Messaggi rapidi e paese dei numeri'],['al','clip','Allegati e brochure',()=>'Listino e brochure per le risposte ai lead']]],
  ['Vendite',[['pr','doc','Preventivi',()=>'Validità '+S.qValid+' giorni e condizioni'],['ld','target','Lead',()=>'Pulizia automatica dei lead']]],
@@ -9458,8 +9461,8 @@ $('st_infv').onclick=openInfEd;$('st_infs').onclick=openInfHist;$('ih_x').onclic
 $('ih_all').onclick=async()=>{const H=S.infHist||[];toast(await copyText('Storico delle informative privacy di '+(S.azienda||'')+'\n\n'+H.map(x=>'VERSIONE '+x.v+' ('+infPer(x)+', '+(x.src==='personalizzata'?'testo personalizzato':'testo proposto')+')\n'+x.text).join('\n\n----------\n\n'))?'Storico copiato.':'Copia non riuscita.')};
 $('st_ok').addEventListener('click',()=>setTimeout(()=>{try{infSync();pubRefresh()}catch(e){}},300));
 setTimeout(()=>{try{infSync()}catch(e){}},3000);
-function paintHub(){const H=$('stHub');H.textContent='';SPG.forEach(([t,rows])=>{const g=h('div','shg'),l=h('div','sl');g.append(h('h3','',t),l);rows.forEach(([k,ic,nm,sm])=>{const b=h('button','shr');b.type='button';const i=h('span','ic');i.innerHTML=ICONS[ic]||'';const tx=h('div','tx');let sub='';try{sub=sm()}catch(e){}tx.append(h('b','',nm),h('span','',sub));const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(i,tx,c);b.onclick=()=>setSp(k);l.append(b)});H.append(g)})}
-function setSp(k){try{laHide()}catch(e){}if(k==='nt')try{ntPaint()}catch(e){}if(k==='pv')try{paintInf()}catch(e){}if(k==='vc'){try{vcReset()}catch(e){}}if(k==='dp'){dpCur=null;try{dpPaint()}catch(e){}}spCur=k||null;document.querySelectorAll('#mSet .sp').forEach(e=>e.hidden=e.dataset.sp!==k);$('stHub').hidden=!!k;if(!k)paintHub();if(k==='sc')try{paintLock()}catch(e){}$('stTitle').textContent=k?SPN[k]:'Impostazioni';$('stBack').setAttribute('aria-label',k?'Indietro':'Chiudi');const sh=$('mSet');if(sh)sh.scrollTop=0}
+function paintHub(){const H=$('stHub');H.textContent='';SPG.forEach(([t,rows])=>{rows=rows.filter(r=>{try{return !(r[4]&&r[4]())}catch(e){return true}});if(!rows.length)return;const g=h('div','shg'),l=h('div','sl');g.append(h('h3','',t),l);rows.forEach(([k,ic,nm,sm])=>{const b=h('button','shr');b.type='button';const i=h('span','ic');i.innerHTML=ICONS[ic]||'';const tx=h('div','tx');let sub='';try{sub=sm()}catch(e){}tx.append(h('b','',nm),h('span','',sub));const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(i,tx,c);b.onclick=()=>setSp(k);l.append(b)});H.append(g)})}
+function setSp(k){try{laHide()}catch(e){}if(k==='in')try{instPaint()}catch(e){}if(k==='nt')try{ntPaint()}catch(e){}if(k==='pv')try{paintInf()}catch(e){}if(k==='vc'){try{vcReset()}catch(e){}}if(k==='dp'){dpCur=null;try{dpPaint()}catch(e){}}spCur=k||null;document.querySelectorAll('#mSet .sp').forEach(e=>e.hidden=e.dataset.sp!==k);$('stHub').hidden=!!k;if(!k)paintHub();if(k==='sc')try{paintLock()}catch(e){}$('stTitle').textContent=k?SPN[k]:'Impostazioni';$('stBack').setAttribute('aria-label',k?'Indietro':'Chiudi');const sh=$('mSet');if(sh)sh.scrollTop=0}
 
 document.querySelectorAll('#tabs [data-i=inbox]').forEach(e=>e.innerHTML=ICONS.inbox);
 /* ===== motivi per record: chip + ordinamento per priorità ===== */
@@ -10296,7 +10299,7 @@ function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=
     p('<b>4. Scegli quando.</b> Ogni attività può avere un’ora: l’avviso arriva a quell’ora. Senza ora, arriva all’ora predefinita che scegli nella stessa pagina. Nella notifica compaiono titolo e cliente; se non vuoi che si leggano a telefono bloccato, spegni «Titolo e cliente nella notifica».');
     if(!ok){const d=h('p','wtx');d.innerHTML='<b>Nota:</b> questo browser non supporta le notifiche.';B.append(d)}
     const a=h('button','btn p lbl');a.type='button';a.innerHTML=ICONS.clock+'<span>Apri i promemoria</span>';a.onclick=()=>{closeWel();openSettings();setSp('nt')};
-    B.append(a,back());return}
+    B.append(a);if(!inst){const ib=h('button','btn lbl');ib.type='button';ib.innerHTML=ICONS.download+'<span>Come installare l’app</span>';ib.onclick=()=>{closeWel();openSettings();setSp('in')};B.append(ib)}B.append(back());return}
   if(view==='cr'){
     let ready=false,can=false;try{ready=SB.e2e.state()==='ready';can=!!(SB.has&&SB.has())}catch(e){}
     B.append(h('h3','','La cifratura dei dati'));
@@ -10717,6 +10720,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.42.0','Promemoria delle attività e calendario. Ogni attività può avere anche un’ora (facoltativa): l’avviso arriva a quell’ora e nel calendario diventa un evento di mezz’ora; senza ora resta un evento di tutto il giorno e l’avviso arriva all’ora predefinita. Da Impostazioni → Promemoria attività attivi la notifica e scegli l’ora predefinita (su iPhone serve l’app aggiunta alla schermata Home). Nella notifica compaiono il titolo dell’attività e il cliente collegato: viaggiano cifrati e li legge solo il tuo dispositivo, il server non lo vede (da Impostazioni puoi nasconderlo, e la notifica dirà solo che hai un’attività in scadenza). Con «Aggiungi al calendario» ed «Esporta nel calendario» porti le attività nel calendario del telefono (Google, Apple o Outlook).'],
 ['1.42.1','Promemoria: in Impostazioni → Promemoria attività c’è «Prova l’invio dal server» e una riga di diagnosi che mostra se la notifica è arrivata al telefono e come è stata gestita.'],
 ['1.42.2','Attività e promemoria più chiari: scadenza e ora sono affiancate, i comandi in fondo sono più ordinati e la pagina Promemoria è stata ridisegnata. Non compare più la richiesta di salvare quando non hai modificato nulla. Nella guida dei primi passi c’è ora il passo «I promemoria sul telefono».'],
+['1.42.3','Installa l’app dalle Impostazioni: dove il browser lo consente (Android, Chrome, Edge) compare il pulsante «Installa l’app»; su iPhone e negli altri casi una guida passo passo spiega come aggiungere KRANG alla schermata Home. Se l’app è già installata lo indica.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -11360,6 +11364,7 @@ async function pushCheck(){if(!pushFlag()||!pushOk()||!SB.has())return;
 function ntPaint(){const ok=pushOk(),on=pushFlag()&&ok&&Notification.permission==='granted',hint=$('nt_h'),b=$('nt_bl');if(!hint)return;
   const inst=isIOSd()&&!isStandalone(),st=$('nt_st');
   hint.textContent=!ok?'Questo browser non supporta le notifiche. Su iPhone servono iOS 16.4 o successivo e l’app aggiunta alla schermata Home.':inst?'Su iPhone aggiungi prima l’app alla schermata Home (Condividi → Aggiungi a Home) e riaprila da lì: solo così iOS consente le notifiche.':on?'Ricevi un avviso quando un’attività scade, anche con l’app chiusa. Funziona su tutti i dispositivi dove li attivi.':'Ricevi un avviso quando un’attività scade, anche con l’app chiusa. Ci vogliono pochi secondi: tocca il pulsante e consenti le notifiche.';
+  {const o=$('nt_inst');if(o)o.remove();if(inst||!isStandalone()&&ok&&isIOSd()){const bi=h('button','btn lbl');bi.id='nt_inst';bi.type='button';bi.style.cssText='width:100%;margin-top:10px';bi.innerHTML=ICONS.download+'<span>Come installare l’app</span>';bi.onclick=()=>setSp('in');$('nt_btn').after(bi)}}
   st.textContent=!ok?'Non disponibili su questo dispositivo':on?'● Attivi su questo dispositivo':'Non attivi';st.style.color=on?'var(--ok,#4ade80)':'var(--muted,#9fb3c8)';
   b.textContent=on?'Disattiva i promemoria':'Attiva i promemoria';$('nt_btn').disabled=!ok;$('nt_btn').classList.toggle('p',!on);$('nt_opts').hidden=!on;const sel=$('nt_hr');if(sel)sel.value=String(remHour());$('nt_sh').checked=S.remShow!==false;if(on)ntDiag()}
 async function ntDiag(){const el=$('nt_diag');try{const L=await kget('log','last');el.textContent=L?'Ultima notifica ricevuta dal server: '+new Date(L.t).toLocaleString('it-IT')+' · dati '+(L.dati===true?'ok':L.dati)+' · titolo '+L.dec+' · mostrata: '+L.mostra:'Nessuna notifica dal server ricevuta finora su questo dispositivo.'}catch(e){el.textContent=''}}
@@ -11372,3 +11377,33 @@ try{navigator.serviceWorker&&navigator.serviceWorker.addEventListener('message',
 setTimeout(()=>{try{if(/[?&]go=tk\b/.test(location.search)){history.replaceState(null,'',location.pathname);tkList()}}catch(e){}},1800);
 setTimeout(()=>{try{pushCheck()}catch(e){}},6000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)try{remSoon()}catch(e){}});
+
+
+/* ===== installa l'app: pulsante dove il browser lo consente, guida passo passo altrove (1.42.3) ===== */
+const instUA=()=>{const u=navigator.userAgent;const ios=isIOSd();return{ios,android:/Android/i.test(u),safari:ios&&/Safari/.test(u)&&!/CriOS|FxiOS|EdgiOS|OPiOS|GSA/.test(u),other:ios&&/CriOS|FxiOS|EdgiOS|OPiOS|GSA/.test(u),ipad:/iPad/.test(u)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)}};
+function instLabel(){return isStandalone()?'Già installata':window.__bip?'Disponibile':'Guida'}
+function instPaint(){const B=$('in_body'),S0=$('in_st');if(!B||!S0)return;B.textContent='';
+  const st=(t,c)=>{S0.textContent=t;S0.style.color=c||'var(--muted,#9fb3c8)'};
+  const P=t=>{const d=h('p','wtx');d.innerHTML=t;d.style.margin='0 0 10px';B.append(d)};
+  const u=instUA();
+  if(isStandalone()){st('● Già installata su questo dispositivo','var(--ok,#4ade80)');P('Stai usando KRANG dalla schermata Home: non devi fare altro.');return}
+  if(window.__bip){st('Pronta da installare');P('Tocca il pulsante e conferma: l’icona di KRANG comparirà nella schermata Home e l’app si aprirà a schermo intero.');
+    const b=h('button','btn p lbl');b.type='button';b.style.width='100%';b.innerHTML=ICONS.download+'<span>Installa l’app</span>';
+    b.onclick=async()=>{const e=window.__bip;if(!e)return;b.disabled=true;try{e.prompt();const r=await e.userChoice;if(r&&r.outcome==='accepted')toast('Installazione avviata.');else toast('Installazione annullata.')}catch(x){}window.__bip=null;instPaint()};B.append(b);return}
+  st('Installazione manuale');
+  if(u.ios){
+    if(u.other)P('<b>Attenzione:</b> stai usando un browser diverso da Safari. Se nel menu Condividi non trovi «Aggiungi a Home», apri questa pagina in Safari e ripeti i passi.');
+    P('<b>1.</b> Tocca il pulsante <b>Condividi</b> (il quadrato con la freccia verso l’alto) '+(u.ipad?'in alto nella barra di Safari.':'in basso nella barra di Safari.'));
+    P('<b>2.</b> Scorri il menu e scegli <b>«Aggiungi a Home»</b>. Se non lo vedi, tocca «Altro» o «Modifica azioni».');
+    P('<b>3.</b> Tocca <b>«Aggiungi»</b> in alto a destra.');
+    P('<b>4.</b> Chiudi Safari e apri <b>KRANG</b> dall’icona nella schermata Home: da lì potrai attivare anche le notifiche.');
+    P('<span style="opacity:.8">Su iPhone è l’unico modo: Apple non permette di farlo con un pulsante.</span>')}
+  else if(u.android){
+    P('<b>1.</b> Tocca il menu del browser (i tre puntini in alto a destra).');
+    P('<b>2.</b> Scegli <b>«Installa app»</b> oppure <b>«Aggiungi a schermata Home»</b>.');
+    P('<b>3.</b> Conferma. L’icona di KRANG comparirà nella schermata Home.');
+    P('<span style="opacity:.8">Se non vedi nessuna delle due voci, apri la pagina con Chrome.</span>')}
+  else{
+    P('<b>1.</b> Cerca nella barra degli indirizzi l’icona di installazione (un monitor con una freccia), oppure apri il menu del browser.');
+    P('<b>2.</b> Scegli <b>«Installa KRANG CRM»</b> e conferma.');
+    P('<span style="opacity:.8">Funziona con Chrome ed Edge. Safari sul Mac: menu File → «Aggiungi al Dock».</span>')}}
