@@ -8775,7 +8775,7 @@ $('qWa').onclick=async()=>{if(!saveQuote())return;const c=clients.find(x=>x.id==
   if(!c.telefono){toast('Aggiungi un numero di telefono al cliente.');return}
   const u8=quotePdf(),name=qName(),txt='Buongiorno '+contactName(c)+', le invio il preventivo n. '+qW.num+(S.azienda?' di '+S.azienda:'')+' (totale '+e2(qTot(qW.righe).lordo)+').';
   let shared=false;
-  try{const f=new File([u8],name,{type:'application/pdf'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:txt});shared=true}}catch(e){if(e&&e.name==='AbortError')return}
+  /* con il numero del cliente si apre la chat giusta (wa.me); il foglio di condivisione non può scegliere il destinatario */
   if(!shared){if(!(await savePdf(u8,name))){toast('PDF non salvato: invio annullato.');return}
     launch('https://wa.me/'+waNum(c)+'?text='+encodeURIComponent(txt),txt);toast(markSent(qC,'Allega il PDF salvato nella chat di WhatsApp. Preventivo impostato su “Inviato”.','WhatsApp'))}
   (c.wa=c.wa||[]).push({id:waId(),dir:'out',data:new Date().toISOString(),testo:txt+' [PDF '+name+']',fonte:'app'});persist();if(shared)toast(markSent(qC,'Preventivo condiviso. Impostato su “Inviato”.','WhatsApp'))};
@@ -10758,7 +10758,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
-['1.49.1','Nuova disposizione: dalla pagina del preventivo (e da ogni altra scheda aperta) la barra in basso ora porta davvero alla sezione scelta; se ci sono modifiche non salvate compare prima l’avviso di salvataggio, e dopo la scelta si prosegue verso la sezione toccata.'],
+['1.49.1','Preventivo via WhatsApp: si apre la chat con il numero del cliente già inserito (il PDF viene salvato e va allegato nella chat). Nuova disposizione: dalla pagina del preventivo (e da ogni altra scheda aperta) la barra in basso ora porta davvero alla sezione scelta; se ci sono modifiche non salvate compare prima l’avviso di salvataggio, e dopo la scelta si prosegue verso la sezione toccata.'],
 ['1.48.3','Tema Neon: i contatori (numeri sulle voci di menu e sulle schede di cliente, lead, opportunità) sono arancioni con scritta blu, in entrambi i layout.'],
 ['1.48.2','Nuova disposizione: il «+» della Home ha la stessa icona, dimensione e posizione di quello delle altre pagine.'],
 ['1.48.1','Il logo aziendale compare anche nell’intestazione dei preventivi e del listino prezzi in PDF, e nell’anteprima del preventivo.'],
