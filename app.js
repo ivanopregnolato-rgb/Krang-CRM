@@ -10736,6 +10736,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.42.2','Attività e promemoria più chiari: scadenza e ora sono affiancate, i comandi in fondo sono più ordinati e la pagina Promemoria è stata ridisegnata. Non compare più la richiesta di salvare quando non hai modificato nulla. Nella guida dei primi passi c’è ora il passo «I promemoria sul telefono».'],
 ['1.42.3','Installa l’app dalle Impostazioni: dove il browser lo consente (Android, Chrome, Edge) compare il pulsante «Installa l’app»; su iPhone e negli altri casi una guida passo passo spiega come aggiungere KRANG alla schermata Home. Se l’app è già installata lo indica.'],
 ['1.43.0','Nuova disposizione in prova: in Impostazioni › Aspetto › Disposizione puoi scegliere «Nuova». Le sezioni passano in basso, a portata di pollice, con la voce «Altro» per attività, prodotti e impostazioni; la Home mostra prima le cose da fare; l’elenco clienti è più compatto e il pulsante «Nuovo» è in basso a destra. La disposizione classica resta quella predefinita. Nel menu c’è ora anche la voce «Attività».'],
+['1.43.1','Nuova disposizione: sistemata la grafica dell’elenco clienti (sotto le schede comparivano delle strisce colorate).'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
