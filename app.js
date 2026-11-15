@@ -9428,7 +9428,7 @@ $('st_broFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';i
 $('st_broDel').onclick=()=>{S.brochure=null;saveS();paintBro()};
 
 const SPG=[['La tua azienda',[['az','building','Profilo azienda',()=>S.azienda||'Nome, partita IVA, sede e contatti']]],
- ['App',[['in','download','Installa l’app',()=>(typeof instLabel==='function'?instLabel():'')]]],
+ ['App',[['in','download','Installa l’app',()=>(typeof instLabel==='function'?instLabel():''),()=>isStandalone()]]],
  ['Notifiche',[['nt','clock','Promemoria attività',()=>(typeof pushLabel==='function'?pushLabel():'')]]],
  ['Comunicazione',[['em','Scrivi','Email',()=>S.replyTo||'Mittente, firma e contatto'],['wa','WhatsApp','WhatsApp',()=>'Messaggi rapidi e paese dei numeri'],['al','clip','Allegati e brochure',()=>'Listino e brochure per le risposte ai lead']]],
  ['Vendite',[['pr','doc','Preventivi',()=>'Validità '+S.qValid+' giorni e condizioni'],['ld','target','Lead',()=>'Pulizia automatica dei lead']]],
@@ -9461,7 +9461,7 @@ $('st_infv').onclick=openInfEd;$('st_infs').onclick=openInfHist;$('ih_x').onclic
 $('ih_all').onclick=async()=>{const H=S.infHist||[];toast(await copyText('Storico delle informative privacy di '+(S.azienda||'')+'\n\n'+H.map(x=>'VERSIONE '+x.v+' ('+infPer(x)+', '+(x.src==='personalizzata'?'testo personalizzato':'testo proposto')+')\n'+x.text).join('\n\n----------\n\n'))?'Storico copiato.':'Copia non riuscita.')};
 $('st_ok').addEventListener('click',()=>setTimeout(()=>{try{infSync();pubRefresh()}catch(e){}},300));
 setTimeout(()=>{try{infSync()}catch(e){}},3000);
-function paintHub(){const H=$('stHub');H.textContent='';SPG.forEach(([t,rows])=>{const g=h('div','shg'),l=h('div','sl');g.append(h('h3','',t),l);rows.forEach(([k,ic,nm,sm])=>{const b=h('button','shr');b.type='button';const i=h('span','ic');i.innerHTML=ICONS[ic]||'';const tx=h('div','tx');let sub='';try{sub=sm()}catch(e){}tx.append(h('b','',nm),h('span','',sub));const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(i,tx,c);b.onclick=()=>setSp(k);l.append(b)});H.append(g)})}
+function paintHub(){const H=$('stHub');H.textContent='';SPG.forEach(([t,rows])=>{rows=rows.filter(r=>{try{return !(r[4]&&r[4]())}catch(e){return true}});if(!rows.length)return;const g=h('div','shg'),l=h('div','sl');g.append(h('h3','',t),l);rows.forEach(([k,ic,nm,sm])=>{const b=h('button','shr');b.type='button';const i=h('span','ic');i.innerHTML=ICONS[ic]||'';const tx=h('div','tx');let sub='';try{sub=sm()}catch(e){}tx.append(h('b','',nm),h('span','',sub));const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(i,tx,c);b.onclick=()=>setSp(k);l.append(b)});H.append(g)})}
 function setSp(k){try{laHide()}catch(e){}if(k==='in')try{instPaint()}catch(e){}if(k==='nt')try{ntPaint()}catch(e){}if(k==='pv')try{paintInf()}catch(e){}if(k==='vc'){try{vcReset()}catch(e){}}if(k==='dp'){dpCur=null;try{dpPaint()}catch(e){}}spCur=k||null;document.querySelectorAll('#mSet .sp').forEach(e=>e.hidden=e.dataset.sp!==k);$('stHub').hidden=!!k;if(!k)paintHub();if(k==='sc')try{paintLock()}catch(e){}$('stTitle').textContent=k?SPN[k]:'Impostazioni';$('stBack').setAttribute('aria-label',k?'Indietro':'Chiudi');const sh=$('mSet');if(sh)sh.scrollTop=0}
 
 document.querySelectorAll('#tabs [data-i=inbox]').forEach(e=>e.innerHTML=ICONS.inbox);
