@@ -9250,7 +9250,7 @@ function renderL(){window.paintSub&&paintSub();
   const cnt=k=>leads.filter(l=>l.stato===k).length;
   [['nuovo','Nuovi'],['convertito','Convertiti'],['scartato','Scartati']].forEach(([k,l])=>{const b=document.createElement('button');b.type='button';b.textContent=l+' '+cnt(k);b.classList.toggle('on',lFilter===k);b.onclick=()=>{lFilter=k;renderL()};F.append(b)});
   const lqv=nrm(($('lq').value||'').trim()),rows=leads.filter(l=>l.stato===lFilter&&(!lqv||smatch(lqv,[l.nome,l.cognome,l.azienda,l.email,l.telefono,l.richiesta,l.oggetto]))).sort((a,b)=>rsScore(lReasons(b))-rsScore(lReasons(a))||b.data-a.data);
-  if(!rows.length){w.append(h('div','hint',lqv?'Nessun lead trovato.':lFilter==='nuovo'?'Nessun lead da valutare. Tocca l’icona di aggiornamento per cercare richieste nelle email da indirizzi non in anagrafica, oppure + per inserirne uno.':'Nessun lead in questa sezione.'));return}
+  if(!rows.length){w.append(h('div','hint',lqv?'Nessun lead trovato.':lFilter==='nuovo'?(document.documentElement.dataset.lay==='b'?'Nessun lead da valutare.':'Nessun lead da valutare. Tocca l’icona di aggiornamento per cercare richieste nelle email da indirizzi non in anagrafica, oppure + per inserirne uno.'):'Nessun lead in questa sezione.'));return}
   rows.forEach(l=>{const b=h('button','row');b.type='button';
     const av=h('div','av',inits(lName(l)));av.style.background='#ffd9b0';
     const t=h('div','tx'),n=h('b','',lName(l));const ch=h('i','cst',{web:'Form web',email:'Email',manuale:'Manuale'}[l.fonte]||'Lead');ch.style.background='#bfe0f8';n.append(ch);
@@ -10747,6 +10747,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.45.1','Nuova disposizione: scorrendo di lato nella scheda cliente le sezioni seguono ora l’ordine delle linguette (Riepilogo, Dati, Attività, Opportunità, Privacy, Storico).'],
 ['1.46.0','Nuova disposizione: «Altro» è ora una pagina vera, non più un menu a comparsa. Raccoglie Attività, Prodotti, Analytics, Marketing, Impostazioni, Aiuto e Info in due riquadri, con la barra in basso sempre visibile. Inoltre lo scorrimento di lato nella scheda cliente segue l’ordine delle linguette.'],
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
+['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));

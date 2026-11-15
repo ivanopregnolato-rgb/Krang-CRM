@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.46.1"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.46.1|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.47.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.47.0|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -559,6 +559,18 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] :is(#o_fasi,#oFilt)>button{border:3px solid transparent}
 [data-lay="b"] :is(#o_fasi,#oFilt)>button:not(.on){opacity:.65}
 [data-lay="b"] :is(#o_fasi,#oFilt)>button.on{border-color:#ffa24d!important;opacity:1;box-shadow:0 0 0 3px rgba(255,162,77,.25);font-weight:800}
+/* preventivo come l'opportunità */
+[data-lay="b"] :is(#sheet,#lSheet,#oSheet,#qSheet){bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+[data-lay="b"] #qSheet .btns{position:sticky;bottom:0;z-index:2;background:var(--bg);padding:10px 0 4px;margin-top:14px;border-top:1px solid var(--line)}
+[data-lay="b"] #qSheet .fg>.f:has(.tri)>label{display:none}
+[data-lay="b"]:is([data-tpl="neon"],[data-tpl="notte"]) #qSheet :is(input,select,textarea):not([type=checkbox]){background:#06203f;border:1.5px solid #6688bb;border-radius:14px;min-height:50px}
+[data-lay="b"] #qSheet .qbn{border:0;border-radius:0;background:none!important;color:var(--muted)!important;padding:0 2px;margin:-4px 0 14px;font-size:16px}
+[data-lay="b"] #qSheet .qdoc{margin:0 0 10px}
+[data-lay="b"] #qSheet .tri{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+[data-lay="b"] #qSheet .tri .btn svg{color:#ffa24d}
+[data-lay="b"] #q_stato>button{border:3px solid transparent}
+[data-lay="b"] #q_stato>button:not(.on){opacity:.65}
+[data-lay="b"] #q_stato>button.on{border-color:#ffa24d!important;opacity:1;box-shadow:0 0 0 3px rgba(255,162,77,.25);font-weight:800}
 [data-lay="b"] #tabs button{font-size:11px;letter-spacing:-.01em;padding:0 1px}
 [data-lay="b"] #tkList .tkx{border-radius:16px}
 
@@ -716,15 +728,23 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 <div class="sheet" id="qSheet" hidden><div>
   <div class="top"><h2 id="qTitle">Preventivo</h2><button class="btn ico pk" id="qClose" type="button" aria-label="Chiudi" title="Chiudi"><span data-i="back"></span></button></div>
   <div class="qbn" id="q_info"></div>
+<div class="fg"><div class="gt lb-only">Preventivo</div>
   <div class="f"><label>Stato</label><div class="chips" id="q_stato"></div></div>
   <div class="f"><label for="q_val">Validità (giorni)</label><input id="q_val" inputmode="numeric" autocomplete="off"><div class="err" id="err-q_val" hidden></div></div>
+</div>
+<div class="fg"><div class="gt lb-only">Righe</div>
   <div class="qdoc" id="qDoc"></div>
   <div class="hint" id="q_marg"></div>
-  <div class="f"><label for="q_cond">Condizioni</label><textarea id="q_cond" rows="3"></textarea></div>
-  <div class="f"><label for="q_note">Note per il cliente</label><textarea id="q_note" rows="2"></textarea></div>
-  <div class="f" style="margin-top:14px"><label>Invia al cliente</label><div class="tri"><button class="btn lbl" id="qPdf" type="button"><span data-i="doc"></span>PDF</button><button class="btn lbl" id="qSend" type="button"><span data-i="Scrivi"></span>Email</button><button class="btn lbl" id="qWa" type="button"><span data-i="WhatsApp"></span>WhatsApp</button></div><div class="hint">PDF: salva il file. Email e WhatsApp lo inviano in allegato; l’invio salva il preventivo e lo passa a “Inviato”.</div></div>
   <div class="dual"><button class="btn lbl" id="qRefresh" type="button"><span data-i="reset"></span>Aggiorna righe</button><button class="btn lbl" id="qCopy" type="button"><span data-i="copy"></span>Copia testo</button></div>
   <div class="hint">Le righe sono una copia dei prodotti al momento della creazione: “Aggiorna righe” le riallinea all’opportunità.</div>
+</div>
+<div class="fg"><div class="gt lb-only">Condizioni e note</div>
+  <div class="f"><label for="q_cond">Condizioni</label><textarea id="q_cond" rows="3"></textarea></div>
+  <div class="f"><label for="q_note">Note per il cliente</label><textarea id="q_note" rows="2"></textarea></div>
+</div>
+<div class="fg"><div class="gt lb-only">Invia al cliente</div>
+  <div class="f" style="margin-top:14px"><label>Invia al cliente</label><div class="tri"><button class="btn lbl" id="qPdf" type="button"><span data-i="doc"></span>PDF</button><button class="btn lbl" id="qSend" type="button"><span data-i="Scrivi"></span>Email</button><button class="btn lbl" id="qWa" type="button"><span data-i="WhatsApp"></span>WhatsApp</button></div><div class="hint">PDF: salva il file. Email e WhatsApp lo inviano in allegato; l’invio salva il preventivo e lo passa a “Inviato”.</div></div>
+</div>
   <div class="btns"><button class="btn d" id="qDel" type="button" style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina preventivo" title="Elimina preventivo"><span data-i="trash"></span></button><button class="btn p" id="qSave" type="button" style="flex:9 1 0" aria-label="Salva preventivo" title="Salva preventivo"><span data-i="check"></span></button></div>
 </div></div>
 
@@ -1086,6 +1106,6 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.46.1"></script>
+<script src="app.js?v=1.47.0"></script>
 </body>
 </html>
