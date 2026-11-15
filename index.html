@@ -501,6 +501,11 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] #sheet #cTabs{position:sticky;top:-12px;z-index:2;background:var(--bg);margin-top:6px;padding-top:6px}
 [data-lay="b"] #cTabs [data-p=sum]{order:0}[data-lay="b"] #cTabs [data-p=dati]{order:1}[data-lay="b"] #cTabs [data-p=tk]{order:2}[data-lay="b"] #cTabs [data-p=opp]{order:3}[data-lay="b"] #cTabs [data-p=priv]{order:4}[data-lay="b"] #cTabs [data-p=st]{order:5}
 [data-lay="b"] .sheet{bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+/* «Salva modifiche»: barra fissa in basso, solo se c'è qualcosa da salvare */
+.svb .s2{display:none}
+[data-lay="b"] .svb .s1{display:none}[data-lay="b"] .svb .s2{display:inline}
+[data-lay="b"] .sheet .svb:not([hidden]){position:fixed;left:16px;right:16px;width:auto;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:6;height:54px;min-height:54px;margin:0;border-radius:18px;font-size:17px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+[data-lay="b"] .sheet:has(.svb:not([hidden])) :is(.btn.pls,#addOppFor){display:none}
 /* «+» nelle schede: stesso pulsante tondo delle liste */
 [data-lay="b"] #addOppFor,[data-lay="b"] .sheet .btn.pls,[data-lay="b"] #tkList .btn.pls{position:fixed;right:16px;bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:3;width:54px;height:54px;min-height:54px;margin:0;border-radius:50%;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 [data-lay="b"] #addOppFor,[data-lay="b"] .sheet .btn.pls,[data-lay="b"] #tkList .btn.pls{background:#ffa24d;color:#2d2b55;border:0}

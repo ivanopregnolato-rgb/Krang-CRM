@@ -172,7 +172,7 @@ document.querySelectorAll('[data-i]').forEach(e=>e.innerHTML=ICONS[e.dataset.i])
 /* tasto Salva in fondo alla scheda: compare solo se il record e' nuovo o modificato */
 const SVREG=new WeakMap();
 window.saveBtn=(host,sigFn,saveFn,baseFn)=>{
-  const b=document.createElement('button');b.type='button';b.className='btn p lbl svb';b.innerHTML=ICONS.check+'Salva';b.hidden=true;
+  const b=document.createElement('button');b.type='button';b.className='btn p lbl svb';b.innerHTML=ICONS.check+'<span class="s1">Salva</span><span class="s2">Salva modifiche</span>';b.hidden=true;
   let s0;try{s0=sigFn()}catch(e){}
   let seen=false,miss=0,iv=0;const box=(host.closest&&host.closest('.sheet,.modal'))||host;
   const stop=()=>{clearInterval(iv);const s=SVREG.get(box);if(s)s.delete(chk)};
@@ -10758,7 +10758,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
-['1.50.0','Nuova disposizione: Prodotti e Impostazioni completano il nuovo layout (il menu in basso resta visibile, sezioni del catalogo con testo e sottolineatura); il «+» nelle schede è il pulsante tondo in basso a destra come nelle liste; il logo nella Home è più grande.'],
+['1.50.0','Nuova disposizione: la barra «Salva modifiche» è fissa in basso e compare solo quando hai cambiato qualcosa. Prodotti e Impostazioni completano il nuovo layout (il menu in basso resta visibile, sezioni del catalogo con testo e sottolineatura); il «+» nelle schede è il pulsante tondo in basso a destra come nelle liste; il logo nella Home è più grande.'],
 ['1.49.1','Preventivo: i tasti Email e WhatsApp compaiono solo se la scheda del cliente ha l’email e il telefono. Preventivo via WhatsApp: si apre la chat con il numero del cliente già inserito (il PDF viene salvato e va allegato nella chat). Nuova disposizione: dalla pagina del preventivo (e da ogni altra scheda aperta) la barra in basso ora porta davvero alla sezione scelta; se ci sono modifiche non salvate compare prima l’avviso di salvataggio, e dopo la scelta si prosegue verso la sezione toccata.'],
 ['1.48.3','Tema Neon: i contatori (numeri sulle voci di menu e sulle schede di cliente, lead, opportunità) sono arancioni con scritta blu, in entrambi i layout.'],
 ['1.48.2','Nuova disposizione: il «+» della Home ha la stessa icona, dimensione e posizione di quello delle altre pagine.'],
