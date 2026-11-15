@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.48.1"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.48.1|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.48.2"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.48.2|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -428,7 +428,7 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] #cAdd,[data-lay="b"] #lAdd,[data-lay="b"] #oAdd,[data-lay="b"] #pAdd,[data-lay="b"] #hFab{position:fixed;right:16px;bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:3;width:auto;height:54px;min-height:54px;padding:0 18px 0 14px;border-radius:18px;display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 [data-lay="b"] #cAdd::after,[data-lay="b"] #lAdd::after,[data-lay="b"] #oAdd::after,[data-lay="b"] #pAdd::after{content:none}
 [data-lay="b"] #cAdd,[data-lay="b"] #lAdd,[data-lay="b"] #oAdd,[data-lay="b"] #pAdd,[data-lay="b"] #hFab{width:54px;padding:0;border-radius:50%;justify-content:center}
-#hFab .fl{display:none}
+[data-lay="b"] #hFab{margin:0}[data-lay="b"] #hFab svg{width:24px;height:24px}
 /* pulsanti «Nuovo»: un più dentro a un cerchietto */
 #addBtn,.btn.pls,#addOppFor{display:flex;align-items:center;justify-content:center;width:44px;height:44px;min-height:0;padding:0;border-radius:50%;margin:6px 0 6px auto;box-shadow:0 2px 6px rgba(0,0,0,.25)}
 #addBtn #addLbl,.btn.pls .pl{display:none}
@@ -690,7 +690,7 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
     <div id="hTodo"></div>
     <div class="hh lb-only" id="hWatchH" hidden><span>Da tenere d’occhio</span></div>
     <div id="hWatch" class="lb-only"></div>
-    <button class="btn p lbl lb-only" id="hFab" type="button" aria-label="Nuovo task" title="Nuovo task"><span data-i="add"></span><span class="fl">Nuovo task</span></button>
+    <button class="btn p lbl lb-only" id="hFab" type="button" aria-label="Nuovo task" title="Nuovo task"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
   </div>
   <div id="list" hidden></div>
   <div id="moreView" hidden></div>
@@ -1146,6 +1146,6 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.48.1"></script>
+<script src="app.js?v=1.48.2"></script>
 </body>
 </html>
