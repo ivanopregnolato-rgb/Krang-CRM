@@ -402,9 +402,9 @@ try{trackF()}catch(e){}
 function paintTabs(mo){document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.x==='more'?(mo||!document.querySelector('#tabs [data-v="'+tab+'"]')):(!mo&&b.dataset.v===tab)))}
 function setTab(v){tab=v;paintTabs(false);
   const c=v==='clienti';$('homeView').hidden=v!=='home';$('oppView').hidden=v!=='opp';$('prodView').hidden=v!=='prod';$('leadView').hidden=v!=='lead';$('list').hidden=!c;$('q').hidden=!c;$('qRow').hidden=!c;$('cFilt').hidden=!c;$('count').hidden=!c;$('cfRow').hidden=!c;document.querySelector('.bar').hidden=true;
-  $('title').textContent={home:'Home',clienti:'Clienti',lead:'Lead',opp:'Opportunità',prod:'Prodotti'}[v];
+  $('title').textContent={home:'Home',clienti:'Clienti',lead:'Lead',opp:'Opportunità',prod:'Prodotti',more:'Altro'}[v]||'';{const mv=$('moreView');if(mv){mv.hidden=v!=='more';if(v==='more')paintMore()}}
   const l={home:'',clienti:'Nuovo cliente',lead:'Nuovo lead',opp:'Nuova opportunità',prod:'Nuovo prodotto'}[v];$('addBtn').setAttribute('aria-label',l);$('addBtn').title=l;$('addLbl').textContent=l;if(v==='prod')renderP();if(v==='home')renderH();if(c)render();window.paintSub&&paintSub();if(v==='lead')renderL()}
-$('tabs').onclick=e=>{const b=e.target.closest('button');if(b){if(document.documentElement.dataset.lay==='b')['sheet','lSheet','oSheet'].forEach(i=>{const x=$(i);if(x)x.hidden=true});if(b.dataset.x==='more'){e.stopPropagation();$('menuBtn').click();return}if(b.dataset.v==='opp'){oFilt='';setTab('opp');renderO();return}setTab(b.dataset.v)}};
+$('tabs').onclick=e=>{const b=e.target.closest('button');if(b){if(document.documentElement.dataset.lay==='b')['sheet','lSheet','oSheet'].forEach(i=>{const x=$(i);if(x)x.hidden=true});if(b.dataset.x==='more'){e.stopPropagation();setTab('more');return}if(b.dataset.v==='opp'){oFilt='';setTab('opp');renderO();return}setTab(b.dataset.v)}};
 $('vList').onclick=()=>{oView='list';renderO()};$('vKan').onclick=()=>{oView='kan';renderO()};
 FONTI.forEach(f=>{const o=h('option','',f);o.value=f;$('o_fonte').append(o)});
 function paintFasi(){const w=$('o_fasi');w.textContent='';FASI.forEach(f=>{const b=h('button','',f[1]);b.type='button';b.style.background=f[3];b.classList.toggle('on',oD.fase===f[0]);b.onclick=()=>{oD.fase=f[0];$('o_prob').value=f[2];setErr('o_prob','');paintFasi();w.dispatchEvent(new Event('input',{bubbles:true}))};w.append(b)})}
@@ -9962,7 +9962,7 @@ let asub='fun';try{const u=localStorage.getItem('crm-asub');if(u==='fun'||u==='e
  window.openAn=()=>{const w=shell('anSh','Analytics'),sh=$('anSh');w.firstChild.hidden=true;$('tabs').style.display='none';$('title').innerHTML='Analytics '+'<span class="beta">Beta</span>';const q=document.querySelector('.bar');if(q)q.hidden=true;sh.style.zIndex=3;sh.style.top=document.querySelector('.stk').getBoundingClientRect().bottom+'px';renderAn()};
  window.renderM=function(){const H=$('mktBody');if(!H)return;try{applyStops()}catch(e){}H.textContent='';const sg=h('div','seg');sg.id='mSeg';sg.style.marginBottom='10px';[['seg','Segmenti'],['cam','Campagne']].forEach(([k,l])=>{const b=h('button','',l);b.style.cssText='font-size:13px;padding:0 4px;white-space:nowrap';b.type='button';b.classList.toggle('on',sub===k);b.onclick=()=>{sub=k;try{localStorage.setItem('crm-msub',k)}catch(e){}renderM()};sg.append(b)});H.append(sg);
   ({seg:paneSeg,fun:paneFun,eng:paneEng,cam:paneCamp})[sub](H)};
- const _st=setTab;setTab=function(v){_st(v);{const a=$('anSh');if(a)a.hidden=true}$('tabs').style.display=['home','clienti','lead','opp'].includes(v)?'':'none';$('mktView').hidden=v!=='mkt';if(v==='mkt'){document.querySelector('.bar').hidden=true;$('title').innerHTML='Marketing '+'<span class="beta">Beta</span>';renderM()}};
+ const _st=setTab;setTab=function(v){_st(v);{const a=$('anSh');if(a)a.hidden=true}$('tabs').style.display=(document.documentElement.dataset.lay==='b'||['home','clienti','lead','opp'].includes(v))?'':'none';$('mktView').hidden=v!=='mkt';if(v==='mkt'){document.querySelector('.bar').hidden=true;$('title').innerHTML='Marketing '+'<span class="beta">Beta</span>';renderM()}};
 }
 /* ===== Transazioni del cliente: acquisti, prodotti e KPI ===== */
 {const DAY=864e5,sum=(a,f)=>a.reduce((x,o)=>x+(+f(o)||0),0),dOf=o=>o.chiusa||o.data||o.creata||'',tt=o=>tsOf(dOf(o));
@@ -10745,6 +10745,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.44.0','Nuova disposizione: la scheda cliente si apre sul «Riepilogo» (chiama, email, WhatsApp e nuova attività a portata di dito, avviso privacy, prossime attività, opportunità aperte e contatti) e le sezioni, anche di lead e opportunità, diventano linguette sottolineate con i moduli divisi in riquadri (Anagrafica, Contatti, Note…) e statistiche delle opportunità in una riga scorrevole. Corretti l’elenco clienti e la voce «Altro» della barra in basso.'],
 ['1.45.0','Nuova disposizione, scheda cliente più vicina al progetto: testata con stato e referente, pulsanti Chiama / Email / WhatsApp / Attività sempre visibili, linguette fisse in ordine Riepilogo, Dati, Attività, Opportunità, Privacy, Storico, barra «Salva» fissa in basso e barra di navigazione sempre visibile sotto le schede. La scheda Dati ha i riquadri Azienda / Referente (o Persona) e Contatti, i campi più scuri come nel progetto e le icone di Home e delle azioni rapide con i colori del progetto; l’elenco clienti è un unico riquadro con righe separate. Anche la Home («Da fare», «Da tenere d’occhio», «Primi passi» compatti, titolo e riepilogo del giorno), gli elenchi di opportunità e attività, la linguetta Privacy e i filtri dello Storico seguono il progetto.'],
 ['1.45.1','Nuova disposizione: scorrendo di lato nella scheda cliente le sezioni seguono ora l’ordine delle linguette (Riepilogo, Dati, Attività, Opportunità, Privacy, Storico).'],
+['1.46.0','Nuova disposizione: «Altro» è ora una pagina vera, non più un menu a comparsa. Raccoglie Attività, Prodotti, Analytics, Marketing, Impostazioni, Aiuto e Info in due riquadri, con la barra in basso sempre visibile. Inoltre lo scorrimento di lato nella scheda cliente segue l’ordine delle linguette.'],
 ]}];
 {let M=null;window.openRel=()=>{if(!M){M=document.createElement('div');M.className='modal';M.id='mRel';document.body.append(M);M.onclick=e=>{if(e.target===M)M.hidden=true}}
  M.textContent='';const bx=h('div','box');bx.style.cssText='max-height:80vh;overflow:auto';bx.append(h('h3','','Note di rilascio'));
@@ -11462,5 +11463,13 @@ window.paintHead=function(c){const sub=$('qSub'),qa=$('qAct');if(!sub||!qa)retur
 window.paintSub=function(){const e=$('pSub');if(!e)return;let t='';try{
   if(tab==='lead'){const n=leads.filter(l=>l.stato==='nuovo').length;t=n?n+(n===1?' richiesta da valutare':' richieste da valutare'):'Nessuna richiesta da valutare'}
   else if(tab==='opp'){const o=opps.filter(x=>x.fase!=='vinta'&&x.fase!=='persa');if(o.length)t=o.length+(o.length===1?' aperta':' aperte')+' · '+eur(o.reduce((s,x)=>s+(+x.valore||0),0))+' · ponderato '+eur(o.reduce((s,x)=>s+(+x.valore||0)*(+x.prob||0)/100,0))}
+  else if(tab==='more')t='Tutto ciò che non usi ogni giorno'
   else if(tab==='clienti'){}
 }catch(err){}e.textContent=t};
+
+window.paintMore=function(){const w=$('moreView');if(!w)return;w.textContent='';
+  let nt=0;try{nt=tasks.filter(x=>x&&x.stato!=='fatta').length}catch(e){}
+  const item=(ic,t,sub,m,beta)=>{const r=h('button','qrow');r.type='button';const th=h('div','pth');th.innerHTML=ICONS[ic]||'';const tx=h('div','tx'),b=h('b','',t);if(beta){const bt=h('span','beta','Beta');b.append(bt)}tx.append(b,h('span','',sub));const cv=h('span','chv');cv.innerHTML=ICONS.chevR;r.append(th,tx,cv);r.onclick=()=>{const x=document.querySelector('#appMenu [data-m='+m+']');if(x)x.click()};return r};
+  const c1=h('div','mcard');c1.append(item('check','Attività',nt?nt+(nt===1?' aperta':' aperte'):'Nessuna aperta','tk'),item('box','Prodotti','Catalogo, listini e magazzino','prod'),item('analytics','Analytics','Andamento delle vendite','an',1),item('mega','Marketing','Messaggi a gruppi di clienti','mkt',1));
+  const c2=h('div','mcard');c2.append(item('gear','Impostazioni','Azienda, promemoria, privacy, backup','set'),item('help','Aiuto e primi passi','Guida e assistente','help'),item('info','Info','Versione e novità','info'));
+  w.append(c1,c2)};

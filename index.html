@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.45.1"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.45.1|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.46.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.46.0|2026-11-14"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -546,6 +546,15 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] :is(#stSeg,#cmSeg){display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;background:none!important;border:0!important;padding:0!important;margin:0 0 12px}
 [data-lay="b"] :is(#stSeg,#cmSeg) button{flex:none;width:auto;min-height:44px;padding:0 16px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600}
 [data-lay="b"] :is(#stSeg,#cmSeg) button.on{background:#ffa24d;border-color:#ffa24d;color:#1d1b3f}
+/* pagina Altro */
+[data-lay="b"] #moreView{display:grid;gap:14px}
+[data-lay="b"] #moreView[hidden]{display:none}
+[data-lay="b"] #moreView .mcard{border:1px solid var(--line);border-radius:18px;background:var(--surface);overflow:hidden}
+[data-lay="b"] #moreView .qrow{margin:0;border:0;border-top:1px solid var(--line);border-radius:0;min-height:68px;background:none}
+[data-lay="b"] #moreView .mcard>.qrow:first-child{border-top:0}
+[data-lay="b"] #moreView .pth{background:#4fc3ff!important;color:#052a44}
+[data-lay="b"] #moreView .qrow b .beta{display:inline!important;margin-left:8px;background:#ffe0bf;color:#1d1b3f!important;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:800;text-transform:none}
+[data-lay="b"] #moreView .chv{display:block;flex:none;margin-left:auto;color:var(--muted)}[data-lay="b"] #moreView .chv svg{width:22px;height:22px}
 [data-lay="b"] #tabs button{font-size:11px;letter-spacing:-.01em;padding:0 1px}
 [data-lay="b"] #tkList .tkx{border-radius:16px}
 
@@ -630,6 +639,7 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
     <button class="btn p lbl lb-only" id="hFab" type="button"><span data-i="plus"></span>Nuova attività</button>
   </div>
   <div id="list" hidden></div>
+  <div id="moreView" hidden></div>
   <div id="prodView" hidden>
     <div class="seg" id="pSeg" role="group" aria-label="Sezione"><button type="button" class="on" data-s="cat" aria-label="Catalogo" title="Catalogo"><span data-i="box"></span><span class="lb">Catalogo</span></button><button type="button" data-s="lst" aria-label="Listini" title="Listini"><span data-i="tag"></span><span class="lb">Listini</span></button><button type="button" data-s="mag" aria-label="Magazzino" title="Magazzino"><span data-i="layers"></span><span class="lb">Magazzino</span></button></div>
     <div id="pCat">
@@ -1072,6 +1082,6 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.45.1"></script>
+<script src="app.js?v=1.46.0"></script>
 </body>
 </html>
