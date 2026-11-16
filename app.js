@@ -9589,7 +9589,7 @@ async function cloudFlush(key){const sp=CSPEC[key];if(!sp||!CLOUD.db||!CLOUD.can
   finally{CLOUD.busy[key]=0;try{paintCloud()}catch(e){}}}
 /* «Assegnato a»: solo il titolare, quando ha collaboratori */
 /* versione dei Termini e dell'informativa (data dell'ultimo aggiornamento, come in legal.js): cambiandola, a tutti gli utenti viene chiesto di riaccettare */
-const LEGAL_V='2026-11-14';
+const LEGAL_V='2026-11-16';
 function termsAsk(){return new Promise(res=>{const o=h('div','invq');o.style.cssText='position:fixed;inset:0;z-index:99999;visibility:visible;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:16px';const bx=h('div','');bx.style.cssText='background:var(--card,#1b1b22);color:var(--tx,#fff);border-radius:16px;padding:18px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:12px';
   const t=h('b','','Termini d’uso e informativa privacy');const p=h('div','','Abbiamo aggiornato i Termini d’uso e l’Informativa privacy. Prendine visione aprendoli entrambi: solo dopo potrai accettarli e continuare.');
   const seen=new Set(),sync=()=>{const all=seen.size>=2;cb.disabled=!all;lb.style.opacity=all?'1':'.5';hn.hidden=all;if(!all){cb.checked=false;ok.disabled=true}};const l=h('div','');[['termini.html','Leggi i Termini d’uso'],['privacy.html','Leggi l’Informativa privacy']].forEach(([u,x])=>{const a=h('a','',x);a.href=u;a.target='_blank';a.rel='noopener';a.style.cssText='display:block;padding:8px 0;color:#4fc3ff;font-weight:600';a.onclick=()=>{seen.add(u);a.textContent='✓ '+x;sync()};l.append(a)});
@@ -10873,7 +10873,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
-['1.56.2','Copyright: aggiunta la licenza proprietaria (LICENSE) e l’avviso «© 2026 Ivano Pregnolato» nell’app e nel codice.'],
+['1.56.2','Termini d’uso aggiornati (proprietà del software e limiti di utilizzo, titolare Ivano Pregnolato): a tutti viene chiesto di riaccettarli. Copyright: aggiunta la licenza proprietaria (LICENSE) e l’avviso «© 2026 Ivano Pregnolato» nell’app e nel codice.'],
 ['1.56.1','Popup dei Termini: avvisa che i testi sono stati aggiornati e permette di accettare solo dopo aver aperto sia i Termini d’uso sia l’Informativa privacy.'],
 ['1.56.0','Termini e informativa: alla registrazione si salvano data e versione dell’accettazione; quando i testi cambiano, a chi ha già un account viene chiesto di riaccettarli (anche ai collaboratori e a chi era già iscritto).'],
 ['1.55.2','Collaboratori: al posto di «Titolare» compare il nome del titolare (campo «Il tuo nome» nella pagina Collaboratori), come per i collaboratori.'],
