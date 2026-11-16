@@ -9587,6 +9587,18 @@ async function cloudFlush(key){const sp=CSPEC[key];if(!sp||!CLOUD.db||!CLOUD.can
     CLOUD.n[key]=cur.length;CLOUD.lite=Object.keys(CSPEC).reduce((t,k)=>t+(k===key?lite:(CLOUD['l_'+k]||0)),0);CLOUD['l_'+key]=lite;CLOUD.err='';CLOUD.last=Date.now()
   }catch(e){CLOUD.err=(e&&e.code)||'errore'}
   finally{CLOUD.busy[key]=0;try{paintCloud()}catch(e){}}}
+/* offline: indicatore delle modifiche da inviare e nuovo tentativo automatico al ritorno della rete */
+function cloudPending(){let n=0;try{Object.keys(CSPEC).forEach(k=>{const sp=CSPEC[k],sy=CLOUD.sync[k];if(!sy||!CLOUD.first[k])return;const seen=new Set();sp.arr().forEach(r=>{if(!r||!r.id)return;const id=String(r.id);seen.add(id);if(sy[id]!==hs(JSON.stringify(cloudClean(r,sp))))n++});Object.keys(sy).forEach(id=>{if(!seen.has(id))n++})})}catch(e){}return n}
+/* notifiche di assegnazione non partite per mancanza di rete: si ritentano per 6 ore */
+const notQ={k:'crm-notq',busy:false,get(){try{return JSON.parse(localStorage.getItem(this.k)||'[]')}catch(e){return []}},set(a){try{localStorage.setItem(this.k,JSON.stringify(a.slice(-50)))}catch(e){}},
+  async flush(){if(this.busy)return;this.busy=true;try{const a=this.get().filter(x=>Date.now()-x.t<216e5&&(x.n||0)<5),keep=[];for(const x of a){if(navigator.onLine===false){keep.push(x);continue}let ok=false;try{ok=await SB.e2e.notify(x.to,x.kind)}catch(e){}if(!ok){x.n=(x.n||0)+1;keep.push(x)}}this.set(keep)}finally{this.busy=false}}};
+function cloudRetry(){if(!CLOUD.on||!CLOUD.db||!CLOUD.canW||navigator.onLine===false)return;Object.keys(CSPEC).forEach(k=>{try{cloudFlush(k)}catch(e){}});try{notQ.flush()}catch(e){}}
+const offPill=(()=>{let el=null;const paint=()=>{try{const off=navigator.onLine===false;let n=0,show=false;if(CLOUD.on&&CLOUD.db&&(off||CLOUD.err)){n=cloudPending();show=off||n>0}
+    if(!el){el=document.createElement('div');el.id='offPill';el.setAttribute('role','status');el.style.cssText='position:fixed;top:calc(env(safe-area-inset-top,0px) + 4px);left:50%;transform:translateX(-50%);z-index:55;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;background:#f0a35e;color:#1b1b22;pointer-events:none;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.35)';el.hidden=true;document.body.append(el)}
+    el.textContent=off?'Offline'+(n?' · '+n+(n===1?' modifica':' modifiche')+' da inviare':''):'Sincronizzazione in attesa · '+n+(n===1?' modifica':' modifiche');el.hidden=!show}catch(e){}};
+  window.addEventListener('online',()=>{paint();setTimeout(()=>{cloudRetry();setTimeout(paint,2500)},1000)});window.addEventListener('offline',paint);
+  setInterval(()=>{if(document.hidden)return;paint();if(navigator.onLine!==false&&CLOUD.err)cloudRetry()},15000);setTimeout(paint,4000);
+  return paint})();
 /* «Assegnato a»: solo il titolare, quando ha collaboratori */
 /* versione dei Termini e dell'informativa (data dell'ultimo aggiornamento, come in legal.js): cambiandola, a tutti gli utenti viene chiesto di riaccettare */
 const LEGAL_V='2026-11-16';
@@ -9614,7 +9626,7 @@ async function termsCheck(){if(termsBusy||!SB.has()||navigator.onLine===false)re
 setTimeout(termsCheck,5000);setInterval(()=>{if(!document.hidden)termsCheck()},60000);
 const ownerName=()=>(S.ownerName||opName||S.azienda||'').trim()||'Titolare';
 /* notifica push al collaboratore a cui il titolare assegna qualcosa (testo generico, nessun dato) */
-function notifyAssign(to,from,kind){try{if(!to||to==='_o'||to===from||!SB.has())return;if(SB.e2e.isCollab())return;SB.e2e.notify(to,kind)}catch(e){}}
+function notifyAssign(to,from,kind){try{if(!to||to==='_o'||to===from||!SB.has())return;if(SB.e2e.isCollab())return;notQ.set(notQ.get().concat({to,kind,t:Date.now(),n:0}));notQ.flush()}catch(e){}}
 function assName(r){let col=false,me='';try{col=SB.e2e.isCollab();me=SB.uid()}catch(e){}if(col)return r.ass?(r.ass===me?'Tu':'Un collega'):ownerName();const T=(typeof TEAMC!=='undefined'&&TEAMC)||[];if(!T.length)return '';if(!r.ass)return ownerName();const m=T.find(x=>x.member===r.ass);return m?(m.name||m.email||'Collaboratore'):'Collaboratore'}
 function assFill(w,sel,cur){let col=false;try{col=SB.e2e.isCollab()}catch(e){}const T=(typeof TEAMC!=='undefined'&&TEAMC)||[];const W=$(w);if(!W)return;if(col||!T.length){W.hidden=true;return}W.hidden=false;const S_=$(sel);S_.textContent='';const o0=h('option','',ownerName()+' (io)');o0.value='';S_.append(o0);T.forEach(m=>{const o=h('option','',m.name||m.email||'Collaboratore');o.value=m.member;S_.append(o)});S_.value=cur||'';if(S_.value!==(cur||''))S_.value=''}
 {const _os=openSheet;openSheet=function(c){const r=_os.apply(this,arguments);try{assFill('cAssW','cAss',c&&c.ass)}catch(e){}return r}}
@@ -10502,7 +10514,7 @@ const SB=(()=>{
   async myInvite(){try{const r=await js('/rest/v1/rpc/my_invite',{method:'POST',auth:1,json:{}});return Array.isArray(r)?r[0]||null:r||null}catch(e){return null}},
   async terms(){const u=await js('/auth/v1/user',{auth:1});return(u&&u.user_metadata&&u.user_metadata.kcrm_terms)||null},
   async acceptTerms(v){await js('/auth/v1/user',{method:'PUT',auth:1,json:{data:{kcrm_terms:{v,at:new Date().toISOString()}}}})},
-  notify(member,kind){return js('/functions/v1/notify-assign',{method:'POST',auth:1,json:{member,kind}}).catch(()=>{})},
+  notify(member,kind){return js('/functions/v1/notify-assign',{method:'POST',auth:1,json:{member,kind}}).then(()=>true).catch(()=>false)},
   async clearInvite(){try{localStorage.removeItem('crm-invite')}catch(e){}try{await js('/auth/v1/user',{method:'PUT',auth:1,json:{data:{kcrm_inv:null}}})}catch(e){}},
   async invite(name,scope,email){if(WS.role==='collab'||!E.raw)throw lockErr();const code=rkNew(),salt=rnd(16),ch=await sha256hex(rkNorm(code)),w=b64(salt)+'.'+await wrap(E.raw,await kek(rkNorm(code),salt,RIT));
    await js('/rest/v1/team_invites',{method:'POST',auth:1,headers:{Prefer:'return=minimal'},json:{code_h:ch,owner:uid(),email:String(email||'').trim().toLowerCase().slice(0,120)||null,name:String(name||'').slice(0,60),scope:scope==='own'?'own':'all',wrapped:w,code_enc:JSON.stringify(await encJ('invite',ch,{c:code}))}});return code},
@@ -10886,6 +10898,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.59.0','Uso offline: se manca la rete compare «Offline · N modifiche da inviare»; al ritorno della rete le modifiche partono da sole, con nuovi tentativi ogni 15 secondi se il cloud non risponde. Le notifiche di assegnazione non partite per mancanza di rete vengono ritentate per 6 ore.'],
 ['1.58.3','Riquadro «Cosa fare adesso»: mostra una sola azione; il testo del «prossimo task» tiene conto dei task già chiusi.'],
 ['1.58.2','Popup dei Termini: i documenti si aprono dentro l’app, sopra il popup, e «Indietro» riporta al popup (prima si tornava alla schermata di accesso).'],
 ['1.58.1','Riepilogo cliente e lead: completando un task con il cerchio, l’elenco e il riquadro «Cosa fare adesso» si aggiornano subito (prima il task restava in elenco).'],
