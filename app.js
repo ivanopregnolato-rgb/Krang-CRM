@@ -10336,6 +10336,8 @@ function paintWel(){const w=$('hWel');if(!w)return;w.textContent='';if(WF.welcom
   tx.append(h('b','','Primi passi'),h('span','',n+' di '+st.length+' completati'),bar);
   const x=h('span','wx');x.setAttribute('role','button');x.setAttribute('aria-label','Nascondi i primi passi');x.title='Nascondi';x.innerHTML=ICONS.x;x.onclick=e=>{e.stopPropagation();askConfirm('Nascondere i primi passi dalla Home? Li ritrovi sempre in Aiuto.','x','Nascondi',()=>{WF.welcomeOff=true;saveS();paintWel()})};
   b.append(i,tx,x);b.onclick=()=>openWel();w.append(b)}
+/* il ruolo si conosce solo dopo il caricamento dell'area di lavoro: quando cambia, la scheda va ridisegnata (altrimenti, dopo un ricaricamento, un collaboratore poteva vedere nascosta la scheda per via delle impostazioni del titolare) */
+(()=>{let pc=null;setInterval(()=>{const c=isCol();if(pc!==c){pc=c;try{paintWel()}catch(e){}}},1000)})();
 /* Aiuto: primi passi e, a tendere, manuale interattivo e assistente */
 function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   B.append(h('h3','','Aiuto'),h('p','wsub','Come iniziare e dove trovare le risposte.'));
@@ -10849,7 +10851,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
-['1.54.5','Primi passi: la scheda in Home si nasconde solo dopo conferma, per evitare che un tocco accidentale sulla X la faccia sparire. La si ritrova sempre in Aiuto.'],
+['1.54.5','Primi passi: la scheda in Home non sparisce più ai collaboratori dopo un ricaricamento (veniva letta l’impostazione del titolare prima di conoscere il ruolo); inoltre si nasconde solo dopo conferma.La si ritrova sempre in Aiuto.'],
 ['1.54.4','Collaboratori: restano visibili «Importa dalla rubrica» e «Anagrafiche duplicate»; le altre sezioni del titolare non compaiono affatto. Inviti: il titolare inserisce l’email del collaboratore: il titolare inserisce l’email del collaboratore (con pulsante «Invia per email»); il server verifica che l’account che si registra abbia quell’indirizzo. Se un account nuovo arriva senza il codice ma con un invito sulla sua email, l’app chiede il codice invece di creare un nuovo titolare; se il codice è sbagliato lo richiede.'],
 ['1.54.3','Impostazioni dei collaboratori: nascoste le sezioni del titolare (email, WhatsApp, allegati, preventivi, lead, privacy, importazioni, duplicati, backup, utilizzo). Restano profilo azienda in sola lettura, account, aspetto, app, promemoria e accesso.'],
 ['1.54.2','Primi passi per i collaboratori: senza profilo azienda e catalogo, con un testo sulla cifratura adatto a chi lavora sul CRM del titolare. I loro segni di completamento restano sul loro dispositivo.'],
