@@ -9590,14 +9590,16 @@ function assFill(w,sel,cur){let col=false;try{col=SB.e2e.isCollab()}catch(e){}co
 {const _os=openSheet;openSheet=function(c){const r=_os.apply(this,arguments);try{assFill('cAssW','cAss',c&&c.ass)}catch(e){}return r}}
 {const _ol=openLead;openLead=function(l){const r=_ol.apply(this,arguments);try{assFill('lAssW','lAss',l&&l.ass)}catch(e){}return r}}
 /* collaboratori con visibilità «solo i suoi clienti»: l'app nasconde i record non assegnati (restano intatti nel cloud) */
-const SC={H:{cl:{},op:{},ld:{}},on(){try{const w=SB.e2e.ws();return w.role==='collab'&&w.scope==='own'}catch(e){return false}},me(){try{return SB.uid()}catch(e){return ''}}};
+const SC={H:{cl:{},op:{},ld:{},tk:{}},on(){try{const w=SB.e2e.ws();return w.role==='collab'&&w.scope==='own'}catch(e){return false}},me(){try{return SB.uid()}catch(e){return ''}}};
 const scCids=()=>new Set(clients.map(c=>String(c.id)));
-function scVis(key,r,cids){const me=SC.me();if(r.ass===me)return true;if(key==='op')return !!(cids&&cids.has(String(r.clienteId)));if(key==='ld')return !!(r.clienteId&&cids&&cids.has(String(r.clienteId)));return false}
+const scRefs=()=>({cliente:new Set(clients.map(c=>String(c.id))),lead:new Set((typeof leads!=='undefined'?leads:[]).map(c=>String(c.id))),opp:new Set(opps.map(c=>String(c.id)))});
+const scArg=k=>k==='cl'?null:k==='tk'?scRefs():scCids();
+function scVis(key,r,cids){const me=SC.me();if(r.ass===me)return true;if(key==='tk'){if(r.ato===me)return true;const q=r.rif;return !!(q&&cids&&cids[q.tipo]&&cids[q.tipo].has(String(q.id)))}if(key==='op')return !!(cids&&cids.has(String(r.clienteId)));if(key==='ld')return !!(r.clienteId&&cids&&cids.has(String(r.clienteId)));return false}
 function scSplit(k,cids){const sp=CSPEC[k],sy=CLOUD.sync[k]||(CLOUD.sync[k]={});let ch=false;const keep=[];sp.arr().forEach(r=>{if(scVis(k,r,cids))keep.push(r);else{SC.H[k][String(r.id)]=r;delete sy[String(r.id)];ch=true}});
   Object.keys(SC.H[k]).forEach(id=>{const r=SC.H[k][id];if(scVis(k,r,cids)){keep.push(r);delete SC.H[k][id];sy[id]=hs(JSON.stringify(cloudClean(r,sp)));ch=true}});
   if(ch){sp.set(keep);sp.save();sp.after()}}
-function scRecalc(){if(!SC.on())return;const cids=scCids();scSplit('op',cids);scSplit('ld',cids)}
-function scApply(){if(SC.on()){scSplit('cl',null);scRecalc()}else{['cl','op','ld'].forEach(k=>{const sp=CSPEC[k],sy=CLOUD.sync[k]||(CLOUD.sync[k]={}),ids=Object.keys(SC.H[k]);if(!ids.length)return;const arr=sp.arr().slice();ids.forEach(id=>{const r=SC.H[k][id];arr.push(r);sy[id]=hs(JSON.stringify(cloudClean(r,sp)))});SC.H[k]={};sp.set(arr);sp.save();sp.after()})}}
+function scRecalc(){if(!SC.on())return;const cids=scCids();scSplit('op',cids);scSplit('ld',cids);scSplit('tk',scRefs())}
+function scApply(){if(SC.on()){scSplit('cl',null);scRecalc()}else{['cl','op','ld','tk'].forEach(k=>{const sp=CSPEC[k],sy=CLOUD.sync[k]||(CLOUD.sync[k]={}),ids=Object.keys(SC.H[k]);if(!ids.length)return;const arr=sp.arr().slice();ids.forEach(id=>{const r=SC.H[k][id];arr.push(r);sy[id]=hs(JSON.stringify(cloudClean(r,sp)))});SC.H[k]={};sp.set(arr);sp.save();sp.after()})}}
 async function scRefresh(){let ch=false;try{ch=await SB.e2e.refreshWS()}catch(e){}if(ch||!scRefresh.d){scRefresh.d=1;try{scApply()}catch(e){}}
   try{if(!SB.e2e.isCollab()&&SB.uid())TEAMC=await SB.e2e.team()}catch(e){}}
 setTimeout(scRefresh,3000);setInterval(()=>{if(!document.hidden)scRefresh()},30000);
@@ -9605,7 +9607,7 @@ function cloudPull(key,snap){const sp=CSPEC[key],sy=CLOUD.sync[key]||(CLOUD.sync
   try{snap.docChanges().forEach(c=>{const id=c.doc.id;
     if(c.type==='removed'){delete sy[id];if(SC.H[key])delete SC.H[key][id];if(idx.has(id)){arr=arr.filter(r=>String(r.id)!==id);idx.clear();arr.forEach((r,i)=>idx.set(String(r.id),i));ch=true}return}
     const d=Object.assign({},c.doc.data());delete d._u;delete d._by;const hh=hs(JSON.stringify(canon(d))),lite=d._lite;delete d._lite;
-    if(SC.on()&&SC.H[key]){if(!scVis(key,d,key==='cl'?null:scCids())){SC.H[key][id]=d;delete sy[id];if(idx.has(id)){arr=arr.filter(r=>String(r.id)!==id);idx.clear();arr.forEach((r,i)=>idx.set(String(r.id),i));ch=true}return}delete SC.H[key][id]}
+    if(SC.on()&&SC.H[key]){if(!scVis(key,d,scArg(key))){SC.H[key][id]=d;delete sy[id];if(idx.has(id)){arr=arr.filter(r=>String(r.id)!==id);idx.clear();arr.forEach((r,i)=>idx.set(String(r.id),i));ch=true}return}delete SC.H[key][id]}
     const i=idx.get(id),cur=i===undefined?null:arr[i];
     if(cur){const curH=hs(JSON.stringify(cloudClean(cur,sp)));if(curH===hh){sy[id]=hh;return}
       if(sy[id]!==undefined&&sy[id]!==curH)return;            // modifica locale non ancora inviata: vince quella locale
@@ -9614,7 +9616,7 @@ function cloudPull(key,snap){const sp=CSPEC[key],sy=CLOUD.sync[key]||(CLOUD.sync
     sy[id]=hh;ch=true})}
   finally{CLOUD.applying=false}
   if(ch){sp.set(arr);sp.save();sp.after()}
-  if(key==='cl'&&SC.on())try{scRecalc()}catch(e){}
+  if((key==='cl'||key==='op'||key==='ld')&&SC.on())try{scRecalc()}catch(e){}
   CLOUD.n[key]=arr.length;CLOUD.last=Date.now();CLOUD.err='';
   if(!CLOUD.first[key]){CLOUD.first[key]=1;const mg=SB.e2e.needMig();if(mg)CLOUD.sync[key]={};Promise.resolve(cloudFlush(key)).then(()=>{if(mg)E2EUI.done(key)})}
   try{paintCloud()}catch(e){}}
@@ -10851,7 +10853,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
-['1.55.0','Task assegnati: il titolare può assegnare un task a un collaboratore (campo «Assegnato a»); di default il task è di chi lo crea. Nell’elenco compare a chi è assegnato e il promemoria push arriva solo a chi deve fare il task.'],
+['1.55.0','Collaboratori con visibilità «solo i suoi clienti»: vedono anche solo i task assegnati a loro o collegati ai loro clienti, lead e opportunità. Task assegnati: il titolare può assegnare un task a un collaboratore (campo «Assegnato a»); di default il task è di chi lo crea. Nell’elenco compare a chi è assegnato e il promemoria push arriva solo a chi deve fare il task.'],
 ['1.54.5','Primi passi: la scheda in Home non sparisce più ai collaboratori dopo un ricaricamento (veniva letta l’impostazione del titolare prima di conoscere il ruolo); inoltre si nasconde solo dopo conferma.La si ritrova sempre in Aiuto.'],
 ['1.54.4','Collaboratori: restano visibili «Importa dalla rubrica» e «Anagrafiche duplicate»; le altre sezioni del titolare non compaiono affatto. Inviti: il titolare inserisce l’email del collaboratore: il titolare inserisce l’email del collaboratore (con pulsante «Invia per email»); il server verifica che l’account che si registra abbia quell’indirizzo. Se un account nuovo arriva senza il codice ma con un invito sulla sua email, l’app chiede il codice invece di creare un nuovo titolare; se il codice è sbagliato lo richiede.'],
 ['1.54.3','Impostazioni dei collaboratori: nascoste le sezioni del titolare (email, WhatsApp, allegati, preventivi, lead, privacy, importazioni, duplicati, backup, utilizzo). Restano profilo azienda in sola lettura, account, aspetto, app, promemoria e accesso.'],
