@@ -9588,6 +9588,20 @@ async function cloudFlush(key){const sp=CSPEC[key];if(!sp||!CLOUD.db||!CLOUD.can
   }catch(e){CLOUD.err=(e&&e.code)||'errore'}
   finally{CLOUD.busy[key]=0;try{paintCloud()}catch(e){}}}
 /* «Assegnato a»: solo il titolare, quando ha collaboratori */
+/* versione dei Termini e dell'informativa (data dell'ultimo aggiornamento, come in legal.js): cambiandola, a tutti gli utenti viene chiesto di riaccettare */
+const LEGAL_V='2026-11-14';
+function termsAsk(){return new Promise(res=>{const o=h('div','invq');o.style.cssText='position:fixed;inset:0;z-index:99999;visibility:visible;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:16px';const bx=h('div','');bx.style.cssText='background:var(--card,#1b1b22);color:var(--tx,#fff);border-radius:16px;padding:18px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:12px';
+  const t=h('b','','Termini d’uso e informativa privacy');const p=h('div','','Per continuare a usare KRANG CRM leggi e accetta i Termini d’uso e l’Informativa privacy.');
+  const l=h('div','');[['termini.html','Leggi i Termini d’uso'],['privacy.html','Leggi l’Informativa privacy']].forEach(([u,x])=>{const a=h('a','',x);a.href=u;a.target='_blank';a.rel='noopener';a.style.cssText='display:block;padding:6px 0;color:#4fc3ff';l.append(a)});
+  const lb=h('label','');lb.style.cssText='display:flex;gap:10px;align-items:flex-start;font-size:15px';const cb=h('input');cb.type='checkbox';cb.style.cssText='width:22px;height:22px;flex:none';lb.append(cb,h('span','','Accetto i Termini d’uso e ho letto l’Informativa privacy'));
+  const ok=h('button','btn p lbl','Accetta e continua'),no=h('button','btn','Esci');ok.type=no.type='button';ok.disabled=true;cb.onchange=()=>{ok.disabled=!cb.checked};
+  ok.onclick=()=>{o.remove();res(true)};no.onclick=()=>{o.remove();res(false)};bx.append(t,p,l,lb,ok,no);o.append(bx);document.body.append(o)})}
+let termsBusy=false;
+async function termsCheck(){if(termsBusy||!SB.has()||navigator.onLine===false)return;if(document.documentElement.classList.contains('noauth'))return;{const ls=$('lockScr');if(ls&&!ls.hidden&&getComputedStyle(ls).display!=='none')return}let u='';try{u=SB.uid()||''}catch(e){}if(!u)return;const K='crm-terms-'+u;try{if(localStorage.getItem(K)===LEGAL_V)return}catch(e){}
+  termsBusy=true;try{const t=await SB.e2e.terms();if(t&&t.v===LEGAL_V){try{localStorage.setItem(K,LEGAL_V)}catch(e){}return}
+    if(!(await termsAsk())){try{await SB.logout()}catch(e){}location.reload();return}
+    await SB.e2e.acceptTerms(LEGAL_V);try{localStorage.setItem(K,LEGAL_V)}catch(e){}}catch(e){}finally{termsBusy=false}}
+setTimeout(termsCheck,5000);setInterval(()=>{if(!document.hidden)termsCheck()},60000);
 const ownerName=()=>(S.ownerName||opName||S.azienda||'').trim()||'Titolare';
 function assName(r){let col=false,me='';try{col=SB.e2e.isCollab();me=SB.uid()}catch(e){}if(col)return r.ass?(r.ass===me?'Tu':'Un collega'):ownerName();const T=(typeof TEAMC!=='undefined'&&TEAMC)||[];if(!T.length)return '';if(!r.ass)return ownerName();const m=T.find(x=>x.member===r.ass);return m?(m.name||m.email||'Collaboratore'):'Collaboratore'}
 function assFill(w,sel,cur){let col=false;try{col=SB.e2e.isCollab()}catch(e){}const T=(typeof TEAMC!=='undefined'&&TEAMC)||[];const W=$(w);if(!W)return;if(col||!T.length){W.hidden=true;return}W.hidden=false;const S_=$(sel);S_.textContent='';const o0=h('option','',ownerName()+' (io)');o0.value='';S_.append(o0);T.forEach(m=>{const o=h('option','',m.name||m.email||'Collaboratore');o.value=m.member;S_.append(o)});S_.value=cur||'';if(S_.value!==(cur||''))S_.value=''}
@@ -10474,6 +10488,8 @@ const SB=(()=>{
   isCollab:()=>WS.role==='collab',ws:()=>({owner:WS.o,scope:WS.scope,name:WS.name,role:WS.role}),
   async pendingInvite(){let c='';try{c=localStorage.getItem('crm-invite')||''}catch(e){}if(c)return c;try{const u=await js('/auth/v1/user',{auth:1});return(u&&u.user_metadata&&u.user_metadata.kcrm_inv)||''}catch(e){return ''}},
   async myInvite(){try{const r=await js('/rest/v1/rpc/my_invite',{method:'POST',auth:1,json:{}});return Array.isArray(r)?r[0]||null:r||null}catch(e){return null}},
+  async terms(){const u=await js('/auth/v1/user',{auth:1});return(u&&u.user_metadata&&u.user_metadata.kcrm_terms)||null},
+  async acceptTerms(v){await js('/auth/v1/user',{method:'PUT',auth:1,json:{data:{kcrm_terms:{v,at:new Date().toISOString()}}}})},
   async clearInvite(){try{localStorage.removeItem('crm-invite')}catch(e){}try{await js('/auth/v1/user',{method:'PUT',auth:1,json:{data:{kcrm_inv:null}}})}catch(e){}},
   async invite(name,scope,email){if(WS.role==='collab'||!E.raw)throw lockErr();const code=rkNew(),salt=rnd(16),ch=await sha256hex(rkNorm(code)),w=b64(salt)+'.'+await wrap(E.raw,await kek(rkNorm(code),salt,RIT));
    await js('/rest/v1/team_invites',{method:'POST',auth:1,headers:{Prefer:'return=minimal'},json:{code_h:ch,owner:uid(),email:String(email||'').trim().toLowerCase().slice(0,120)||null,name:String(name||'').slice(0,60),scope:scope==='own'?'own':'all',wrapped:w,code_enc:JSON.stringify(await encJ('invite',ch,{c:code}))}});return code},
@@ -10582,7 +10598,7 @@ const SB=(()=>{
  async function fb(row){await js('/rest/v1/assistant_feedback',{method:'POST',auth:true,headers:{Prefer:'return=minimal'},json:row})}
  return{db,uid,e2e,fb,ai,vies,csearch,usage,push,consent,leadApi,alog,arecent,logoutAll,did,setCap:t=>{capTok=t||''},email:()=>ses&&ses.user?ses.user.email:'',has:()=>!!ses,msg,wipe,
   async signIn(email,password){setSes(await js('/auth/v1/token?grant_type=password',{method:'POST',json:Object.assign({email,password},sec())}))},
-  async signUp(email,password){let inv='';try{inv=localStorage.getItem('crm-invite')||''}catch(e){}const j=await js('/auth/v1/signup',{method:'POST',json:Object.assign({email,password},inv?{data:{kcrm_inv:inv}}:{},sec())});if(j&&j.access_token){setSes(j);return true}return false},
+  async signUp(email,password){let inv='';try{inv=localStorage.getItem('crm-invite')||''}catch(e){}const j=await js('/auth/v1/signup',{method:'POST',json:Object.assign({email,password},{data:Object.assign({kcrm_terms:{v:LEGAL_V,at:new Date().toISOString()}},inv?{kcrm_inv:inv}:{})},sec())});if(j&&j.access_token){setSes(j);return true}return false},
   recover:email=>js('/auth/v1/recover',{method:'POST',json:Object.assign({email},sec())}),
   resend:email=>js('/auth/v1/resend',{method:'POST',json:Object.assign({type:'signup',email},sec())}),
   async logout(){try{if(ses)await raw('/auth/v1/logout?scope=local',{method:'POST',auth:1})}catch(e){}ses=null;save()},
@@ -10857,6 +10873,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.56.0','Termini e informativa: alla registrazione si salvano data e versione dell’accettazione; quando i testi cambiano, a chi ha già un account viene chiesto di riaccettarli (anche ai collaboratori e a chi era già iscritto).'],
 ['1.55.2','Collaboratori: al posto di «Titolare» compare il nome del titolare (campo «Il tuo nome» nella pagina Collaboratori), come per i collaboratori.'],
 ['1.55.1','Scheda cliente: «Assegnato a» accanto alla foto; nel Riepilogo (clienti e lead) compare in sola lettura tra i contatti.'],
 ['1.55.0','Collaboratori con visibilità «solo i suoi clienti»: vedono anche solo i task assegnati a loro o collegati ai loro clienti, lead e opportunità. Task assegnati: il titolare può assegnare un task a un collaboratore (campo «Assegnato a»); di default il task è di chi lo crea. Nell’elenco compare a chi è assegnato e il promemoria push arriva solo a chi deve fare il task.'],
