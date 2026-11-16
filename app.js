@@ -8911,7 +8911,7 @@ function infoBtn(el,text){el.style.position='relative';const b=document.createEl
   b.onclick=e=>{e.stopPropagation();if(tip){tip.remove();tip=null;b.classList.remove('on');return}tip=document.createElement('div');tip.className='itip';tip.textContent=text;el.append(tip);b.classList.add('on')};el.append(b)}
 function renderH(){
   try{paintLogo()}catch(e){}
-  const hr=new Date().getHours(),op=(()=>{try{return localStorage.getItem('crm-op')||''}catch(e){return''}})();
+  const hr=new Date().getHours(),op=(()=>{let o='';try{o=localStorage.getItem('crm-op')||''}catch(e){}if(!o){try{const w=SB.e2e.ws();if(w.role==='collab')o=w.name||''}catch(e){}}return o})();
   try{paintWel()}catch(e){}
   $('hGreet').textContent=(hr<13?'Buongiorno':hr<18?'Buon pomeriggio':'Buonasera')+(op?', '+op:'');
   const dt=new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long'}).format(new Date());$('hDate').textContent=(S.azienda?S.azienda+' · ':'')+dt.charAt(0).toUpperCase()+dt.slice(1);
@@ -10801,7 +10801,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
-['1.52.6','Collaboratori: l’elenco si aggiorna ogni volta che apri la pagina e ogni 15 secondi, così il titolare vede subito chi ha accettato e può cambiarne la visibilità o rimuoverlo.'],
+['1.52.6','Collaboratori: se non ha impostato il proprio nome, in Home il collaboratore vede il nome indicato nell’invito. L’elenco si aggiorna ogni volta che apri la pagina e ogni 15 secondi, così il titolare vede subito chi ha accettato e può cambiarne la visibilità o rimuoverlo.'],
 ['1.52.5','Invito collaboratore: un account appena creato viene riconosciuto come nuovo e l’invito si accetta senza il messaggio «ha già dei dati».'],
 ['1.52.4','Invito collaboratore: il primo accesso ritrova il codice anche dopo la pulizia del dispositivo. Se non viene accettato in automatico, puoi incollare il link in Impostazioni → Collaboratori.'],
 ['1.52.3','Invito collaboratore: il codice non si perde più se crei l’account e confermi l’email da un altro browser o dall’app installata.'],
