@@ -150,8 +150,8 @@ function saveClient(viaSend){
   if(!viaSend&&!editing&&$('p_fonte').value==='interessato'&&!$('p_inf').checked&&!$('p_later').checked){setPane('priv');setErr('p_later','Conferma di aver fornito l’informativa privacy (in Dettagli e modifica manuale) oppure scegli «Invierò l’informativa più tardi».');try{$('p_laterW').scrollIntoView({block:'center'})}catch(e){}return null}
   d.privacy=collectPriv(editing&&editing.privacy,!editing);d.agg=new Date().toISOString();if(!$('cAssW').hidden)d.ass=$('cAss').value;
   if(!['nome','cognome','azienda','telefono','email'].some(f=>d[f])){showMsg('Inserisci almeno un dato.');return null}
-  let cl=editing;if(!cl&&newRef&&clients.includes(newRef)&&!$('sheet').hidden)cl=newRef;if(cl)Object.assign(cl,d);else{cl=stampNew({id:Date.now().toString(36),...d});clients.push(cl)}newRef=cl;
-  persist();render();if(!viaSend)$('sheet').hidden=true;return cl
+  let cl=editing;if(!cl&&newRef&&clients.includes(newRef)&&!$('sheet').hidden)cl=newRef;const pa0=cl?cl.ass:'';if(cl)Object.assign(cl,d);else{cl=stampNew({id:Date.now().toString(36),...d});clients.push(cl)}newRef=cl;
+  persist();render();notifyAssign(d.ass,pa0,'cl');if(!viaSend)$('sheet').hidden=true;return cl
 }
 function viaNew(kind){
   if(kind==='email'&&!$('email').value.trim()){setPane('dati');setErr('email','Inserisci l’email per inviare l’informativa.');return}
@@ -9319,8 +9319,8 @@ $('l_ext').onclick=async()=>{const t=$('l_paste').value.trim();if(!t){$('l_exth'
   try{const o=await extractLead({text:t,sender:'',subject:''});['nome','cognome','telefono','azienda','richiesta'].forEach(k=>{const el={nome:'l_nome',cognome:'l_cognome',telefono:'l_tel',azienda:'l_az',richiesta:'l_rich'}[k];if(o[k])$(el).value=o[k]});if(o.email)$('l_email').value=o.email;$('l_exth').textContent='Controlla i dati ricavati e correggi se serve.'}
   finally{b.disabled=false}};
 $('l_save').onclick=()=>{const d=lRead();if(!lCheck(d))return;
-  if(lCur)Object.assign(lCur,d);else{const n=Date.now();lCur=stampNew({id:'l'+n.toString(36),fonte:'manuale',oggetto:'',data:n,creato:n,stato:'nuovo',...d});leads.push(lCur)}
-  persistL();renderL();$('lSheet').hidden=true;toast('Lead salvato.')};
+  const pa0=lCur?lCur.ass:'';if(lCur)Object.assign(lCur,d);else{const n=Date.now();lCur=stampNew({id:'l'+n.toString(36),fonte:'manuale',oggetto:'',data:n,creato:n,stato:'nuovo',...d});leads.push(lCur)}
+  persistL();renderL();notifyAssign(d.ass,pa0,'ld');$('lSheet').hidden=true;toast('Lead salvato.')};
 $('l_ripr').onclick=()=>{if(!lCur||lCur.stato!=='scartato')return;lCur.stato='nuovo';delete lCur.scartato;persistL();renderL();lFilter='nuovo';renderL();$('lSheet').hidden=true;toast('Lead rimesso tra i nuovi.')};
 $('l_scarta').onclick=()=>{if(!lCur)return;lCur.stato='scartato';lCur.scartato=Date.now();persistL();renderL();$('lSheet').hidden=true;toast('Lead scartato. Verrà eliminato dopo 30 giorni.')};
 $('l_del').onclick=()=>{const l=lCur;if(!l)return;askConfirm('Eliminare il lead '+lName(l)+'?','trash','Elimina',()=>{leads=leads.filter(x=>x!==l);persistL();renderL();$('lSheet').hidden=true;toast('Lead eliminato.')})};
@@ -9603,6 +9603,8 @@ async function termsCheck(){if(termsBusy||!SB.has()||navigator.onLine===false)re
     await SB.e2e.acceptTerms(LEGAL_V);try{localStorage.setItem(K,LEGAL_V)}catch(e){}}catch(e){}finally{termsBusy=false}}
 setTimeout(termsCheck,5000);setInterval(()=>{if(!document.hidden)termsCheck()},60000);
 const ownerName=()=>(S.ownerName||opName||S.azienda||'').trim()||'Titolare';
+/* notifica push al collaboratore a cui il titolare assegna qualcosa (testo generico, nessun dato) */
+function notifyAssign(to,from,kind){try{if(!to||to==='_o'||to===from||!SB.has())return;if(SB.e2e.isCollab())return;SB.e2e.notify(to,kind)}catch(e){}}
 function assName(r){let col=false,me='';try{col=SB.e2e.isCollab();me=SB.uid()}catch(e){}if(col)return r.ass?(r.ass===me?'Tu':'Un collega'):ownerName();const T=(typeof TEAMC!=='undefined'&&TEAMC)||[];if(!T.length)return '';if(!r.ass)return ownerName();const m=T.find(x=>x.member===r.ass);return m?(m.name||m.email||'Collaboratore'):'Collaboratore'}
 function assFill(w,sel,cur){let col=false;try{col=SB.e2e.isCollab()}catch(e){}const T=(typeof TEAMC!=='undefined'&&TEAMC)||[];const W=$(w);if(!W)return;if(col||!T.length){W.hidden=true;return}W.hidden=false;const S_=$(sel);S_.textContent='';const o0=h('option','',ownerName()+' (io)');o0.value='';S_.append(o0);T.forEach(m=>{const o=h('option','',m.name||m.email||'Collaboratore');o.value=m.member;S_.append(o)});S_.value=cur||'';if(S_.value!==(cur||''))S_.value=''}
 {const _os=openSheet;openSheet=function(c){const r=_os.apply(this,arguments);try{assFill('cAssW','cAss',c&&c.ass)}catch(e){}return r}}
@@ -10490,6 +10492,7 @@ const SB=(()=>{
   async myInvite(){try{const r=await js('/rest/v1/rpc/my_invite',{method:'POST',auth:1,json:{}});return Array.isArray(r)?r[0]||null:r||null}catch(e){return null}},
   async terms(){const u=await js('/auth/v1/user',{auth:1});return(u&&u.user_metadata&&u.user_metadata.kcrm_terms)||null},
   async acceptTerms(v){await js('/auth/v1/user',{method:'PUT',auth:1,json:{data:{kcrm_terms:{v,at:new Date().toISOString()}}}})},
+  notify(member,kind){return js('/functions/v1/notify-assign',{method:'POST',auth:1,json:{member,kind}}).catch(()=>{})},
   async clearInvite(){try{localStorage.removeItem('crm-invite')}catch(e){}try{await js('/auth/v1/user',{method:'PUT',auth:1,json:{data:{kcrm_inv:null}}})}catch(e){}},
   async invite(name,scope,email){if(WS.role==='collab'||!E.raw)throw lockErr();const code=rkNew(),salt=rnd(16),ch=await sha256hex(rkNorm(code)),w=b64(salt)+'.'+await wrap(E.raw,await kek(rkNorm(code),salt,RIT));
    await js('/rest/v1/team_invites',{method:'POST',auth:1,headers:{Prefer:'return=minimal'},json:{code_h:ch,owner:uid(),email:String(email||'').trim().toLowerCase().slice(0,120)||null,name:String(name||'').slice(0,60),scope:scope==='own'?'own':'all',wrapped:w,code_enc:JSON.stringify(await encJ('invite',ch,{c:code}))}});return code},
@@ -10873,6 +10876,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.57.0','Notifica all’assegnazione: quando il titolare assegna un cliente, un lead o un task a un collaboratore, a lui arriva subito una notifica push (testo generico, nessun dato); un tocco apre la sezione giusta.'],
 ['1.56.2','Termini d’uso aggiornati (proprietà del software e limiti di utilizzo, titolare Ivano Pregnolato): a tutti viene chiesto di riaccettarli. Copyright: aggiunta la licenza proprietaria (LICENSE) e l’avviso «© 2026 Ivano Pregnolato» nell’app e nel codice.'],
 ['1.56.1','Popup dei Termini: avvisa che i testi sono stati aggiornati e permette di accettare solo dopo aver aperto sia i Termini d’uso sia l’Informativa privacy.'],
 ['1.56.0','Termini e informativa: alla registrazione si salvano data e versione dell’accettazione; quando i testi cambiano, a chi ha già un account viene chiesto di riaccettarli (anche ai collaboratori e a chi era già iscritto).'],
@@ -11455,7 +11459,7 @@ function tkOpen(t,pre,lock){const isNew=!t;const d=t?{...t,rif:t.rif?{...t.rif}:
     if(!da.value||isNaN(new Date(da.value+'T00:00'))){e2.textContent='Scegli la scadenza: puoi usare i tasti rapidi o scrivere la data.';e2.hidden=false;da.classList.add('bad');bad=bad||da}
     if(!(d.rif&&tkRef({rif:d.rif}))){e4.textContent='Collega il task a un cliente, un lead o un’opportunità.';e4.hidden=false;bad=bad||q}
     if(bad){bad.scrollIntoView({block:'center'});try{bad.focus({preventScroll:true})}catch(e){}return}
-    const rec=Object.assign(t||stampNew(d),{titolo:tt,scad:da.value||'',ora:oi.value||'',nota:no.value.trim(),rif:d.rif||null,stato:(t&&t.stato)||'aperta'});if(f5.hidden===false)rec.ato=as5.value||'_o';if(!t)tasks.push(rec);persistT();sh.hidden=true;try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast('Task salvato.')};
+    const pa0=t?tkWho(t):'_o';const rec=Object.assign(t||stampNew(d),{titolo:tt,scad:da.value||'',ora:oi.value||'',nota:no.value.trim(),rif:d.rif||null,stato:(t&&t.stato)||'aperta'});if(f5.hidden===false)rec.ato=as5.value||'_o';if(!t)tasks.push(rec);persistT();notifyAssign(rec.ato,pa0,'tk');sh.hidden=true;try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast('Task salvato.')};
   const ac=h('div','delw');w.append(f1,f2,f3,f4,f5,ac);
   if(t){const dn=h('button','btn lbl'+(t.stato==='fatta'?'':' p'));dn.type='button';dn.innerHTML=ICONS.check+(t.stato==='fatta'?'Riapri':'Segna come fatta');dn.style.width='100%';dn.onclick=()=>{tkDone(t,t.stato!=='fatta');sh.hidden=true};
     const row=h('div','');row.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:8px';
@@ -11575,8 +11579,10 @@ $('nt_sh').onchange=()=>{S.remShow=$('nt_sh').checked;try{saveS()}catch(e){}remS
 $('nt_hr').onchange=()=>{S.remH=parseInt($('nt_hr').value,10)||9;try{saveS()}catch(e){}remSync(true);ntPaint()};
 $('nt_srv').onclick=async()=>{const b=$('nt_srv');b.disabled=true;const el=$('nt_diag');el.textContent='Invio in corso…';try{const r=await SB.push.test();el.textContent='Il server ha inviato: '+(r&&r.results?r.results.map(x=>x.ok?'accettata da '+x.host:'rifiutata ('+x.status+')').join(', '):'nessuna iscrizione')+'. Attendo l’arrivo…';let tries=0;const iv=setInterval(async()=>{tries++;await ntDiag();if(tries>=6)clearInterval(iv)},3000)}catch(e){el.textContent='Invio non riuscito.'}finally{b.disabled=false}};
 $('nt_test').onclick=async()=>{try{const {reg}=await pushGet();if(!reg)throw 0;await reg.showNotification('KRANG CRM',{body:'Prova riuscita: i promemoria arriveranno così.',icon:'kcrm-192.png',tag:'krang-prova',data:{go:'tk'}})}catch(e){toast('Impossibile mostrare la notifica di prova.')}};
-try{navigator.serviceWorker&&navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.go==='tk')tkList()})}catch(e){}
-setTimeout(()=>{try{if(/[?&]go=tk\b/.test(location.search)){history.replaceState(null,'',location.pathname);tkList()}}catch(e){}},1800);
+try{navigator.serviceWorker&&navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.go)goTo(e.data.go)})}catch(e){}
+/* un tocco sulla notifica porta alla sezione giusta: task, clienti o lead */
+function goTo(k){try{if(k==='tk')tkList();else if(k==='cl')setTab('clienti');else if(k==='ld')setTab('lead')}catch(e){}}
+setTimeout(()=>{try{const m=/[?&]go=(tk|cl|ld)\b/.exec(location.search);if(m){history.replaceState(null,'',location.pathname);goTo(m[1])}}catch(e){}},1800);
 setTimeout(()=>{try{pushCheck()}catch(e){}},6000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)try{remSoon();remHeal()}catch(e){}});
 

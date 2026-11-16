@@ -1,4 +1,4 @@
-const V='crm-v1.56.2',F=['./','index.html','app.js?v=1.56.2','boot.js?v=1.56.2','manifest.webmanifest','privacy.html','termini.html','legal.js','assistente.js?v=1.56.2','legal.css','consensi.html','consensi.js','consensi.css','kcrm-180.png','kcrm-192.png','kcrm-512.png'];
+const V='crm-v1.57.0',F=['./','index.html','app.js?v=1.57.0','boot.js?v=1.57.0','manifest.webmanifest','privacy.html','termini.html','legal.js','assistente.js?v=1.57.0','legal.css','consensi.html','consensi.js','consensi.css','kcrm-180.png','kcrm-192.png','kcrm-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>Promise.all(F.map(f=>c.add(f).catch(()=>0)))).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 /* solo file dell'app (stessa origine, GET, risposta "basic"): mai dati degli utenti, mai risposte di altri siti */
@@ -10,12 +10,12 @@ const kdb=()=>new Promise((ok,ko)=>{const q=indexedDB.open('krang-push',2);q.onu
 const kget=async(s,k)=>{const d=await kdb();return new Promise((ok,ko)=>{const r=d.transaction(s).objectStore(s).get(k);r.onsuccess=()=>{d.close();ok(r.result)};r.onerror=()=>{d.close();ko()}})};
 const kput=async(s,k,v)=>{const d=await kdb();return new Promise(ok=>{const t=d.transaction(s,'readwrite');t.objectStore(s).put(v,k);t.oncomplete=()=>{d.close();ok()};t.onerror=()=>{d.close();ok()}})};
 self.addEventListener('push',e=>{const L={t:Date.now(),dati:!!e.data,dec:'-',mostra:'in corso'};let d={};try{d=e.data?e.data.json():{}}catch(x){L.dati='illeggibili'}
- const show=(b)=>self.registration.showNotification(d.t||'KRANG CRM',{body:b,icon:'kcrm-192.png',badge:'kcrm-192.png',tag:'krang-tk-'+(d.e?String(d.e).slice(-12):'g'+Date.now()),data:{go:'tk'}});
+ const show=(b)=>self.registration.showNotification(d.t||'KRANG CRM',{body:b,icon:'kcrm-192.png',badge:'kcrm-192.png',tag:'krang-tk-'+(d.e?String(d.e).slice(-12):'g'+Date.now()),data:{go:d.go||'tk'}});
  e.waitUntil((async()=>{let b=d.b||'Hai attività in scadenza.';
   try{await kput('log','last',L)}catch(x){}
   if(d.e){try{const kb=await kget('k','nk');
    if(kb){const u=s=>Uint8Array.from(atob((s+'='.repeat((4-s.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0)),o=u(d.e),k=await crypto.subtle.importKey('raw',u(kb),'AES-GCM',false,['decrypt']),t=JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:o.slice(0,12)},k,o.slice(12))));if(t.t){b=t.t+(t.r?'\n'+t.r:'');L.dec='ok'}}else L.dec='senza chiave'}catch(x){L.dec='non decifrato'}}
   try{await show(b)}catch(x){L.mostra='errore: '+((x&&x.message)||x);try{await kput('log','last',L)}catch(y){}return}
   L.mostra='ok';try{await kput('log','last',L)}catch(x){}})())});
-self.addEventListener('notificationclick',e=>{e.notification.close();
- e.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(l=>{for(const c of l){if('focus' in c){try{c.postMessage({go:'tk'})}catch(x){}return c.focus()}}return self.clients.openWindow('./?go=tk')}))});
+self.addEventListener('notificationclick',e=>{e.notification.close();const g=(e.notification.data&&e.notification.data.go)||'tk';
+ e.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(l=>{for(const c of l){if('focus' in c){try{c.postMessage({go:g})}catch(x){}return c.focus()}}return self.clients.openWindow('./?go='+g)}))});
