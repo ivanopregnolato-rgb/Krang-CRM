@@ -10781,7 +10781,7 @@ const E2EUI=(()=>{
 /* ===== info e versione ===== */
 {const rd=t=>{const m=/name="app-version" content="([^"|]+)\|([^"]+)"/.exec(t);return m?{v:m[1],d:m[2]}:null},cur=rd('<meta name="app-version" content="'+(document.querySelector('meta[name=app-version]')||{content:''}).content+'">')||{v:'?',d:''};
  const dl=d=>{const p=String(d).split('-');return p.length===3?(+p[2])+' '+['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'][+p[1]-1]+' '+p[0]:d};
- const M=$('mInfo');let newer=false;try{$('au_v').textContent='KRANG CRM · versione '+cur.v}catch(e){}
+ const M=$('mInfo');let newer=false;try{$('au_v').textContent='KRANG CRM · versione '+cur.v+' · © 2026 Ivano Pregnolato'}catch(e){}
  $('inX').onclick=()=>{M.hidden=true};M.onclick=e=>{if(e.target===M)M.hidden=true};
  $('inU').onclick=async()=>{const b=$('inU');b.disabled=true;try{if(navigator.serviceWorker)for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister();if(window.caches)for(const k of await caches.keys())await caches.delete(k)}catch(e){}location.reload()};
  window.openInfo=async()=>{$('inV').textContent='Versione '+cur.v;$('inD').textContent='Aggiornata il '+dl(cur.d);const st=$('inS'),u=$('inU');st.textContent='Controllo aggiornamenti…';u.hidden=true;M.hidden=false;
@@ -10873,6 +10873,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.56.2','Copyright: aggiunta la licenza proprietaria (LICENSE) e l’avviso «© 2026 Ivano Pregnolato» nell’app e nel codice.'],
 ['1.56.1','Popup dei Termini: avvisa che i testi sono stati aggiornati e permette di accettare solo dopo aver aperto sia i Termini d’uso sia l’Informativa privacy.'],
 ['1.56.0','Termini e informativa: alla registrazione si salvano data e versione dell’accettazione; quando i testi cambiano, a chi ha già un account viene chiesto di riaccettarli (anche ai collaboratori e a chi era già iscritto).'],
 ['1.55.2','Collaboratori: al posto di «Titolare» compare il nome del titolare (campo «Il tuo nome» nella pagina Collaboratori), come per i collaboratori.'],
