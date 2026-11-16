@@ -10886,6 +10886,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.58.3','Riquadro «Cosa fare adesso»: mostra una sola azione; il testo del «prossimo task» tiene conto dei task già chiusi.'],
 ['1.58.2','Popup dei Termini: i documenti si aprono dentro l’app, sopra il popup, e «Indietro» riporta al popup (prima si tornava alla schermata di accesso).'],
 ['1.58.1','Riepilogo cliente e lead: completando un task con il cerchio, l’elenco e il riquadro «Cosa fare adesso» si aggiornano subito (prima il task restava in elenco).'],
 ['1.58.0','Scheda cliente, Riepilogo: riquadro «Cosa fare adesso» con la prossima azione consigliata (task scaduto, informativa mancante, opportunità ferma, prossimo passo da fissare, cliente da ricontattare, proposta) e un breve riepilogo (stato, ultimo contatto, opportunità aperte, prossimo task). Calcolato sul dispositivo con regole semplici.'],
@@ -11650,13 +11651,14 @@ function nbaFor(c){const T0=Date.now(),dd=x=>{const t=x?new Date(x).getTime():0;
   if(!pv||!pv.informativa)A.push({k:'priv',t:'Invia l’informativa privacy',s:'Senza informativa non puoi mandare comunicazioni commerciali.',b:'Apri Privacy',fn:()=>setPane('priv')});
   const st=op.map(o=>({o,d:dd(o.mod||o.cre)})).filter(x=>x.d!==null&&x.d>=OPP).sort((a,b)=>b.d-a.d)[0];
   if(st)A.push({k:'opp',t:'Fai avanzare «'+(st.o.titolo||'opportunità')+'»',s:'Ferma da '+st.d+' giorni: sollecita il cliente o aggiorna la fase.',b:'Apri l’opportunità',fn:()=>openOpp(st.o)});
-  if(op.length&&!open.length)A.push({k:'next',t:'Fissa il prossimo passo',s:'C’è un’opportunità aperta ma nessun task in programma.',b:'Nuovo task',fn:()=>tkOpen(null,{tipo:'cliente',id:c.id},true)});
+  const done=tk.concat(optk).filter(t=>t.stato==='fatta').length;
+  if(op.length&&!open.length)A.push({k:'next',t:'Fissa il prossimo task',s:done?('Hai chiuso '+done+(done===1?' task':' task')+' e non ce ne sono altri in programma: pianifica il prossimo contatto.'):'C’è un’opportunità aperta ma nessun task in programma.',b:'Nuovo task',fn:()=>tkOpen(null,{tipo:'cliente',id:c.id},true)});
   if(sil!==null&&sil>=SIL)A.push({k:'sil',t:'Ricontatta '+(fullName(c)||'il cliente'),s:(last?'Nessun contatto registrato da '+sil+' giorni.':'Nessun contatto registrato dalla creazione ('+sil+' giorni).'),b:c.telefono?'Chiama':(c.email?'Scrivi una email':'Nuovo task'),fn:()=>{if(c.telefono)launch('tel:'+telHref(c),telHref(c),c);else if(c.email)openCompose(c);else tkOpen(null,{tipo:'cliente',id:c.id},true)}});
   if(!op.length&&!open.length)A.push({k:'prop',t:'Proponi qualcosa',s:'Nessuna opportunità aperta e nessun task: crea il prossimo passo.',b:'Nuova opportunità',fn:()=>{$('addOppFor').click()}});
   const sum=[];const stc=(typeof cstat==='function'?cstat(c):null);if(stc)sum.push('Stato: '+stc[1]+'.');sum.push(last?'Ultimo contatto: '+(dd(last)===0?'oggi':dd(last)+' giorni fa')+'.':'Nessun contatto registrato.');
   if(op.length){const v=op.reduce((a,o)=>a+(+o.valore||0),0);sum.push(op.length+(op.length===1?' opportunità aperta':' opportunità aperte')+(v?' per '+eur(v):'')+'.')}
   const nx=open.filter(t=>t.scad).sort((a,b)=>a.scad.localeCompare(b.scad))[0];if(nx)sum.push('Prossimo task: '+(nx.titolo||'task')+' ('+fmtD(nx.scad)+').');
-  return{main:A[0]||{k:'ok',t:'Tutto in ordine',s:'Nessuna azione urgente per questo cliente.',b:'',fn:null},alt:A.slice(1,3),sum}}
+  return{main:A[0]||{k:'ok',t:'Tutto in ordine',s:'Nessuna azione urgente per questo cliente.',b:'',fn:null},alt:[],sum}}
 window.paintSum=function(){const c=editing,w=$('sumF');if(!w)return;w.textContent='';if(!c||!c.id){return}
   let NB=null;try{NB=nbaFor(c)}catch(e){try{console.error('nba',e)}catch(x){}}
   if(NB){const cd=h('div','scard nba');cd.style.cssText='border:1px solid var(--line);margin-bottom:12px;padding:14px 16px';const hd=h('small','','Cosa fare adesso');hd.style.cssText='opacity:.7;text-transform:uppercase;letter-spacing:.04em;font-size:12px';const tt=h('b','',NB.main.t);tt.style.cssText='display:block;font-size:18px;margin:4px 0';const ss=h('div','hint',NB.main.s);cd.append(hd,tt,ss);
