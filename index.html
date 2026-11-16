@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.55.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.55.0|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.55.1"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.55.1|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -146,7 +146,7 @@ h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em}
 .pph{display:flex;gap:14px;align-items:flex-start}.pph .photo{position:relative;margin:22px 0 0;flex:none}.pph .pcol{flex:1;min-width:0}.pph #pPhotoDel{position:absolute;left:60px;top:-8px;width:30px;height:30px;min-height:0;padding:0;border-radius:50%}.pph #pPhotoDel svg{width:14px;height:14px}
 .pr{display:flex;gap:12px;align-items:center;padding:10px 12px}.pr .pbd{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.prt{display:flex;justify-content:space-between;gap:10px;align-items:baseline}.prt b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.prp{white-space:nowrap}.prp small{color:var(--muted);margin-left:3px;font-size:12px}.pr .pbd span{font-size:13px;color:var(--muted)}.pr .prs{font-weight:600}.pr .prs.warn{color:#b3314a}
 .cd{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px 14px 4px;margin:0 0 12px;box-shadow:var(--sh)}.cd>h3{margin:0 0 10px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}.cd .f input,.cd .f textarea,.cd .f select{background:var(--bg)}.cd .pph .f{margin-bottom:10px}.pmarg{display:inline-block;background:var(--lilac);color:#2d2b55;border-radius:999px;padding:3px 10px;font-weight:600}.pmarg:empty{display:none}.sbar{position:sticky;bottom:-20px;margin:12px -16px -20px;padding:12px 16px 20px;background:linear-gradient(to top,var(--bg) 70%,transparent)}.sbar .btn{margin:0}.cd .pcol{margin-top:-2px}
-.cph{position:relative;gap:16px;margin:12px 0 14px}.cph .acts{flex:1;margin:0;gap:0;justify-content:space-evenly}.cph .acts a{width:54px;height:54px}.cph .acts a svg{width:24px;height:24px}.cph #photoDel{position:absolute;left:60px;top:-8px;width:30px;height:30px;min-height:0;padding:0;border-radius:50%}.cph #photoDel svg{width:14px;height:14px}
+.cph #cAssW{flex:1;min-width:0;margin:0}.cph #cAssW label{margin-bottom:4px}.cph{position:relative;gap:16px;margin:12px 0 14px}.cph .acts{flex:1;margin:0;gap:0;justify-content:space-evenly}.cph .acts a{width:54px;height:54px}.cph .acts a svg{width:24px;height:24px}.cph #photoDel{position:absolute;left:60px;top:-8px;width:30px;height:30px;min-height:0;padding:0;border-radius:50%}.cph #photoDel svg{width:14px;height:14px}
 .acts a{display:grid;place-items:center;flex:none;width:58px;height:58px;border:1px solid rgba(38,48,69,.1);border-radius:50%;box-shadow:var(--sh);color:#2d2b55;text-decoration:none}
 .acts a:nth-child(1){background:#bfe0f8}
 .acts a:nth-child(2){background:var(--lilac)}
@@ -1059,7 +1059,7 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
   <div class="seg" id="seg" role="group" aria-label="Tipo di anagrafica"><button type="button" class="on" data-t="persona"><span data-i="user"></span>Persona</button><button type="button" data-t="azienda"><span data-i="building"></span>Azienda</button></div>
   <div id="favHold" hidden><button class="ico" id="favBtn" type="button" aria-label="Preferito" title="Preferito"><span data-i="star"></span></button></div>
   <div id="dupBan" class="hint" hidden style="border:1px solid var(--line);border-radius:12px;padding:10px;margin:0 0 10px"></div>
-  <div class="photo cph"><button class="av big" id="photoBtn" type="button" aria-label="Foto del cliente" title="Foto del cliente"></button><div class="acts" id="acts" hidden></div><button class="btn ico" id="photoDel" type="button" hidden aria-label="Rimuovi foto" title="Rimuovi foto"><span data-i="x"></span></button></div>
+  <div class="photo cph"><button class="av big" id="photoBtn" type="button" aria-label="Foto del cliente" title="Foto del cliente"></button><div class="f" id="cAssW" hidden><label for="cAss">Assegnato a</label><select id="cAss"></select></div><div class="acts" id="acts" hidden></div><button class="btn ico" id="photoDel" type="button" hidden aria-label="Rimuovi foto" title="Rimuovi foto"><span data-i="x"></span></button></div>
   <input type="file" id="photoFile" accept="image/*" hidden>
 <div id="fgAP">
 <div class="fg" id="fgP"><div class="gt lb-only"></div>
@@ -1084,7 +1084,6 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
   <div id="mapThumb" class="mapt" hidden style="margin:-4px 0 12px"></div>
 </div>
 <div class="fg"><div class="gt lb-only">Note</div>
-  <div class="f" id="cAssW" hidden><label for="cAss">Assegnato a</label><select id="cAss"></select></div>
   <div class="f"><label for="note">Note</label><textarea id="note" rows="4"></textarea></div>
 </div>
   <div id="privF" class="pane-hide">
@@ -1202,6 +1201,6 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.55.0"></script>
+<script src="app.js?v=1.55.1"></script>
 </body>
 </html>
