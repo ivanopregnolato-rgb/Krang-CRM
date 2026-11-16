@@ -10308,36 +10308,41 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 const _setTab=setTab;setTab=function(v){_setTab(v);paintBadges()};
 /* in tutte le pagine tranne la Home compare, accanto al menu, la freccia indietro che riporta alla Home */
 render();renderO();renderP();setTab('home');
+/* per i collaboratori i segni della guida restano sul dispositivo: la configurazione è quella del titolare */
+const isCol=()=>{try{return SB.e2e.isCollab()}catch(e){return false}};
+const wfKey=()=>{let u='';try{u=SB.uid()||''}catch(e){}return 'crm-wf-'+u};
+const wfRead=()=>{try{return JSON.parse(localStorage.getItem(wfKey())||'{}')||{}}catch(e){return {}}};
+const WF=new Proxy({},{get:(_,k)=>isCol()?!!wfRead()[k]:S[k],set:(_,k,v)=>{if(isCol()){const o=wfRead();o[k]=v;try{localStorage.setItem(wfKey(),JSON.stringify(o))}catch(e){}}else S[k]=v;return true}});
 /* ===== guida di benvenuto: primi passi ===== */
-const wState=()=>{let enc=false;try{enc=SB.e2e.state()==='ready'}catch(e){}return[
- {k:'cr',ic:'shield',t:'La cifratura dei dati',d:'Come proteggiamo ciò che salvi',done:!!S.cryptoOk||enc},
+const wState=()=>{let enc=false;try{enc=SB.e2e.state()==='ready'}catch(e){}const A=[
+ {k:'cr',ic:'shield',t:'La cifratura dei dati',d:'Come proteggiamo ciò che salvi',done:!!WF.cryptoOk||enc},
  {k:'sc',ic:'user',t:'L’accesso con biometria',d:'Face ID o impronta per aprire l’app',done:!!(typeof LOCK!=='undefined'&&LOCK.on)},
  {k:'az',ic:'building',t:'Il profilo della tua azienda',d:'Nome, partita IVA e firma delle email',done:!!(S.azienda&&S.azienda.trim())},
  {k:'cl',ic:'users',t:'Il tuo primo cliente',d:'Scrivi i dati o fotografa un biglietto da visita',done:clients.length>0},
  {k:'pr',ic:'box',t:'I prodotti a catalogo',d:'Inseriscili e collegali alle opportunità',done:prods.length>0},
  {k:'no',ic:'clock',t:'I promemoria sul telefono',d:'Una notifica quando un task scade',done:(()=>{try{return pushFlag()&&Notification.permission==='granted'}catch(e){return false}})()},
- {k:'as',ic:'chat',t:'L’assistente',d:'Chiedi come si fa una cosa: risponde in pochi secondi',done:!!S.askSeen}]};
-function paintWel(){const w=$('hWel');if(!w)return;w.textContent='';if(S.welcomeOff)return;const st=wState(),n=st.filter(x=>x.done).length;if(n===st.length)return;
+ {k:'as',ic:'chat',t:'L’assistente',d:'Chiedi come si fa una cosa: risponde in pochi secondi',done:!!WF.askSeen}];return isCol()?A.filter(x=>x.k!=='az'&&x.k!=='pr'):A};
+function paintWel(){const w=$('hWel');if(!w)return;w.textContent='';if(WF.welcomeOff)return;const st=wState(),n=st.filter(x=>x.done).length;if(n===st.length)return;
   const b=h('button','wcard');b.type='button';const i=h('span','ic');i.innerHTML=ICONS.compass;const tx=h('div','tx');const bar=h('div','wbar'),f=h('i');f.style.width=Math.round(n/st.length*100)+'%';bar.append(f);
   tx.append(h('b','','Primi passi'),h('span','',n+' di '+st.length+' completati'),bar);
-  const x=h('span','wx');x.setAttribute('role','button');x.setAttribute('aria-label','Nascondi i primi passi');x.title='Nascondi';x.innerHTML=ICONS.x;x.onclick=e=>{e.stopPropagation();S.welcomeOff=true;saveS();paintWel()};
+  const x=h('span','wx');x.setAttribute('role','button');x.setAttribute('aria-label','Nascondi i primi passi');x.title='Nascondi';x.innerHTML=ICONS.x;x.onclick=e=>{e.stopPropagation();WF.welcomeOff=true;saveS();paintWel()};
   b.append(i,tx,x);b.onclick=()=>openWel();w.append(b)}
 /* Aiuto: primi passi e, a tendere, manuale interattivo e assistente */
 function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   B.append(h('h3','','Aiuto'),h('p','wsub','Come iniziare e dove trovare le risposte.'));
   let n=0,t=5;try{const st=wState();n=st.filter(x=>x.done).length;t=st.length}catch(e){}
   const rows=[
-    ['compass','Primi passi',n+' di '+t+' completati',()=>{S.welcomeOff=false;saveS();openWel()}],
+    ['compass','Primi passi',n+' di '+t+' completati',()=>{WF.welcomeOff=false;saveS();openWel()}],
     ['chat','Assistente','Chiedi come si fa una cosa',()=>{M.hidden=true;openAsk()}]];
   const g=h('div','shg'),l=h('div','sl');
   rows.forEach(([ic,nm,sm,fn])=>{const b=h('button','shr wlr');b.type='button';const i=h('span','ic');i.innerHTML=ICONS[ic]||'';const tx=h('div','tx');tx.append(h('b','',nm),h('span','',sm));b.append(i,tx);
     if(fn){const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(c);b.onclick=fn}else{b.disabled=true;b.style.opacity='.55'}l.append(b)});
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
-function openAsk(){if(!S.askSeen){S.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
-  if(!S.welcomeSeen){S.welcomeSeen=true;saveS()}
+  if(!WF.welcomeSeen){WF.welcomeSeen=true;saveS()}
   const back=()=>{const b=h('button','btn lbl');b.type='button';b.innerHTML=ICONS.back+'<span>Indietro</span>';b.onclick=()=>openWel();return b};
   if(view==='cl'){
     B.append(h('h3','','Il tuo primo cliente'),h('p','wsub','Scegli come inserirlo: puoi cambiare tutto dopo.'));
@@ -10368,12 +10373,14 @@ function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=
     let ready=false,can=false;try{ready=SB.e2e.state()==='ready';can=!!(SB.has&&SB.has())}catch(e){}
     B.append(h('h3','','La cifratura dei dati'));
     const p=(t)=>{const d=h('p','wtx');d.innerHTML=t;B.append(d)};
+    if(isCol()){p('<b>Cosa fa.</b> I dati del CRM del titolare (clienti, lead e preventivi) sono cifrati sul tuo telefono prima di essere salvati nel cloud. Possono leggerli solo il titolare e i collaboratori invitati.');p('<b>Cosa devi fare.</b> Niente: la cifratura usa la password del tuo account e funziona da sola. Non c’è nessuna chiave di recupero da conservare.');p('<b>Se dimentichi la password.</b> Chiedi al titolare un nuovo invito: i dati restano al titolare e non vanno persi.')}else{
     p('<b>Cosa fa.</b> I tuoi clienti, lead e preventivi vengono cifrati sul tuo telefono prima di essere salvati nel cloud. Nemmeno io posso leggerli.');
     p('<b>Cosa devi fare.</b> Niente: la cifratura usa la password del tuo account e si attiva da sola al primo accesso. Ti verrà mostrata una <b>chiave di recupero</b>: salvala fuori dal telefono, in un gestore di password o su carta.');
     p('<b>Attenzione.</b> Se reimposti la password da un dispositivo nuovo senza la chiave di recupero, i dati nel cloud non si possono recuperare da nessuno.');
+    }
     if(ready){const d=h('p','wtx');d.innerHTML='<b>Stato:</b> la cifratura è attiva su questo dispositivo.';B.append(d)}
-    const ok=h('button','btn p lbl');ok.type='button';ok.innerHTML=ICONS.check+'<span>Ho capito</span>';ok.onclick=()=>{S.cryptoOk=true;saveS();openWel()};B.append(ok);
-    if(!ready&&can){const g=h('button','btn lbl');g.type='button';g.innerHTML=ICONS.shield+'<span>Attiva ora</span>';g.onclick=()=>{S.cryptoOk=true;saveS();closeWel();CLOUD.started=false;cloudGate()};B.append(g)}
+    const ok=h('button','btn p lbl');ok.type='button';ok.innerHTML=ICONS.check+'<span>Ho capito</span>';ok.onclick=()=>{WF.cryptoOk=true;saveS();openWel()};B.append(ok);
+    if(!ready&&can){const g=h('button','btn lbl');g.type='button';g.innerHTML=ICONS.shield+'<span>Attiva ora</span>';g.onclick=()=>{WF.cryptoOk=true;saveS();closeWel();CLOUD.started=false;cloudGate()};B.append(g)}
     B.append(back());return}
   const st=wState(),n=st.filter(x=>x.done).length;
   B.append(h('h3','','Benvenuto in KRANG CRM'),h('p','wsub',n===st.length?'Hai completato i primi passi.':['','','','Tre','Quattro','Cinque','Sei','Sette'][st.length]+' passi per iniziare. Puoi saltarli e tornare qui dal menu, voce Aiuto.'));
@@ -10382,9 +10389,9 @@ function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=
     b.onclick=()=>{if(x.k==='az'){closeWel();openSettings();setSp('az')}else if(x.k==='sc'){closeWel();openSettings();setSp('sc')}else if(x.k==='as'){closeWel();openAsk()}else openWel(x.k)};l.append(b)});
   g.append(l);B.append(g);
   const go=h('button','btn p lbl');go.type='button';go.innerHTML=ICONS.check+'<span>'+(n===st.length?'Inizia':'Più tardi')+'</span>';go.onclick=closeWel;B.append(go)}
-(()=>{let k=0;const t=setInterval(()=>{k++;if(k>40||S.welcomeSeen||S.welcomeOff){clearInterval(t);return}
+(()=>{let k=0;const t=setInterval(()=>{k++;if(k>40||WF.welcomeSeen||WF.welcomeOff){clearInterval(t);return}
   if(document.documentElement.classList.contains('noauth')||!$('mE2E').hidden||!$('mWel').hidden)return;
-  if(clients.length||leads.length||opps.length||(S.azienda&&S.azienda.trim())){S.welcomeSeen=true;saveS();clearInterval(t);return}
+  if(!isCol()&&(clients.length||leads.length||opps.length||(S.azienda&&S.azienda.trim()))){WF.welcomeSeen=true;saveS();clearInterval(t);return}
   if(CLOUD.on&&!CLOUD.last&&k<15)return;
   clearInterval(t);openWel()},1500)})();
 
