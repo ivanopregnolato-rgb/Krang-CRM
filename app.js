@@ -10876,6 +10876,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.58.1','Riepilogo cliente e lead: completando un task con il cerchio, l’elenco e il riquadro «Cosa fare adesso» si aggiornano subito (prima il task restava in elenco).'],
 ['1.58.0','Scheda cliente, Riepilogo: riquadro «Cosa fare adesso» con la prossima azione consigliata (task scaduto, informativa mancante, opportunità ferma, prossimo passo da fissare, cliente da ricontattare, proposta) e un breve riepilogo (stato, ultimo contatto, opportunità aperte, prossimo task). Calcolato sul dispositivo con regole semplici.'],
 ['1.57.0','Notifica all’assegnazione: quando il titolare assegna un cliente, un lead o un task a un collaboratore, a lui arriva subito una notifica push (testo generico, nessun dato); un tocco apre la sezione giusta.'],
 ['1.56.2','Termini d’uso aggiornati (proprietà del software e limiti di utilizzo, titolare Ivano Pregnolato): a tutti viene chiesto di riaccettarli. Copyright: aggiunta la licenza proprietaria (LICENSE) e l’avviso «© 2026 Ivano Pregnolato» nell’app e nel codice.'],
@@ -11498,6 +11499,9 @@ function tkPanel(host,rif,what){host.textContent='';
   if(dn.length){const tg=h('button','btn lbl',(host._sd?'Nascondi':'Mostra')+' i task fatti ('+dn.length+')');tg.type='button';tg.style.cssText='width:100%;margin-top:8px';tg.onclick=()=>{host._sd=!host._sd;tkPanel(host,rif,what)};host.append(tg);if(host._sd)dn.slice(0,50).forEach(t=>host.append(tkRow(t)))}
   return op.length}
 function tkPaintAll(){const cnt=(id,n)=>{const e=$(id);if(e)e.textContent=n||''};
+  /* il Riepilogo (cliente e lead) si ridisegna quando cambia un task: prima il task completato restava in elenco */
+  try{const sf=$('sumF');if(sf&&$('sheet')&&!$('sheet').hidden&&!sf.classList.contains('pane-hide')&&typeof window.paintSum==='function')window.paintSum()}catch(e){}
+  try{const lf=$('l_sumF');if(lf&&$('lSheet')&&!$('lSheet').hidden&&!lf.classList.contains('pane-hide')&&typeof window.paintLSum==='function')window.paintLSum()}catch(e){}
   try{const tb=document.querySelector('#cTabs [data-p=tk]');if(tb){const sv=!!(typeof editing!=='undefined'&&editing&&editing.id);{const sb=document.querySelector('#cTabs [data-p=sum]');if(sb)sb.hidden=!sv}tb.hidden=!sv;if(!sv&&tb.classList.contains('on'))setPane('dati')}}catch(e){}
   try{const tb=document.querySelector('#lTabs [data-lp=tk]');if(tb){const sv=!!(typeof lCur!=='undefined'&&lCur&&lCur.id);tb.hidden=!sv;if(!sv&&tb.classList.contains('on'))setLTab('dati')}}catch(e){}
   try{const ob=$('oTabs');if(ob){const sv=!!(typeof oEd!=='undefined'&&oEd&&oEd.id);ob.hidden=!sv;if(!sv)setOTab('dati')}}catch(e){}
@@ -11624,7 +11628,7 @@ function instPaint(){const B=$('in_body'),S0=$('in_st');if(!B||!S0)return;B.text
 
 /* ===== Riepilogo del cliente (disposizione Nuova) ===== */
 /* «Cosa fare adesso»: regole semplici sul dispositivo, nessun dato esce dall'app */
-function nbaFor(c){const T0=Date.now(),dd=x=>{const t=x?new Date(x).getTime():0;return t&&!isNaN(t)?Math.floor((T0-t)/864e5):null};
+function nbaFor(c){const T0=Date.now(),dd=x=>{const t=x?new Date(x).getTime():0;return t&&!isNaN(t)?Math.max(0,Math.floor((T0-t)/864e5)):null};
   const SIL=S.nbaSil>0?S.nbaSil:21,OPP=S.nbaOpp>0?S.nbaOpp:10,td=ymd();
   const tk=tkForRef({tipo:'cliente',id:c.id}),op=(typeof opps!=='undefined'?opps:[]).filter(o=>o.clienteId===c.id&&o.fase!=='vinta'&&o.fase!=='persa');
   const optk=op.flatMap(o=>tkForRef({tipo:'opp',id:o.id})),open=tk.concat(optk).filter(t=>t.stato!=='fatta');
@@ -11643,7 +11647,7 @@ function nbaFor(c){const T0=Date.now(),dd=x=>{const t=x?new Date(x).getTime():0;
   const nx=open.filter(t=>t.scad).sort((a,b)=>a.scad.localeCompare(b.scad))[0];if(nx)sum.push('Prossimo task: '+(nx.titolo||'task')+' ('+fmtD(nx.scad)+').');
   return{main:A[0]||{k:'ok',t:'Tutto in ordine',s:'Nessuna azione urgente per questo cliente.',b:'',fn:null},alt:A.slice(1,3),sum}}
 window.paintSum=function(){const c=editing,w=$('sumF');if(!w)return;w.textContent='';if(!c||!c.id){return}
-  let NB=null;try{NB=nbaFor(c)}catch(e){}
+  let NB=null;try{NB=nbaFor(c)}catch(e){try{console.error('nba',e)}catch(x){}}
   if(NB){const cd=h('div','scard nba');cd.style.cssText='border:1px solid var(--line);margin-bottom:12px;padding:14px 16px';const hd=h('small','','Cosa fare adesso');hd.style.cssText='opacity:.7;text-transform:uppercase;letter-spacing:.04em;font-size:12px';const tt=h('b','',NB.main.t);tt.style.cssText='display:block;font-size:18px;margin:4px 0';const ss=h('div','hint',NB.main.s);cd.append(hd,tt,ss);
     if(NB.main.fn){const bt=h('button','btn p lbl',NB.main.b);bt.type='button';bt.style.cssText='width:100%;margin-top:10px';bt.onclick=NB.main.fn;cd.append(bt)}
     NB.alt.forEach(a=>{const ab=h('button','srow');ab.type='button';const d=h('div');d.append(h('b','',a.t),h('small','',a.s));ab.append(d);ab.onclick=a.fn;ab.style.marginTop='6px';cd.append(ab)});
