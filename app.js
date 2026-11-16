@@ -9456,9 +9456,10 @@ const SPN={};SPG.forEach(g=>g[1].forEach(r=>SPN[r[0]]=r[2]));
 (()=>{const cl=document.querySelector('#mSet .sp[data-sp=cl]'),k=[...cl.children],bk=h('div','sp');bk.dataset.sp='bk';bk.hidden=true;k.slice(1).forEach(e=>bk.append(e));cl.after(bk)})();
 let spCur=null;
 /* collaboratori: inviti e gestione (Impostazioni → Collaboratori) */
+setInterval(()=>{if(spCur==='tm'&&!document.hidden)paintTeam().catch(()=>{})},15000);
 async function paintTeam(){const ow=$('tm_ow'),co=$('tm_co');if(!ow)return;let w={role:'owner'};try{w=SB.e2e.ws()}catch(e){}
   if(w.role==='collab'){ow.hidden=true;co.hidden=false;co.textContent='Lavori sul CRM del titolare'+(w.name?' (accesso a nome di '+w.name+')':'')+'. '+(w.scope==='own'?'Vedi i clienti assegnati a te.':'Vedi tutti i dati.')+' Le impostazioni sensibili sono gestite dal titolare.';return}
-  co.hidden=true;ow.hidden=false;const L=$('tm_L');L.textContent='';let T=[];try{T=await SB.e2e.team()}catch(e){L.append(h('div','hint','Elenco non disponibile ora.'));return}
+  co.hidden=true;ow.hidden=false;const L=$('tm_L');let T=[];try{T=await SB.e2e.team()}catch(e){L.textContent='';L.append(h('div','hint','Elenco non disponibile ora.'));return}L.textContent='';
   if(!T.length){L.append(h('div','hint','Nessun collaboratore.'));return}
   T.forEach(m=>{const r=h('div','shr');r.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 0';const t=h('div','tx');t.style.flex='1';t.append(h('b','',m.name||'Collaboratore'),h('div','hint','Dal '+fmtD(String(m.created).slice(0,10))));
     const sel=h('select');sel.dataset.ns='1';sel.setAttribute('aria-label','Cosa vede '+(m.name||'il collaboratore'));[['all','Tutto'],['own','Solo suoi']].forEach(o=>{const op=h('option','',o[1]);op.value=o[0];sel.append(op)});sel.value=m.scope;sel.style.cssText='flex:none;width:auto;min-width:96px';sel.onchange=()=>SB.e2e.setScope(m.member,sel.value).then(()=>toast('Visibilità aggiornata.')).catch(()=>toast('Impossibile aggiornare ora.'));
@@ -9501,7 +9502,7 @@ $('ih_all').onclick=async()=>{const H=S.infHist||[];toast(await copyText('Storic
 $('st_ok').addEventListener('click',()=>setTimeout(()=>{try{infSync();pubRefresh()}catch(e){}},300));
 setTimeout(()=>{try{infSync()}catch(e){}},3000);
 function paintHub(){const H=$('stHub');H.textContent='';SPG.forEach(([t,rows])=>{rows=rows.filter(r=>{try{return !(r[4]&&r[4]())}catch(e){return true}});if(!rows.length)return;const g=h('div','shg'),l=h('div','sl');g.append(h('h3','',t),l);rows.forEach(([k,ic,nm,sm])=>{const b=h('button','shr');b.type='button';const i=h('span','ic');i.innerHTML=ICONS[ic]||'';const tx=h('div','tx');let sub='';try{sub=sm()}catch(e){}tx.append(h('b','',nm),h('span','',sub));const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(i,tx,c);b.onclick=()=>setSp(k);l.append(b)});H.append(g)})}
-function setSp(k){try{laHide()}catch(e){}if(k==='in')try{instPaint()}catch(e){}if(k==='nt')try{ntPaint()}catch(e){}if(k==='pv')try{paintInf()}catch(e){}if(k==='vc'){try{vcReset()}catch(e){}}if(k==='dp'){dpCur=null;try{dpPaint()}catch(e){}}spCur=k||null;document.querySelectorAll('#mSet .sp').forEach(e=>e.hidden=e.dataset.sp!==k);$('stHub').hidden=!!k;if(!k)paintHub();if(k==='sc')try{paintLock()}catch(e){}$('stTitle').textContent=k?SPN[k]:'Impostazioni';$('stBack').setAttribute('aria-label',k?'Indietro':'Chiudi');const sh=$('mSet');if(sh)sh.scrollTop=0}
+function setSp(k){try{laHide()}catch(e){}if(k==='in')try{instPaint()}catch(e){}if(k==='nt')try{ntPaint()}catch(e){}if(k==='pv')try{paintInf()}catch(e){}if(k==='vc'){try{vcReset()}catch(e){}}if(k==='dp'){dpCur=null;try{dpPaint()}catch(e){}}spCur=k||null;document.querySelectorAll('#mSet .sp').forEach(e=>e.hidden=e.dataset.sp!==k);$('stHub').hidden=!!k;if(!k)paintHub();if(k==='sc')try{paintLock()}catch(e){}if(k==='tm')try{paintTeam()}catch(e){}$('stTitle').textContent=k?SPN[k]:'Impostazioni';$('stBack').setAttribute('aria-label',k?'Indietro':'Chiudi');const sh=$('mSet');if(sh)sh.scrollTop=0}
 
 document.querySelectorAll('#tabs [data-i=inbox]').forEach(e=>e.innerHTML=ICONS.inbox);
 /* ===== motivi per record: chip + ordinamento per priorità ===== */
@@ -10800,6 +10801,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.52.6','Collaboratori: l’elenco si aggiorna ogni volta che apri la pagina e ogni 15 secondi, così il titolare vede subito chi ha accettato e può cambiarne la visibilità o rimuoverlo.'],
 ['1.52.5','Invito collaboratore: un account appena creato viene riconosciuto come nuovo e l’invito si accetta senza il messaggio «ha già dei dati».'],
 ['1.52.4','Invito collaboratore: il primo accesso ritrova il codice anche dopo la pulizia del dispositivo. Se non viene accettato in automatico, puoi incollare il link in Impostazioni → Collaboratori.'],
 ['1.52.3','Invito collaboratore: il codice non si perde più se crei l’account e confermi l’email da un altro browser o dall’app installata.'],
