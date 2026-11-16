@@ -148,7 +148,7 @@ let newRef=null;/* anagrafica appena creata da questo foglio: va esclusa dai con
 function saveClient(viaSend){
   const d={};FIELDS.forEach(f=>d[f]=$(f).value.trim());d.indirizzo=addrC(d.indirizzo);if(curTipo!=='azienda')d.pec='';d.foto=curFoto;d.tipo=curTipo;d.fav=curFav;if(!validate(d)){setPane('dati');const el=$('sheet').querySelector('.bad');if(el)el.scrollIntoView({block:'center'});return null}
   if(!viaSend&&!editing&&$('p_fonte').value==='interessato'&&!$('p_inf').checked&&!$('p_later').checked){setPane('priv');setErr('p_later','Conferma di aver fornito l’informativa privacy (in Dettagli e modifica manuale) oppure scegli «Invierò l’informativa più tardi».');try{$('p_laterW').scrollIntoView({block:'center'})}catch(e){}return null}
-  d.privacy=collectPriv(editing&&editing.privacy,!editing);d.agg=new Date().toISOString();
+  d.privacy=collectPriv(editing&&editing.privacy,!editing);d.agg=new Date().toISOString();if(!$('cAssW').hidden)d.ass=$('cAss').value;
   if(!['nome','cognome','azienda','telefono','email'].some(f=>d[f])){showMsg('Inserisci almeno un dato.');return null}
   let cl=editing;if(!cl&&newRef&&clients.includes(newRef)&&!$('sheet').hidden)cl=newRef;if(cl)Object.assign(cl,d);else{cl=stampNew({id:Date.now().toString(36),...d});clients.push(cl)}newRef=cl;
   persist();render();if(!viaSend)$('sheet').hidden=true;return cl
@@ -522,7 +522,7 @@ const tok=()=>{const a='ABCDEFGHJKMNPQRSTUVWXYZ23456789',r=new Uint32Array(6);cr
 const fmtDT=s=>{const d=new Date(s);return isNaN(d)?'':DTF.format(d)};
 /* data e utente di creazione: cre (ISO) e creU (email o "Questo dispositivo"), salvati nel record e quindi nel backup */
 const whoU=()=>{let u='';try{u=SB.email()||''}catch(e){}return u||'Questo dispositivo'};
-function stampNew(r){if(r&&!r.cre){r.cre=new Date().toISOString();r.creU=whoU()}return r}
+function stampNew(r){if(r&&!r.cre){r.cre=new Date().toISOString();r.creU=whoU();try{if(SB.e2e.isCollab()&&!r.ass)r.ass=SB.uid()}catch(e){}}return r}
 /* ultimo aggiornamento: mod (ISO) e modU; si aggiorna al salvataggio se il contenuto del record è cambiato */
 const MODS={},MODX=new Set(['cre','creU','mod','modU','waSeen']);
 const modSig=r=>JSON.stringify(r,(k,v)=>MODX.has(k)?undefined:v);
@@ -9296,7 +9296,7 @@ $('l_pinfE').onclick=()=>{setLTab('msg');$('l_reply').onclick()};$('l_pinfW').on
 function setLTipo(t){lTipo=t;{const two=document.querySelector('#lSheet .lp[data-lp=dati] .two'),az=$('l_azF'),pf=$('l_pivaF'),pc=$('l_pecF');if(t==='azienda'){pf.hidden=false;pc.hidden=false;two.before(az,pf,pc)}else{pf.hidden=true;pc.hidden=true;two.after(az,pf,pc)}}document.querySelectorAll('#l_seg button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));const L=(id,x)=>{const e=document.querySelector('label[for='+id+']');if(e)e.textContent=x};if(t==='azienda'){L('l_az','Ragione sociale');L('l_nome','Nome referente');L('l_cognome','Cognome referente');L('l_ruolo','Ruolo del referente')}else{L('l_az','Azienda');L('l_nome','Nome');L('l_cognome','Cognome');L('l_ruolo','Ruolo')}}
 $('l_seg').onclick=e=>{const b=e.target.closest('button');if(b)setLTipo(b.dataset.t)};
 function lTel(){let n=$('l_tel').value.replace(/[\s.()\/-]/g,''),pa=$('l_paese').value||'IT';if(n.startsWith('00'))n='+'+n.slice(2);if(n.startsWith('+')){const hit=splitPfx(n);if(hit){pa=hit.iso;n=hit.rest}}else n=n.replace(/\D/g,'');return{telefono:n,paese:pa}}
-function lRead(){return{tipo:lTipo,nome:$('l_nome').value.trim(),cognome:$('l_cognome').value.trim(),email:$('l_email').value.trim().toLowerCase(),...lTel(),azienda:$('l_az').value.trim(),richiesta:$('l_rich').value.trim(),ruolo:$('l_ruolo').value.trim(),nascita:$('l_nascita').value,piva:$('l_piva').value.trim(),pec:$('l_pec').value.trim(),sito:$('l_sito').value.trim(),indirizzo:$('l_ind').value.trim(),note:$('l_note').value.trim()}}
+function lRead(){return{...($('lAssW')&&!$('lAssW').hidden?{ass:$('lAss').value}:{}),tipo:lTipo,nome:$('l_nome').value.trim(),cognome:$('l_cognome').value.trim(),email:$('l_email').value.trim().toLowerCase(),...lTel(),azienda:$('l_az').value.trim(),richiesta:$('l_rich').value.trim(),ruolo:$('l_ruolo').value.trim(),nascita:$('l_nascita').value,piva:$('l_piva').value.trim(),pec:$('l_pec').value.trim(),sito:$('l_sito').value.trim(),indirizzo:$('l_ind').value.trim(),note:$('l_note').value.trim()}}
 function lCheck(d){let ok=true;setErr('l_email','');['l_pec','l_piva','l_nascita'].forEach(f=>setErr(f,''));
   if(d.tipo!=='azienda'){d.piva='';d.pec=''}
   if(d.pec){d.pec=d.pec.toLowerCase();if(!/^[^\s@.][^\s@]*@[^\s@.]+(\.[^\s@.]+)*\.[a-z]{2,}$/.test(d.pec)){setErr('l_pec','Inserisci una PEC valida, ad esempio nome@pec.azienda.it.');ok=false}}
@@ -9457,19 +9457,25 @@ let spCur=null;
 /* collaboratori: inviti e gestione (Impostazioni → Collaboratori) */
 setInterval(()=>{if(spCur==='tm'&&!document.hidden)paintTeam().catch(()=>{})},15000);
 function lockAz(){let c=false;try{c=SB.e2e.isCollab()}catch(e){}const p=document.querySelector('#mSet .sp[data-sp=az]');if(!p)return;let n=$('az_ro');if(!n){n=h('div','hint','Il profilo azienda è gestito dal titolare: puoi consultarlo ma non modificarlo.');n.id='az_ro';n.style.marginBottom='12px';p.prepend(n)}n.hidden=!c;p.querySelectorAll('input,select,textarea,button').forEach(e=>{if(c){if(!e.dataset.ro){e.dataset.ro=e.disabled?'0':'1'}e.disabled=true}else if(e.dataset.ro==='1'){e.disabled=false;delete e.dataset.ro}})}
+const inviteLink=c=>location.origin+location.pathname+'#invito='+encodeURIComponent(c);
+function leftTxt(iso){const ms=new Date(iso).getTime()-Date.now();if(!(ms>0))return 'scaduto';const d=Math.floor(ms/864e5),hh=Math.floor(ms%864e5/36e5);return d>=1?'scade tra '+d+(d===1?' giorno':' giorni')+(hh?' e '+hh+' h':''):'scade tra '+Math.max(1,hh)+(hh<=1?' ora':' ore')}
 async function paintTeam(){const ow=$('tm_ow'),co=$('tm_co');if(!ow)return;let w={role:'owner'};try{w=SB.e2e.ws()}catch(e){}
   if(w.role==='collab'){ow.hidden=true;co.hidden=false;co.textContent='Lavori sul CRM del titolare'+(w.name?' (accesso a nome di '+w.name+')':'')+'. '+(w.scope==='own'?'Vedi i clienti assegnati a te.':'Vedi tutti i dati.')+' Le impostazioni sensibili sono gestite dal titolare.';return}
-  co.hidden=true;ow.hidden=false;const L=$('tm_L');let T=[];try{T=await SB.e2e.team()}catch(e){L.textContent='';L.append(h('div','hint','Elenco non disponibile ora.'));return}L.textContent='';
-  if(!T.length){L.append(h('div','tm0','Non hai ancora invitato nessuno. Crea un invito qui sotto.'));return}
-  T.forEach(m=>{const nm=m.name||'Collaboratore',c=h('div','tmc'),hd=h('div','tmh'),av=h('div','av',nm.trim().split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase()),t=h('div');t.append(h('b','',nm),h('span','','Collabora dal '+fmtD(String(m.created).slice(0,10))));hd.append(av,t);
-    const sel=h('select');sel.dataset.ns='1';sel.setAttribute('aria-label','Cosa vede '+nm);[['all','Vede tutti i dati'],['own','Vede solo i suoi clienti']].forEach(o=>{const op=h('option','',o[1]);op.value=o[0];sel.append(op)});sel.value=m.scope;sel.onchange=()=>SB.e2e.setScope(m.member,sel.value).then(()=>toast('Visibilità aggiornata.')).catch(()=>toast('Impossibile aggiornare ora.'));
+  co.hidden=true;ow.hidden=false;const L=$('tm_L');let T=[],I=[];try{[T,I]=await Promise.all([SB.e2e.team(),SB.e2e.invites().catch(()=>[])])}catch(e){L.textContent='';L.append(h('div','hint','Elenco non disponibile ora.'));return}const FR=document.createDocumentFragment();
+  TEAMC=T;
+  if(!T.length&&!I.length){L.textContent='';L.append(h('div','tm0','Non hai ancora invitato nessuno. Crea un invito qui sotto.'));return}
+  const scSel=(val,fn,lab)=>{const sel=h('select');sel.dataset.ns='1';sel.setAttribute('aria-label',lab);[['all','Vede tutti i dati'],['own','Vede solo i suoi clienti']].forEach(o=>{const op=h('option','',o[1]);op.value=o[0];sel.append(op)});sel.value=val;sel.onchange=()=>fn(sel.value);const fw=h('div','f');fw.append(sel);return fw};
+  T.forEach(m=>{const nm=m.name||'Collaboratore',c=h('div','tmc'),hd=h('div','tmh'),av=h('div','av',nm.trim().split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase()),t=h('div');t.append(h('b','',nm));if(m.email)t.append(h('span','',m.email));t.append(h('span','','Collabora dal '+fmtD(String(m.created).slice(0,10))));hd.append(av,t);
     const b=h('button','btn','Rimuovi collaboratore');b.type='button';b.onclick=()=>askConfirm('Rimuovere '+nm+'? Perde subito l’accesso ai dati.','trash','Rimuovi',()=>SB.e2e.removeMember(m.member).then(()=>{toast('Collaboratore rimosso.');paintTeam()}).catch(()=>toast('Impossibile rimuovere ora.')));
-    const fw=h('div','f');fw.append(sel);c.append(hd,fw,b);L.append(c)})}
+    c.append(hd,scSel(m.scope,v=>SB.e2e.setScope(m.member,v).then(()=>toast('Visibilità aggiornata.')).catch(()=>toast('Impossibile aggiornare ora.')),'Cosa vede '+nm),b);FR.append(c)});
+  for(const iv of I){const nm=iv.name||'Collaboratore',c=h('div','tmc'),hd=h('div','tmh'),av=h('div','av','…'),t=h('div');t.append(h('b','',nm),h('span','','Invito in attesa · '+leftTxt(iv.expires)),h('span','',iv.scope==='own'?'Vedrà solo i suoi clienti':'Vedrà tutti i dati'));hd.append(av,t);c.append(hd);
+    const code=await SB.e2e.inviteCode(iv),lk=code?inviteLink(code):'';
+    if(lk){const c1=h('button','btn lbl','Copia link'),c2=h('button','btn lbl','Condividi');c1.type=c2.type='button';c1.onclick=()=>{navigator.clipboard.writeText(lk).then(()=>toast('Link copiato.')).catch(()=>toast('Copia non riuscita.'))};c2.onclick=()=>{if(navigator.share)navigator.share({title:'Invito a KRANG CRM',text:'Ti invito a lavorare sul mio CRM: apri il link per accettare.',url:lk}).catch(()=>{});else c1.click()};const rw=h('div','tmr');rw.append(c1,c2);c.append(rw)}
+    else c.append(h('div','hint','Link non disponibile: annulla l’invito e creane uno nuovo.'));
+    const x=h('button','btn','Annulla invito');x.type='button';x.onclick=()=>askConfirm('Annullare l’invito per '+nm+'? Il link smette di funzionare.','trash','Annulla invito',()=>SB.e2e.cancelInvite(iv.code_h).then(()=>{toast('Invito annullato.');paintTeam()}).catch(()=>toast('Impossibile annullare ora.')));c.append(x);FR.append(c)}L.textContent='';L.append(FR)}
+let TEAMC=[];
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#tm_add');if(!b)return;const n=$('tm_n').value.trim();if(!n){setErr('tm_n','Scrivi il nome del collaboratore.');return}setErr('tm_n','');b.disabled=true;
-  SB.e2e.invite(n,$('tm_s').value).then(code=>{$('tm_n').value='';const lk=location.origin+location.pathname+'#invito='+encodeURIComponent(code),bx=$('tm_K');bx.hidden=false;bx.textContent='';bx.append(h('b','','Invito pronto per '+n),h('div','hint','Mandagli questo link: vale 7 giorni e si usa una sola volta.'));
-    const k=h('input');k.readOnly=true;k.value=lk;bx.append(k);
-    const c1=h('button','btn lbl','Copia link'),c2=h('button','btn lbl','Condividi');c1.type=c2.type='button';c1.onclick=()=>{navigator.clipboard.writeText(lk).then(()=>toast('Link copiato.')).catch(()=>k.select())};c2.onclick=()=>{if(navigator.share)navigator.share({title:'Invito a KRANG CRM',text:'Ti invito a lavorare sul mio CRM: apri il link per accettare.',url:lk}).catch(()=>{});else c1.click()};bx.append(c1,c2);paintTeam()}).catch(err=>{toast(err&&err.code==='locked'?'Sblocca prima i dati con la tua password.':'Impossibile creare l’invito ora.')}).finally(()=>{b.disabled=false})});
-
+  SB.e2e.invite(n,$('tm_s').value).then(()=>{$('tm_n').value='';toast('Invito creato: lo trovi nell’elenco, con copia e condividi.');return paintTeam()}).catch(err=>{toast(err&&err.code==='locked'?'Sblocca prima i dati con la tua password.':'Impossibile creare l’invito ora.')}).finally(()=>{b.disabled=false})});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#tm_acc');if(!b)return;let c=$('tm_ic').value.trim();const m=/invito=([^&\s]+)/.exec(c);if(m)c=decodeURIComponent(m[1]);const pw=$('tm_ip').value;
   if(!c){setErr('tm_ic','Incolla il link o il codice che hai ricevuto.');return}setErr('tm_ic','');if(!pw){setErr('tm_ip','Scrivi la tua password di accesso.');return}setErr('tm_ip','');b.disabled=true;
   SB.e2e.acceptInvite(c,pw).then(()=>{toast('Invito accettato: ricarico.');setTimeout(()=>location.reload(),600)}).catch(er=>{setErr('tm_ic',er&&er.code==='used'?'Questo account ha già dei dati: crea un account nuovo per l’invito.':'Invito non valido, scaduto o già usato.')}).finally(()=>{b.disabled=false})});
@@ -9570,10 +9576,27 @@ async function cloudFlush(key){const sp=CSPEC[key];if(!sp||!CLOUD.db||!CLOUD.can
     CLOUD.n[key]=cur.length;CLOUD.lite=Object.keys(CSPEC).reduce((t,k)=>t+(k===key?lite:(CLOUD['l_'+k]||0)),0);CLOUD['l_'+key]=lite;CLOUD.err='';CLOUD.last=Date.now()
   }catch(e){CLOUD.err=(e&&e.code)||'errore'}
   finally{CLOUD.busy[key]=0;try{paintCloud()}catch(e){}}}
+/* «Assegnato a»: solo il titolare, quando ha collaboratori */
+function assFill(w,sel,cur){let col=false;try{col=SB.e2e.isCollab()}catch(e){}const T=(typeof TEAMC!=='undefined'&&TEAMC)||[];const W=$(w);if(!W)return;if(col||!T.length){W.hidden=true;return}W.hidden=false;const S_=$(sel);S_.textContent='';const o0=h('option','','Titolare (io)');o0.value='';S_.append(o0);T.forEach(m=>{const o=h('option','',m.name||m.email||'Collaboratore');o.value=m.member;S_.append(o)});S_.value=cur||'';if(S_.value!==(cur||''))S_.value=''}
+{const _os=openSheet;openSheet=function(c){const r=_os.apply(this,arguments);try{assFill('cAssW','cAss',c&&c.ass)}catch(e){}return r}}
+{const _ol=openLead;openLead=function(l){const r=_ol.apply(this,arguments);try{assFill('lAssW','lAss',l&&l.ass)}catch(e){}return r}}
+/* collaboratori con visibilità «solo i suoi clienti»: l'app nasconde i record non assegnati (restano intatti nel cloud) */
+const SC={H:{cl:{},op:{},ld:{}},on(){try{const w=SB.e2e.ws();return w.role==='collab'&&w.scope==='own'}catch(e){return false}},me(){try{return SB.uid()}catch(e){return ''}}};
+const scCids=()=>new Set(clients.map(c=>String(c.id)));
+function scVis(key,r,cids){const me=SC.me();if(r.ass===me)return true;if(key==='op')return !!(cids&&cids.has(String(r.clienteId)));if(key==='ld')return !!(r.clienteId&&cids&&cids.has(String(r.clienteId)));return false}
+function scSplit(k,cids){const sp=CSPEC[k],sy=CLOUD.sync[k]||(CLOUD.sync[k]={});let ch=false;const keep=[];sp.arr().forEach(r=>{if(scVis(k,r,cids))keep.push(r);else{SC.H[k][String(r.id)]=r;delete sy[String(r.id)];ch=true}});
+  Object.keys(SC.H[k]).forEach(id=>{const r=SC.H[k][id];if(scVis(k,r,cids)){keep.push(r);delete SC.H[k][id];sy[id]=hs(JSON.stringify(cloudClean(r,sp)));ch=true}});
+  if(ch){sp.set(keep);sp.save();sp.after()}}
+function scRecalc(){if(!SC.on())return;const cids=scCids();scSplit('op',cids);scSplit('ld',cids)}
+function scApply(){if(SC.on()){scSplit('cl',null);scRecalc()}else{['cl','op','ld'].forEach(k=>{const sp=CSPEC[k],sy=CLOUD.sync[k]||(CLOUD.sync[k]={}),ids=Object.keys(SC.H[k]);if(!ids.length)return;const arr=sp.arr().slice();ids.forEach(id=>{const r=SC.H[k][id];arr.push(r);sy[id]=hs(JSON.stringify(cloudClean(r,sp)))});SC.H[k]={};sp.set(arr);sp.save();sp.after()})}}
+async function scRefresh(){let ch=false;try{ch=await SB.e2e.refreshWS()}catch(e){}if(ch||!scRefresh.d){scRefresh.d=1;try{scApply()}catch(e){}}
+  try{if(!SB.e2e.isCollab()&&SB.uid())TEAMC=await SB.e2e.team()}catch(e){}}
+setTimeout(scRefresh,3000);setInterval(()=>{if(!document.hidden)scRefresh()},30000);
 function cloudPull(key,snap){const sp=CSPEC[key],sy=CLOUD.sync[key]||(CLOUD.sync[key]={});let ch=false,arr=sp.arr().slice();const idx=new Map(arr.map((r,i)=>[String(r.id),i]));CLOUD.applying=true;
   try{snap.docChanges().forEach(c=>{const id=c.doc.id;
-    if(c.type==='removed'){delete sy[id];if(idx.has(id)){arr=arr.filter(r=>String(r.id)!==id);idx.clear();arr.forEach((r,i)=>idx.set(String(r.id),i));ch=true}return}
+    if(c.type==='removed'){delete sy[id];if(SC.H[key])delete SC.H[key][id];if(idx.has(id)){arr=arr.filter(r=>String(r.id)!==id);idx.clear();arr.forEach((r,i)=>idx.set(String(r.id),i));ch=true}return}
     const d=Object.assign({},c.doc.data());delete d._u;delete d._by;const hh=hs(JSON.stringify(canon(d))),lite=d._lite;delete d._lite;
+    if(SC.on()&&SC.H[key]){if(!scVis(key,d,key==='cl'?null:scCids())){SC.H[key][id]=d;delete sy[id];if(idx.has(id)){arr=arr.filter(r=>String(r.id)!==id);idx.clear();arr.forEach((r,i)=>idx.set(String(r.id),i));ch=true}return}delete SC.H[key][id]}
     const i=idx.get(id),cur=i===undefined?null:arr[i];
     if(cur){const curH=hs(JSON.stringify(cloudClean(cur,sp)));if(curH===hh){sy[id]=hh;return}
       if(sy[id]!==undefined&&sy[id]!==curH)return;            // modifica locale non ancora inviata: vince quella locale
@@ -9582,6 +9605,7 @@ function cloudPull(key,snap){const sp=CSPEC[key],sy=CLOUD.sync[key]||(CLOUD.sync
     sy[id]=hh;ch=true})}
   finally{CLOUD.applying=false}
   if(ch){sp.set(arr);sp.save();sp.after()}
+  if(key==='cl'&&SC.on())try{scRecalc()}catch(e){}
   CLOUD.n[key]=arr.length;CLOUD.last=Date.now();CLOUD.err='';
   if(!CLOUD.first[key]){CLOUD.first[key]=1;const mg=SB.e2e.needMig();if(mg)CLOUD.sync[key]={};Promise.resolve(cloudFlush(key)).then(()=>{if(mg)E2EUI.done(key)})}
   try{paintCloud()}catch(e){}}
@@ -10422,12 +10446,16 @@ const SB=(()=>{
   async changePass(cur,nw){await rawByPass(cur);await e2e.setPass(nw)},
   /* a ogni accesso con password: la chiave dei dati è protetta dalla password dell'account, senza che l'utente scelga nulla */
   /* inviti: il codice protegge la chiave dei dati, il server non la legge */
+  async refreshWS(){const b=WS.role+WS.scope+WS.o;await loadWS();return b!==WS.role+WS.scope+WS.o},
   isCollab:()=>WS.role==='collab',ws:()=>({owner:WS.o,scope:WS.scope,name:WS.name,role:WS.role}),
   async pendingInvite(){let c='';try{c=localStorage.getItem('crm-invite')||''}catch(e){}if(c)return c;try{const u=await js('/auth/v1/user',{auth:1});return(u&&u.user_metadata&&u.user_metadata.kcrm_inv)||''}catch(e){return ''}},
   async clearInvite(){try{localStorage.removeItem('crm-invite')}catch(e){}try{await js('/auth/v1/user',{method:'PUT',auth:1,json:{data:{kcrm_inv:null}}})}catch(e){}},
-  async invite(name,scope){if(WS.role==='collab'||!E.raw)throw lockErr();const code=rkNew(),salt=rnd(16),w=b64(salt)+'.'+await wrap(E.raw,await kek(rkNorm(code),salt,RIT));
-   await js('/rest/v1/team_invites',{method:'POST',auth:1,headers:{Prefer:'return=minimal'},json:{code_h:await sha256hex(rkNorm(code)),owner:uid(),name:String(name||'').slice(0,60),scope:scope==='own'?'own':'all',wrapped:w}});return code},
-  async team(){return js('/rest/v1/team_members?owner=eq.'+uid()+'&select=member,name,scope,created&order=created.asc',{auth:1})},
+  async invite(name,scope){if(WS.role==='collab'||!E.raw)throw lockErr();const code=rkNew(),salt=rnd(16),ch=await sha256hex(rkNorm(code)),w=b64(salt)+'.'+await wrap(E.raw,await kek(rkNorm(code),salt,RIT));
+   await js('/rest/v1/team_invites',{method:'POST',auth:1,headers:{Prefer:'return=minimal'},json:{code_h:ch,owner:uid(),name:String(name||'').slice(0,60),scope:scope==='own'?'own':'all',wrapped:w,code_enc:JSON.stringify(await encJ('invite',ch,{c:code}))}});return code},
+  async team(){return js('/rest/v1/team_members?owner=eq.'+uid()+'&select=member,name,scope,email,created&order=created.asc',{auth:1})},
+  async invites(){const r=await js('/rest/v1/team_invites?owner=eq.'+uid()+'&used=eq.false&expires=gt.'+encodeURIComponent(new Date().toISOString())+'&select=code_h,name,scope,expires,code_enc,created&order=created.asc',{auth:1});return r||[]},
+  async inviteCode(row){if(!row||!row.code_enc)return '';try{return(await decJ('invite',row.code_h,JSON.parse(row.code_enc))).c||''}catch(e){return ''}},
+  async cancelInvite(h){await js('/rest/v1/team_invites?owner=eq.'+uid()+'&code_h=eq.'+encodeURIComponent(h),{method:'DELETE',auth:1,headers:{Prefer:'return=minimal'}})},
   async setScope(member,scope){await js('/rest/v1/team_members?owner=eq.'+uid()+'&member=eq.'+member,{method:'PATCH',auth:1,headers:{Prefer:'return=minimal'},json:{scope:scope==='own'?'own':'all'}})},
   async removeMember(member){await js('/rest/v1/team_members?owner=eq.'+uid()+'&member=eq.'+member,{method:'DELETE',auth:1,headers:{Prefer:'return=minimal'}})},
   async acceptInvite(code,pass){if(!uid())throw new Error('nessuna sessione');
@@ -10801,6 +10829,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.54.0','Collaboratori: «Solo i suoi clienti» ora funziona (il collaboratore vede solo clienti, opportunità e lead assegnati a lui); il titolare assegna clienti e lead dal campo «Assegnato a». In elenco compaiono l’email del collaboratore e gli inviti in attesa, con copia link, condividi e scadenza.'],
 ['1.53.1','Collaboratori: il campo «Cosa vede» ha le stesse dimensioni degli altri campi.'],
 ['1.53.0','Pagina Collaboratori rifatta: schede chiare per ogni collaboratore, campi a tutta larghezza, invito in un riquadro dedicato. La voce sta sotto «Profilo azienda» e i collaboratori non possono modificare il profilo azienda.'],
 ['1.52.6','Collaboratori: se non ha impostato il proprio nome, in Home il collaboratore vede il nome indicato nell’invito. L’elenco si aggiorna ogni volta che apri la pagina e ogni 15 secondi, così il titolare vede subito chi ha accettato e può cambiarne la visibilità o rimuoverlo.'],

@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
-<script src="boot.js?v=1.53.1"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.53.1|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.54.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.54.0|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -667,7 +667,7 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
 /* pagina Collaboratori */
 #mSet .tmf{padding:14px}#mSet .tmf .f{margin-bottom:12px}#mSet .tmf .btn{width:100%}#mSet .tmf .hint{margin:0 0 12px}
 #mSet .tmc{padding:14px;border-bottom:1px solid var(--line)}#mSet .tmc:last-child{border-bottom:0}#mSet .tmc .tmh{display:flex;align-items:center;gap:12px;margin-bottom:10px}#mSet .tmc .av{width:40px;height:40px;border-radius:50%;background:var(--lilac);color:#2d2b55;display:grid;place-items:center;font-weight:700;flex:none}#mSet .tmc .tmh b{display:block;font-size:16px}#mSet .tmc .tmh span{display:block;color:var(--muted);font-size:13px}#mSet .tmc .f{margin:0 0 10px}
-#mSet select:not([multiple]){font-size:16px;min-height:50px;padding-left:12px;padding-right:36px;width:100%;box-sizing:border-box}#mSet .tmc .btn{width:100%}
+#mSet select:not([multiple]){font-size:16px;min-height:50px;padding-left:12px;padding-right:36px;width:100%;box-sizing:border-box}#mSet .tmc .btn{width:100%;margin-top:8px}#mSet .tmc .tmr{display:flex;gap:8px}#mSet .tmc .tmr .btn{flex:1;margin-top:0}
 #mSet .tmd{margin:0 0 16px}#mSet .tmd summary{cursor:pointer;padding:12px 4px;font-weight:600;color:var(--muted)}#mSet .tmd .sl{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--sh)}
 #mSet #tm_K{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}#mSet #tm_K input{width:100%;margin:8px 0;font-size:13px}#mSet #tm_K .btn{margin-top:8px}
 #mSet .tm0{padding:16px 14px;color:var(--muted);font-size:14px}
@@ -955,7 +955,6 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
     <div class="f"><label for="tm_n">Nome</label><input id="tm_n" data-ns maxlength="60" autocomplete="off" placeholder="Per esempio Anna Rossi"><div class="err" id="err-tm_n" hidden></div></div>
     <div class="f"><label for="tm_s">Cosa potrà vedere</label><select id="tm_s" data-ns><option value="all">Tutti i dati</option><option value="own">Solo i clienti assegnati a lui</option></select></div>
     <button class="btn p lbl" id="tm_add" type="button"><span data-i="add"></span>Crea invito</button>
-    <div id="tm_K" hidden></div>
    </div></div>
    <details class="tmd"><summary>Hai ricevuto un invito?</summary><div class="sl tmf">
     <div class="hint">Se non è stato accettato in automatico, incolla qui il link. Serve un account nuovo, senza dati.</div>
@@ -1084,6 +1083,7 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
   <div id="mapThumb" class="mapt" hidden style="margin:-4px 0 12px"></div>
 </div>
 <div class="fg"><div class="gt lb-only">Note</div>
+  <div class="f" id="cAssW" hidden><label for="cAss">Assegnato a</label><select id="cAss"></select></div>
   <div class="f"><label for="note">Note</label><textarea id="note" rows="4"></textarea></div>
 </div>
   <div id="privF" class="pane-hide">
@@ -1152,6 +1152,7 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
 </div>
 <div class="fg"><div class="gt lb-only">Richiesta e note</div>
   <div class="f"><label for="l_rich">Richiesta</label><textarea id="l_rich" rows="5"></textarea></div>
+  <div class="f" id="lAssW" hidden><label for="lAss">Assegnato a</label><select id="lAss"></select></div>
   <div class="f"><label for="l_note">Note</label><textarea id="l_note" rows="3"></textarea></div>
 </div>
 </div>
@@ -1200,6 +1201,6 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.53.1"></script>
+<script src="app.js?v=1.54.0"></script>
 </body>
 </html>
