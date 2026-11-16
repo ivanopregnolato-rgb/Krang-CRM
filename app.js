@@ -9597,8 +9597,8 @@ const offPill=(()=>{let el=null;const paint=()=>{try{const off=navigator.onLine=
     if(!el){el=document.createElement('div');el.id='offPill';el.setAttribute('role','status');el.style.cssText='position:fixed;top:calc(env(safe-area-inset-top,0px) + 4px);left:50%;transform:translateX(-50%);z-index:55;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;background:#f0a35e;color:#1b1b22;pointer-events:none;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.35)';el.hidden=true;document.body.append(el)}
     el.textContent=off?'Offline'+(n?' · '+n+(n===1?' modifica':' modifiche')+' da inviare':''):'Sincronizzazione in attesa · '+n+(n===1?' modifica':' modifiche');el.hidden=!show}catch(e){}};
   window.addEventListener('online',()=>{paint();setTimeout(()=>{cloudRetry();setTimeout(paint,2500)},1000)});window.addEventListener('offline',paint);
-  setInterval(()=>{if(document.hidden)return;paint();if(navigator.onLine!==false&&CLOUD.err)cloudRetry()},15000);setTimeout(paint,4000);
-  return paint})();
+  setInterval(()=>{if(document.hidden)return;paint();if(navigator.onLine!==false&&CLOUD.err&&(Date.now()-(offPill.t||0)>14000)){offPill.t=Date.now();cloudRetry()}},4000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(paint,300)});setTimeout(paint,4000);
+  paint.t=0;return paint})();
 /* «Assegnato a»: solo il titolare, quando ha collaboratori */
 /* versione dei Termini e dell'informativa (data dell'ultimo aggiornamento, come in legal.js): cambiandola, a tutti gli utenti viene chiesto di riaccettare */
 const LEGAL_V='2026-11-16';
@@ -9677,7 +9677,7 @@ async function cloudStart(){if(CLOUD.started||!CLOUD.on)return;CLOUD.started=tru
     clearTimeout(CLOUD.timer);const tmo=()=>{if(CLOUD.last)return;if(document.hidden){CLOUD.timer=setTimeout(tmo,10000);return}CLOUD.err='timeout';paintCloud()};CLOUD.timer=setTimeout(tmo,10000);paintCloud()
   }catch(e){CLOUD.started=false;CLOUD.err=(e&&e.code)||'errore';paintCloud()}}
 function cloudStop(){CLOUD.subs.forEach(f=>{try{f()}catch(e){}});CLOUD.subs=[];CLOUD.db=null;CLOUD.started=false;CLOUD.mgS=0;try{E2EUI.reset()}catch(e){}CLOUD.first={};CLOUD.sync={};CLOUD.sf=0;CLOUD.sh='';paintCloud()}
-function paintCloud(){const e=$('st_cstat');if(!e)return;
+function paintCloud(){try{offPill()}catch(x){}const e=$('st_cstat');if(!e)return;
   const E={nodb:'Il cloud non è disponibile in questa visualizzazione: serve aprire l’app con il tuo account Claude.',timeout:'Il database non risponde ancora: i dati restano su questo dispositivo e si sincronizzeranno appena possibile.',offline:'Sei offline: i dati restano su questo dispositivo e si sincronizzeranno appena torna la rete.',locked:'Sincronizzazione in pausa: i dati sono cifrati e serve la passphrase. Apri Impostazioni → Account.',quota_exceeded:'Limite di spazio del database raggiunto: elimina dati o allegati pesanti.',revoked:'Accesso al cloud revocato per questa sessione.',resource_exhausted:'Troppe operazioni ravvicinate: riprovo da solo.',invalid_argument:'Un record non è stato accettato dal database (troppo grande o non valido).'};
   let t;if(!CLOUD.on)t='Sincronizzazione disattivata: i dati sono solo in questo browser.';
   else if(CLOUD.err&&!CLOUD.last)t=E[CLOUD.err]||('Errore: '+CLOUD.err);
@@ -10898,6 +10898,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.59.1','Etichetta offline: compare subito dopo una modifica non inviata (prima poteva servire fino a 15 secondi) e al ritorno nell’app.'],
 ['1.59.0','Uso offline: se manca la rete compare «Offline · N modifiche da inviare»; al ritorno della rete le modifiche partono da sole, con nuovi tentativi ogni 15 secondi se il cloud non risponde. Le notifiche di assegnazione non partite per mancanza di rete vengono ritentate per 6 ore.'],
 ['1.58.3','Riquadro «Cosa fare adesso»: mostra una sola azione; il testo del «prossimo task» tiene conto dei task già chiusi.'],
 ['1.58.2','Popup dei Termini: i documenti si aprono dentro l’app, sopra il popup, e «Indietro» riporta al popup (prima si tornava alla schermata di accesso).'],
