@@ -10430,11 +10430,11 @@ const SB=(()=>{
   async setScope(member,scope){await js('/rest/v1/team_members?owner=eq.'+uid()+'&member=eq.'+member,{method:'PATCH',auth:1,headers:{Prefer:'return=minimal'},json:{scope:scope==='own'?'own':'all'}})},
   async removeMember(member){await js('/rest/v1/team_members?owner=eq.'+uid()+'&member=eq.'+member,{method:'DELETE',auth:1,headers:{Prefer:'return=minimal'}})},
   async acceptInvite(code,pass){if(!uid())throw new Error('nessuna sessione');
-   const own=await js('/rest/v1/records?user_id=eq.'+uid()+'&select=id&limit=1',{auth:1});if(own&&own.length)throw Object.assign(new Error('account già in uso'),{code:'used'});
+   const own=await js('/rest/v1/records?user_id=eq.'+uid()+'&col=neq.config&select=id&limit=1',{auth:1});if(own&&own.length)throw Object.assign(new Error('account già in uso'),{code:'used'});
    let r;try{r=await js('/rest/v1/rpc/accept_invite',{method:'POST',auth:1,json:{h:await sha256hex(rkNorm(code))}})}catch(e){throw Object.assign(new Error('invito non valido o scaduto'),{code:'badinv'})}
    r=Array.isArray(r)?r[0]:r;if(!r||!r.wrapped)throw Object.assign(new Error('invito non valido'),{code:'badinv'});
    const p=String(r.wrapped).split('.');let raw;try{raw=await unwrap(p[1],await kek(rkNorm(code),unb64(p[0]),RIT))}catch(e){throw Object.assign(new Error('invito non valido'),{code:'badinv'})}
-   await putBundle(await mkBundle(pass,rkNew(),raw));await setDK(raw,true);await loadWS();return WS.name||''},
+   await putBundle(await mkBundle(pass,rkNew(),raw));await setDK(raw,true);await loadWS();try{await js('/rest/v1/records?user_id=eq.'+uid()+'&col=eq.config',{method:'DELETE',auth:1,headers:{Prefer:'return=minimal'}})}catch(e){}return WS.name||''},
   async auto(pass){const st=await e2e.init();
    if(st==='none'){const rk=await e2e.setupPrepare(pass);await e2e.setupCommit();return{rk}}
    if(st==='ready'){try{await rawByPass(pass)}catch(e){if(e&&e.code==='badpass')await e2e.setPass(pass);else if(e&&e.code!=='nokey')throw e}return{}}
@@ -10800,6 +10800,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.52.5','Invito collaboratore: un account appena creato viene riconosciuto come nuovo e l’invito si accetta senza il messaggio «ha già dei dati».'],
 ['1.52.4','Invito collaboratore: il primo accesso ritrova il codice anche dopo la pulizia del dispositivo. Se non viene accettato in automatico, puoi incollare il link in Impostazioni → Collaboratori.'],
 ['1.52.3','Invito collaboratore: il codice non si perde più se crei l’account e confermi l’email da un altro browser o dall’app installata.'],
 ['1.52.2','Registrazione: se la password viene rifiutata, l’app dice il motivo reale (troppo corta, troppo semplice o già comparsa in violazioni di dati).'],
