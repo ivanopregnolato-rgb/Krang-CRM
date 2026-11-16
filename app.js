@@ -9464,7 +9464,7 @@ async function paintTeam(){const ow=$('tm_ow'),co=$('tm_co');if(!ow)return;let w
   T.forEach(m=>{const nm=m.name||'Collaboratore',c=h('div','tmc'),hd=h('div','tmh'),av=h('div','av',nm.trim().split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase()),t=h('div');t.append(h('b','',nm),h('span','','Collabora dal '+fmtD(String(m.created).slice(0,10))));hd.append(av,t);
     const sel=h('select');sel.dataset.ns='1';sel.setAttribute('aria-label','Cosa vede '+nm);[['all','Vede tutti i dati'],['own','Vede solo i suoi clienti']].forEach(o=>{const op=h('option','',o[1]);op.value=o[0];sel.append(op)});sel.value=m.scope;sel.onchange=()=>SB.e2e.setScope(m.member,sel.value).then(()=>toast('Visibilità aggiornata.')).catch(()=>toast('Impossibile aggiornare ora.'));
     const b=h('button','btn','Rimuovi collaboratore');b.type='button';b.onclick=()=>askConfirm('Rimuovere '+nm+'? Perde subito l’accesso ai dati.','trash','Rimuovi',()=>SB.e2e.removeMember(m.member).then(()=>{toast('Collaboratore rimosso.');paintTeam()}).catch(()=>toast('Impossibile rimuovere ora.')));
-    c.append(hd,sel,b);L.append(c)})}
+    const fw=h('div','f');fw.append(sel);c.append(hd,fw,b);L.append(c)})}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#tm_add');if(!b)return;const n=$('tm_n').value.trim();if(!n){setErr('tm_n','Scrivi il nome del collaboratore.');return}setErr('tm_n','');b.disabled=true;
   SB.e2e.invite(n,$('tm_s').value).then(code=>{$('tm_n').value='';const lk=location.origin+location.pathname+'#invito='+encodeURIComponent(code),bx=$('tm_K');bx.hidden=false;bx.textContent='';bx.append(h('b','','Invito pronto per '+n),h('div','hint','Mandagli questo link: vale 7 giorni e si usa una sola volta.'));
     const k=h('input');k.readOnly=true;k.value=lk;bx.append(k);
@@ -10801,6 +10801,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.53.1','Collaboratori: il campo «Cosa vede» ha le stesse dimensioni degli altri campi.'],
 ['1.53.0','Pagina Collaboratori rifatta: schede chiare per ogni collaboratore, campi a tutta larghezza, invito in un riquadro dedicato. La voce sta sotto «Profilo azienda» e i collaboratori non possono modificare il profilo azienda.'],
 ['1.52.6','Collaboratori: se non ha impostato il proprio nome, in Home il collaboratore vede il nome indicato nell’invito. L’elenco si aggiorna ogni volta che apri la pagina e ogni 15 secondi, così il titolare vede subito chi ha accettato e può cambiarne la visibilità o rimuoverlo.'],
 ['1.52.5','Invito collaboratore: un account appena creato viene riconosciuto come nuovo e l’invito si accetta senza il messaggio «ha già dei dati».'],
