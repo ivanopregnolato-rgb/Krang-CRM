@@ -10840,6 +10840,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.54.2','Primi passi per i collaboratori: senza profilo azienda e catalogo, con un testo sulla cifratura adatto a chi lavora sul CRM del titolare. I loro segni di completamento restano sul loro dispositivo.'],
 ['1.54.1','Collaboratori: la scelta «Cosa vede» si conferma con «Salva modifiche», come le altre impostazioni.'],
 ['1.54.0','Collaboratori: «Solo i suoi clienti» ora funziona (il collaboratore vede solo clienti, opportunità e lead assegnati a lui); il titolare assegna clienti e lead dal campo «Assegnato a». In elenco compaiono l’email del collaboratore e gli inviti in attesa, con copia link, condividi e scadenza.'],
 ['1.53.1','Collaboratori: il campo «Cosa vede» ha le stesse dimensioni degli altri campi.'],
