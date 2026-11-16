@@ -10851,6 +10851,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.55.0','Task assegnati: il titolare può assegnare un task a un collaboratore (campo «Assegnato a»); di default il task è di chi lo crea. Nell’elenco compare a chi è assegnato e il promemoria push arriva solo a chi deve fare il task.'],
 ['1.54.5','Primi passi: la scheda in Home non sparisce più ai collaboratori dopo un ricaricamento (veniva letta l’impostazione del titolare prima di conoscere il ruolo); inoltre si nasconde solo dopo conferma.La si ritrova sempre in Aiuto.'],
 ['1.54.4','Collaboratori: restano visibili «Importa dalla rubrica» e «Anagrafiche duplicate»; le altre sezioni del titolare non compaiono affatto. Inviti: il titolare inserisce l’email del collaboratore: il titolare inserisce l’email del collaboratore (con pulsante «Invia per email»); il server verifica che l’account che si registra abbia quell’indirizzo. Se un account nuovo arriva senza il codice ma con un invito sulla sua email, l’app chiede il codice invece di creare un nuovo titolare; se il codice è sbagliato lo richiede.'],
 ['1.54.3','Impostazioni dei collaboratori: nascoste le sezioni del titolare (email, WhatsApp, allegati, preventivi, lead, privacy, importazioni, duplicati, backup, utilizzo). Restano profilo azienda in sola lettura, account, aspetto, app, promemoria e accesso.'],
@@ -11387,6 +11388,10 @@ const tkRef=t=>{const r=t&&t.rif;if(!r)return null;
   if(r.tipo==='opp'){const o=opps.find(x=>x.id===r.id);return o?{nome:'Opportunità · '+o.titolo,go:()=>openOpp(o)}:null}
   return null};
 const tkOpen_=()=>tasks.filter(t=>t&&t.stato!=='fatta');
+/* chi deve fare il task: ato (scelto dal titolare; '_o' = titolare), altrimenti chi l'ha creato (ass, per i collaboratori), altrimenti il titolare */
+const tkWho=t=>(t&&t.ato)||(t&&t.ass)||'_o';
+const tkMine=t=>{let col=false,me='';try{col=SB.e2e.isCollab();me=SB.uid()}catch(e){}const w=tkWho(t);return col?w===me:w==='_o'};
+const tkWhoName=t=>{const w=tkWho(t);let col=false,me='';try{col=SB.e2e.isCollab();me=SB.uid()}catch(e){}if(col)return w===me?'':(w==='_o'?'Titolare':'Un collega');if(w==='_o')return '';const m=(typeof TEAMC!=='undefined'&&TEAMC||[]).find(x=>x.member===w);return m?(m.name||m.email||'Collaboratore'):'Collaboratore'};
 const tkSort=(a,b)=>((a.scad||'9999')+(a.ora||'')).localeCompare((b.scad||'9999')+(b.ora||''))||String(a.cre||'').localeCompare(String(b.cre||''));
 function tkWhen(t){if(!t.scad)return 'Senza scadenza';const td=ymd(),o=/^\d\d:\d\d$/.test(t.ora||'')?' alle '+t.ora:'';if(t.scad<td)return 'Scaduta il '+fmtD(t.scad);if(t.scad===td)return 'Oggi'+o;const n=Math.round((new Date(t.scad+'T00:00')-new Date(td+'T00:00'))/864e5);return (n===1?'Domani':fmtD(t.scad))+o}
 function tkDone(t,on){t.stato=on?'fatta':'aperta';if(on)t.fatta=ymd();else delete t.fatta;persistT();try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast(on?'Task completato.':'Attività riaperta.')}
@@ -11414,14 +11419,17 @@ function tkOpen(t,pre,lock){const isNew=!t;const d=t?{...t,rif:t.rif?{...t.rif}:
     R.slice(0,8).forEach(r=>{const b=h('button','btn lbl',r.n);b.type='button';b.style.cssText='width:100%;justify-content:flex-start;margin:0 0 4px';b.onclick=()=>{d.rif={tipo:r.tipo,id:r.id};q.value='';rl.textContent='';e4.hidden=true;paintRif()};rl.append(b)});
     if(!R.length)rl.append(h('div','hint','Nessun risultato.'))};
   paintRif();
-  const sig=()=>JSON.stringify([ti.value.trim(),da.value,oi.value,no.value.trim(),d.rif]);
+  /* assegnazione: solo il titolare, e solo se ha collaboratori */
+  const f5=h('div','f'),l5=h('label','','Assegnato a'),as5=h('select');as5.id='tk_a';l5.htmlFor='tk_a';as5.dataset.ns='1';f5.append(l5,as5);f5.hidden=true;
+  (async()=>{let col=false;try{col=SB.e2e.isCollab()}catch(e){}if(col)return;let T=(typeof TEAMC!=='undefined'&&TEAMC)||[];if(!T.length){try{T=await SB.e2e.team();TEAMC=T}catch(e){}}if(!T.length)return;const o0=h('option','','Titolare (io)');o0.value='_o';as5.append(o0);T.forEach(m=>{const o=h('option','',m.name||m.email||'Collaboratore');o.value=m.member;as5.append(o)});as5.value=t?tkWho(t):'_o';if(as5.value!==(t?tkWho(t):'_o'))as5.value='_o';as5.dataset.b=as5.value;f5.hidden=false;})();
+  const sig=()=>JSON.stringify([ti.value.trim(),da.value,oi.value,no.value.trim(),d.rif,as5.value===(as5.dataset.b||as5.value)?'':as5.value]);
   const save=()=>{const tt=ti.value.trim();let bad=null;e1.hidden=e2.hidden=e4.hidden=true;ti.classList.remove('bad');da.classList.remove('bad');
     if(!tt){e1.textContent='Scrivi cosa c’è da fare.';e1.hidden=false;ti.classList.add('bad');bad=bad||ti}
     if(!da.value||isNaN(new Date(da.value+'T00:00'))){e2.textContent='Scegli la scadenza: puoi usare i tasti rapidi o scrivere la data.';e2.hidden=false;da.classList.add('bad');bad=bad||da}
     if(!(d.rif&&tkRef({rif:d.rif}))){e4.textContent='Collega il task a un cliente, un lead o un’opportunità.';e4.hidden=false;bad=bad||q}
     if(bad){bad.scrollIntoView({block:'center'});try{bad.focus({preventScroll:true})}catch(e){}return}
-    const rec=Object.assign(t||stampNew(d),{titolo:tt,scad:da.value||'',ora:oi.value||'',nota:no.value.trim(),rif:d.rif||null,stato:(t&&t.stato)||'aperta'});if(!t)tasks.push(rec);persistT();sh.hidden=true;try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast('Task salvato.')};
-  const ac=h('div','delw');w.append(f1,f2,f3,f4,ac);
+    const rec=Object.assign(t||stampNew(d),{titolo:tt,scad:da.value||'',ora:oi.value||'',nota:no.value.trim(),rif:d.rif||null,stato:(t&&t.stato)||'aperta'});if(f5.hidden===false)rec.ato=as5.value||'_o';if(!t)tasks.push(rec);persistT();sh.hidden=true;try{renderH()}catch(e){}try{tkPaintClient()}catch(e){}if($('tkList')&&!$('tkList').hidden)tkListPaint();toast('Task salvato.')};
+  const ac=h('div','delw');w.append(f1,f2,f3,f4,f5,ac);
   if(t){const dn=h('button','btn lbl'+(t.stato==='fatta'?'':' p'));dn.type='button';dn.innerHTML=ICONS.check+(t.stato==='fatta'?'Riapri':'Segna come fatta');dn.style.width='100%';dn.onclick=()=>{tkDone(t,t.stato!=='fatta');sh.hidden=true};
     const row=h('div','');row.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:8px';
     const rf=tkRef(t);if(rf){const go=h('button','btn lbl','Apri '+rf.nome);go.type='button';go.style.cssText='min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';go.onclick=()=>{sh.hidden=true;rf.go()};row.append(go)}
@@ -11436,7 +11444,7 @@ let tkShowDone=false;
 function tkRow(t){const r=h('div','tkr');r.style.cssText='display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:0 0 6px';
   const cb=h('button','btn ico');cb.type='button';cb.style.flex='none';cb.innerHTML=t.stato==='fatta'?ICONS.check:'';cb.style.borderRadius='50%';cb.style.border='2px solid var(--ink,#fff)';cb.style.opacity=t.stato==='fatta'?'.7':'1';cb.title=cb.ariaLabel=t.stato==='fatta'?'Riapri il task':'Segna come fatta';cb.onclick=e=>{e.stopPropagation();tkDone(t,t.stato!=='fatta')};
   const b=h('button','');b.type='button';b.style.cssText='flex:1;min-width:0;text-align:left;background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer';const rf=tkRef(t);
-  const a=h('b','',t.titolo);a.style.display='block';if(t.stato==='fatta')a.style.textDecoration='line-through';const s=h('span','hint',(t.stato==='fatta'?'Fatta il '+fmtD(t.fatta||''):tkWhen(t))+(rf?' · '+rf.nome:''));s.style.display='block';if(t.stato!=='fatta'&&t.scad&&t.scad<ymd())s.style.color='var(--danger)';
+  const a=h('b','',t.titolo);a.style.display='block';if(t.stato==='fatta')a.style.textDecoration='line-through';const s=h('span','hint',(t.stato==='fatta'?'Fatta il '+fmtD(t.fatta||''):tkWhen(t))+(rf?' · '+rf.nome:'')+(tkWhoName(t)?' · '+tkWhoName(t):''));s.style.display='block';if(t.stato!=='fatta'&&t.scad&&t.scad<ymd())s.style.color='var(--danger)';
   b.append(a,s);b.onclick=()=>tkOpen(t);r.append(cb,b);return r}
 function tkListPaint(){const sh=$('tkList');if(!sh)return;const L=sh.querySelector('.tkbody');if(!L)return;L.textContent='';const td=ymd(),op=tkOpen_().sort(tkSort);
   const grp=[['Scadute',op.filter(t=>t.scad&&t.scad<td)],['Oggi',op.filter(t=>t.scad===td)],['Prossime',op.filter(t=>t.scad&&t.scad>td)],['Senza scadenza',op.filter(t=>!t.scad)]];
@@ -11519,12 +11527,12 @@ async function kget(s,k){const d=await kdb();return new Promise((ok,ko)=>{const 
 async function nkIdb(){try{const k=nkGet(),d=await kdb();await new Promise(ok=>{const t=d.transaction('k','readwrite');t.objectStore('k').put(k,'nk');t.oncomplete=()=>{d.close();ok()};t.onerror=()=>{d.close();ok()}})}catch(e){}}
 async function remBlob(title,ref){if(S.remShow===false||!title)return '';try{const k=await crypto.subtle.importKey('raw',b64d(nkGet()),'AES-GCM',false,['encrypt']),iv=crypto.getRandomValues(new Uint8Array(12)),ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},k,new TextEncoder().encode(JSON.stringify({t:String(title).slice(0,100),r:String(ref||'').slice(0,80)}))));const o=new Uint8Array(12+ct.length);o.set(iv);o.set(ct,12);return b64e(o)}catch(e){return ''}}
 function remList(){const hh=String(remHour()).padStart(2,'0'),now=Date.now()+6e4,o=[];
-  tkOpen_().forEach(t=>{if(!t.scad)return;const d=new Date(t.scad+'T'+(/^\d\d:\d\d$/.test(t.ora||'')?t.ora:hh+':00')+':00');if(isNaN(d)||d.getTime()<now)return;o.push({k:String(t.id),t:d.toISOString()})});return o.slice(0,500)}
+  tkOpen_().filter(tkMine).forEach(t=>{if(!t.scad)return;const d=new Date(t.scad+'T'+(/^\d\d:\d\d$/.test(t.ora||'')?t.ora:hh+':00')+':00');if(isNaN(d)||d.getTime()<now)return;o.push({k:String(t.id),t:d.toISOString()})});return o.slice(0,500)}
 let remTm=0,remBusy=false;
 function remSoon(){if(!pushFlag())return;clearTimeout(remTm);remTm=setTimeout(()=>remSync(false),2500)}
 let remLast=0;function remHeal(){if(!pushFlag()||Date.now()-remLast<6e4)return;remLast=Date.now();remSync(true)}
 async function remSync(force){if(remBusy||!pushFlag()||!SB.has()||navigator.onLine===false)return;remBusy=true;
-  try{nkIdb();const l=remList(),T={};tkOpen_().forEach(t=>{const rf=tkRef(t);T[String(t.id)]=[t.titolo,rf?rf.nome:'']});const sg=JSON.stringify([l,l.map(x=>T[x.k]),S.remShow!==false,String(nkGet()).slice(0,8)]);let last='';try{last=localStorage.getItem(REMK)||''}catch(e){}if(!force&&sg===last)return;for(const x of l)x.b=await remBlob(T[x.k][0],T[x.k][1]);await SB.push.rem(l);try{localStorage.setItem(REMK,sg)}catch(e){}}catch(e){}finally{remBusy=false}}
+  try{nkIdb();const l=remList(),T={};tkOpen_().filter(tkMine).forEach(t=>{const rf=tkRef(t);T[String(t.id)]=[t.titolo,rf?rf.nome:'']});const sg=JSON.stringify([l,l.map(x=>T[x.k]),S.remShow!==false,String(nkGet()).slice(0,8)]);let last='';try{last=localStorage.getItem(REMK)||''}catch(e){}if(!force&&sg===last)return;for(const x of l)x.b=await remBlob(T[x.k][0],T[x.k][1]);await SB.push.rem(l);try{localStorage.setItem(REMK,sg)}catch(e){}}catch(e){}finally{remBusy=false}}
 async function pushCheck(){if(!pushFlag()||!pushOk()||!SB.has())return;
   if(Notification.permission!=='granted'){setPushFlag(false);return}
   try{const {reg,sub}=await pushGet();if(!reg)return;if(!sub){const n=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:vapidKey()});await SB.push.save(subKeys(n))}else await SB.push.save(subKeys(sub));remSoon();remHeal()}catch(e){}}
