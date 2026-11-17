@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
 <style>
-:root{--sab:max(env(safe-area-inset-bottom,0px),26px);--sbt:var(--sab);--sw:0px;--act:var(--lilac);--actb:#9b8fe0;--bg:#f3f6fb;--surface:#fff;--ink:#263045;--muted:#6b7488;--out:#d3dae8;--line:#dde3ee;--accent:#a6dcc8;--warm:#f7d9bb;--pink:#f5cad6;--lilac:#d9d1f3;--butter:#f6edb8;--danger:#c4435c;--sh:0 1px 2px rgba(20,30,60,.07),0 6px 16px rgba(20,30,60,.06);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:var(--sab)}
+:root{--sab:env(safe-area-inset-bottom,0px);--sbt:var(--sab);--sw:0px;--act:var(--lilac);--actb:#9b8fe0;--bg:#f3f6fb;--surface:#fff;--ink:#263045;--muted:#6b7488;--out:#d3dae8;--line:#dde3ee;--accent:#a6dcc8;--warm:#f7d9bb;--pink:#f5cad6;--lilac:#d9d1f3;--butter:#f6edb8;--danger:#c4435c;--sh:0 1px 2px rgba(20,30,60,.07),0 6px 16px rgba(20,30,60,.06);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:var(--sab)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--act:var(--lilac);--actb:#9b8fe0;--bg:#161b27;--surface:#202737;--ink:#eef1f8;--muted:#9ba5bb;--out:#34405a;--line:#2c3650;--danger:#ff8fa5;--sh:0 1px 2px rgba(0,0,0,.3),0 6px 16px rgba(0,0,0,.2)}}
 :root[data-theme="dark"]{color-scheme:dark;--act:var(--lilac);--actb:#9b8fe0;--bg:#161b27;--surface:#202737;--ink:#eef1f8;--muted:#9ba5bb;--out:#34405a;--line:#2c3650;--danger:#ff8fa5;--sh:0 1px 2px rgba(0,0,0,.3),0 6px 16px rgba(0,0,0,.2)}
 /* modelli di colore scelti dall'utente (Impostazioni > Aspetto). Nessun attributo = Standard */
@@ -141,6 +141,8 @@ h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em}
 #menuBtn[hidden]{display:none}
 /* niente transform sulla vista: renderebbe il suo «+» (posizione fissa) relativo alla vista e lo farebbe volare dall'alto durante lo scorrimento */
 @keyframes swl{from{opacity:.4;left:28px}to{opacity:1;left:0}}@keyframes swr{from{opacity:.4;left:-28px}to{opacity:1;left:0}}.swl,.swr{position:relative}.swl{animation:swl .22s ease-out}.swr{animation:swr .22s ease-out}
+/* senza connessione la fascia sotto il menu si allarga quanto serve alla barra «Offline» (altrimenti resta com'è) */
+html.offl{--sab:max(env(safe-area-inset-bottom,0px),26px)}
 /* ===== Desktop e tablet largo (da 1024 px): menu laterale, pagine più larghe ===== */
 @media (min-width:1024px){
  :root{--sbt:-52px;--sw:232px}
