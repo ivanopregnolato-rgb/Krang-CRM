@@ -8883,7 +8883,7 @@ function afterOppSave(o){const short=[];(o.prodotti||[]).forEach(r=>{const pr=mp
 /* ===== Home ===== */
 let hAll=false;
 function actions(){const A=[],noInf=[],td=ymd(),add=(pri,ic,title,sub,go)=>A.push({pri,ic,title,sub,go});
-  clients.forEach(c=>{const b=bday(c.nascita);if(b&&b.days<=7)add(b.days===0?90:60-b.days,'gift','Compleanno di '+fullName(c),(b.days===0?'Oggi':b.days===1?'Domani':'Tra '+b.days+' giorni')+' · '+(b.age+(b.days===0?0:1))+' anni',()=>openSheet(c));
+  clients.forEach(c=>{const b=bday(c.nascita);if(b&&b.days<=7)add(b.days===0?90:60-b.days,'gift','Compleanno di '+fullName(c),(b.days===0?'Oggi':b.days===1?'Domani':'Tra '+b.days+' giorni')+((b.age+(b.days===0?0:1))>0?' · '+(b.age+(b.days===0?0:1))+' anni':''),()=>openSheet(c));
     const pv=c.privacy;if(!pv||!pv.informativa)noInf.push(c);
     (pv&&pv.richieste||[]).forEach(r=>{if(effSt(r)==='scaduta')add(62,'clock','Richiesta consensi scaduta',fullName(c)+' · codice '+r.token,()=>openSheet(c))})});
   try{tkActions(add,td)}catch(e){}
@@ -10902,7 +10902,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
-['1.59.6','Il pulsante «+» resta fermo in basso a destra anche quando scorri da una pagina all’altra (prima partiva dall’alto durante lo scorrimento). La barra arancione «Offline» non usa più uno spostamento che sull’iPhone la rendeva sfocata.'],
+['1.59.6','Il pulsante «+» resta fermo in basso a destra anche quando scorri da una pagina all’altra (prima partiva dall’alto durante lo scorrimento). Nei compleanni in Home, se l’anno di nascita inserito dà 0 anni (data uguale a oggi) l’età non viene più scritta. La barra arancione «Offline» non usa più uno spostamento che sull’iPhone la rendeva sfocata.'],
 ['1.59.5','Titoli di tutte le pagine (Home, Clienti, Lead, Opportunità, Altro) alla stessa altezza, un po’ più in basso: lasciano spazio alla barra arancione «Offline», che non resta più nascosta sotto l’orario.'],
 ['1.59.4','Barra «Offline» ben visibile (non più sfocata dietro l’intestazione) e mostrata anche se vai offline con l’app aperta: ad ogni salvataggio l’app verifica la rete. Avvio senza connessione: il caricamento dei caratteri non può più bloccare la prima schermata, la copia salvata si legge anche se il telefono cambia le intestazioni della richiesta e, se l’app non riesce ad avviarsi, lo scrive invece di restare bianca.'],
 ['1.59.3','Etichetta «Offline» affidabile: se il telefono in modalità aereo dice comunque di essere online, l’app lo scopre con una piccola richiesta di prova all’apertura, al ritorno nell’app e quando un salvataggio nel cloud non riesce (nessuna richiesta periodica), e mostra l’etichetta arancione e lo stato corretto.'],
