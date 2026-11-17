@@ -9,6 +9,12 @@
  try{if(!localStorage.getItem('crm-sb-v1'))d.classList.add('noauth')}catch(e){d.classList.add('noauth')}
  try{var _l=JSON.parse(localStorage.getItem('crm-lock-v1')||'{}');if(_l.on)d.classList.add('locked')}catch(e){}
  /* font: caricato senza bloccare la pagina (niente gestori inline) */
- var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap';document.head.appendChild(l);
+ /* media=print: il foglio di stile non può bloccare il disegno della pagina (senza rete, all'avvio, restava la schermata bianca); a caricamento finito diventa attivo */
+ var l=document.createElement('link');l.rel='stylesheet';l.media='print';l.href='https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap';l.addEventListener('load',function(){l.media='all'});document.head.appendChild(l);
 })();
 try{if(localStorage.getItem('crm-lay')!=='a')document.documentElement.setAttribute('data-lay','b')}catch(e){document.documentElement.setAttribute('data-lay','b')}
+
+/* se dopo qualche secondo l'app non è partita (file non caricati, tipicamente senza rete e senza copia salvata) lo dice invece di restare bianca */
+setTimeout(function(){try{if(typeof window.persist==='function'||document.getElementById('offDiag'))return;var d=document.createElement('div');d.id='offDiag';d.style.cssText='position:fixed;inset:0;z-index:99999;background:#0b1020;color:#eef4ff;font:16px/1.5 system-ui,sans-serif;padding:calc(env(safe-area-inset-top,0px) + 40px) 24px 24px;visibility:visible';
+ var p=document.createElement('p');p.textContent='KRANG CRM non è riuscito ad avviarsi. Chiudi l’app e riaprila: se sei senza rete, riprova quando torna la connessione.';d.appendChild(p);var q=document.createElement('p');q.style.opacity='.6';q.style.fontSize='13px';q.textContent='Dettaglio: app non caricata';d.appendChild(q);document.body.appendChild(d);
+ if(window.caches)caches.keys().then(function(k){return Promise.all(k.map(function(n){return caches.open(n).then(function(c){return c.keys().then(function(l){return n+': '+l.length+' file'})})}))}).then(function(r){q.textContent='Dettaglio: app non caricata · '+(r.join(', ')||'nessuna copia salvata')}).catch(function(){})}catch(e){}},6000);

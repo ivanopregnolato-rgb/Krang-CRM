@@ -1,11 +1,11 @@
-const V='crm-v1.59.3',F=['./','index.html','app.js?v=1.59.3','boot.js?v=1.59.3','manifest.webmanifest','privacy.html','termini.html','legal.js','assistente.js?v=1.59.3','legal.css','consensi.html','consensi.js','consensi.css','kcrm-180.png','kcrm-192.png','kcrm-512.png'];
-self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>Promise.all(F.map(f=>c.add(f).catch(()=>0)))).then(()=>self.skipWaiting()))});
+const V='crm-v1.59.4',F=['./','index.html','app.js?v=1.59.4','boot.js?v=1.59.4','manifest.webmanifest','privacy.html','termini.html','legal.js','assistente.js?v=1.59.4','legal.css','consensi.html','consensi.js','consensi.css','kcrm-180.png','kcrm-192.png','kcrm-512.png'];
+self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>Promise.all(F.map((f,i)=>i<4?c.add(f):c.add(f).catch(()=>0)))).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 /* solo file dell'app (stessa origine, GET, risposta "basic"): mai dati degli utenti, mai risposte di altri siti */
 self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(e.request.method!=='GET'||u.origin!==location.origin||!u.pathname.startsWith(new URL('./',location.href).pathname))return;
  const nav=e.request.mode==='navigate',st=()=>caches.open(V);
  /* dalla copia salvata: i file dell'app, anche con indirizzo diverso (es. ?go=tk) e, per l'avvio, la pagina principale */
- const hit=()=>caches.match(e.request,{ignoreSearch:nav}).then(r=>r||(nav?(caches.match('index.html',{ignoreSearch:true})).then(x=>x||caches.match('./',{ignoreSearch:true})):undefined));
+ const hit=()=>caches.match(e.request,{ignoreSearch:nav,ignoreVary:true}).then(r=>r||(nav?(caches.match('index.html',{ignoreSearch:true,ignoreVary:true})).then(x=>x||caches.match('./',{ignoreSearch:true,ignoreVary:true})):undefined));
  const net=()=>fetch(e.request).then(r=>{if(r.ok&&r.type==='basic'){const c=r.clone();st().then(x=>x.put(e.request,c))}return r});
  /* rete con tempo massimo: senza connessione (o rete finta) si parte subito dalla copia salvata */
  e.respondWith(new Promise(ok=>{let done=false;const fin=r=>{if(!done){done=true;ok(r)}};
