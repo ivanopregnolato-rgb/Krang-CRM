@@ -1,4 +1,4 @@
-const V='crm-v1.59.2',F=['./','index.html','app.js?v=1.59.2','boot.js?v=1.59.2','manifest.webmanifest','privacy.html','termini.html','legal.js','assistente.js?v=1.59.2','legal.css','consensi.html','consensi.js','consensi.css','kcrm-180.png','kcrm-192.png','kcrm-512.png'];
+const V='crm-v1.59.3',F=['./','index.html','app.js?v=1.59.3','boot.js?v=1.59.3','manifest.webmanifest','privacy.html','termini.html','legal.js','assistente.js?v=1.59.3','legal.css','consensi.html','consensi.js','consensi.css','kcrm-180.png','kcrm-192.png','kcrm-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>Promise.all(F.map(f=>c.add(f).catch(()=>0)))).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 /* solo file dell'app (stessa origine, GET, risposta "basic"): mai dati degli utenti, mai risposte di altri siti */
@@ -9,7 +9,7 @@ self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(e.request.me
  const net=()=>fetch(e.request).then(r=>{if(r.ok&&r.type==='basic'){const c=r.clone();st().then(x=>x.put(e.request,c))}return r});
  /* rete con tempo massimo: senza connessione (o rete finta) si parte subito dalla copia salvata */
  e.respondWith(new Promise(ok=>{let done=false;const fin=r=>{if(!done){done=true;ok(r)}};
-  const t=setTimeout(()=>hit().then(r=>{if(r)fin(r)}),nav?2500:4000);
+  const t=setTimeout(()=>hit().then(r=>{if(r)fin(r)}),nav?1500:4000);
   net().then(r=>{clearTimeout(t);fin(r)},()=>{clearTimeout(t);hit().then(r=>fin(r||new Response('<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width"><body style="font:16px system-ui;padding:32px;background:#111;color:#eee"><h3>KRANG CRM</h3><p>Sei offline e l’app non è ancora salvata su questo dispositivo. Riapri l’app quando c’è connessione.</p>',{status:503,headers:{'Content-Type':'text/html;charset=utf-8'}})))})}))});
 
 /* promemoria push: il testo è generico (arriva cifrato dal server); un tocco apre l'elenco delle attività */

@@ -9593,10 +9593,14 @@ function cloudPending(){let n=0;try{Object.keys(CSPEC).forEach(k=>{const sp=CSPE
 const notQ={k:'crm-notq',busy:false,get(){try{return JSON.parse(localStorage.getItem(this.k)||'[]')}catch(e){return []}},set(a){try{localStorage.setItem(this.k,JSON.stringify(a.slice(-50)))}catch(e){}},
   async flush(){if(this.busy)return;this.busy=true;try{const a=this.get().filter(x=>Date.now()-x.t<216e5&&(x.n||0)<5),keep=[];for(const x of a){if(navigator.onLine===false){keep.push(x);continue}let ok=false;try{ok=await SB.e2e.notify(x.to,x.kind)}catch(e){}if(!ok){x.n=(x.n||0)+1;keep.push(x)}}this.set(keep)}finally{this.busy=false}}};
 function cloudRetry(){if(!CLOUD.on||!CLOUD.db||!CLOUD.canW||navigator.onLine===false)return;Object.keys(CSPEC).forEach(k=>{try{cloudFlush(k)}catch(e){}});try{notQ.flush()}catch(e){}}
-const offPill=(()=>{let el=null;const paint=()=>{try{const off=navigator.onLine===false;let n=0,show=false;if(CLOUD.on&&(off||CLOUD.err)){n=CLOUD.db?cloudPending():0;show=off||n>0}if(off&&!document.documentElement.classList.contains('noauth'))show=true
+const offPill=(()=>{let el=null;const paint=()=>{try{const off=navigator.onLine===false||offPill.dead===true;let n=0,show=false;if(CLOUD.on&&(off||CLOUD.err)){n=CLOUD.db?cloudPending():0;show=off||n>0}if(off&&!document.documentElement.classList.contains('noauth'))show=true
     if(!el){el=document.createElement('div');el.id='offPill';el.setAttribute('role','status');el.style.cssText='position:fixed;top:calc(env(safe-area-inset-top,0px) + 4px);left:50%;transform:translateX(-50%);z-index:55;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;background:#f0a35e;color:#1b1b22;pointer-events:none;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.35)';el.hidden=true;document.body.append(el)}
     el.textContent=off?'Offline'+(n?' · '+n+(n===1?' modifica':' modifiche')+' da inviare':''):'Sincronizzazione in attesa · '+n+(n===1?' modifica':' modifiche');el.hidden=!show}catch(e){}};
   window.addEventListener('online',()=>{paint();setTimeout(()=>{cloudRetry();setTimeout(paint,2500)},1000)});window.addEventListener('offline',paint);
+  /* il telefono in modalità aereo a volte dice comunque «online»: una piccola richiesta di prova (senza dati) lo scopre */
+  const probe=()=>{if(document.hidden||!document.documentElement||document.documentElement.classList.contains('noauth'))return;const ac=new AbortController(),t=setTimeout(()=>ac.abort(),5000);
+   fetch('https://oebneptbsfxbfwafjhjw.supabase.co/auth/v1/health',{cache:'no-store',signal:ac.signal,headers:{apikey:'sb_publishable_zUOzrWkF4tLoXjR5bsi3xQ_KK9khPrd'}}).then(()=>{clearTimeout(t);const was=offPill.dead;offPill.dead=false;if(was){paint();try{cloudRetry()}catch(e){}}},()=>{clearTimeout(t);offPill.dead=true;paint()})};
+  window.addEventListener('online',()=>setTimeout(probe,500));setTimeout(probe,2500);setInterval(probe,8000);
   setInterval(()=>{if(document.hidden)return;paint();if(navigator.onLine!==false&&CLOUD.err&&(Date.now()-(offPill.t||0)>14000)){offPill.t=Date.now();cloudRetry()}},4000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(paint,300)});setTimeout(paint,4000);
   paint.t=0;return paint})();
 /* «Assegnato a»: solo il titolare, quando ha collaboratori */
@@ -9683,7 +9687,7 @@ function paintCloud(){try{offPill()}catch(x){}const e=$('st_cstat');if(!e)return
   else if(CLOUD.err&&!CLOUD.last)t=E[CLOUD.err]||('Errore: '+CLOUD.err);
   else if(!CLOUD.db)t='Collegamento al cloud in corso…';
   else{const n=Object.values(CLOUD.n).reduce((a,b)=>a+(b||0),0),d=CLOUD.last?new Date(CLOUD.last):null;t='Cloud attivo'+(d?' · ultimo scambio alle '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'):'')+' · '+n+' record.'+(CLOUD.canW?'':' Sola lettura: il tuo ruolo non consente di modificare i dati.')+(CLOUD.lite?' '+CLOUD.lite+' record con foto o allegati troppo pesanti: restano completi solo su questo dispositivo.':'')+(CLOUD.err?' '+(E[CLOUD.err]||CLOUD.err):'')}
-  e.textContent=t}
+  if(CLOUD.on&&(navigator.onLine===false||offPill.dead===true))t='Offline: '+E.offline.replace(/^Sei offline: /,'');e.textContent=t}
 // invio automatico dopo ogni salvataggio locale
 {const w=(fn,key)=>function(){const r=fn.apply(this,arguments);try{cloudPush(key)}catch(e){}return r};
  persist=w(persist,'cl');persistO=w(persistO,'op');persistP=w(persistP,'pr');persistM=w(persistM,'mv');
@@ -10898,6 +10902,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.59.3','Etichetta «Offline» affidabile: se il telefono in modalità aereo dice comunque di essere online, l’app lo verifica con una piccola richiesta di prova (ogni 8 secondi) e mostra l’etichetta arancione e lo stato corretto.'],
 ['1.59.2','Avvio senza connessione: in modalità aereo l’app si apre dalla copia salvata sul telefono (prima poteva restare bianca). Se la rete non risponde entro pochi secondi si parte comunque. L’etichetta arancione «Offline» ora compare sempre senza connessione, anche all’avvio e senza modifiche da inviare.'],
 ['1.59.1','Etichetta offline: compare subito dopo una modifica non inviata (prima poteva servire fino a 15 secondi) e al ritorno nell’app.'],
 ['1.59.0','Uso offline: se manca la rete compare «Offline · N modifiche da inviare»; al ritorno della rete le modifiche partono da sole, con nuovi tentativi ogni 15 secondi se il cloud non risponde. Le notifiche di assegnazione non partite per mancanza di rete vengono ritentate per 6 ore.'],
