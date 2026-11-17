@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
 <style>
-:root{--act:var(--lilac);--actb:#9b8fe0;--bg:#f3f6fb;--surface:#fff;--ink:#263045;--muted:#6b7488;--out:#d3dae8;--line:#dde3ee;--accent:#a6dcc8;--warm:#f7d9bb;--pink:#f5cad6;--lilac:#d9d1f3;--butter:#f6edb8;--danger:#c4435c;--sh:0 1px 2px rgba(20,30,60,.07),0 6px 16px rgba(20,30,60,.06);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{--sab:max(env(safe-area-inset-bottom,0px),26px);--act:var(--lilac);--actb:#9b8fe0;--bg:#f3f6fb;--surface:#fff;--ink:#263045;--muted:#6b7488;--out:#d3dae8;--line:#dde3ee;--accent:#a6dcc8;--warm:#f7d9bb;--pink:#f5cad6;--lilac:#d9d1f3;--butter:#f6edb8;--danger:#c4435c;--sh:0 1px 2px rgba(20,30,60,.07),0 6px 16px rgba(20,30,60,.06);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:var(--sab)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--act:var(--lilac);--actb:#9b8fe0;--bg:#161b27;--surface:#202737;--ink:#eef1f8;--muted:#9ba5bb;--out:#34405a;--line:#2c3650;--danger:#ff8fa5;--sh:0 1px 2px rgba(0,0,0,.3),0 6px 16px rgba(0,0,0,.2)}}
 :root[data-theme="dark"]{color-scheme:dark;--act:var(--lilac);--actb:#9b8fe0;--bg:#161b27;--surface:#202737;--ink:#eef1f8;--muted:#9ba5bb;--out:#34405a;--line:#2c3650;--danger:#ff8fa5;--sh:0 1px 2px rgba(0,0,0,.3),0 6px 16px rgba(0,0,0,.2)}
 /* modelli di colore scelti dall'utente (Impostazioni > Aspetto). Nessun attributo = Standard */
@@ -182,7 +182,7 @@ details summary{cursor:pointer;font-weight:600;padding:12px 0}
 .msg{margin:10px 0;padding:10px 12px;border:1px solid rgba(38,48,69,.1);border-radius:12px;background:var(--butter);color:#2d2b55;font-size:14px}
 
 /* schermate a tutto schermo e finestre */
-.sheet{position:fixed;inset:0;background:var(--bg);overflow:auto;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:12px 16px calc(32px + env(safe-area-inset-bottom,0px));z-index:5}
+.sheet{position:fixed;inset:0;background:var(--bg);overflow:auto;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:12px 16px calc(32px + var(--sab));z-index:5}
 .sheet>div{max-width:560px;margin:0 auto}
 html.sh-open,html.sh-open body{overflow:hidden;overscroll-behavior:none}
 .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}
@@ -208,7 +208,7 @@ html.sh-open,html.sh-open body{overflow:hidden;overscroll-behavior:none}
 .box p{margin:0 0 16px;font-weight:600}
 .box.info{max-height:80vh;overflow:auto}
 .box.compact .tech{display:none}
-.toast{position:fixed;left:16px;right:16px;bottom:calc(100px + env(safe-area-inset-bottom,0px));max-width:528px;margin:0 auto;background:var(--ink);color:var(--bg);padding:12px 14px;border-radius:12px;z-index:30;font-size:14px}
+.toast{position:fixed;left:16px;right:16px;bottom:calc(100px + var(--sab));max-width:528px;margin:0 auto;background:var(--ink);color:var(--bg);padding:12px 14px;border-radius:12px;z-index:30;font-size:14px}
 .toast button{margin-left:10px;background:var(--bg);color:var(--ink);border:0;border-radius:8px;padding:6px 12px;font-weight:600;cursor:pointer}
 .itx{font-size:14px;line-height:1.5;font-weight:400;margin-bottom:14px}
 .itx p{margin:0 0 8px;font-weight:400}
@@ -418,16 +418,16 @@ html.sh-open,html.sh-open body{overflow:hidden;overscroll-behavior:none}
 
 /* ===== disposizione "Nuova" (Impostazioni > Aspetto): navigazione in basso, Home con le cose da fare in cima ===== */
 html:not([data-lay="b"]) .lb-only{display:none!important}
-[data-lay="b"] .app{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+[data-lay="b"] .app{padding-bottom:calc(150px + var(--sab))}
 [data-lay="b"] .stk{position:static;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 2px;background:none}
 [data-lay="b"] #menuBtn{display:none}
 [data-lay="b"] #title{font-size:28px;line-height:1.15;font-weight:800;letter-spacing:-.02em;margin:6px 0 4px}
-[data-lay="b"] #tabs{position:fixed;left:0;right:0;bottom:0;z-index:4;margin:0;gap:2px;border:0;border-top:1px solid var(--line);border-radius:0;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));background:var(--bg);box-shadow:0 -6px 18px rgba(0,0,0,.18)}
+[data-lay="b"] #tabs{position:fixed;left:0;right:0;bottom:0;z-index:4;margin:0;gap:2px;border:0;border-top:1px solid var(--line);border-radius:0;padding:6px 8px calc(6px + var(--sab));background:var(--bg);box-shadow:0 -6px 18px rgba(0,0,0,.18)}
 [data-lay="b"] #tabs button{height:54px;font-size:12px;border-radius:14px}
-[data-lay="b"] .amenu{left:8px;right:8px;top:auto;bottom:calc(74px + env(safe-area-inset-bottom,0px));border-radius:20px}
+[data-lay="b"] .amenu{left:8px;right:8px;top:auto;bottom:calc(74px + var(--sab));border-radius:20px}
 [data-lay="b"] .amenu [data-m="home"],[data-lay="b"] .amenu [data-m="home"]+hr{display:none}
-[data-lay="b"] .toast{bottom:calc(142px + env(safe-area-inset-bottom,0px))}
-[data-lay="b"] #cAdd,[data-lay="b"] #lAdd,[data-lay="b"] #oAdd,[data-lay="b"] #pAdd,[data-lay="b"] #lstAdd,[data-lay="b"] #hFab{position:fixed;right:16px;bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:3;width:auto;height:54px;min-height:54px;padding:0 18px 0 14px;border-radius:18px;display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+[data-lay="b"] .toast{bottom:calc(142px + var(--sab))}
+[data-lay="b"] #cAdd,[data-lay="b"] #lAdd,[data-lay="b"] #oAdd,[data-lay="b"] #pAdd,[data-lay="b"] #lstAdd,[data-lay="b"] #hFab{position:fixed;right:16px;bottom:calc(78px + var(--sab));z-index:3;width:auto;height:54px;min-height:54px;padding:0 18px 0 14px;border-radius:18px;display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 [data-lay="b"] #lstAdd::after,[data-lay="b"] #cAdd::after,[data-lay="b"] #lAdd::after,[data-lay="b"] #oAdd::after,[data-lay="b"] #pAdd::after{content:none}
 [data-lay="b"] #cAdd,[data-lay="b"] #lAdd,[data-lay="b"] #oAdd,[data-lay="b"] #pAdd,[data-lay="b"] #lstAdd,[data-lay="b"] #hFab{width:54px;padding:0;border-radius:50%;justify-content:center}
 [data-lay="b"] #hFab{margin:0}[data-lay="b"] #hFab svg{width:24px;height:24px}
@@ -502,14 +502,14 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] #qAct svg{width:22px;height:22px;color:#ffa24d;stroke:#ffa24d}
 [data-lay="b"] #sheet #cTabs{position:sticky;top:-12px;z-index:2;background:var(--bg);margin-top:6px;padding-top:6px}
 [data-lay="b"] #cTabs [data-p=sum]{order:0}[data-lay="b"] #cTabs [data-p=dati]{order:1}[data-lay="b"] #cTabs [data-p=tk]{order:2}[data-lay="b"] #cTabs [data-p=opp]{order:3}[data-lay="b"] #cTabs [data-p=priv]{order:4}[data-lay="b"] #cTabs [data-p=st]{order:5}
-[data-lay="b"] .sheet{bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+[data-lay="b"] .sheet{bottom:calc(64px + var(--sab))}
 /* «Salva modifiche»: barra fissa in basso, solo se c'è qualcosa da salvare */
 .svb .s2{display:none}
 [data-lay="b"] .svb .s1{display:none}[data-lay="b"] .svb .s2{display:inline}
-[data-lay="b"] .sheet .svb:not([hidden]){position:fixed;left:16px;right:16px;width:auto;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:6;height:54px;min-height:54px;margin:0;border-radius:18px;font-size:17px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+[data-lay="b"] .sheet .svb:not([hidden]){position:fixed;left:16px;right:16px;width:auto;bottom:calc(76px + var(--sab));z-index:6;height:54px;min-height:54px;margin:0;border-radius:18px;font-size:17px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
 [data-lay="b"] .sheet:has(.svb:not([hidden])) :is(.btn.pls,#addOppFor){display:none}
 /* «+» nelle schede: stesso pulsante tondo delle liste */
-[data-lay="b"] #addOppFor,[data-lay="b"] .sheet .btn.pls,[data-lay="b"] #tkList .btn.pls{position:fixed;right:16px;bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:3;width:54px;height:54px;min-height:54px;margin:0;border-radius:50%;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+[data-lay="b"] #addOppFor,[data-lay="b"] .sheet .btn.pls,[data-lay="b"] #tkList .btn.pls{position:fixed;right:16px;bottom:calc(78px + var(--sab));z-index:3;width:54px;height:54px;min-height:54px;margin:0;border-radius:50%;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 [data-lay="b"] #addOppFor,[data-lay="b"] .sheet .btn.pls,[data-lay="b"] #tkList .btn.pls{background:#ffa24d;color:#2d2b55;border:0}
 [data-lay="b"] #addOppFor,[data-lay="b"] .sheet .btn.pls,[data-lay="b"] #tkList .btn.pls{display:flex!important;align-items:center;justify-content:center;gap:0;padding:0!important;margin:0!important;line-height:0}
 [data-lay="b"] #addOppFor svg,[data-lay="b"] .btn.pls svg{display:block;margin:0;flex:none;width:24px;height:24px;color:#2d2b55}
@@ -520,7 +520,7 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] :is(#pSeg,#pMag .seg) button .lb{display:inline!important;max-width:none}
 [data-lay="b"] :is(#pSeg,#pMag .seg) button svg{width:18px;height:18px}
 [data-lay="b"] :is(#pSeg,#pMag .seg) button.on{color:var(--ink);box-shadow:inset 0 -3px 0 #ffa24d}
-[data-lay="b"] :is(#sheet,#lSheet,#oSheet){bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+[data-lay="b"] :is(#sheet,#lSheet,#oSheet){bottom:calc(64px + var(--sab))}
 [data-lay="b"] :is(#sheet,#lSheet,#oSheet,#qSheet){scrollbar-width:none;-ms-overflow-style:none}
 [data-lay="b"] :is(#sheet,#lSheet,#oSheet,#qSheet)::-webkit-scrollbar{display:none;width:0;height:0}
 [data-lay="b"] #sheet [data-p=tk],[data-lay="b"] #sheet [data-p=opp]{scrollbar-width:none}
@@ -566,7 +566,7 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] #tkList .tkr{border:0!important;border-top:1px solid var(--line)!important;border-radius:0!important;margin:0!important;padding:12px 14px!important;min-height:64px}
 [data-lay="b"] #tkList .tkg>.tkr:first-child{border-top:0!important}
 [data-lay="b"] #tkList .tkh{font-size:12px!important;font-weight:800!important;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-[data-lay="b"] #tkList #tkAdd{position:fixed;right:16px;bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:6;width:54px!important;height:54px;padding:0;border-radius:50%;margin:0!important;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+[data-lay="b"] #tkList #tkAdd{position:fixed;right:16px;bottom:calc(78px + var(--sab));z-index:6;width:54px!important;height:54px;padding:0;border-radius:50%;margin:0!important;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 [data-lay="b"] .wcard::after{flex:none;line-height:1}
 [data-lay="b"] .wcard .ic{background:#4fc3ff!important;color:#052a44!important}
 .tkg{display:contents}
@@ -599,7 +599,7 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 [data-lay="b"] :is(#o_fasi,#oFilt)>button:not(.on){opacity:.65}
 [data-lay="b"] :is(#o_fasi,#oFilt)>button.on{border-color:#ffa24d!important;opacity:1;box-shadow:0 0 0 3px rgba(255,162,77,.25);font-weight:800}
 /* preventivo come l'opportunità */
-[data-lay="b"] :is(#sheet,#lSheet,#oSheet,#qSheet){bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+[data-lay="b"] :is(#sheet,#lSheet,#oSheet,#qSheet){bottom:calc(64px + var(--sab))}
 [data-lay="b"] #qSheet .btns{position:sticky;bottom:0;z-index:2;background:var(--bg);padding:10px 0 4px;margin-top:14px;border-top:1px solid var(--line)}
 [data-lay="b"] #qSheet .fg>.f:has(.tri)>label{display:none}
 [data-lay="b"]:is([data-tpl="neon"],[data-tpl="notte"]) #qSheet :is(input,select,textarea):not([type=checkbox]){background:#06203f;border:1.5px solid #6688bb;border-radius:14px;min-height:50px}
