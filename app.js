@@ -101,7 +101,7 @@ function render(){WONS=null;OBC=null;if(tab==='home')renderH();
     const s=document.createElement('span');s.textContent=c.tipo==='azienda'?[[c.nome,c.cognome].filter(Boolean).join(' '),c.ruolo].filter(Boolean).join(', '):[c.ruolo,c.azienda].filter(Boolean).join(', ');if(!s.textContent)s.hidden=true;const ex=[];if(c.telefono){const p=document.createElement('em');const fe=flagEl(c.paese||'IT');fe.classList.add('sm');p.append(fe,' '+dial(c.paese)+' '+c.telefono);ex.push(p)}if(c.email){const m=document.createElement('em');m.textContent=c.email;ex.push(m)}if(!c.privacy||!c.privacy.informativa){const w=document.createElement('em');w.className='warn';const pq=c.privacy&&(c.privacy.richieste||[]).find(r=>r.stato==='inviata'&&Date.now()<=new Date(r.scade+'Z')),dd=pq?Math.floor((Date.now()-new Date(pq.creata+'Z'))/864e5):0;w.textContent=pq?(dd>=7?'Informativa inviata, nessuna risposta da '+dd+' giorni':'Informativa inviata, in attesa di risposta'):c.privacy?'Informativa privacy da inviare':'Privacy da verificare';ex.push(w)}
     t.append(n,s,...ex);{const rr=rsRow(rsOf(c).filter(x=>!x[2]));if(rr)t.append(rr)}t.className='tx';if(c.tipo==='azienda'&&!c.foto)av.innerHTML=ICONS.building;if(c.foto){av.textContent='';av.style.background="url('"+okImg(c.foto)+"') center/cover"}{const fb=h('span','fav'+(c.fav?' on':''));fb.setAttribute('role','button');fb.tabIndex=0;fb.title=c.fav?'Togli dai preferiti':'Aggiungi ai preferiti';fb.setAttribute('aria-label',fb.title+' '+nm);fb.innerHTML=ICONS.star;const tg=e=>{e.stopPropagation();e.preventDefault();c.fav=!c.fav;c.agg=new Date().toISOString();persist();render()};fb.onclick=tg;fb.onkeydown=e=>{if(e.key==='Enter'||e.key===' ')tg(e)};fb.onpointerdown=e=>e.stopPropagation();b.append(av,t,fb)}l.append(swipeRow(b,c))});
   if(rows.length>cLim){const mo=h('button','btn lbl','Mostra altri ('+(rows.length-cLim)+')');mo.type='button';mo.style.margin='4px 0 16px';mo.onclick=()=>{cLim+=100;render()};l.append(mo)}
-  if(rows.length)l.prepend(h('div','hint','Scorri una scheda: a destra chiami, a sinistra scrivi una email o un WhatsApp.'))
+  if(rows.length)l.prepend(h('div','hint swh','Scorri una scheda: a destra chiami, a sinistra scrivi una email o un WhatsApp.'))
 }
 let swOpen=null;
 function swipeRow(b,c,o){o=o||{};
@@ -110,10 +110,12 @@ function swipeRow(b,c,o){o=o||{};
   if(Lw){const a=h('div','swa l');a.append(mk('','Chiama','Chiama','#b5ebc0',()=>launch('tel:'+telHref(c),c.telefono,c)));w.append(a)}
   if(Rw){const a=h('div','swa r');if(hasMail)a.append(mk('','Scrivi','Email','#bfe0f8',()=>{if(o.mail)o.mail();else{openCompose(c);offerInf(c)}}));if(hasTel)a.append(mk('','WhatsApp','WhatsApp','#b9e6d3',()=>{if(o.wa)o.wa();else openWa(c)}));w.append(a)}
   w.append(b);
+  /* computer: i tre gesti diventano pulsanti che compaiono passando il mouse sulla scheda */
+  if(Lw||Rw){const hv=h('div','hov');if(hasTel)hv.append(mk('','Chiama','Chiama','#b5ebc0',()=>launch('tel:'+telHref(c),c.telefono,c)));if(hasMail)hv.append(mk('','Scrivi','Email','#bfe0f8',()=>{if(o.mail)o.mail();else{openCompose(c);offerInf(c)}}));if(hasTel)hv.append(mk('','WhatsApp','WhatsApp','#b9e6d3',()=>{if(o.wa)o.wa();else openWa(c)}));w.append(hv)}
   let x0=0,y0=0,off=0,cur=0,drag=false,down=false,moved=false;
   const set=(v,anim)=>{cur=v;b.style.transition=anim?'transform .2s':'none';b.style.transform=v?'translateX('+v+'px)':''};
   function close(){set(0,true);off=0;if(swOpen===close)swOpen=null}
-  b.addEventListener('pointerdown',e=>{if(!Lw&&!Rw)return;down=true;drag=false;moved=false;x0=e.clientX;y0=e.clientY;off=cur;if(swOpen&&swOpen!==close)swOpen()});
+  b.addEventListener('pointerdown',e=>{if(!Lw&&!Rw||e.pointerType==='mouse')return;down=true;drag=false;moved=false;x0=e.clientX;y0=e.clientY;off=cur;if(swOpen&&swOpen!==close)swOpen()});
   b.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-x0,dy=e.clientY-y0;
     if(!drag){if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.5){drag=true;moved=true;window.__swDrag=Date.now();try{b.setPointerCapture(e.pointerId)}catch(_){}}else return}
     set(Math.max(-Rw,Math.min(Lw,off+dx)),false)});
@@ -10908,6 +10910,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.61.0','Computer: elenco e scheda affiancati (clienti, lead, opportunità): scegli un elemento a sinistra e la scheda si apre a destra senza coprire l’elenco. Sulle schede dell’elenco, passando il mouse compaiono i pulsanti Chiama, Email e WhatsApp al posto dello scorrimento, che resta solo sul telefono.'],
 ['1.60.2','La verifica della rete ora riceve una risposta regolare dal server: prima veniva registrata come errore 401 nella console di monitoraggio, anche se l’app funzionava.'],
 ['1.60.1','Computer: le finestre (invio email, chiamata…) sono più grandi e leggibili; il pulsante Salva non occupa più tutta la larghezza; il tasto Chiama da computer propone di copiare il numero invece di aprire la scelta dell’app del sistema, che non si poteva chiudere.'],
 ['1.60.0','Su computer e schermi larghi (da 1024 px) l’app ha il menu laterale a sinistra al posto dei pulsanti in basso, pagine più larghe e le schede che si aprono accanto al menu. Su tablet in verticale la colonna è più larga. Sul telefono non cambia nulla. Sotto il menu non c’è più spazio inutile: la fascia per la barra «Offline» si apre solo quando sei offline.'],
@@ -11747,7 +11750,10 @@ window.paintMore=function(){const w=$('moreView');if(!w)return;w.textContent='';
   ['cTabs','lTabs','oTabs'].forEach(id=>{const bar=document.getElementById(id);if(!bar)return;let t=0;const go=()=>{clearTimeout(t);t=setTimeout(()=>mid(bar),30)};new MutationObserver(go).observe(bar,{attributes:true,attributeFilter:['class'],subtree:true});new MutationObserver(go).observe(bar.closest('.sheet')||bar,{attributes:true,attributeFilter:['hidden']})})})();
 
 /* con una scheda aperta la pagina sotto non scorre (e non mostra la sua barra di scorrimento) */
-(function(){const upd=()=>{const open=[...document.querySelectorAll('.sheet')].some(s=>!s.hidden);document.documentElement.classList.toggle('sh-open',open)};
+(function(){const upd=()=>{const open=[...document.querySelectorAll('.sheet')].some(s=>!s.hidden),H=document.documentElement;H.classList.toggle('sh-open',open);
+  /* computer: elenco a sinistra e scheda a destra (clienti, lead, opportunità) */
+  try{const dsk=window.matchMedia('(min-width:1024px)').matches,lists=['list','leadView','oppView'].some(i=>$(i)&&!$(i).hidden),det=['sheet','lSheet','oSheet'].some(i=>$(i)&&!$(i).hidden);H.classList.toggle('dpane',dsk&&lists);H.classList.toggle('dsel',dsk&&lists&&det)}catch(e){}};
+  window.addEventListener('resize',()=>setTimeout(upd,60));
   let t=0;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(upd,20)}).observe(document.body,{subtree:true,attributes:true,attributeFilter:['hidden'],childList:true});upd()})();
 
 /* logo aziendale: ridimensionato sul telefono (max 320 px), salvato nelle impostazioni, mostrato nella Home */

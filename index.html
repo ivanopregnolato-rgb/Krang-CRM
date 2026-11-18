@@ -5,8 +5,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
 <!-- © 2026 Ivano Pregnolato. Tutti i diritti riservati. Vietata la copia o la redistribuzione senza consenso scritto. -->
-<script src="boot.js?v=1.60.2"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.60.2|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.61.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.61.0|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -143,6 +143,7 @@ h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em}
 @keyframes swl{from{opacity:.4;left:28px}to{opacity:1;left:0}}@keyframes swr{from{opacity:.4;left:-28px}to{opacity:1;left:0}}.swl,.swr{position:relative}.swl{animation:swl .22s ease-out}.swr{animation:swr .22s ease-out}
 /* senza connessione la fascia sotto il menu si allarga quanto serve alla barra «Offline» (altrimenti resta com'è) */
 html.offl{--sab:max(env(safe-area-inset-bottom,0px),26px)}
+.swp .hov,#dpEmpty{display:none}
 /* ===== Desktop e tablet largo (da 1024 px): menu laterale, pagine più larghe ===== */
 @media (min-width:1024px){
  :root{--sbt:-52px;--sw:232px}
@@ -163,6 +164,20 @@ html.offl{--sab:max(env(safe-area-inset-bottom,0px),26px)}
  .box .btn{height:52px;font-size:16px}
  #mWel .box{max-width:520px}
  #offPill{left:var(--sw)!important;bottom:12px!important}
+ /* elenco + scheda affiancati */
+ [data-lay="b"] .sheet{bottom:0}
+ html.dpane.sh-open,html.dpane.sh-open body{overflow:auto;overscroll-behavior:auto}
+ html.dpane[data-lay="b"] .app{width:420px;max-width:420px;margin:0;padding-left:16px;padding-right:16px;box-sizing:border-box}
+ html.dpane[data-lay="b"] :is(#sheet,#lSheet,#oSheet){left:calc(var(--sw) + 420px);border-left:1px solid var(--line)}
+ html.dpane[data-lay="b"] :is(#cAdd,#lAdd,#oAdd){right:auto;left:calc(var(--sw) + 350px)}
+ html.dpane[data-lay="b"] :is(#sheet,#lSheet,#oSheet) .svb:not([hidden]){right:max(16px,calc((100vw - var(--sw) - 420px - 760px)/2))}
+ html.dpane:not(.dsel) #dpEmpty{display:grid;position:fixed;top:0;bottom:0;right:0;left:calc(var(--sw) + 420px);place-items:center;padding:24px;text-align:center;color:var(--muted);font-weight:600;border-left:1px solid var(--line);z-index:1}
+ .swh{display:none}
+ .swp .hov{display:flex;position:absolute;right:56px;top:50%;transform:translateY(-50%);gap:6px;background:var(--surface);padding:4px 6px;border-radius:999px;box-shadow:0 2px 10px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .12s;z-index:2}
+ .swp:hover .hov,.swp:focus-within .hov{opacity:1;pointer-events:auto}
+ .swp .hov button{width:38px;height:38px;border:0;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:#16213a}
+ .swp .hov button svg{width:20px;height:20px}
+ .swp .swa{display:none}
 }
 /* tablet in verticale e telefoni grandi: stessa colonna, ma più larga */
 @media (min-width:700px) and (max-width:1023.98px){
@@ -1064,6 +1079,7 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
   <div class="f"><label for="cl_ric">Richiama il (facoltativo)</label><input id="cl_ric" type="date"><div class="clEs" id="cl_rq" style="margin:8px 0 0"></div></div>
   <button class="btn p lbl" id="cl_ok" type="button"><span data-i="check"></span>Salva la chiamata</button>
   <button class="btn lbl" id="cl_x" type="button"><span data-i="x"></span>Non registrare</button></div></div>
+<div id="dpEmpty" aria-hidden="true">Scegli un elemento dall’elenco per vederne la scheda.</div>
 <div class="modal" id="mLaunch" hidden><div class="box info" role="dialog"><p id="ml_txt"></p>
   <a class="btn p lbl" id="ml_go" href="#"><span data-i="Chiama"></span><span>Apri</span></a>
   <button class="btn lbl" id="ml_copy" type="button"><span data-i="copy"></span> Copia</button>
@@ -1233,6 +1249,6 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.60.2"></script>
+<script src="app.js?v=1.61.0"></script>
 </body>
 </html>
