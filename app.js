@@ -230,7 +230,13 @@ function launch(h,val,rec){
   $('ml_txt').textContent=/^tel:/.test(h)?String(val||''):kind==='Apri posta'?'Apre la tua app di posta con il messaggio pronto.':kind==='Apri WhatsApp'?'Apre WhatsApp con il messaggio pronto.':'';
   const a=$('ml_go');a.href=h;a.target='_blank';a.rel='noopener noreferrer';a.querySelector('span:last-child').textContent=kind;a.firstElementChild.innerHTML=ICONS[kind==='Chiama'?'Chiama':kind==='Apri posta'?'Scrivi':'WhatsApp'];a.style.textDecoration='none';
   $('ml_copy').onclick=async()=>{$('ml_copy').lastChild.textContent=(await copyText(String(val||h)))?' Copiato':' Seleziona e copia'};$('ml_copy').lastChild.textContent=' Copia '+(/^tel:/.test(h)?'numero':'testo');
-  a.onclick=()=>{if(kind==='Chiama'&&rec)try{callMark(rec)}catch(e){}setTimeout(()=>{m.hidden=true},400)};m.hidden=false}
+  a.onclick=()=>{if(kind==='Chiama'&&rec)try{callMark(rec)}catch(e){}setTimeout(()=>{m.hidden=true},400)};
+  /* dal computer il collegamento «tel:» apre la scelta dell'app del sistema, che non si può chiudere: qui il gesto principale è copiare il numero, l'apertura dell'app resta facoltativa */
+  const desk=kind==='Chiama'&&window.matchMedia&&matchMedia('(min-width:1024px) and (hover:hover) and (pointer:fine)').matches;
+  a.classList.toggle('p',!desk);$('ml_copy').classList.toggle('p',desk);
+  desk?a.before($('ml_copy')):a.after($('ml_copy'));
+  if(desk){$('ml_txt').textContent=String(val||'')+' · dal computer copia il numero e chiama dal telefono.';a.querySelector('span:last-child').textContent='Apri con un’app (facoltativo)'}
+  m.hidden=false}
 function toast(t){const e=$('toast');e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{e.hidden=true},4000)}
 function askConfirm(text,icon,label,fn){$('confirmText').textContent=text;$('cYes').firstChild.innerHTML=ICONS[icon];$('cYes').lastChild.textContent=label;$('cYes').onclick=()=>{$('confirm').hidden=true;fn()};$('confirm').hidden=false}
 $('cNo').onclick=()=>{$('confirm').hidden=true};
@@ -10902,6 +10908,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.60.1','Computer: le finestre (invio email, chiamata…) sono più grandi e leggibili; il pulsante Salva non occupa più tutta la larghezza; il tasto Chiama da computer propone di copiare il numero invece di aprire la scelta dell’app del sistema, che non si poteva chiudere.'],
 ['1.60.0','Su computer e schermi larghi (da 1024 px) l’app ha il menu laterale a sinistra al posto dei pulsanti in basso, pagine più larghe e le schede che si aprono accanto al menu. Su tablet in verticale la colonna è più larga. Sul telefono non cambia nulla. Sotto il menu non c’è più spazio inutile: la fascia per la barra «Offline» si apre solo quando sei offline.'],
 ['1.59.8','La fascia sotto i pulsanti del menu ha sempre almeno 26 punti di altezza (su ogni telefono): la barra «Offline» ci sta dentro e non copre mai i pulsanti. Corretto anche un errore della 1.59.7: la verifica della rete poteva essere rifiutata dal server e l’app si dichiarava sempre offline anche con la connessione attiva.'],
 ['1.59.7','La barra arancione «Offline» passa in basso, nella fascia sotto i pulsanti Home / Clienti / Lead (in alto restava sfocata).'],

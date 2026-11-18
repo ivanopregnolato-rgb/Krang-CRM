@@ -5,8 +5,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
 <!-- © 2026 Ivano Pregnolato. Tutti i diritti riservati. Vietata la copia o la redistribuzione senza consenso scritto. -->
-<script src="boot.js?v=1.60.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.60.0|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.60.1"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.60.1|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -156,7 +156,12 @@ html.offl{--sab:max(env(safe-area-inset-bottom,0px),26px)}
  [data-lay="b"] .sheet>div{max-width:760px}
  [data-lay="b"] .toast{left:calc(var(--sw) + 16px);right:16px}
  [data-lay="b"] #cAdd,[data-lay="b"] #lAdd,[data-lay="b"] #oAdd,[data-lay="b"] #pAdd,[data-lay="b"] #lstAdd,[data-lay="b"] #hFab,[data-lay="b"] #addOppFor,[data-lay="b"] .sheet .btn.pls,[data-lay="b"] #tkList .btn.pls,[data-lay="b"] #tkList #tkAdd{right:max(28px,calc((100vw - var(--sw) - 880px)/2 + 28px))}
- [data-lay="b"] .sheet .svb:not([hidden]){left:max(16px,calc((100vw - var(--sw) - 760px)/2));right:max(16px,calc((100vw - var(--sw) - 760px)/2))}
+ [data-lay="b"] .sheet .svb:not([hidden]){left:auto;width:auto;min-width:260px;padding:0 28px;right:max(16px,calc((100vw - var(--sw) - 760px)/2))}
+ .modal .box{max-width:520px;padding:28px}
+ .modal .box.info{max-width:600px}
+ .box p{font-size:17px}
+ .box .btn{height:52px;font-size:16px}
+ #mWel .box{max-width:520px}
  #offPill{left:var(--sw)!important;bottom:12px!important}
 }
 /* tablet in verticale e telefoni grandi: stessa colonna, ma più larga */
@@ -1228,6 +1233,6 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.60.0"></script>
+<script src="app.js?v=1.60.1"></script>
 </body>
 </html>
