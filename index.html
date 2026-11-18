@@ -5,8 +5,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
 <!-- © 2026 Ivano Pregnolato. Tutti i diritti riservati. Vietata la copia o la redistribuzione senza consenso scritto. -->
-<script src="boot.js?v=1.61.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.61.0|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.61.1"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.61.1|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -1103,10 +1103,10 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
   <div id="qAct" class="lb-only"></div>
   <div class="tabs" id="cTabs"><button type="button" class="lb-only" data-p="sum">Riepilogo</button><button type="button" class="on" data-p="dati" title="Dati" aria-label="Dati"><span data-i="user"></span>Dati</button><button type="button" data-p="opp" title="Opportunità" aria-label="Opportunità"><span data-i="target"></span>Opportunità<span class="cnt" id="cCnt"></span></button><button type="button" data-p="tk" title="Task" aria-label="Task"><span data-i="check"></span>Task<span class="cnt" id="cTkCnt"></span></button><button type="button" data-p="priv" title="Privacy" aria-label="Privacy"><span data-i="shield"></span>Privacy</button><button type="button" data-p="st" title="Storico" aria-label="Storico"><span data-i="route"></span>Storico</button></div>
   <div class="msg" id="msg" hidden></div>
+  <div id="dupBan" class="hint" hidden style="border:1px solid var(--line);border-radius:12px;padding:10px;margin:0 0 10px"></div>
   <div id="sumF" class="pane-hide"></div>
   <div class="seg" id="seg" role="group" aria-label="Tipo di anagrafica"><button type="button" class="on" data-t="persona"><span data-i="user"></span>Persona</button><button type="button" data-t="azienda"><span data-i="building"></span>Azienda</button></div>
   <div id="favHold" hidden><button class="ico" id="favBtn" type="button" aria-label="Preferito" title="Preferito"><span data-i="star"></span></button></div>
-  <div id="dupBan" class="hint" hidden style="border:1px solid var(--line);border-radius:12px;padding:10px;margin:0 0 10px"></div>
   <div class="photo cph"><button class="av big" id="photoBtn" type="button" aria-label="Foto del cliente" title="Foto del cliente"></button><div class="f" id="cAssW" hidden><label for="cAss">Assegnato a</label><select id="cAss"></select></div><div class="acts" id="acts" hidden></div><button class="btn ico" id="photoDel" type="button" hidden aria-label="Rimuovi foto" title="Rimuovi foto"><span data-i="x"></span></button></div>
   <input type="file" id="photoFile" accept="image/*" hidden>
 <div id="fgAP">
@@ -1249,6 +1249,6 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.61.0"></script>
+<script src="app.js?v=1.61.1"></script>
 </body>
 </html>

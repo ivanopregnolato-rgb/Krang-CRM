@@ -1,4 +1,4 @@
-const V='crm-v1.61.0',F=['./','index.html','app.js?v=1.61.0','boot.js?v=1.61.0','manifest.webmanifest','privacy.html','termini.html','legal.js','assistente.js?v=1.61.0','legal.css','consensi.html','consensi.js','consensi.css','kcrm-180.png','kcrm-192.png','kcrm-512.png'];
+const V='crm-v1.61.1',F=['./','index.html','app.js?v=1.61.1','boot.js?v=1.61.1','manifest.webmanifest','privacy.html','termini.html','legal.js','assistente.js?v=1.61.1','legal.css','consensi.html','consensi.js','consensi.css','kcrm-180.png','kcrm-192.png','kcrm-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>Promise.all(F.map((f,i)=>i<4?c.add(f):c.add(f).catch(()=>0)))).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 /* solo file dell'app (stessa origine, GET, risposta "basic"): mai dati degli utenti, mai risposte di altri siti */
