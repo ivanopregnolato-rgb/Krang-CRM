@@ -5,7 +5,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const ORIGINS = ["https://ivanopregnolato-rgb.github.io"];
-const KEYS = ["mkEmail", "mkTel", "profilazione", "terzi"];
+const KEYS = ["mk", "profilazione", "terzi"];
 const KINDS = ["portabilita", "anonimizzazione"];
 const PER_LINK_DAY = 20, PER_IP_HOUR = 60;
 
@@ -55,6 +55,8 @@ Deno.serve(async (req) => {
   if (req.method === "GET") return out(req, { az: pub.az, info: pub.info, ver: pub.ver, vfrom: pub.vfrom, cons: pub.cons, state });
 
   const keys = new Set((pub.cons as { k: string }[]).map((x) => x.k));
+  // Pagina registrata con la versione precedente (mkEmail/mkTel): il consenso marketing unico resta ammesso.
+  if (keys.has("mkEmail") || keys.has("mkTel")) keys.add("mk");
   for (const key of Object.keys(choices)) if (!keys.has(key)) delete choices[key];
   if (kind === "consensi" && !Object.keys(choices).length) return out(req, { err: "vuoto" }, 400);
   if (kind !== "consensi") {

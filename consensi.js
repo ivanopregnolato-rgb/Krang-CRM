@@ -7,10 +7,16 @@ const say=(t,bad)=>{st.hidden=false;st.className='box'+(bad?' err':'');st.textCo
 const add=(p,t,c)=>{const e=document.createElement(p);if(c)e.className=c;e.textContent=t;return e};
 const fd=d=>{const m=/^(\d{4})-(\d\d)-(\d\d)/.exec(d||'');return m?m[3]+'/'+m[2]+'/'+m[1]:''};
 let S={},RQ={};
+/* link e pagina registrati con la versione precedente (due consensi marketing): si mostra un solo consenso, valido solo se erano dati entrambi */
+function mkNorm(j){const L=(j.cons||[]).filter(c=>c.k!=='mkEmail'&&c.k!=='mkTel'),old=(j.cons||[]).some(c=>c.k==='mkEmail'||c.k==='mkTel'),C=S.c=S.c||{};
+  if(old&&!L.some(c=>c.k==='mk'))L.unshift({k:'mk',label:'Marketing (email, telefono, SMS e WhatsApp)'});
+  if(!C.mk&&(C.mkEmail||C.mkTel)){const e=C.mkEmail,t=C.mkTel;C.mk={v:!!(e&&e.v)&&!!(t&&t.v),d:[e&&e.d,t&&t.d].filter(Boolean).sort().pop()||''}}
+  delete C.mkEmail;delete C.mkTel;return Object.assign({},j,{cons:L})}
 function paintCons(j){
+  j=mkNorm(j);
   const cs=$('cs');cs.textContent='';const C=(S.c)||{};
   (j.cons||[]).forEach(c=>{const l=document.createElement('label');l.className='chk';const i=document.createElement('input');i.type='checkbox';i.dataset.k=c.k;const x=C[c.k];i.checked=!!(x&&x.v);
-    const s=document.createElement('span');s.append(add('b',c.label));s.append(add('small',x&&x.d?(x.v?'Consenso prestato il ':'Consenso non prestato (aggiornato il ')+fd(x.d)+(x.v?'':')'):'Nessuna scelta espressa finora'));l.append(i,s);cs.append(l)})}
+    const s=document.createElement('span');s.append(add('b',c.label));s.append(add('small',x&&x.d?(x.v?'Consenso prestato il ':'Consenso non prestato (aggiornato il ')+fd(x.d)+(x.v?'':')'):'Nessuna scelta espressa finora'));if(c.k==='mk')s.append(add('small','Un unico consenso per tutti i canali: se lo rifiuti, non riceverai comunicazioni promozionali né via email, né per telefono, SMS o WhatsApp.'));l.append(i,s);cs.append(l)})}
 function paintRq(){
   const w=$('rq');w.textContent='';
   const R=[['portabilita','Chiedo una copia dei miei dati (portabilità)','Il titolare ti invierà i dati che ti riguardano in un formato leggibile.','Invia la richiesta'],

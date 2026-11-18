@@ -64,12 +64,12 @@ const DEMO=[
 {id:'demo2',nome:'Marco',cognome:'Rossi',azienda:'Rossi Costruzioni Srl',ruolo:'Titolare',nascita:'1971-11-22',tipo:'azienda',piva:'12345678903',paese:'IT',telefono:'3479876543',email:'marco.rossi@rossicostruzioni.it',sito:'www.rossicostruzioni.it',indirizzo:'Corso Francia 45, 10138 Torino',note:'Preventivo ristrutturazione da inviare entro fine mese.',foto:''},
 {id:'demo3',nome:'Sophie',cognome:'Martin',azienda:'Atelier Lumière',ruolo:'Direttrice',nascita:'1985-06-02',paese:'FR',telefono:'612345678',email:'sophie.martin@atelier-lumiere.fr',sito:'www.atelier-lumiere.fr',indirizzo:'12 Rue de la République, 69002 Lyon',note:'Conosciuta in fiera a Lione.',foto:''},
 {id:'demo4',nome:'Luca',cognome:'Meier',azienda:'Meier Tech AG',ruolo:'CTO',nascita:'1982-12-09',tipo:'azienda',piva:'CHE123456789',paese:'CH',telefono:'791234567',email:'luca.meier@meiertech.ch',sito:'www.meiertech.ch',indirizzo:'Bahnhofstrasse 20, 8001 Zürich',note:'Interessato alla demo del prodotto.',foto:''}];
-function mkPriv(o){return Object.assign({base:'contratto',fonteDati:'interessato',informativa:false,infData:'',infModo:'Di persona',infVer:'1.0',cons:{mkEmail:{v:false,d:''},mkTel:{v:false,d:''},profilazione:{v:false,d:''},terzi:{v:false,d:''}},conserva:'',log:[],richieste:[]},o)}
-DEMO[0].privacy=mkPriv({informativa:true,infData:'2023-03-10',infModo:'Firmata',cons:{mkEmail:{v:true,d:'2023-03-10'},mkTel:{v:false,d:''},profilazione:{v:false,d:''},terzi:{v:false,d:''}},log:[{d:'2023-03-10T10:00',t:'Informativa fornita (Firmata, v1.0)'},{d:'2023-03-10T10:00',t:'Marketing via email: prestato'}]});
+function mkPriv(o){return Object.assign({base:'contratto',fonteDati:'interessato',informativa:false,infData:'',infModo:'Di persona',infVer:'1.0',cons:{mk:{v:false,d:''},profilazione:{v:false,d:''},terzi:{v:false,d:''}},conserva:'',log:[],richieste:[]},o)}
+DEMO[0].privacy=mkPriv({informativa:true,infData:'2023-03-10',infModo:'Firmata',cons:{mk:{v:true,d:'2023-03-10'},profilazione:{v:false,d:''},terzi:{v:false,d:''}},log:[{d:'2023-03-10T10:00',t:'Informativa fornita (Firmata, v1.0)'},{d:'2023-03-10T10:00',t:'Marketing via email: prestato'}]});
 DEMO[1].privacy=mkPriv({informativa:true,infData:'2026-02-02',infModo:'Email',log:[{d:'2026-02-02T09:30',t:'Informativa fornita (Email, v1.0)'}]});
 DEMO[0].wa=[{id:'wa1',dir:'out',data:'2026-11-03T09:12:00.000Z',testo:'Buongiorno Giulia, le confermo l’appuntamento di giovedì alle 15 per la degustazione.',fonte:'manuale'},{id:'wa2',dir:'in',data:'2026-11-03T09:40:00.000Z',testo:'Perfetto, grazie! Porto anche il mio socio.',fonte:'manuale'},{id:'wa3',dir:'out',data:'2026-11-06T16:05:00.000Z',testo:'Ciao Giulia, le ho mandato il preventivo per i regali di Natale. Mi dica se va bene.',fonte:'manuale'},{id:'wa4',dir:'in',data:'2026-11-07T18:20:00.000Z',testo:'Grazie, lo guardo domani. Possiamo fare 30 confezioni invece di 24?',fonte:'manuale'}];
 DEMO[2].privacy=mkPriv({fonteDati:'fiera',base:'legittimo',richieste:[{id:'rdemo',token:'K7M2QX',creata:'2026-11-05T09:00',scade:'2026-11-19T09:00',email:'sophie.martin@atelier-lumiere.fr',stato:'inviata'}],log:[{d:'2026-09-18T15:00',t:'Anagrafica creata (fonte: Fiera o evento)'},{d:'2026-11-05T09:00',t:'Informativa inviata via email a sophie.martin@atelier-lumiere.fr (codice K7M2QX, valido fino al 19 nov 2026)',op:'Demo',ev:'invio'}]});
-DEMO[3].privacy=mkPriv({base:'consenso',informativa:true,infData:'2026-05-18',infModo:'Email',cons:{mkEmail:{v:true,d:'2026-05-18'},mkTel:{v:true,d:'2026-05-18'},profilazione:{v:false,d:''},terzi:{v:false,d:''}}});
+DEMO[3].privacy=mkPriv({base:'consenso',informativa:true,infData:'2026-05-18',infModo:'Email',cons:{mk:{v:true,d:'2026-05-18'},profilazione:{v:false,d:''},terzi:{v:false,d:''}}});
 function persist(){try{stampMods(clients,'c')}catch(e){}try{localStorage.setItem(KEY,JSON.stringify(clients))}catch(e){toast('Spazio pieno: impossibile salvare sul dispositivo.')}try{lkSoon()}catch(e){}}
 const contactName=c=>c.tipo==='azienda'?([c.nome,c.cognome].filter(Boolean).join(' ')||c.azienda):fullName(c);
 const inits=nm=>{const w=String(nm||'').trim().split(/\s+/).filter(Boolean);return ((w[0]||'?')[0]+(w.length>1?w[w.length-1][0]:'')).toUpperCase()};
@@ -481,11 +481,18 @@ document.querySelectorAll('#cTabs button').forEach(b=>b.classList.toggle('on',b.
 function stLoad(){if(cSub==='comm')loadComm();else if(cSub==='tp')paintTouch();else if(cSub==='tr')paintTr()}
 $('cTabs').onclick=e=>{const b=e.target.closest('button');if(b){setPane(b.dataset.p);if(b.dataset.p==='st')stLoad();if(b.dataset.p==='tk')tkPaintAll()}};
 $('stSeg').onclick=e=>{const b=e.target.closest('button');if(b){setPane(b.dataset.s);stLoad()}};
-const CONS=['mkEmail','mkTel','profilazione','terzi'];
-const CLABEL={mkEmail:'Marketing via email',mkTel:'Marketing telefonico e WhatsApp',profilazione:'Profilazione commerciale',terzi:'Comunicazione a partner terzi'};
+const CONS=['mk','profilazione','terzi'];
+const CLABEL={mk:'Marketing (email, telefono, SMS e WhatsApp)',profilazione:'Profilazione commerciale',terzi:'Comunicazione a partner terzi'};
 function privUI(){const on=$('p_inf').checked;$('p_infx').hidden=!on;if(on&&!$('p_infdata').value)$('p_infdata').value=ymd();
   $('p_infhint').textContent=on?'':($('p_fonte').value==='interessato'?'Da fornire al momento della raccolta dei dati (art. 13).':'Dati non raccolti dall’interessato: invia l’informativa entro 30 giorni dalla raccolta (art. 14).');setErr('p_inf','')}
 ['p_inf','p_fonte'].forEach(id=>$(id).addEventListener('change',privUI));
+/* un solo consenso al marketing per tutti i canali: i due consensi precedenti (email, telefono/WhatsApp) diventano uno e vale solo se erano dati entrambi */
+function mkMig(){let n=0;try{clients.forEach(c=>{const pv=c.privacy;if(!pv||!pv.cons||!(pv.cons.mkEmail||pv.cons.mkTel))return;const e=pv.cons.mkEmail,t=pv.cons.mkTel;
+  if(!pv.cons.mk){const ev=!!(e&&e.v),tv=!!(t&&t.v),d=[e&&e.d,t&&t.d].filter(Boolean).sort().pop()||'';pv.cons.mk={v:ev&&tv,d};
+   if((ev||tv)&&!(ev&&tv))(pv.log=pv.log||[]).push({d:new Date().toISOString().slice(0,16),t:'Marketing: i due consensi (email, telefono/WhatsApp) sono stati unificati; era dato solo per un canale, quindi ora risulta non dato',k:'revoca'})}
+  delete pv.cons.mkEmail;delete pv.cons.mkTel;n++});
+  if(S.segs&&JSON.stringify(S.segs).match(/"f":"mk(Email|Tel)"/)){S.segs=JSON.parse(JSON.stringify(S.segs).replace(/"f":"mk(Email|Tel)"/g,'"f":"mk"'));n++;try{saveS()}catch(e){}}
+  if(n){try{persist()}catch(e){}}}catch(e){}return n}
 function loadPriv(p){p=p||mkPriv();$('p_later').checked=false;
   $('p_fonte').value=p.fonteDati;$('p_base').value=p.base;$('p_inf').checked=!!p.informativa;$('p_infmodo').value=p.infModo||'Di persona';$('p_infdata').value=p.infData||'';$('p_cons').value=p.conserva||'';{const a=autoRet(),ad=a.until?ymd(new Date(a.until)):'';$('p_cons').dataset.auto=ad;if(!p.conserva)$('p_cons').value=ad}
   CONS.forEach(k=>{const c=p.cons[k]||{v:false,d:''};$('c_'+k).checked=!!c.v;$('s_'+k).textContent=c.v?'Prestato il '+fmtD(c.d):(c.d?'Revocato il '+fmtD(c.d):'')});
@@ -508,7 +515,7 @@ const mesi=n=>n%12===0?(n/12===1?'1 anno':n/12+' anni'):n+' mesi';
 function infoSections0(){const R=S.ret||{};return [
 ['Titolare',(S.azienda?S.azienda+(S.piva?', P. IVA '+S.piva:'')+(S.indirizzo?', sede in '+S.indirizzo:'')+(S.replyTo?' ('+S.replyTo+')':''):'[denominazione e contatti del titolare]')+'.'],
 ['Dati trattati','dati anagrafici e di contatto (nome, azienda, ruolo, telefono, email, indirizzo e, se forniti, data di nascita e foto); comunicazioni scambiate via email, telefono e WhatsApp; preventivi, ordini e dati commerciali. I dati non forniti direttamente da lei possono provenire da biglietti da visita, fiere ed eventi o fonti pubbliche professionali.'],
-['Finalità e basi giuridiche','(a) gestire richieste, preventivi, ordini e il rapporto contrattuale: contratto o misure precontrattuali; (b) adempiere agli obblighi fiscali e contabili: obbligo di legge; (c) gestire la clientela, tutelare i diritti del titolare e la sicurezza: legittimo interesse; (d) inviare comunicazioni promozionali via email, telefono e WhatsApp, usare la data di nascita per auguri e offerte personalizzate, profilare le preferenze commerciali e comunicare i dati a partner terzi: solo con il suo consenso, revocabile in ogni momento.'],
+['Finalità e basi giuridiche','(a) gestire richieste, preventivi, ordini e il rapporto contrattuale: contratto o misure precontrattuali; (b) adempiere agli obblighi fiscali e contabili: obbligo di legge; (c) gestire la clientela, tutelare i diritti del titolare e la sicurezza: legittimo interesse; (d) inviare comunicazioni promozionali via email, telefono, SMS e WhatsApp (con un unico consenso: se lo rifiuta o lo revoca non riceverà comunicazioni promozionali su nessuno di questi canali), usare la data di nascita per auguri e offerte personalizzate, profilare le preferenze commerciali e comunicare i dati a partner terzi: solo con il suo consenso, revocabile in ogni momento.'],
 ['Natura del conferimento','i dati per (a) e (b) sono necessari al rapporto e il rifiuto impedisce di dar seguito alla richiesta; i consensi di cui al punto (d) sono facoltativi e il rifiuto non incide sul servizio. Non è presente alcun processo decisionale automatizzato.'],
 ['Destinatari','personale autorizzato e fornitori che trattano i dati per conto del titolare (assistenza informatica, hosting, servizi di posta e messaggistica, consulenti, corrieri). I dati non sono diffusi.'],
 ['Trasferimenti extra UE','alcuni fornitori, ad esempio dei servizi di posta e messaggistica, possono trattare i dati fuori dallo Spazio economico europeo con le garanzie previste dal GDPR (decisioni di adeguatezza o clausole contrattuali tipo).'],
@@ -639,8 +646,8 @@ function openCompose(c){cmpLeadRef=null;cmpInfC=null;cmpAtt=[];cmpQ=null;cmpOpts
   cmpTo=c.email;cmpLog='';const nome=contactName(c);
   cmpName=nome;$('mc_to').value=cmpTo;$('mc_sub').value='';$('mc_body').value='Gentile '+nome+',\n\n\n\n'+firma();
   ['mc_sub','mc_body'].forEach(k=>setErr(k,''));
-  const ok=c.privacy&&c.privacy.cons&&c.privacy.cons.mkEmail&&c.privacy.cons.mkEmail.v;
-  $('mc_hint').textContent=ok?'':'Questo cliente non ha dato il consenso al marketing via email: usa questa email solo per comunicazioni legate al rapporto in corso.';
+  const ok=c.privacy&&c.privacy.cons&&c.privacy.cons.mk&&c.privacy.cons.mk.v;
+  $('mc_hint').textContent=ok?'':'Questo cliente non ha dato il consenso al marketing: usa questa email solo per comunicazioni legate al rapporto in corso.';
   const T=$('mc_tpl');T.textContent='';TEMPLATES.forEach(([l,s,t])=>{const b=h('button','',l);b.type='button';b.style.background='var(--lilac)';b.onclick=()=>{$('mc_sub').value=subj(s);$('mc_body').value=tpl('Gentile {nome},\n\n'+t+'\n\n',{nome})+firma()};T.append(b)});
   mcActs();$('mCompose').hidden=false}
 $('mc_x').onclick=()=>{$('mCompose').hidden=true};
@@ -9579,7 +9586,7 @@ const CLOUD={on:false,db:null,uid:'',canW:false,canA:false,subs:[],t:{},busy:{},
 try{CLOUD.on=!!JSON.parse(localStorage.getItem(CKEY)||'{}').on}catch(e){}
 const hs=str=>{let h=5381;for(let i=0;i<str.length;i++)h=((h<<5)+h+str.charCodeAt(i))|0;return String(h)+':'+str.length};
 const CSPEC={
- cl:{col:'clienti',arr:()=>clients,set:v=>{clients=v},save:()=>{try{localStorage.setItem(KEY,JSON.stringify(clients))}catch(e){}},heavy:{foto:''},after:()=>{try{render()}catch(e){}}},
+ cl:{col:'clienti',arr:()=>clients,set:v=>{clients=v},save:()=>{try{localStorage.setItem(KEY,JSON.stringify(clients))}catch(e){}},heavy:{foto:''},after:()=>{try{if(mkMig())pubRefresh()}catch(e){}try{render()}catch(e){}}},
  op:{col:'opportunita',arr:()=>opps,set:v=>{opps=v},save:()=>{try{localStorage.setItem(OKEY,JSON.stringify(opps))}catch(e){}},heavy:{allegati:[]},after:()=>{try{renderO()}catch(e){}}},
  pr:{col:'prodotti',arr:()=>prods,set:v=>{prods=v},save:()=>{try{localStorage.setItem(PKEY,JSON.stringify(prods))}catch(e){}},heavy:{foto:''},after:()=>{try{renderP()}catch(e){}}},
  mv:{col:'movimenti',arr:()=>movs,set:v=>{movs=v},save:()=>{try{localStorage.setItem(MKEY,JSON.stringify(movs))}catch(e){}},heavy:{},after:()=>{try{renderP()}catch(e){}}},
@@ -9794,7 +9801,7 @@ $('st_bkf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f
    if(az&&k[0]==='IT')o.piva=vatIT(i+1);
    if(i%5===0){const d=new Date(Date.now()+((i/5)%14)*864e5);o.nascita=(1960+(i%36))+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
    const q=i%4,idt=dAgo(40+rnd(500)),lg=[{d:idt+'T10:00',t:'Informativa fornita (Email, v1.0)'}];
-   o.privacy=q===2?mkPriv({fonteDati:'interessato',base:'contratto'}):q===0?mkPriv({informativa:true,infData:idt,infModo:'Email',cons:{mkEmail:{v:true,d:idt},mkTel:{v:false,d:''},profilazione:{v:false,d:''},terzi:{v:false,d:''}},log:lg}):q===1?mkPriv({informativa:true,infData:idt,infModo:'Firmata',base:'contratto',log:lg}):mkPriv({informativa:true,infData:idt,infModo:'Email',base:'consenso',cons:{mkEmail:{v:true,d:idt},mkTel:{v:false,d:''},profilazione:{v:true,d:idt},terzi:{v:false,d:''}},log:lg});
+   o.privacy=q===2?mkPriv({fonteDati:'interessato',base:'contratto'}):q===0?mkPriv({informativa:true,infData:idt,infModo:'Email',cons:{mk:{v:true,d:idt},profilazione:{v:false,d:''},terzi:{v:false,d:''}},log:lg}):q===1?mkPriv({informativa:true,infData:idt,infModo:'Firmata',base:'contratto',log:lg}):mkPriv({informativa:true,infData:idt,infModo:'Email',base:'consenso',cons:{mk:{v:true,d:idt},profilazione:{v:true,d:idt},terzi:{v:false,d:''}},log:lg});
    if(i%8===3){const nm=2+i%4;for(let j=0;j<nm;j++){const w=WAT[j%WAT.length];o.wa.push({id:'xw'+i+'_'+j,dir:w[0],data:new Date(Date.now()-(30-j*3-i%5)*864e5).toISOString(),testo:w[1],fonte:'manuale'})}}
    XC.push(o);clients.push(o)}
   /* opportunità: chiuse (vinte 78%, perse 22%) e aperte, con prezzi e sconti dai listini; le vinte scaricano il magazzino */
@@ -9822,7 +9829,7 @@ $('st_exDel').onclick=()=>{const has=opps.some(o=>o.demo)||clients.some(c=>c.dem
  const C_=(f,o,v)=>({f,o,v});
  const PRE=[
   {id:'p_fav',nome:'Preferiti',q:{op:'AND',conds:[C_('fav','eq','si')]},pre:1},
-  {id:'p_mk',nome:'Consenso marketing email',q:{op:'AND',conds:[C_('mkEmail','eq','si')]},pre:1},
+  {id:'p_mk',nome:'Consenso marketing',q:{op:'AND',conds:[C_('mk','eq','si')]},pre:1},
   {id:'p_op',nome:'Con opportunità aperta',q:{op:'AND',conds:[C_('oppAperte','ge','1')]},pre:1},
   {id:'p_no',nome:'Senza opportunità',q:{op:'AND',conds:[C_('oppTot','eq','0')]},pre:1},
   {id:'p_pi',nome:'Prospect fermi da 30 giorni',q:{op:'AND',conds:[C_('stato','eq','prospect'),C_('giorni','ge','30')]},pre:1},
@@ -9844,8 +9851,7 @@ $('st_exDel').onclick=()=>{const has=opps.some(o=>o.demo)||clients.some(c=>c.dem
   {id:'haEmail',ent:'Cliente',label:'Ha un’email',type:'bool',get:c=>!!c.email},
   {id:'haTel',ent:'Cliente',label:'Ha un telefono',type:'bool',get:c=>!!c.telefono},
   {id:'compl',ent:'Cliente',label:'Compleanno tra (giorni)',type:'num',get:c=>{const b=c.nascita&&bday(c.nascita);return b?b.days:null}},
-  {id:'mkEmail',ent:'Consensi',label:'Marketing via email',type:'bool',get:c=>hasC(c,'mkEmail')},
-  {id:'mkTel',ent:'Consensi',label:'Marketing telefono e WhatsApp',type:'bool',get:c=>hasC(c,'mkTel')},
+  {id:'mk',ent:'Consensi',label:'Marketing (tutti i canali)',type:'bool',get:c=>hasC(c,'mk')},
   {id:'profilazione',ent:'Consensi',label:'Profilazione',type:'bool',get:c=>hasC(c,'profilazione')},
   {id:'info',ent:'Consensi',label:'Informativa data',type:'bool',get:c=>!!(c.privacy&&c.privacy.informativa)},
   {id:'oppAperte',ent:'Opportunità',label:'Opportunità aperte (n)',type:'num',get:c=>oppsOf(c.id).filter(o=>o.fase!=='vinta'&&o.fase!=='persa').length},
@@ -9878,7 +9884,7 @@ $('st_exDel').onclick=()=>{const has=opps.some(o=>o.demo)||clients.some(c=>c.dem
  function openSeg(sg){let sh=$('segSheet');if(!sh){sh=h('div','sheet');sh.id='segSheet';sh.style.zIndex=4;document.body.append(sh)}sh.hidden=false;sh.textContent='';
   const w=h('div'),top=h('div','top'),x=h('button','btn ico pk');x.type='button';x.title=x.ariaLabel='Chiudi';x.innerHTML=ICONS.back;x.onclick=()=>{sh.hidden=true};top.append(h('h2','',sg.nome),x);
   const ms=members(sg).sort((a,b)=>(b.fav?1:0)-(a.fav?1:0)||fullName(a).localeCompare(fullName(b),'it'));
-  const mk=ms.filter(c=>c.email&&c.privacy&&c.privacy.cons&&c.privacy.cons.mkEmail&&c.privacy.cons.mkEmail.v);
+  const mk=ms.filter(c=>c.email&&c.privacy&&c.privacy.cons&&c.privacy.cons.mk&&c.privacy.cons.mk.v);
   w.append(top,h('div','hint',rtxt(sg)+' — '+ms.length+(ms.length===1?' contatto':' contatti')));
   const ac=h('div'),cp=h('button','btn lbl');ac.style.cssText='display:flex;gap:8px;margin:8px 0';cp.style.cssText='flex:1;white-space:nowrap';cp.type='button';cp.innerHTML='<span>'+ICONS.Scrivi+'</span> Copia email ('+mk.length+')';cp.title='Copia le email dei contatti con consenso al marketing via email';
   cp.onclick=async()=>{if(!mk.length){toast('Nessun contatto di questo segmento ha dato il consenso al marketing via email.');return}toast(await copyText(mk.map(c=>c.email).join(', '))?'Copiate '+mk.length+' email con consenso marketing.':'Copia non riuscita.')};ac.append(cp);
@@ -9941,13 +9947,13 @@ $('st_exDel').onclick=()=>{const has=opps.some(o=>o.demo)||clients.some(c=>c.dem
   let ws=0,wr=0;const inP=d=>!f||tsOf(d)>=f;clients.forEach(c=>(c.wa||[]).forEach(m=>{if(inP(m.data))m.dir==='out'?ws++:wr++}));leads.forEach(l=>(l.wa||[]).forEach(m=>{if(inP(m.data))m.dir==='out'?ws++:wr++}));let es=0,er=0,cs=0,cr=0;clients.forEach(c=>(c.em||[]).forEach(m=>{if(inP(m.data))m.dir==='out'?cs++:cr++}));leads.forEach(l=>(l.msgs||[]).forEach(m=>{if(inP(m.data))m.dir==='out'?es++:er++}));
   b=box('Messaggi nel periodo','Messaggi registrati nell’app per clienti e lead. Le email contano da quando le invii dall’app.');b.append(rowKV('WhatsApp inviati '+ws,'ricevuti '+wr),rowKV('Email clienti inviate '+cs,'ricevute '+cr),rowKV('Email lead inviate '+es,'ricevute '+er));H.append(b);
   const nc=n=>clients.filter(c=>c.privacy&&c.privacy.cons&&c.privacy.cons[n]&&c.privacy.cons[n].v).length;
-  b=box('Consensi','Quanti clienti hanno dato il consenso: sono quelli che puoi raggiungere con comunicazioni di marketing.');[['Informativa data',clients.filter(c=>c.privacy&&c.privacy.informativa).length],['Marketing via email',nc('mkEmail')],['Marketing telefono e WhatsApp',nc('mkTel')]].forEach(([l,n])=>{const r=h('div','pbar');r.append(h('span','',l),bar(clients.length?n/clients.length*100:0,'#bfe0f8'),h('em','',n+' · '+pct(n,clients.length)));b.append(r)});H.append(b);
+  b=box('Consensi','Quanti clienti hanno dato il consenso: sono quelli che puoi raggiungere con comunicazioni di marketing.');[['Informativa data',clients.filter(c=>c.privacy&&c.privacy.informativa).length],['Marketing (tutti i canali)',nc('mk')]].forEach(([l,n])=>{const r=h('div','pbar');r.append(h('span','',l),bar(clients.length?n/clients.length*100:0,'#bfe0f8'),h('em','',n+' · '+pct(n,clients.length)));b.append(r)});H.append(b);
   const cold=clients.map(c=>[c,gg(c)]).filter(x=>x[1]===null||x[1]>90).sort((a,c)=>(c[0].fav?1:0)-(a[0].fav?1:0)||(c[1]===null?1e9:c[1])-(a[1]===null?1e9:a[1])).slice(0,6);
   if(cold.length){const hh=h('div','hh');hh.append(h('span','','Da riattivare'));H.append(hh);cold.forEach(([c,g])=>{const r=h('button','row'),t=h('div','tx'),nm=fullName(c);t.append(h('b','',(c.fav?'★ ':'')+nm),h('em','',g===null?'Nessun contatto registrato':g+' giorni senza contatti'));const av=h('div','av',(nm[0]||'?').toUpperCase());av.style.background='var(--lilac)';r.append(av,t);r.onclick=()=>openSheet(c);H.append(r)})}}
  /* ----- campagne ----- */
  S.camps=S.camps||[];
  const FOOT=c=>'\n\nPuoi modificare o revocare il consenso alle nostre comunicazioni commerciali in qualsiasi momento da questa pagina personale: '+conUrl(c);
- const eligible=(ms,ch)=>{const ok=[],no={cons:0,dato:0};ms.forEach(c=>{const k=ch==='wa'?'mkTel':'mkEmail',has=ch==='wa'?c.telefono:c.email;if(!(c.privacy&&c.privacy.cons&&c.privacy.cons[k]&&c.privacy.cons[k].v)){no.cons++;return}if(!has){no.dato++;return}ok.push(c)});return{ok,no}};
+ const eligible=(ms,ch)=>{const ok=[],no={cons:0,dato:0};ms.forEach(c=>{const k='mk',has=ch==='wa'?c.telefono:c.email;if(!(c.privacy&&c.privacy.cons&&c.privacy.cons[k]&&c.privacy.cons[k].v)){no.cons++;return}if(!has){no.dato++;return}ok.push(c)});return{ok,no}};
  const first=c=>c.tipo==='azienda'?(c.nome||fullName(c)):(c.nome||fullName(c));
  const fillT=(t,c)=>tpl(t,{nome:first(c)});
  const cdesc=cp=>{const d=cp.dest||[],ok=d.filter(x=>x.st==='ok').length;let rs=0,op=0;d.forEach(x=>{const t=tsOf(x.d||cp.data),c=clients.find(z=>z.id===x.id);if(!c)return;if([...(c.em||[]),...(c.wa||[])].some(m=>m.dir==='in'&&tsOf(m.data)>t))rs++;if(opps.some(o=>o.clienteId===c.id&&tsOf(o.creata)>=t-864e5))op++});return{ok,tot:d.length,rs,op}};
@@ -10304,7 +10310,9 @@ $('sc_dis').onclick=()=>askConfirm('Disattivare il blocco? L’app si aprirà se
 function paintDrive(){}
 
 /* risposte dei clienti dalla pagina dei consensi: si applicano da sole alla scheda e poi si cancellano dal server */
-function applyConsent(c,r){const p=c.privacy=c.privacy||mkPriv(),dt=new Date(r.at),ok=!isNaN(dt),day=ymd(ok?dt:new Date()),ch=r.choices||{},esito=[],opx=opName;opName='Pagina consensi';
+function applyConsent(c,r){const p=c.privacy=c.privacy||mkPriv(),dt=new Date(r.at),ok=!isNaN(dt),day=ymd(ok?dt:new Date()),ch=Object.assign({},r.choices||{}),esito=[],opx=opName;opName='Pagina consensi';
+  /* risposte inviate con la pagina vecchia (due consensi): conta come sì solo se nessuno dei due è stato negato */
+  if(typeof ch.mk!=='boolean'&&(typeof ch.mkEmail==='boolean'||typeof ch.mkTel==='boolean'))ch.mk=ch.mkEmail!==false&&ch.mkTel!==false&&(ch.mkEmail===true||ch.mkTel===true);
   const when=(ok?dt:new Date()).toISOString().slice(0,16),pend=(p.richieste||[]).filter(x=>x.stato==='inviata');
   if(!p.informativa){const f=(p.richieste||[]).find(x=>x.stato!=='annullata');p.informativa=true;p.infModo='Email';p.infData=f?ymd(new Date(f.creata+'Z')):day;p.infVer=(f&&f.ver)||r.ver||infVer()}
   CONS.forEach(k=>{if(typeof ch[k]!=='boolean')return;const old=p.cons[k]||{v:false,d:''};if(!!old.v===ch[k]&&old.d)return;p.cons[k]={v:ch[k],d:day};esito.push(CLABEL[k]+': '+(ch[k]?'prestato':'revocato'));logP(c,CLABEL[k]+': '+(ch[k]?'prestato':'revocato')+' dal cliente con il link (versione informativa '+(r.ver||'1.0')+')',ch[k]?'consenso':'revoca')});
@@ -10910,6 +10918,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.62.0','Consenso marketing unico: al posto dei due consensi (email, telefono/WhatsApp) ce n’è uno solo, valido per email, telefono, SMS e WhatsApp. Se il cliente lo rifiuta, non riceve marketing su nessun canale. I clienti esistenti restano con il marketing attivo solo se avevano dato entrambi i consensi. Aggiornati la pagina consensi inviata al cliente, i segmenti, i report e le campagne.'],
 ['1.61.1','Duplicati: l’avviso «Possibile duplicato» in cima alla scheda cliente tornava nascosto nel Riepilogo (si vedeva solo nella scheda Dati); ora compare subito, in tutte le schede.'],
 ['1.61.0','Computer: elenco e scheda affiancati (clienti, lead, opportunità): scegli un elemento a sinistra e la scheda si apre a destra senza coprire l’elenco. Sulle schede dell’elenco, passando il mouse compaiono i pulsanti Chiama, Email e WhatsApp al posto dello scorrimento, che resta solo sul telefono.'],
 ['1.60.2','La verifica della rete ora riceve una risposta regolare dal server: prima veniva registrata come errore 401 nella console di monitoraggio, anche se l’app funzionava.'],
@@ -11773,3 +11782,4 @@ $('lgoDel').onclick=()=>{delete S.logo;saveS();paintLogo();toast('Logo rimosso.'
 $('lgoFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
   try{const d=await logoFromFile(f);if(!d||!okImg(d)){toast('Immagine non utilizzabile o troppo pesante.');return}S.logo=d;saveS();paintLogo();toast('Logo salvato.')}catch(err){toast('Immagine non leggibile.')}};
 try{paintLogo()}catch(e){}
+try{if(mkMig())pubRefresh()}catch(e){}
