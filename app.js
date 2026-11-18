@@ -493,7 +493,7 @@ function mkMig(){let n=0;try{clients.forEach(c=>{const pv=c.privacy;if(!pv||!pv.
   delete pv.cons.mkEmail;delete pv.cons.mkTel;n++});
   if(S.segs&&JSON.stringify(S.segs).match(/"f":"mk(Email|Tel)"/)){S.segs=JSON.parse(JSON.stringify(S.segs).replace(/"f":"mk(Email|Tel)"/g,'"f":"mk"'));n++;try{saveS()}catch(e){}}
   if(n){try{persist()}catch(e){}}}catch(e){}return n}
-function loadPriv(p){p=p||mkPriv();$('p_later').checked=false;
+function loadPriv(p){p=p||mkPriv();$('p_later').checked=false;try{laterUi()}catch(e){}
   $('p_fonte').value=p.fonteDati;$('p_base').value=p.base;$('p_inf').checked=!!p.informativa;$('p_infmodo').value=p.infModo||'Di persona';$('p_infdata').value=p.infData||'';$('p_cons').value=p.conserva||'';{const a=autoRet(),ad=a.until?ymd(new Date(a.until)):'';$('p_cons').dataset.auto=ad;if(!p.conserva)$('p_cons').value=ad}
   CONS.forEach(k=>{const c=p.cons[k]||{v:false,d:''};$('c_'+k).checked=!!c.v;$('s_'+k).textContent=c.v?'Prestato il '+fmtD(c.d):(c.d?'Revocato il '+fmtD(c.d):'')});
   const L=$('p_log');L.textContent='';(p.log||[]).slice(-6).reverse().forEach(x=>L.append(h('div','logi',fmtDT(x.d+'Z')+' – '+x.t+(x.op?' ('+x.op+')':''))));
@@ -593,11 +593,13 @@ function paintPrivSum(){
   {const a=editing&&editing.privacy&&editing.privacy.anon;if(a&&a.stato==='aperta')sm.append(row(1,'Richiesta di anonimizzazione','Da evadere entro '+fmtD(a.scade),'wait'))}
 }
 ['change','input'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target&&e.target.closest&&e.target.closest('#p_det'))try{paintPrivSum()}catch(x){}}));
+/* in creazione, «Invierò l’informativa più tardi» nasconde i tasti di invio */
+function laterUi(){try{$('p_mailF').hidden=!editing&&$('p_later').checked}catch(e){}}
 let rq=null,rr=null;
 function paintReq(){
   retHint();
   const w=$('p_req');w.textContent='';$('p_mailF').hidden=false;$('p_sum').hidden=false;paintPrivSum();try{paintAnon()}catch(e){}$('p_wa').onclick=sendWaInfo;
-  $('p_laterW').hidden=!!editing;if(editing||$('p_inf').checked)$('p_later').checked=false;if(!$('p_laterW').dataset.w){$('p_laterW').dataset.w=1;$('p_inf').addEventListener('change',()=>{if($('p_inf').checked)$('p_later').checked=false})}
+  $('p_laterW').hidden=!!editing;if(editing||$('p_inf').checked)$('p_later').checked=false;if(!$('p_laterW').dataset.w){$('p_laterW').dataset.w=1;$('p_inf').addEventListener('change',()=>{if($('p_inf').checked)$('p_later').checked=false;laterUi()});$('p_later').addEventListener('change',laterUi)}laterUi();
   if(!editing){const pb=$('p_prep');pb.disabled=false;pb.innerHTML=ICONS.Scrivi+'Invia informativa';pb.onclick=()=>viaNew('email');return}
   const p=editing.privacy||mkPriv(),R=p.richieste||[],pend=R.find(r=>effSt(r)==='inviata'),ok=!!editing.email,given=CONS.filter(k=>p.cons[k]&&p.cons[k].v).map(k=>CLABEL[k]);
 
@@ -10918,7 +10920,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
-['1.62.0','Consenso marketing unico: al posto dei due consensi (email, telefono/WhatsApp) ce n’è uno solo, valido per email, telefono, SMS e WhatsApp. Se il cliente lo rifiuta, non riceve marketing su nessun canale. I clienti esistenti restano con il marketing attivo solo se avevano dato entrambi i consensi. Aggiornati la pagina consensi inviata al cliente, i segmenti, i report e le campagne.'],
+['1.62.0','Consenso marketing unico: al posto dei due consensi (email, telefono/WhatsApp) ce n’è uno solo, valido per email, telefono, SMS e WhatsApp. Se il cliente lo rifiuta, non riceve marketing su nessun canale. I clienti esistenti restano con il marketing attivo solo se avevano dato entrambi i consensi. Aggiornati la pagina consensi inviata al cliente, i segmenti, i report e le campagne. In creazione cliente, «Invierò l’informativa più tardi» nasconde i tasti di invio.'],
 ['1.61.1','Duplicati: l’avviso «Possibile duplicato» in cima alla scheda cliente tornava nascosto nel Riepilogo (si vedeva solo nella scheda Dati); ora compare subito, in tutte le schede.'],
 ['1.61.0','Computer: elenco e scheda affiancati (clienti, lead, opportunità): scegli un elemento a sinistra e la scheda si apre a destra senza coprire l’elenco. Sulle schede dell’elenco, passando il mouse compaiono i pulsanti Chiama, Email e WhatsApp al posto dello scorrimento, che resta solo sul telefono.'],
 ['1.60.2','La verifica della rete ora riceve una risposta regolare dal server: prima veniva registrata come errore 401 nella console di monitoraggio, anche se l’app funzionava.'],
