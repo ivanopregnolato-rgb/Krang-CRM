@@ -23,7 +23,7 @@ const defs=()=>[
  {k:'cr',ic:'shield',t:'Cifratura dei dati',sub:'I tuoi dati restano tuoi',skip:true,
   ok:()=>e2eReady(),render:rCr},
  {k:'az',ic:'building',t:'La tua azienda',sub:'Titolare dell’informativa e delle email',app:()=>!col(),
-  ok:()=>!!(S.azienda&&S.azienda.trim()),render:rAz,need:true},
+  ok:()=>!!(S.azienda&&S.azienda.trim()&&S.replyTo),render:rAz,need:true},
  {k:'pv',ic:'doc',t:'Privacy',sub:'Informativa e consenso marketing',app:()=>!col(),
   ok:()=>flag('cfgPv'),render:rPv,need:true},
  {k:'sc',ic:'user',t:'Accesso con biometria',sub:'Face ID, impronta o volto',skip:true,
@@ -82,14 +82,14 @@ function rCr(B){
 
 /* ---------- 3 · azienda ---------- */
 function rAz(B,ctx){
-  B.append(P('Questi dati compaiono nell’informativa privacy, nelle email e nei preventivi. Il <b>nome dell’azienda</b> è obbligatorio, il resto si può completare dopo.'));
+  B.append(P('Questi dati compaiono nell’informativa privacy, nelle email e nei preventivi. <b>Nome dell’azienda</b> ed <b>email di contatto</b> sono obbligatori, il resto si può completare dopo.'));
   const fn=field('cf_az','Nome azienda (o tuo nome e cognome)',S.azienda,{ac:'organization'});
   const two=E('div','two');two.append(field('cf_piva','Partita IVA',S.piva,{im:'numeric'}),field('cf_tel','Telefono',S.telefono,{type:'tel',im:'tel',ac:'tel'}));
-  B.append(fn,two,field('cf_ind','Indirizzo della sede',S.indirizzo,{ac:'street-address'}),field('cf_rt','Email di contatto',S.replyTo,{type:'email',ac:'email',hint:'Compare nell’informativa e nelle risposte dei clienti.'}));
+  B.append(fn,two,field('cf_ind','Indirizzo della sede',S.indirizzo,{ac:'street-address'}),field('cf_rt','Email di contatto *',S.replyTo,{type:'email',ac:'email',hint:'Obbligatoria: compare nell’informativa e nelle risposte dei clienti.'}));
   const read=()=>({azienda:$('cf_az').value.trim(),piva:$('cf_piva').value.trim(),telefono:$('cf_tel').value.trim(),indirizzo:$('cf_ind').value.trim(),rt:$('cf_rt').value.trim().toLowerCase()});
-  const chk=()=>{const v=read();let bad=false;fErr('cf_rt',mailOk(v.rt)?'':'Indirizzo email non valido.');if(!mailOk(v.rt))bad=true;ctx.setNext(!!v.azienda&&!bad);return v};
+  const chk=()=>{const v=read();let bad=false;const em=!v.rt||!mailOk(v.rt);fErr('cf_rt',v.rt&&!mailOk(v.rt)?'Indirizzo email non valido.':'');if(em)bad=true;ctx.setNext(!!v.azienda&&!bad);return v};
   B.querySelectorAll('input').forEach(i=>i.addEventListener('input',chk));chk();
-  ctx.beforeNext=()=>{const v=chk();if(!v.azienda||!mailOk(v.rt))return false;
+  ctx.beforeNext=()=>{const v=chk();if(!v.azienda||!v.rt||!mailOk(v.rt))return false;
     S.azienda=v.azienda;S.piva=v.piva;S.telefono=v.telefono;S.indirizzo=v.indirizzo;S.replyTo=v.rt;try{saveS()}catch(e){}try{infSync();pubRefresh()}catch(e){}return true}}
 
 /* ---------- 4 · privacy ---------- */
@@ -100,9 +100,11 @@ function rPv(B,ctx){
   B.append(box);
   B.append(note('<b>Consenso al marketing.</b> È uno solo, valido per email, telefono, SMS e WhatsApp: se il cliente lo rifiuta, non gli scrivi su nessun canale. Lo registri nella scheda del cliente, sezione Privacy.'));
   B.append(note('Il testo è una proposta: puoi modificarlo in Impostazioni → Privacy. Prima di usarlo con i clienti ti consigliamo di <b>farlo rivedere da un legale</b>.'));
+  B.append(field('cf_pm','Email per le richieste privacy',S.privEmail,{type:'email',ac:'email',ph:S.replyTo||'',hint:'I clienti scrivono qui per accedere ai dati, correggerli, cancellarli o revocare i consensi. Se la lasci vuota, uso l’email di contatto dell’azienda'+(S.replyTo?' ('+S.replyTo+')':'')+'.'}));
   const l=E('label','chk cfg-chk'),c=E('input');c.type='checkbox';c.checked=flag('cfgPv');l.append(c,E('span','','Ho letto l’informativa e la ritengo adatta alla mia attività'));B.append(l);
-  c.onchange=()=>ctx.setNext(c.checked);ctx.setNext(c.checked);
-  ctx.beforeNext=()=>{if(!c.checked)return false;setFlag('cfgPv',true);try{infSync();pubRefresh()}catch(e){}return true}}
+  const pmOk=()=>{const v=$('cf_pm').value.trim().toLowerCase();fErr('cf_pm',mailOk(v)?'':'Indirizzo email non valido.');return mailOk(v)};
+  const upd=()=>ctx.setNext(c.checked&&pmOk());c.onchange=upd;$('cf_pm').addEventListener('input',upd);upd();
+  ctx.beforeNext=()=>{if(!c.checked||!pmOk())return false;S.privEmail=$('cf_pm').value.trim().toLowerCase();setFlag('cfgPv',true);try{infSync();pubRefresh()}catch(e){}return true}}
 
 /* ---------- 5 · biometria ---------- */
 function rSc(B,ctx){

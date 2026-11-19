@@ -5,8 +5,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
 <!-- © 2026 Ivano Pregnolato. Tutti i diritti riservati. Vietata la copia o la redistribuzione senza consenso scritto. -->
-<script src="boot.js?v=1.63.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.63.0|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.63.1"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.63.1|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -964,6 +964,7 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
   <div class="f"><label for="st_firma">Firma delle email</label><textarea id="st_firma" rows="3"></textarea><div class="hint">Segnaposto: {azienda}, {mittente}.</div></div>
 </div>
 <div class="sp" data-sp="pv" hidden>
+  <div class="f"><label for="st_pm">Email per le richieste privacy</label><input id="st_pm" type="email" autocomplete="off" placeholder="Se vuota, usa l’email di contatto dell’azienda"><div class="hint">Compare nell’informativa: i clienti scrivono qui per accedere ai dati, correggerli, cancellarli o revocare i consensi.</div><div class="err" id="err-st_pm" hidden></div></div>
   <div class="f"><label>Conservazione dei dati (mesi)</label><div class="hint" style="margin:0 0 8px">Valori indicativi da far verificare a un consulente o al DPO. Le stesse durate compaiono nell’informativa.</div>
     <div class="two" style="align-items:center;margin:6px 0"><div><div style="font-size:14px">Dati contrattuali e fiscali</div><div class="hint" style="margin:0">Dalla fine del rapporto. 120 mesi sono 10 anni (art. 2220 c.c.).</div></div><div><input id="st_r_contratto" inputmode="numeric" autocomplete="off" aria-label="Dati contrattuali e fiscali"><div class="err" id="err-st_r_contratto" hidden></div></div></div>
     <div class="two" style="align-items:center;margin:6px 0"><div><div style="font-size:14px">Contatti senza contratto</div><div class="hint" style="margin:0">Dall’ultimo contatto.</div></div><div><input id="st_r_contatti" inputmode="numeric" autocomplete="off" aria-label="Contatti senza contratto"><div class="err" id="err-st_r_contatti" hidden></div></div></div>
@@ -1249,6 +1250,6 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.63.0"></script>
+<script src="app.js?v=1.63.1"></script>
 </body>
 </html>
