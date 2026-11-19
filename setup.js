@@ -99,9 +99,9 @@ function rPv(B,ctx){
   const box=E('div','cfg-doc');String(t||'Imposta prima il nome dell’azienda.').split(/\n\n+/).forEach(x=>{if(!x.trim())return;const p=E('p'),s=x.trim(),i=s.indexOf(': ');if(i>0&&i<60){p.append(E('b','',s.slice(0,i+2)));p.append(document.createTextNode(s.slice(i+2)))}else p.textContent=s;box.append(p)});
   B.append(box);
   B.append(note('<b>Consenso al marketing.</b> È uno solo, valido per email, telefono, SMS e WhatsApp: se il cliente lo rifiuta, non gli scrivi su nessun canale. Lo registri nella scheda del cliente, sezione Privacy.'));
-  B.append(note('Il testo è una proposta: puoi modificarlo in Impostazioni → Privacy. Prima di usarlo con i clienti ti consigliamo di <b>farlo rivedere da un legale</b>.'));
+
   B.append(field('cf_pm','Email per le richieste privacy',S.privEmail,{type:'email',ac:'email',ph:S.replyTo||'',hint:'I clienti scrivono qui per accedere ai dati, correggerli, cancellarli o revocare i consensi. Se la lasci vuota, uso l’email di contatto dell’azienda'+(S.replyTo?' ('+S.replyTo+')':'')+'.'}));
-  const l=E('label','chk cfg-chk'),c=E('input');c.type='checkbox';c.checked=flag('cfgPv');l.append(c,E('span','','Ho letto l’informativa e la ritengo adatta alla mia attività'));B.append(l);
+  const l=E('label','cfg-note cfg-ack'),c=E('input');c.type='checkbox';c.checked=flag('cfgPv');const tx=E('span');tx.innerHTML='<b>Ho letto l’informativa e ho capito che è una proposta.</b> Puoi modificarla in Impostazioni → Privacy. Prima di usarla con i clienti ti consigliamo di <b>farla rivedere da un legale</b>.';l.append(c,tx);B.append(l);
   const pmOk=()=>{const v=$('cf_pm').value.trim().toLowerCase();fErr('cf_pm',mailOk(v)?'':'Indirizzo email non valido.');return mailOk(v)};
   const upd=()=>ctx.setNext(c.checked&&pmOk());c.onchange=upd;$('cf_pm').addEventListener('input',upd);upd();
   ctx.beforeNext=()=>{if(!c.checked||!pmOk())return false;S.privEmail=$('cf_pm').value.trim().toLowerCase();setFlag('cfgPv',true);try{infSync();pubRefresh()}catch(e){}return true}}
@@ -148,10 +148,10 @@ const css=`
 #mCfg .cfg-top small{color:var(--muted);font-size:13px;white-space:nowrap}
 #mCfg .cfg-x{border:0;background:transparent;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;padding:8px}
 #mCfg .cfg-main{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:8px 20px 20px}
-#mCfg .cfg-in{max-width:520px;margin:0 auto}
+#mCfg .cfg-in{max-width:520px;margin:0 auto;padding-top:14px}
 #mCfg h2{margin:14px 0 4px;font-size:26px;line-height:1.15}
 #mCfg .cfg-sub{margin:0 0 16px;color:var(--muted)}
-#mCfg .cfg-ic{width:56px;height:56px;border-radius:18px;background:var(--lilac);color:#2d2b55;display:grid;place-items:center;margin-top:10px}
+#mCfg .cfg-ic{width:56px;height:56px;flex:none;border-radius:18px;background:var(--lilac);color:#2d2b55;display:grid;place-items:center}
 #mCfg .cfg-ic svg{width:28px;height:28px}
 #mCfg .cfg-p{margin:0 0 12px;line-height:1.5}#mCfg .cfg-sm{font-size:13px;color:var(--muted)}
 #mCfg .cfg-note,#mCfg .cfg-warn,#mCfg .cfg-ok{border-radius:14px;padding:12px 14px;margin:12px 0;font-size:14px;line-height:1.45}
@@ -160,7 +160,7 @@ const css=`
 #mCfg .cfg-ok{background:var(--accent);color:#1d3b30;display:flex;gap:10px;align-items:center;font-weight:600}
 #mCfg .cfg-ok svg{width:20px;height:20px;flex:none}
 #mCfg .cfg-doc{max-height:34vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 14px;margin:8px 0;font-size:13.5px;line-height:1.5}
-#mCfg .cfg-chk{margin:14px 0}
+#mCfg .cfg-ack{display:flex;gap:12px;align-items:flex-start;cursor:pointer;margin:14px 0}#mCfg .cfg-ack input{width:24px;height:24px;flex:none;margin:1px 0 0;accent-color:var(--accent)}#mCfg .cfg-ack:has(input:checked){border-color:var(--accent)}
 #mCfg .btn.lbl{display:flex;gap:8px;align-items:center;justify-content:center;width:100%;margin:10px 0}
 #mCfg .btn.lbl svg{width:18px;height:18px}
 #mCfg .btn:disabled{opacity:.45}
