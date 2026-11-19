@@ -9465,7 +9465,7 @@ $('st_broDel').onclick=()=>{S.brochure=null;saveS();paintBro()};
 
 const SPG=[['La tua azienda',[['az','building','Profilo azienda',()=>S.azienda||'Nome, partita IVA, sede e contatti'],['tm','users','Collaboratori',()=>{try{const w=SB.e2e.ws();return w.role==='collab'?'Lavori sul CRM di '+(w.name||'un titolare'):'Invita chi lavora con te'}catch(e){return ''}}]]],
  ['App',[['in','download','Installa l’app',()=>(typeof instLabel==='function'?instLabel():''),()=>isStandalone()]]],
- ['Notifiche',[['nt','clock','Promemoria task',()=>(typeof pushLabel==='function'?pushLabel():'')]]],
+ ['Notifiche',[['nt','clock','Notifiche push',()=>(typeof pushLabel==='function'?pushLabel():'')]]],
  ['Comunicazione',[['em','Scrivi','Email',()=>S.replyTo||'Mittente, firma e contatto'],['wa','WhatsApp','WhatsApp',()=>'Messaggi rapidi e paese dei numeri'],['al','clip','Allegati e brochure',()=>'Listino e brochure per le risposte ai lead']]],
  ['Vendite',[['pr','doc','Preventivi',()=>'Validità '+S.qValid+' giorni e condizioni'],['ld','target','Lead',()=>'Pulizia automatica dei lead']]],
  ['Dati e privacy',[['sc','user','Accesso e sicurezza',()=>LOCK.on?'Biometria attiva':'Blocco non attivo'],['pv','shield','Privacy e conservazione',()=>'Durate di conservazione e revisione'],['vc','user','Importa dalla rubrica',()=>'Da un file contatti (.vcf)'],['dp','users','Anagrafiche duplicate',()=>'Trova e unisci le schede doppie'],['bk','download','Backup, accessi ed esempi',()=>'Esporta, importa, persone e dati di prova']]]];
@@ -10302,9 +10302,12 @@ document.addEventListener('visibilitychange',()=>{if(!LOCK.on)return;if(document
 if(LOCK.on){$('lkBio').hidden=!(navigator.credentials&&window.PublicKeyCredential);setTimeout(()=>{if(document.documentElement.classList.contains('locked')&&!$('lkBio').hidden)lkTry()},300)}
 function paintLock(){$('sc_off').hidden=!!LOCK.on;$('sc_onw').hidden=!LOCK.on;$('sc_st').textContent=LOCK.on?'Blocco attivo: all’apertura l’app chiede la biometria del dispositivo (Face ID, impronta o riconoscimento del volto). Il PIN è l’alternativa di emergenza.':'Il blocco non è attivo. Attivandolo, l’app chiederà la biometria del dispositivo ogni volta che la apri.';$('sc_delay').value=String(LOCK.delay==null?5:LOCK.delay);setErr('sc_pin','');setErr('sc_pin2','')}
 const pinOk=v=>/^\d{4,8}$/.test(v);
+/* attiva il blocco biometrico con il PIN dato: restituisce '' se riuscito, altrimenti il messaggio d'errore (usata anche dalla configurazione guidata) */
+async function lockOn(v){if(!pinOk(v))return 'Scegli un PIN di 4–8 cifre.';
+  try{const id=await lkRegister();const salt=b64(rnd(12));LOCK={on:true,id,salt,pin:await pinHash(v,salt,'p2'),kdf:'p2',delay:5};lkSave();try{paintLock()}catch(e){}return ''}
+  catch(e){return e&&e.code==='nopk'?'La biometria non è disponibile in questa pagina o in questo browser.':e&&e.name==='NotAllowedError'?'Operazione annullata o non consentita da questa pagina.':'Non sono riuscito a registrare la biometria.'}}
 $('sc_on').onclick=async()=>{const v=$('sc_pin').value.trim();if(!pinOk(v)){setErr('sc_pin','Scegli un PIN di 4–8 cifre.');return}setErr('sc_pin','');const b=$('sc_on');b.disabled=true;
-  try{const id=await lkRegister();const salt=b64(rnd(12));LOCK={on:true,id,salt,pin:await pinHash(v,salt,'p2'),kdf:'p2',delay:5};lkSave();$('sc_pin').value='';paintLock();toast('Blocco biometrico attivato.')}
-  catch(e){setErr('sc_pin',e&&e.code==='nopk'?'La biometria non è disponibile in questa pagina o in questo browser.':e&&e.name==='NotAllowedError'?'Operazione annullata o non consentita da questa pagina.':'Non sono riuscito a registrare la biometria.')}finally{b.disabled=false}};
+  try{const m=await lockOn(v);if(m)setErr('sc_pin',m);else{$('sc_pin').value='';toast('Blocco biometrico attivato.')}}finally{b.disabled=false}};
 $('sc_delay').onchange=()=>{LOCK.delay=+$('sc_delay').value;lkSave();toast('Impostazione salvata.')};
 $('sc_pinok').onclick=async()=>{const v=$('sc_pin2').value.trim();if(!pinOk(v)){setErr('sc_pin2','Scegli un PIN di 4–8 cifre.');return}setErr('sc_pin2','');LOCK.salt=b64(rnd(16));LOCK.pin=await pinHash(v,LOCK.salt,'p2');LOCK.kdf='p2';lkSave();$('sc_pin2').value='';toast('PIN aggiornato.')};
 $('sc_test').onclick=async()=>{try{await lkVerify();toast('Biometria riconosciuta.')}catch(e){toast('Riconoscimento non riuscito.')}};
@@ -10395,7 +10398,7 @@ const wState=()=>{let enc=false;try{enc=SB.e2e.state()==='ready'}catch(e){}const
  {k:'az',ic:'building',t:'Il profilo della tua azienda',d:'Nome, partita IVA e firma delle email',done:!!(S.azienda&&S.azienda.trim())},
  {k:'cl',ic:'users',t:'Il tuo primo cliente',d:'Scrivi i dati o fotografa un biglietto da visita',done:clients.length>0},
  {k:'pr',ic:'box',t:'I prodotti a catalogo',d:'Inseriscili e collegali alle opportunità',done:prods.length>0},
- {k:'no',ic:'clock',t:'I promemoria sul telefono',d:'Una notifica quando un task scade',done:(()=>{try{return pushFlag()&&Notification.permission==='granted'}catch(e){return false}})()},
+ {k:'no',ic:'clock',t:'Le notifiche push',d:'Una notifica quando un task scade',done:(()=>{try{return pushFlag()&&Notification.permission==='granted'}catch(e){return false}})()},
  {k:'as',ic:'chat',t:'L’assistente',d:'Chiedi come si fa una cosa: risponde in pochi secondi',done:!!WF.askSeen}];return isCol()?A.filter(x=>x.k!=='az'&&x.k!=='pr'):A};
 function paintWel(){const w=$('hWel');if(!w)return;w.textContent='';if(WF.welcomeOff)return;const st=wState(),n=st.filter(x=>x.done).length;if(n===st.length)return;
   const b=h('button','wcard');b.type='button';const i=h('span','ic');i.innerHTML=ICONS.compass;const tx=h('div','tx');const bar=h('div','wbar'),f=h('i');f.style.width=Math.round(n/st.length*100)+'%';bar.append(f);
@@ -10409,6 +10412,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   B.append(h('h3','','Aiuto'),h('p','wsub','Come iniziare e dove trovare le risposte.'));
   let n=0,t=5;try{const st=wState();n=st.filter(x=>x.done).length;t=st.length}catch(e){}
   const rows=[
+    ['gear','Configurazione guidata','Installazione, cifratura, azienda, privacy, biometria e notifiche',()=>{M.hidden=true;openCfg()}],
     ['compass','Primi passi',n+' di '+t+' completati',()=>{WF.welcomeOff=false;saveS();openWel()}],
     ['chat','Assistente','Chiedi come si fa una cosa',()=>{M.hidden=true;openAsk()}]];
   const g=h('div','shg'),l=h('div','sl');
@@ -10417,6 +10421,8 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   g.append(l);B.append(g);
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
+/* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.63.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!WF.welcomeSeen){WF.welcomeSeen=true;saveS()}
@@ -10437,14 +10443,14 @@ function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=
     B.append(a,c,back());return}
   if(view==='no'){
     const ios=isIOSd(),inst=isStandalone(),ok=pushOk();
-    B.append(h('h3','','I promemoria sul telefono'),h('p','wsub','Ricevi una notifica quando un task scade, anche con l’app chiusa. Quattro passi.'));
+    B.append(h('h3','','Le notifiche push'),h('p','wsub','Ricevi una notifica quando un task scade, anche con l’app chiusa. Quattro passi.'));
     const p=(t)=>{const d=h('p','wtx');d.innerHTML=t;B.append(d)};
     p('<b>1. Aggiungi l’app alla schermata Home.</b> '+(ios?(inst?'Fatto: stai usando l’app dalla schermata Home.':'Su iPhone è indispensabile: in Safari tocca «Condividi» → «Aggiungi a Home», poi riapri KRANG da lì.'):'Su iPhone serve iOS 16.4 o successivo e l’app aggiunta alla schermata Home (Condividi → Aggiungi a Home). Su Android e computer puoi saltare questo passo.'));
-    p('<b>2. Attiva i promemoria.</b> In Impostazioni → Promemoria task tocca «Attiva i promemoria» e consenti le notifiche quando il telefono lo chiede.');
+    p('<b>2. Attiva le notifiche push.</b> In Impostazioni → Notifiche push tocca «Attiva le notifiche push» e consenti le notifiche quando il telefono lo chiede.');
     p('<b>3. Prova la notifica.</b> Nella stessa pagina apri «Prova e diagnosi», tocca «Notifica di prova» e controlla che compaia. Se non arriva, verifica che nelle impostazioni del telefono le notifiche di KRANG siano consentite e che non sia attiva una modalità Concentrazione (per esempio Sonno).');
     p('<b>4. Scegli quando.</b> Ogni task può avere un’ora: l’avviso arriva a quell’ora. Senza ora, arriva all’ora predefinita che scegli nella stessa pagina. Nella notifica compaiono titolo e cliente; se non vuoi che si leggano a telefono bloccato, spegni «Titolo e cliente nella notifica».');
     if(!ok){const d=h('p','wtx');d.innerHTML='<b>Nota:</b> questo browser non supporta le notifiche.';B.append(d)}
-    const a=h('button','btn p lbl');a.type='button';a.innerHTML=ICONS.clock+'<span>Apri i promemoria</span>';a.onclick=()=>{closeWel();openSettings();setSp('nt')};
+    const a=h('button','btn p lbl');a.type='button';a.innerHTML=ICONS.clock+'<span>Apri le notifiche push</span>';a.onclick=()=>{closeWel();openSettings();setSp('nt')};
     B.append(a);if(!inst){const ib=h('button','btn lbl');ib.type='button';ib.innerHTML=ICONS.download+'<span>Come installare l’app</span>';ib.onclick=()=>{closeWel();openSettings();setSp('in')};B.append(ib)}B.append(back());return}
   if(view==='cr'){
     let ready=false,can=false;try{ready=SB.e2e.state()==='ready';can=!!(SB.has&&SB.has())}catch(e){}
@@ -10470,7 +10476,7 @@ function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=
   if(document.documentElement.classList.contains('noauth')||!$('mE2E').hidden||!$('mWel').hidden)return;
   if(!isCol()&&(clients.length||leads.length||opps.length||(S.azienda&&S.azienda.trim()))){WF.welcomeSeen=true;saveS();clearInterval(t);return}
   if(CLOUD.on&&!CLOUD.last&&k<15)return;
-  clearInterval(t);openWel()},1500)})();
+  clearInterval(t);openCfg()},1500)})();
 
 
 /* diagnostica spazio: chiede archiviazione persistente e avvisa se il browser sta per riempirsi */
@@ -10920,6 +10926,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.63.0','Configurazione guidata a schermo intero al primo accesso: sei passi (installazione, cifratura, azienda, privacy, biometria, notifiche push) che si completano direttamente nella guida, con Avanti e Indietro. La ritrovi in Aiuto. «Promemoria task» ora si chiama «Notifiche push».'],
 ['1.62.0','Consenso marketing unico: al posto dei due consensi (email, telefono/WhatsApp) ce n’è uno solo, valido per email, telefono, SMS e WhatsApp. Se il cliente lo rifiuta, non riceve marketing su nessun canale. I clienti esistenti restano con il marketing attivo solo se avevano dato entrambi i consensi. Aggiornati la pagina consensi inviata al cliente, i segmenti, i report e le campagne. In creazione cliente, «Invierò l’informativa più tardi» nasconde i tasti di invio.'],
 ['1.61.1','Duplicati: l’avviso «Possibile duplicato» in cima alla scheda cliente tornava nascosto nel Riepilogo (si vedeva solo nella scheda Dati); ora compare subito, in tutte le schede.'],
 ['1.61.0','Computer: elenco e scheda affiancati (clienti, lead, opportunità): scegli un elemento a sinistra e la scheda si apre a destra senza coprire l’elenco. Sulle schede dell’elenco, passando il mouse compaiono i pulsanti Chiama, Email e WhatsApp al posto dello scorrimento, che resta solo sul telefono.'],
@@ -11607,12 +11614,12 @@ function pushLabel(){if(!pushOk())return 'Non disponibili su questo dispositivo'
 async function pushOn(){
   if(!pushOk()){toast('Questo dispositivo non supporta le notifiche.');return false}
   if(isIOSd()&&!isStandalone()){toast('Su iPhone aggiungi prima l’app alla schermata Home, poi riapri da lì.');return false}
-  if(!SB.has()){toast('Accedi per attivare i promemoria.');return false}
+  if(!SB.has()){toast('Accedi per attivare le notifiche push.');return false}
   let p=Notification.permission;if(p==='default')p=await Notification.requestPermission();
   if(p!=='granted'){toast('Notifiche non consentite: abilitale nelle impostazioni del dispositivo.');return false}
   try{const {reg,sub:old}=await pushGet();if(!reg)throw 0;const sub=old||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:vapidKey()});
     await SB.push.save(subKeys(sub));setPushFlag(true);await remSync(true);return true}
-  catch(e){toast('Non sono riuscito ad attivare i promemoria. Riprova tra poco.');return false}}
+  catch(e){toast('Non sono riuscito ad attivare le notifiche push. Riprova tra poco.');return false}}
 async function pushOff(){
   try{const {sub}=await pushGet();if(sub){const ep=sub.endpoint;await sub.unsubscribe();try{await SB.push.del(ep)}catch(e){}}
     setPushFlag(false);try{if((await SB.push.n())===0)await SB.push.rem([])}catch(e){}}catch(e){setPushFlag(false)}}
@@ -11638,13 +11645,13 @@ function ntPaint(){const ok=pushOk(),on=pushFlag()&&ok&&Notification.permission=
   hint.textContent=!ok?'Questo browser non supporta le notifiche. Su iPhone servono iOS 16.4 o successivo e l’app aggiunta alla schermata Home.':inst?'Su iPhone aggiungi prima l’app alla schermata Home (Condividi → Aggiungi a Home) e riaprila da lì: solo così iOS consente le notifiche.':on?'Ricevi un avviso quando un task scade, anche con l’app chiusa. Funziona su tutti i dispositivi dove li attivi.':'Ricevi un avviso quando un task scade, anche con l’app chiusa. Ci vogliono pochi secondi: tocca il pulsante e consenti le notifiche.';
   {const o=$('nt_inst');if(o)o.remove();if(inst||!isStandalone()&&ok&&isIOSd()){const bi=h('button','btn lbl');bi.id='nt_inst';bi.type='button';bi.style.cssText='width:100%;margin-top:10px';bi.innerHTML=ICONS.download+'<span>Come installare l’app</span>';bi.onclick=()=>setSp('in');$('nt_btn').after(bi)}}
   st.textContent=!ok?'Non disponibili su questo dispositivo':on?'● Attivi su questo dispositivo':'Non attivi';st.style.color=on?'var(--ok,#4ade80)':'var(--muted,#9fb3c8)';
-  b.textContent=on?'Disattiva i promemoria':'Attiva i promemoria';$('nt_btn').disabled=!ok;$('nt_btn').classList.toggle('p',!on);$('nt_opts').hidden=!on;const sel=$('nt_hr');if(sel)sel.value=String(remHour());$('nt_sh').checked=S.remShow!==false;if(on)ntDiag()}
+  b.textContent=on?'Disattiva le notifiche push':'Attiva le notifiche push';$('nt_btn').disabled=!ok;$('nt_btn').classList.toggle('p',!on);$('nt_opts').hidden=!on;const sel=$('nt_hr');if(sel)sel.value=String(remHour());$('nt_sh').checked=S.remShow!==false;if(on)ntDiag()}
 async function ntDiag(){const el=$('nt_diag');try{const L=await kget('log','last');el.textContent=L?'Ultima notifica ricevuta dal server: '+new Date(L.t).toLocaleString('it-IT')+' · dati '+(L.dati===true?'ok':L.dati)+' · titolo '+L.dec+' · mostrata: '+L.mostra:'Nessuna notifica dal server ricevuta finora su questo dispositivo.'}catch(e){el.textContent=''}}
-$('nt_btn').onclick=async()=>{const on=pushFlag()&&pushOk()&&Notification.permission==='granted';$('nt_btn').disabled=true;try{if(on){await pushOff();toast('Promemoria disattivati su questo dispositivo.')}else if(await pushOn())toast('Promemoria attivati.')}finally{ntPaint()}};
+$('nt_btn').onclick=async()=>{const on=pushFlag()&&pushOk()&&Notification.permission==='granted';$('nt_btn').disabled=true;try{if(on){await pushOff();toast('Notifiche push disattivate su questo dispositivo.')}else if(await pushOn())toast('Notifiche push attivate.')}finally{ntPaint()}};
 $('nt_sh').onchange=()=>{S.remShow=$('nt_sh').checked;try{saveS()}catch(e){}remSync(true)};
 $('nt_hr').onchange=()=>{S.remH=parseInt($('nt_hr').value,10)||9;try{saveS()}catch(e){}remSync(true);ntPaint()};
 $('nt_srv').onclick=async()=>{const b=$('nt_srv');b.disabled=true;const el=$('nt_diag');el.textContent='Invio in corso…';try{const r=await SB.push.test();el.textContent='Il server ha inviato: '+(r&&r.results?r.results.map(x=>x.ok?'accettata da '+x.host:'rifiutata ('+x.status+')').join(', '):'nessuna iscrizione')+'. Attendo l’arrivo…';let tries=0;const iv=setInterval(async()=>{tries++;await ntDiag();if(tries>=6)clearInterval(iv)},3000)}catch(e){el.textContent='Invio non riuscito.'}finally{b.disabled=false}};
-$('nt_test').onclick=async()=>{try{const {reg}=await pushGet();if(!reg)throw 0;await reg.showNotification('KRANG CRM',{body:'Prova riuscita: i promemoria arriveranno così.',icon:'kcrm-192.png',tag:'krang-prova',data:{go:'tk'}})}catch(e){toast('Impossibile mostrare la notifica di prova.')}};
+$('nt_test').onclick=async()=>{try{const {reg}=await pushGet();if(!reg)throw 0;await reg.showNotification('KRANG CRM',{body:'Prova riuscita: le notifiche push arriveranno così.',icon:'kcrm-192.png',tag:'krang-prova',data:{go:'tk'}})}catch(e){toast('Impossibile mostrare la notifica di prova.')}};
 try{navigator.serviceWorker&&navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.go)goTo(e.data.go)})}catch(e){}
 /* un tocco sulla notifica porta alla sezione giusta: task, clienti o lead */
 function goTo(k){try{if(k==='tk')tkList();else if(k==='cl')setTab('clienti');else if(k==='ld')setTab('lead')}catch(e){}}
@@ -11754,7 +11761,7 @@ window.paintMore=function(){const w=$('moreView');if(!w)return;w.textContent='';
   let nt=0;try{nt=tasks.filter(x=>x&&x.stato!=='fatta').length}catch(e){}
   const item=(ic,t,sub,m,beta)=>{const r=h('button','qrow');r.type='button';const th=h('div','pth');th.innerHTML=ICONS[ic]||'';const tx=h('div','tx'),b=h('b','',t);if(beta){const bt=h('span','beta','Beta');b.append(bt)}tx.append(b,h('span','',sub));const cv=h('span','chv');cv.innerHTML=ICONS.chevR;r.append(th,tx,cv);r.onclick=()=>{const x=document.querySelector('#appMenu [data-m='+m+']');if(x)x.click()};return r};
   const c1=h('div','mcard');c1.append(item('check','Task',nt?nt+(nt===1?' aperta':' aperte'):'Nessuna aperta','tk'),item('box','Prodotti','Catalogo, listini e magazzino','prod'),item('analytics','Analytics','Andamento delle vendite','an',1),item('mega','Marketing','Messaggi a gruppi di clienti','mkt',1));
-  const c2=h('div','mcard');c2.append(item('gear','Impostazioni','Azienda, promemoria, privacy, backup','set'),item('help','Aiuto e primi passi','Guida e assistente','help'),item('info','Info','Versione e novità','info'));
+  const c2=h('div','mcard');c2.append(item('gear','Impostazioni','Azienda, notifiche push, privacy, backup','set'),item('help','Aiuto e primi passi','Guida e assistente','help'),item('info','Info','Versione e novità','info'));
   w.append(c1,c2)};
 
 /* schede a scorrimento: la voce corrente resta al centro della barra (cliente, lead, opportunità) */
