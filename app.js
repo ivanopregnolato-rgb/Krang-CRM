@@ -10394,14 +10394,11 @@ const wfKey=()=>{let u='';try{u=SB.uid()||''}catch(e){}return 'crm-wf-'+u};
 const wfRead=()=>{try{return JSON.parse(localStorage.getItem(wfKey())||'{}')||{}}catch(e){return {}}};
 const WF=new Proxy({},{get:(_,k)=>isCol()?!!wfRead()[k]:S[k],set:(_,k,v)=>{if(isCol()){const o=wfRead();o[k]=v;try{localStorage.setItem(wfKey(),JSON.stringify(o))}catch(e){}}else S[k]=v;return true}});
 /* ===== guida di benvenuto: primi passi ===== */
-const wState=()=>{let enc=false;try{enc=SB.e2e.state()==='ready'}catch(e){}const A=[
- {k:'cr',ic:'shield',t:'La cifratura dei dati',d:'Come proteggiamo ciò che salvi',done:!!WF.cryptoOk||enc},
- {k:'sc',ic:'user',t:'L’accesso con biometria',d:'Face ID o impronta per aprire l’app',done:!!(typeof LOCK!=='undefined'&&LOCK.on)},
- {k:'az',ic:'building',t:'Il profilo della tua azienda',d:'Nome, partita IVA e firma delle email',done:!!(S.azienda&&S.azienda.trim())},
+const wState=()=>{const A=[
  {k:'cl',ic:'users',t:'Il tuo primo cliente',d:'Scrivi i dati o fotografa un biglietto da visita',done:clients.length>0},
  {k:'pr',ic:'box',t:'I prodotti a catalogo',d:'Inseriscili e collegali alle opportunità',done:prods.length>0},
- {k:'no',ic:'clock',t:'Le notifiche push',d:'Una notifica quando un task scade',done:(()=>{try{return pushFlag()&&Notification.permission==='granted'}catch(e){return false}})()},
- {k:'as',ic:'chat',t:'L’assistente',d:'Chiedi come si fa una cosa: risponde in pochi secondi',done:!!WF.askSeen}];return isCol()?A.filter(x=>x.k!=='az'&&x.k!=='pr'):A};
+ {k:'co',ic:'users',t:'I collaboratori',d:'Invita chi lavora con te e scegli cosa può vedere',done:!!WF.coSeen||(typeof TEAMC!=='undefined'&&TEAMC.length>0)},
+ {k:'as',ic:'chat',t:'L’assistente',d:'Chiedi come si fa una cosa: risponde in pochi secondi',done:!!WF.askSeen}];return isCol()?A.filter(x=>x.k!=='pr'&&x.k!=='co'):A};
 function paintWel(){const w=$('hWel');if(!w)return;w.textContent='';if(WF.welcomeOff)return;const st=wState(),n=st.filter(x=>x.done).length;if(n===st.length)return;
   const b=h('button','wcard');b.type='button';const i=h('span','ic');i.innerHTML=ICONS.compass;const tx=h('div','tx');const bar=h('div','wbar'),f=h('i');f.style.width=Math.round(n/st.length*100)+'%';bar.append(f);
   tx.append(h('b','','Primi passi'),h('span','',n+' di '+st.length+' completati'),bar);
@@ -10412,7 +10409,7 @@ function paintWel(){const w=$('hWel');if(!w)return;w.textContent='';if(WF.welcom
 /* Aiuto: primi passi e, a tendere, manuale interattivo e assistente */
 function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   B.append(h('h3','','Aiuto'),h('p','wsub','Come iniziare e dove trovare le risposte.'));
-  let n=0,t=5;try{const st=wState();n=st.filter(x=>x.done).length;t=st.length}catch(e){}
+  let n=0,t=4;try{const st=wState();n=st.filter(x=>x.done).length;t=st.length}catch(e){}
   const rows=[
     ['gear','Configurazione guidata','Installazione, cifratura, azienda, privacy, biometria e notifiche',()=>{M.hidden=true;openCfg()}],
     ['compass','Primi passi',n+' di '+t+' completati',()=>{WF.welcomeOff=false;saveS();openWel()}],
@@ -10424,7 +10421,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.63.2';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.64.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!WF.welcomeSeen){WF.welcomeSeen=true;saveS()}
@@ -10443,35 +10440,21 @@ function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=
     const a=h('button','btn p lbl');a.type='button';a.innerHTML=ICONS.box+'<span>Aggiungi un prodotto</span>';a.onclick=()=>{closeWel();setTab('prod');openProd(null)};
     const c=h('button','btn lbl');c.type='button';c.innerHTML=ICONS.tag+'<span>Vai alle opportunità</span>';c.onclick=()=>{closeWel();setTab('opp')};
     B.append(a,c,back());return}
-  if(view==='no'){
-    const ios=isIOSd(),inst=isStandalone(),ok=pushOk();
-    B.append(h('h3','','Le notifiche push'),h('p','wsub','Ricevi una notifica quando un task scade, anche con l’app chiusa. Quattro passi.'));
+  if(view==='co'){
+    if(!WF.coSeen){WF.coSeen=true;saveS();try{paintWel()}catch(e){}}
+    B.append(h('h3','','I collaboratori'),h('p','wsub','Fai lavorare altre persone sul tuo CRM, tenendo tu il controllo. Quattro passi.'));
     const p=(t)=>{const d=h('p','wtx');d.innerHTML=t;B.append(d)};
-    p('<b>1. Aggiungi l’app alla schermata Home.</b> '+(ios?(inst?'Fatto: stai usando l’app dalla schermata Home.':'Su iPhone è indispensabile: in Safari tocca «Condividi» → «Aggiungi a Home», poi riapri KRANG da lì.'):'Su iPhone serve iOS 16.4 o successivo e l’app aggiunta alla schermata Home (Condividi → Aggiungi a Home). Su Android e computer puoi saltare questo passo.'));
-    p('<b>2. Attiva le notifiche push.</b> In Impostazioni → Notifiche push tocca «Attiva le notifiche push» e consenti le notifiche quando il telefono lo chiede.');
-    p('<b>3. Prova la notifica.</b> Nella stessa pagina apri «Prova e diagnosi», tocca «Notifica di prova» e controlla che compaia. Se non arriva, verifica che nelle impostazioni del telefono le notifiche di KRANG siano consentite e che non sia attiva una modalità Concentrazione (per esempio Sonno).');
-    p('<b>4. Scegli quando.</b> Ogni task può avere un’ora: l’avviso arriva a quell’ora. Senza ora, arriva all’ora predefinita che scegli nella stessa pagina. Nella notifica compaiono titolo e cliente; se non vuoi che si leggano a telefono bloccato, spegni «Titolo e cliente nella notifica».');
-    if(!ok){const d=h('p','wtx');d.innerHTML='<b>Nota:</b> questo browser non supporta le notifiche.';B.append(d)}
-    const a=h('button','btn p lbl');a.type='button';a.innerHTML=ICONS.clock+'<span>Apri le notifiche push</span>';a.onclick=()=>{closeWel();openSettings();setSp('nt')};
-    B.append(a);if(!inst){const ib=h('button','btn lbl');ib.type='button';ib.innerHTML=ICONS.download+'<span>Come installare l’app</span>';ib.onclick=()=>{closeWel();openSettings();setSp('in')};B.append(ib)}B.append(back());return}
-  if(view==='cr'){
-    let ready=false,can=false;try{ready=SB.e2e.state()==='ready';can=!!(SB.has&&SB.has())}catch(e){}
-    B.append(h('h3','','La cifratura dei dati'));
-    const p=(t)=>{const d=h('p','wtx');d.innerHTML=t;B.append(d)};
-    if(isCol()){p('<b>Cosa fa.</b> I dati del CRM del titolare (clienti, lead e preventivi) sono cifrati sul tuo telefono prima di essere salvati nel cloud. Possono leggerli solo il titolare e i collaboratori invitati.');p('<b>Cosa devi fare.</b> Niente: la cifratura usa la password del tuo account e funziona da sola. Non c’è nessuna chiave di recupero da conservare.');p('<b>Se dimentichi la password.</b> Chiedi al titolare un nuovo invito: i dati restano al titolare e non vanno persi.')}else{
-    p('<b>Cosa fa.</b> I tuoi clienti, lead e preventivi vengono cifrati sul tuo telefono prima di essere salvati nel cloud. Nemmeno io posso leggerli.');
-    p('<b>Cosa devi fare.</b> Niente: la cifratura usa la password del tuo account e si attiva da sola al primo accesso. Ti verrà mostrata una <b>chiave di recupero</b>: salvala fuori dal telefono, in un gestore di password o su carta.');
-    p('<b>Attenzione.</b> Se reimposti la password da un dispositivo nuovo senza la chiave di recupero, i dati nel cloud non si possono recuperare da nessuno.');
-    }
-    if(ready){const d=h('p','wtx');d.innerHTML='<b>Stato:</b> la cifratura è attiva su questo dispositivo.';B.append(d)}
-    const ok=h('button','btn p lbl');ok.type='button';ok.innerHTML=ICONS.check+'<span>Ho capito</span>';ok.onclick=()=>{WF.cryptoOk=true;saveS();openWel()};B.append(ok);
-    if(!ready&&can){const g=h('button','btn lbl');g.type='button';g.innerHTML=ICONS.shield+'<span>Attiva ora</span>';g.onclick=()=>{WF.cryptoOk=true;saveS();closeWel();CLOUD.started=false;cloudGate()};B.append(g)}
-    B.append(back());return}
+    p('<b>1. Scegli il tuo nome.</b> In Impostazioni → Team scrivi come vuoi essere visto dai collaboratori.');
+    p('<b>2. Crea un invito.</b> Indica nome e email del collaboratore e scegli cosa potrà vedere: <b>tutti i dati</b> oppure <b>solo i clienti assegnati a lui</b>.');
+    p('<b>3. Mandagli il link.</b> Dall’invito puoi copiarlo, condividerlo o inviarlo per email. Il collaboratore lo apre, crea il suo accesso e da quel momento lavora sul tuo CRM. L’invito scade dopo qualche giorno: se serve, ne crei un altro.');
+    p('<b>4. Gestisci l’accesso.</b> Puoi cambiare in ogni momento cosa vede ciascuno oppure rimuoverlo: perde subito l’accesso. I dati restano sempre tuoi e le impostazioni sensibili (azienda, privacy, backup) restano a te. Per i collaboratori la cifratura funziona da sola, senza chiave di recupero.');
+    const a=h('button','btn p lbl');a.type='button';a.innerHTML=ICONS.users+'<span>Invita un collaboratore</span>';a.onclick=()=>{closeWel();openSettings();setSp('tm')};
+    B.append(a,back());return}
   const st=wState(),n=st.filter(x=>x.done).length;
-  B.append(h('h3','','Benvenuto in KRANG CRM'),h('p','wsub',n===st.length?'Hai completato i primi passi.':['','','','Tre','Quattro','Cinque','Sei','Sette'][st.length]+' passi per iniziare. Puoi saltarli e tornare qui dal menu, voce Aiuto.'));
+  B.append(h('h3','','Benvenuto in KRANG CRM'),h('p','wsub',n===st.length?'Hai completato i primi passi.':['','','Due','Tre','Quattro','Cinque'][st.length]+' passi per iniziare. Puoi saltarli e tornare qui dal menu, voce Aiuto.'));
   const g=h('div','shg'),l=h('div','sl');
   st.forEach(x=>{const b=h('button','shr wlr');b.type='button';const i=h('span','ic');i.innerHTML=x.done?ICONS.check:ICONS[x.ic];if(x.done)i.classList.add('ok');const tx=h('div','tx');tx.append(h('b','',x.t),h('span','',x.d));const c=h('span','ch');c.innerHTML=ICONS.chevR;b.append(i,tx,c);
-    b.onclick=()=>{if(x.k==='az'){closeWel();openSettings();setSp('az')}else if(x.k==='sc'){closeWel();openSettings();setSp('sc')}else if(x.k==='as'){closeWel();openAsk()}else openWel(x.k)};l.append(b)});
+    b.onclick=()=>{if(x.k==='as'){closeWel();openAsk()}else openWel(x.k)};l.append(b)});
   g.append(l);B.append(g);
   const go=h('button','btn p lbl');go.type='button';go.innerHTML=ICONS.check+'<span>'+(n===st.length?'Inizia':'Più tardi')+'</span>';go.onclick=closeWel;B.append(go)}
 (()=>{let k=0;const t=setInterval(()=>{k++;if(k>40||WF.welcomeSeen||WF.welcomeOff){clearInterval(t);return}
@@ -10928,6 +10911,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.64.0','Primi passi rinnovati: ora sono quattro (primo cliente, prodotti, collaboratori e assistente). Installazione, cifratura, azienda, privacy, biometria e notifiche push stanno nella Configurazione guidata. Nuova guida «I collaboratori» per invitare chi lavora con te.'],
 ['1.63.2','Configurazione guidata, passo Privacy: la spunta è ora nello stesso riquadro dell’avviso («è una proposta, fai rivedere il testo a un legale»), così è chiaro cosa si sta confermando. Sistemato anche il taglio dell’icona in alto nei passi.'],
 ['1.63.1','Privacy: nella configurazione guidata l’email di contatto è obbligatoria e c’è un nuovo campo «Email per le richieste privacy», anche in Impostazioni → Privacy. È l’indirizzo a cui i clienti scrivono per esercitare i loro diritti e compare nell’informativa; se è vuoto si usa l’email di contatto dell’azienda.'],
 ['1.63.0','Configurazione guidata a schermo intero al primo accesso: sei passi (installazione, cifratura, azienda, privacy, biometria, notifiche push) che si completano direttamente nella guida, con Avanti e Indietro. La ritrovi in Aiuto. «Promemoria task» ora si chiama «Notifiche push».'],
