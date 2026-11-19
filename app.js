@@ -9466,7 +9466,7 @@ $('st_broFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';i
 $('st_broDel').onclick=()=>{S.brochure=null;saveS();paintBro()};
 
 const SPG=[['La tua azienda',[['az','building','Profilo azienda',()=>S.azienda||'Nome, partita IVA, sede e contatti'],['tm','users','Collaboratori',()=>{try{const w=SB.e2e.ws();return w.role==='collab'?'Lavori sul CRM di '+(w.name||'un titolare'):'Invita chi lavora con te'}catch(e){return ''}}]]],
- ['App',[['in','download','Installa l’app',()=>(typeof instLabel==='function'?instLabel():''),()=>isStandalone()]]],
+ ['App',[['in','download','Installa l’app',()=>(typeof instLabel==='function'?instLabel():''),()=>isStandalone()],['lg','doc','Termini e informativa dell’app',()=>'Termini d’uso e privacy di KRANG CRM']]],
  ['Notifiche',[['nt','clock','Notifiche push',()=>(typeof pushLabel==='function'?pushLabel():'')]]],
  ['Comunicazione',[['em','Scrivi','Email',()=>S.replyTo||'Mittente, firma e contatto'],['wa','WhatsApp','WhatsApp',()=>'Messaggi rapidi e paese dei numeri'],['al','clip','Allegati e brochure',()=>'Listino e brochure per le risposte ai lead']]],
  ['Vendite',[['pr','doc','Preventivi',()=>'Validità '+S.qValid+' giorni e condizioni'],['ld','target','Lead',()=>'Pulizia automatica dei lead']]],
@@ -9474,6 +9474,7 @@ const SPG=[['La tua azienda',[['az','building','Profilo azienda',()=>S.azienda||
 const SPN={};SPG.forEach(g=>g[1].forEach(r=>SPN[r[0]]=r[2]));
 (()=>{const cl=document.querySelector('#mSet .sp[data-sp=cl]'),k=[...cl.children],bk=h('div','sp');bk.dataset.sp='bk';bk.hidden=true;k.slice(1).forEach(e=>bk.append(e));cl.after(bk)})();
 let spCur=null;
+$('lg_t').onclick=()=>termsDoc('termini.html','Termini d’uso');$('lg_p').onclick=()=>termsDoc('privacy.html','Informativa privacy dell’app');
 /* collaboratori: inviti e gestione (Impostazioni → Collaboratori) */
 setInterval(()=>{if(spCur==='tm'&&!document.hidden)paintTeam().catch(()=>{})},15000);
 function lockAz(){let c=false;try{c=SB.e2e.isCollab()}catch(e){}const p=document.querySelector('#mSet .sp[data-sp=az]');if(!p)return;let n=$('az_ro');if(!n){n=h('div','hint','Il profilo azienda è gestito dal titolare: puoi consultarlo ma non modificarlo.');n.id='az_ro';n.style.marginBottom='12px';p.prepend(n)}n.hidden=!c;p.querySelectorAll('input,select,textarea,button').forEach(e=>{if(c){if(!e.dataset.ro){e.dataset.ro=e.disabled?'0':'1'}e.disabled=true}else if(e.dataset.ro==='1'){e.disabled=false;delete e.dataset.ro}})}
@@ -9624,7 +9625,7 @@ const offPill=(()=>{let el=null;const paint=()=>{try{if(paint.dead&&CLOUD.last>(
   paint.t=0;return paint})();
 /* «Assegnato a»: solo il titolare, quando ha collaboratori */
 /* versione dei Termini e dell'informativa (data dell'ultimo aggiornamento, come in legal.js): cambiandola, a tutti gli utenti viene chiesto di riaccettare */
-const LEGAL_V='2026-11-16';
+const LEGAL_V='2026-11-16';$('lg_v').textContent='Versione dei testi in vigore: '+LEGAL_V.split('-').reverse().join('/')+'.';
 /* i documenti si leggono dentro l'app, sopra il popup: «Indietro» torna al popup (aprirli in una pagina a parte riportava alla schermata di accesso) */
 async function termsDoc(url,title){const o=h('div','invq');o.style.cssText='position:fixed;inset:0;z-index:100000;visibility:visible;background:var(--bg,#0b1020);color:var(--tx,#fff);display:flex;flex-direction:column';
   const top=h('div','');top.style.cssText='display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 12px;border-bottom:1px solid var(--line,#334)';const bk=h('button','btn lbl');bk.type='button';bk.innerHTML=(ICONS.back||'')+'<span>Indietro</span>';bk.style.cssText='flex:none;width:auto;padding:0 14px';bk.onclick=()=>o.remove();top.append(bk,h('b','',title.replace(/^Leggi (i |l’)/,'').replace(/^./,c=>c.toUpperCase())));
@@ -10421,7 +10422,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.64.1';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.64.2';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!WF.welcomeSeen){WF.welcomeSeen=true;saveS()}
@@ -10911,6 +10912,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.64.2','Termini d’uso e informativa privacy dell’app sempre consultabili: nuova voce in Impostazioni → App e richiamo nel riepilogo della Configurazione guidata.'],
 ['1.64.1','Blocco biometrico: i messaggi d’errore ora spiegano cosa è andato storto (biometria non configurata sul dispositivo, richiesta annullata o scaduta, pagina non consentita dal browser).'],
 ['1.64.0','Primi passi rinnovati: ora sono quattro (primo cliente, prodotti, collaboratori e assistente). Installazione, cifratura, azienda, privacy, biometria e notifiche push stanno nella Configurazione guidata. Nuova guida «I collaboratori» per invitare chi lavora con te.'],
 ['1.63.2','Configurazione guidata, passo Privacy: la spunta è ora nello stesso riquadro dell’avviso («è una proposta, fai rivedere il testo a un legale»), così è chiaro cosa si sta confermando. Sistemato anche il taglio dell’icona in alto nei passi.'],

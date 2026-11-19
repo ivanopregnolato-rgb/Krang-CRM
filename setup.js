@@ -136,7 +136,8 @@ function rEnd(B){
   B.append(P('Ecco a che punto sei. Puoi rivedere qualsiasi passo e tornare qui da <b>Menu → Aiuto</b>.'));
   const l=E('div','cfg-sum');
   steps.forEach((d,i)=>{const ok=d.ok(),r=E('button','cfg-r');r.type='button';const ic=E('span','cfg-i '+(ok?'ok':'no'));ic.innerHTML=ok?ICONS.check:'–';const tx=E('div','tx');tx.append(E('b','',d.t),E('span','',ok?'Fatto':'Da fare più tardi'));const c=E('span','ch');c.innerHTML=ICONS.chevR;r.append(ic,tx,c);r.onclick=()=>go(i);l.append(r)});
-  B.append(l)}
+  B.append(l);
+  const lg=E('div','cfg-note');lg.innerHTML='Hai accettato i <b>Termini d’uso</b> e l’<b>Informativa privacy</b> di KRANG CRM registrandoti. Puoi rileggerli quando vuoi: ';const a=E('a','','Termini d’uso'),b=E('a','','Informativa privacy');[[a,'termini.html','Termini d’uso'],[b,'privacy.html','Informativa privacy dell’app']].forEach(([x,u,t])=>{x.href='#';x.onclick=e=>{e.preventDefault();termsDoc(u,t)}});lg.append(a,document.createTextNode(' · '),b,document.createTextNode('. Sono sempre in Impostazioni → App.'));B.append(lg)}
 
 /* ---------- struttura ---------- */
 const css=`
