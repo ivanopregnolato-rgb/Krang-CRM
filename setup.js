@@ -24,7 +24,7 @@ const defs=()=>[
   ok:()=>e2eReady(),render:rCr},
  {k:'az',ic:'building',t:'La tua azienda',sub:'Titolare dell’informativa e delle email',app:()=>!col(),
   ok:()=>!!(S.azienda&&S.azienda.trim()&&S.replyTo),render:rAz,need:true},
- {k:'pv',ic:'doc',t:'Privacy',sub:'Informativa e consenso marketing',app:()=>!col(),
+ {k:'pv',ic:'doc',t:'La privacy della tua azienda',sub:'L’informativa che riceveranno i tuoi clienti',app:()=>!col(),
   ok:()=>flag('cfgPv'),render:rPv,need:true},
  {k:'sc',ic:'user',t:'Accesso con biometria',sub:'Face ID, impronta o volto',skip:true,
   ok:()=>lockOnNow(),render:rSc},
@@ -94,14 +94,16 @@ function rAz(B,ctx){
 
 /* ---------- 4 · privacy ---------- */
 function rPv(B,ctx){
-  B.append(P('KRANG prepara per te l’<b>informativa privacy</b> che invierai ai clienti. Leggila: è scritta con i dati della tua azienda.'));
+  B.append(P('Qui configuri la <b>privacy della tua azienda</b>, non quella di KRANG. KRANG prepara l’<b>informativa</b> con i tuoi dati: sarà <b>il testo che i tuoi clienti ricevono</b> via email o WhatsApp e leggono nella pagina in cui scelgono i consensi.'));
+  B.append(E('div','cfg-lbl','Anteprima: quello che vedranno i tuoi clienti'));
   let t='';try{t=infoTxt()}catch(e){}
   const box=E('div','cfg-doc');String(t||'Imposta prima il nome dell’azienda.').split(/\n\n+/).forEach(x=>{if(!x.trim())return;const p=E('p'),s=x.trim(),i=s.indexOf(': ');if(i>0&&i<60){p.append(E('b','',s.slice(0,i+2)));p.append(document.createTextNode(s.slice(i+2)))}else p.textContent=s;box.append(p)});
   B.append(box);
   B.append(note('<b>Consenso al marketing.</b> È uno solo, valido per email, telefono, SMS e WhatsApp: se il cliente lo rifiuta, non gli scrivi su nessun canale. Lo registri nella scheda del cliente, sezione Privacy.'));
 
-  B.append(field('cf_pm','Email per le richieste privacy',S.privEmail,{type:'email',ac:'email',ph:S.replyTo||'',hint:'I clienti scrivono qui per accedere ai dati, correggerli, cancellarli o revocare i consensi. Se la lasci vuota, uso l’email di contatto dell’azienda'+(S.replyTo?' ('+S.replyTo+')':'')+'.'}));
-  const l=E('label','cfg-note cfg-ack'),c=E('input');c.type='checkbox';c.checked=flag('cfgPv');const tx=E('span');tx.innerHTML='<b>Ho letto l’informativa e ho capito che è una proposta.</b> Puoi modificarla in Impostazioni → Privacy. Prima di usarla con i clienti ti consigliamo di <b>farla rivedere da un legale</b>.';l.append(c,tx);B.append(l);
+  B.append(E('div','cfg-lbl','Contatto per i tuoi clienti'));
+  B.append(field('cf_pm','Email per le richieste privacy',S.privEmail,{type:'email',ac:'email',ph:S.replyTo||'',hint:'I tuoi clienti scrivono qui per accedere ai dati, correggerli, cancellarli o revocare i consensi. Se la lasci vuota, uso l’email di contatto dell’azienda'+(S.replyTo?' ('+S.replyTo+')':'')+'.'}));
+  const l=E('label','cfg-note cfg-ack'),c=E('input');c.type='checkbox';c.checked=flag('cfgPv');const tx=E('span');tx.innerHTML='<b>Ho letto l’informativa che i miei clienti riceveranno e ho capito che è una proposta.</b> Puoi modificarla in Impostazioni → Privacy. Prima di usarla con i clienti ti consigliamo di <b>farla rivedere da un legale</b>.';l.append(c,tx);B.append(l);
   const pmOk=()=>{const v=$('cf_pm').value.trim().toLowerCase();fErr('cf_pm',mailOk(v)?'':'Indirizzo email non valido.');return mailOk(v)};
   const upd=()=>ctx.setNext(c.checked&&pmOk());c.onchange=upd;$('cf_pm').addEventListener('input',upd);upd();
   ctx.beforeNext=()=>{if(!c.checked||!pmOk())return false;S.privEmail=$('cf_pm').value.trim().toLowerCase();setFlag('cfgPv',true);try{infSync();pubRefresh()}catch(e){}return true}}
@@ -161,7 +163,7 @@ const css=`
 #mCfg .cfg-ok{background:var(--accent);color:#1d3b30;display:flex;gap:10px;align-items:center;font-weight:600}
 #mCfg .cfg-ok svg{width:20px;height:20px;flex:none}
 #mCfg .cfg-doc{max-height:34vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 14px;margin:8px 0;font-size:13.5px;line-height:1.5}
-#mCfg .cfg-ack{display:flex;gap:12px;align-items:flex-start;cursor:pointer;margin:14px 0}#mCfg .cfg-ack input{width:24px;height:24px;flex:none;margin:1px 0 0;accent-color:var(--accent)}#mCfg .cfg-ack:has(input:checked){border-color:var(--accent)}
+#mCfg .cfg-lbl{margin:14px 0 4px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}#mCfg .cfg-ack{display:flex;gap:12px;align-items:flex-start;cursor:pointer;margin:14px 0}#mCfg .cfg-ack input{width:24px;height:24px;flex:none;margin:1px 0 0;accent-color:var(--accent)}#mCfg .cfg-ack:has(input:checked){border-color:var(--accent)}
 #mCfg .btn.lbl{display:flex;gap:8px;align-items:center;justify-content:center;width:100%;margin:10px 0}
 #mCfg .btn.lbl svg{width:18px;height:18px}
 #mCfg .btn:disabled{opacity:.45}
