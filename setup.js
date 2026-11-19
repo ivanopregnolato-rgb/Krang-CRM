@@ -85,12 +85,13 @@ function rAz(B,ctx){
   B.append(P('Questi dati compaiono nell’informativa privacy, nelle email e nei preventivi. <b>Nome dell’azienda</b> ed <b>email di contatto</b> sono obbligatori, il resto si può completare dopo.'));
   const fn=field('cf_az','Nome azienda (o tuo nome e cognome)',S.azienda,{ac:'organization'});
   const two=E('div','two');two.append(field('cf_piva','Partita IVA',S.piva,{im:'numeric'}),field('cf_tel','Telefono',S.telefono,{type:'tel',im:'tel',ac:'tel'}));
-  B.append(fn,two,field('cf_ind','Indirizzo della sede',S.indirizzo,{ac:'street-address'}),field('cf_rt','Email di contatto *',S.replyTo,{type:'email',ac:'email',hint:'Obbligatoria: compare nell’informativa e nelle risposte dei clienti.'}));
-  const read=()=>({azienda:$('cf_az').value.trim(),piva:$('cf_piva').value.trim(),telefono:$('cf_tel').value.trim(),indirizzo:$('cf_ind').value.trim(),rt:$('cf_rt').value.trim().toLowerCase()});
+  const on=field('cf_on','Il tuo nome',S.ownerName||opName,{ac:'name',hint:'Ti saluto con questo nome in Home e i collaboratori ti vedono così.'});
+  B.append(fn,two,field('cf_ind','Indirizzo della sede',S.indirizzo,{ac:'street-address'}),field('cf_rt','Email di contatto *',S.replyTo,{type:'email',ac:'email',hint:'Obbligatoria: compare nell’informativa e nelle risposte dei clienti.'}),on);
+  const read=()=>({azienda:$('cf_az').value.trim(),piva:$('cf_piva').value.trim(),telefono:$('cf_tel').value.trim(),indirizzo:$('cf_ind').value.trim(),rt:$('cf_rt').value.trim().toLowerCase(),nome:$('cf_on').value.trim().slice(0,60)});
   const chk=()=>{const v=read();let bad=false;const em=!v.rt||!mailOk(v.rt);fErr('cf_rt',v.rt&&!mailOk(v.rt)?'Indirizzo email non valido.':'');if(em)bad=true;ctx.setNext(!!v.azienda&&!bad);return v};
   B.querySelectorAll('input').forEach(i=>i.addEventListener('input',chk));chk();
   ctx.beforeNext=()=>{const v=chk();if(!v.azienda||!v.rt||!mailOk(v.rt))return false;
-    S.azienda=v.azienda;S.piva=v.piva;S.telefono=v.telefono;S.indirizzo=v.indirizzo;S.replyTo=v.rt;try{saveS()}catch(e){}try{infSync();pubRefresh()}catch(e){}return true}}
+    S.azienda=v.azienda;S.piva=v.piva;S.telefono=v.telefono;S.indirizzo=v.indirizzo;S.replyTo=v.rt;S.ownerName=v.nome;if(v.nome&&!opName){try{saveOp(v.nome)}catch(e){}}try{saveS()}catch(e){}try{renderH()}catch(e){}try{infSync();pubRefresh()}catch(e){}return true}}
 
 /* ---------- 4 · privacy ---------- */
 function rPv(B,ctx){

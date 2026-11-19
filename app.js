@@ -8931,7 +8931,7 @@ function infoBtn(el,text){el.style.position='relative';const b=document.createEl
   b.onclick=e=>{e.stopPropagation();if(tip){tip.remove();tip=null;b.classList.remove('on');return}tip=document.createElement('div');tip.className='itip';tip.textContent=text;el.append(tip);b.classList.add('on')};el.append(b)}
 function renderH(){
   try{paintLogo()}catch(e){}
-  const hr=new Date().getHours(),op=(()=>{let o='';try{o=localStorage.getItem('crm-op')||''}catch(e){}if(!o){try{const w=SB.e2e.ws();if(w.role==='collab')o=w.name||''}catch(e){}}return o})();
+  const hr=new Date().getHours(),op=(()=>{let o='';try{o=localStorage.getItem('crm-op')||''}catch(e){}if(!o){try{const w=SB.e2e.ws();if(w.role==='collab')o=w.name||''}catch(e){}}if(!o)o=S.ownerName||'';return o})();
   try{paintWel()}catch(e){}
   $('hGreet').textContent=(hr<13?'Buongiorno':hr<18?'Buon pomeriggio':'Buonasera')+(op?', '+op:'');
   const dt=new Intl.DateTimeFormat('it-IT',{weekday:'long',day:'numeric',month:'long'}).format(new Date());$('hDate').textContent=(S.azienda?S.azienda+' · ':'')+dt.charAt(0).toUpperCase()+dt.slice(1);
@@ -10422,7 +10422,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.64.3';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.64.4';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!WF.welcomeSeen){WF.welcomeSeen=true;saveS()}
@@ -10912,6 +10912,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.64.4','Il saluto in Home torna a mostrare il tuo nome: si usa il nome impostato in Team (e ora anche nella Configurazione guidata, passo Azienda), oltre a quello già usato per il registro delle azioni.'],
 ['1.64.3','Configurazione guidata, passo Privacy: è ora chiaro che si imposta la privacy della propria azienda e che l’informativa è quella che i clienti riceveranno (titolo, anteprima etichettata, contatto per i clienti).'],
 ['1.64.2','Termini d’uso e informativa privacy dell’app sempre consultabili: nuova voce in Impostazioni → App e richiamo nel riepilogo della Configurazione guidata.'],
 ['1.64.1','Blocco biometrico: i messaggi d’errore ora spiegano cosa è andato storto (biometria non configurata sul dispositivo, richiesta annullata o scaduta, pagina non consentita dal browser).'],
