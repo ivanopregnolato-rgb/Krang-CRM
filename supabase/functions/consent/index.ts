@@ -5,7 +5,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const ORIGINS = ["https://ivanopregnolato-rgb.github.io"];
-const KEYS = ["mk", "profilazione", "terzi"];
+const KEYS = ["mk", "mkEmail", "mkTel", "profilazione", "terzi"]; // mkEmail/mkTel: solo per link aperti con la pagina precedente
 const KINDS = ["portabilita", "anonimizzazione"];
 const PER_LINK_DAY = 20, PER_IP_HOUR = 60;
 
