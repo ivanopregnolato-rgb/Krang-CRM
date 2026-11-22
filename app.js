@@ -10422,7 +10422,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.65.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.66.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!WF.welcomeSeen){WF.welcomeSeen=true;saveS()}
@@ -10912,6 +10912,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.66.0','Chiudi le schede trascinandole verso il basso (telefono e tablet), come in iOS: funziona come la freccia indietro e, se ci sono modifiche, chiede prima se salvarle. La freccia resta.'],
 ['1.65.0','Il tuo nome: ora si imposta anche in Impostazioni → Azienda ed è obbligatorio nel passo Azienda della Configurazione guidata. È il nome del saluto in Home e quello che vedono i collaboratori.'],
 ['1.64.4','Il saluto in Home torna a mostrare il tuo nome: si usa il nome impostato in Team (e ora anche nella Configurazione guidata, passo Azienda), oltre a quello già usato per il registro delle azioni.'],
 ['1.64.3','Configurazione guidata, passo Privacy: è ora chiaro che si imposta la privacy della propria azienda e che l’informativa è quella che i clienti riceveranno (titolo, anteprima etichettata, contatto per i clienti).'],
@@ -11238,6 +11239,32 @@ function guideify(root){
    const v=s.bar==='#tabs'?['homeView','list','leadView','oppView'].map($).find(vis):s.bar==='#pSeg'?$('prodView'):s.bar==='#mSeg'?$('mktView'):null;
    if(v&&!matchMedia('(prefers-reduced-motion:reduce)').matches){v.classList.remove('swl','swr');void v.offsetWidth;v.classList.add(dx<0?'swl':'swr');setTimeout(()=>v.classList.remove('swl','swr'),260)}
  },{passive:true})}
+
+/* ===== trascina la scheda verso il basso per chiuderla (telefono e tablet): equivale alla freccia indietro, con la richiesta di salvare se ci sono modifiche ===== */
+{const vis=el=>!!el&&!el.hidden&&el.getClientRects().length>0;
+ const CLOSE={sheet:'close',lSheet:'lClose',oSheet:'oClose',pSheet:'pClose',qSheet:'qClose',rvSheet:'rvClose'};
+ const skip=t=>{for(let e=t;e&&e!==document.body;e=e.parentElement){if(e.matches&&e.matches('input,textarea,select,[contenteditable="true"],canvas,.nosw,.crChip,.crGhost,.crCut'))return true;
+   if(e.classList&&e.classList.contains('sheet'))break;const o=getComputedStyle(e).overflowY;if((o==='auto'||o==='scroll')&&e.scrollHeight>e.clientHeight+2&&e.scrollTop>0)return true}return false};
+ const closeBtn=sh=>{const b=CLOSE[sh.id]&&$(CLOSE[sh.id]);if(b&&vis(b))return b;const x=sh.querySelector('.top [data-i=back]');const y=(x&&x.closest('button'))||sh.querySelector('.top button');return y&&vis(y)?y:null};
+ let g=null;const reduce=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
+ const reset=(sh,anim)=>{sh.style.transition=anim&&!reduce()?'transform .22s cubic-bezier(.2,.8,.2,1)':'none';sh.style.transform='';const end=()=>{sh.style.transition='';sh.style.borderRadius='';sh.style.boxShadow='';sh.removeEventListener('transitionend',end)};if(anim)sh.addEventListener('transitionend',end);else end()};
+ document.addEventListener('touchstart',e=>{g=null;if(e.touches.length!==1)return;if([...document.querySelectorAll('.modal')].some(vis))return;
+   const sh=e.target.closest&&e.target.closest('.sheet');if(!sh||!vis(sh)||sh.scrollTop>0||skip(e.target))return;const bt=closeBtn(sh);if(!bt)return;
+   const t=e.touches[0];g={sh,x:t.clientX,y:t.clientY,t:Date.now(),on:false,dy:0}},{passive:true});
+ document.addEventListener('touchmove',e=>{if(!g||e.touches.length!==1)return;const t=e.touches[0],dy=t.clientY-g.y,dx=t.clientX-g.x;
+   if(!g.on){if(Math.abs(dx)>14&&Math.abs(dx)>Math.abs(dy)){g=null;return}if(dy<0&&Math.abs(dy)>10){g=null;return}if(dy<12||dy<Math.abs(dx)*1.5||g.sh.scrollTop>0)return;
+     try{if(String(getSelection()).length){g=null;return}}catch(x){}g.on=true;g.sh.style.transition='none';g.sh.style.borderRadius='22px 22px 0 0';g.sh.style.boxShadow='0 -8px 40px rgba(0,0,0,.35)'}
+   g.dy=Math.max(0,dy);g.sh.style.transform='translateY('+(g.dy*.94)+'px)';if(e.cancelable)e.preventDefault()},{passive:false});
+ const end=ok=>{const x=g;g=null;if(!x||!x.on)return;const dt=Math.max(1,Date.now()-x.t),sh=x.sh,far=x.dy>=Math.max(110,innerHeight*.16),fast=x.dy>=50&&x.dy/dt>=.5;
+   if(!ok||!(far||fast)){reset(sh,true);return}
+   const bt=closeBtn(sh);if(!bt){reset(sh,true);return}
+   bt.click();
+   /* se la scheda è stata chiusa si ripulisce; se chiede di salvare, la scheda torna al suo posto sotto la richiesta */
+   setTimeout(()=>{reset(sh,vis(sh))},60)};
+ document.addEventListener('touchend',()=>end(true),{passive:true});document.addEventListener('touchcancel',()=>end(false),{passive:true});
+ /* suggerimento, una volta sola, la prima volta che si apre una scheda con il tocco */
+ try{if(matchMedia('(pointer:coarse)').matches&&!localStorage.getItem('crm-hint-drag')){const o=new MutationObserver(()=>{if(['sheet','lSheet','oSheet'].some(i=>vis($(i)))){o.disconnect();try{localStorage.setItem('crm-hint-drag','1')}catch(e){}setTimeout(()=>toast('Per chiudere una scheda trascinala verso il basso.'),900)}});
+   ['sheet','lSheet','oSheet'].forEach(i=>{const el=$(i);if(el)o.observe(el,{attributes:true,attributeFilter:['hidden']})})}}catch(e){}}
 
 /* ===== occhietto: mostra/nascondi in tutti i campi password (esistenti e creati dopo) ===== */
 {const EYE='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
