@@ -538,7 +538,7 @@ function privSignOpen(){const cl={tipo:curTipo,nome:$('nome').value,cognome:$('c
       $('p_later').checked=false;try{laterUi()}catch(e){}$('p_inf').checked=true;$('p_infmodo').value='Firmata';$('p_infdata').value=ymd();$('p_inf').dispatchEvent(new Event('change',{bubbles:true}));try{privUI();paintPrivSum()}catch(e){}paintPSign();const cl=saveClient(true);if(!cl){toast('Firma raccolta: completa i dati del cliente e salvalo per registrare consensi e firma.');return}openSheet(cl);try{setPane('priv')}catch(e){}toast('Firma registrata e cliente salvato.');setTimeout(()=>privCopyAsk(cl),350)}})}
 ['change'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target&&e.target.id&&/^c_(mk|profilazione|terzi)$/.test(e.target.id))try{paintPSign()}catch(x){}}));
 /* ===== copia al cliente: ricevuta PDF dell'informativa e dei consensi firmati ===== */
-function privReceiptPdf(c,f){const D=pdfDoc(),L=40,R=555,TOP=50,BOT=790;let y=TOP;D.page();
+function privReceiptPdf(c,f){const D=pdfDoc(),L=40,R=555,TOP=50,BOT=790;let y=TOP;D.sigAll(f);D.page();
   const need=n=>{if(y+n>BOT){D.page();y=TOP}};
   let v={};try{const t=JSON.parse(f.hx||'[]');v={mk:t[0],profilazione:t[1],terzi:t[2]}}catch(e){}if(f.cons)v=f.cons;
   D.rect(0,0,595,6,'0.65 0.86 0.78');
@@ -8920,7 +8920,8 @@ function pdfDoc(){const W=595,H=842,pages=[];let cur=null,used=false;
     path(pts,w,g){if(!pts||pts.length<1)return;let s=(g==null?'0.1':g)+' G '+(w||1.4)+' w 1 J 1 j '+pts[0][0].toFixed(1)+' '+(H-pts[0][1]).toFixed(1)+' m ';if(pts.length===1)s+=(pts[0][0]+.1).toFixed(1)+' '+(H-pts[0][1]).toFixed(1)+' l ';for(let i=1;i<pts.length;i++)s+=pts[i][0].toFixed(1)+' '+(H-pts[i][1]).toFixed(1)+' l ';cur.push(s+'S')},
     logo(x,y,mh){const J=window.LOGOJ;if(!J)return 0;const k=Math.min(mh/J.h,150/J.w),w=J.w*k,hh=J.h*k;used=true;cur.push('q '+w.toFixed(1)+' 0 0 '+hh.toFixed(1)+' '+x+' '+(H-y-hh).toFixed(1)+' cm /Im1 Do Q');return w+12},
     wrap(t,w,sz,b){const out=[];String(t).split('\n').forEach(par=>{let l='';par.split(/\s+/).filter(Boolean).forEach(wr=>{const tr=l?l+' '+wr:wr;if(wd(tr,sz,b)<=w||!l)l=tr;else{out.push(l);l=wr}});out.push(l)});return out},
-    build(){pages.forEach((c,i)=>{cur=c;D.text(W/2,H-24,'Pagina '+(i+1)+' di '+pages.length,8,0,'c',.5)});
+    sigAll(f){if(f&&(f.s||[]).length)D._sg=f},
+    build(){pages.forEach((c,i)=>{cur=c;D.text(W/2,H-24,'Pagina '+(i+1)+' di '+pages.length,8,0,'c',.5);const f=D._sg;if(f){const k=Math.min(80/f.w,24/f.h),w=f.w*k,x0=555-w,y0=H-30-f.h*k/2;D.text(x0-4,H-24,'Firma',7,0,'r',.5);f.s.forEach(st=>D.path(st.map(p=>[x0+p[0]*k,y0+p[1]*k]),.8))}});
       const objs=[];const add=b=>objs.push(b)-1;
       add('<< /Type /Catalog /Pages 2 0 R >>');add(null);add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');{const J=window.LOGOJ;add(used&&J?'<< /Type /XObject /Subtype /Image /Width '+J.w+' /Height '+J.h+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+J.s.length+' >>\nstream\n'+J.s+'\nendstream':'<< >>')}
       const kids=[];pages.forEach(c=>{const st=c.join('\n'),ci=objs.length+1,pi=objs.length;add('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+W+' '+H+'] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << /Im1 5 0 R >> >> /Contents '+(ci+1)+' 0 R >>');add('<< /Length '+st.length+' >>\nstream\n'+st+'\nendstream');kids.push((pi+1)+' 0 R')});
@@ -8962,7 +8963,7 @@ function priceListPdf(cli){const LS=(()=>{try{return cli?listinoFor(cli):null}ca
   return D.build()}
 const brochureOk=()=>!!(S.brochure&&S.brochure.b64);
 function quotePdf(){const D=pdfDoc(),c=clients.find(x=>x.id===qO.clienteId),t=qTot(qW.righe),val=Math.max(0,parseInt(qW.validita,10)||0),L=40,R=555,TOP=50,BOT=790;
-  let y=TOP;D.page();
+  if(qW.firma&&(qW.firma.s||[]).length)D.sigAll(qW.firma);let y=TOP;D.page();
   const need=n=>{if(y+n>BOT){D.page();y=TOP;head()}};
   const head=()=>{D.text(L,y+8,'Descrizione',8.5,1,'l',.35);D.text(300,y+8,'Qtà',8.5,1,'r',.35);D.text(360,y+8,'Prezzo',8.5,1,'r',.35);D.text(395,y+8,'Sc. %',8.5,1,'r',.35);D.text(430,y+8,'IVA',8.5,1,'r',.35);D.text(R,y+8,'Importo',8.5,1,'r',.35);D.line(L,y+14,R,y+14,.55,.8);y+=24};
   D.rect(0,0,595,6,'0.65 0.86 0.78');
@@ -10546,7 +10547,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.71.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.72.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -11040,6 +11041,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.72.0','Nei PDF firmati (preventivi e ricevuta dei consensi) la firma del cliente compare in basso su ogni foglio, non solo sull’ultimo.'],
 ['1.71.0','Alla creazione di un account la chiave di recupero non compare più in un popup separato: si mostra e si salva dentro il passo «Cifratura» della configurazione guidata.'],
 ['1.70.1','Eliminando l’account o cambiando account sullo stesso dispositivo, i vecchi dati non vengono più riportati nel nuovo account.'],
 ['1.70.0','Dopo la firma dei consensi il cliente viene salvato e si può inviargli subito una copia (PDF con informativa, consensi e firma) per email o WhatsApp.'],
