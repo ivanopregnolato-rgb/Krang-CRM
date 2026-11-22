@@ -5,8 +5,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
 <!-- © 2026 Ivano Pregnolato. Tutti i diritti riservati. Vietata la copia o la redistribuzione senza consenso scritto. -->
-<script src="boot.js?v=1.68.3"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.68.3|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.68.5"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.68.5|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -232,6 +232,7 @@ html.sh-open,html.sh-open body{overflow:hidden;overscroll-behavior:none}
 .top .btn[aria-label=Chiudi]{order:-1;background:transparent!important;border:0;box-shadow:none;margin-left:-8px}
 /* freccia indietro delle pagine di Altro: uguale a quella delle schede */
 #pgBack{background:transparent!important;border:0;box-shadow:none;margin-left:-8px;width:48px;height:48px;color:var(--ink)}#pgBack[hidden]{display:none}#pgBack+h1{margin-left:6px}#pgBack svg{width:22px;height:22px}
+[data-lay="b"] #qSignL{display:none}
 .top h2{flex:1;min-width:0}
 .top h2{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:8px}
 .tbar{display:flex;gap:8px;align-items:center;flex:none}
@@ -720,7 +721,7 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
 #mSet #tm_K{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}#mSet #tm_K input{width:100%;margin:8px 0;font-size:13px}#mSet #tm_K .btn{margin-top:8px}
 #mSet .tm0{padding:16px 14px;color:var(--muted);font-size:14px}
 
-/* 1.68.3 titolo coerente + lineetta gesture */
+/* 1.68.5 titolo coerente + lineetta gesture */
 [data-lay="b"] #tkList .top h2,[data-lay="b"] #mSet .top h2{font-size:28px;line-height:1.15;letter-spacing:-.02em}
 @media (pointer:coarse){.sheet:not(#cardRev) .top::before,html[data-lay="b"].pg-on .stk::before{content:"";position:absolute;left:50%;top:5px;width:40px;height:4px;margin-left:-20px;border-radius:2px;background:var(--ink);opacity:.32;pointer-events:none}html[data-lay="b"].pg-on .stk{position:relative}}
 </style>
@@ -865,12 +866,12 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
   <div class="dual"><button class="btn lbl" id="qRefresh" type="button"><span data-i="reset"></span>Aggiorna righe</button><button class="btn lbl" id="qCopy" type="button"><span data-i="copy"></span>Copia testo</button></div>
   <div class="hint">Le righe sono una copia dei prodotti al momento della creazione: “Aggiorna righe” le riallinea all’opportunità.</div>
 </div>
+<div class="fg"><div class="gt lb-only">Firma del cliente</div>
+  <div class="f" style="margin-top:14px"><label id="qSignL">Firma del cliente</label><div id="qSign"></div></div>
+</div>
 <div class="fg"><div class="gt lb-only">Condizioni e note</div>
   <div class="f"><label for="q_cond">Condizioni</label><textarea id="q_cond" rows="3"></textarea></div>
   <div class="f"><label for="q_note">Note per il cliente</label><textarea id="q_note" rows="2"></textarea></div>
-</div>
-<div class="fg"><div class="gt lb-only">Firma del cliente</div>
-  <div class="f" style="margin-top:14px"><label>Firma del cliente</label><div id="qSign"></div></div>
 </div>
 <div class="fg"><div class="gt lb-only">Invia al cliente</div>
   <div class="f" style="margin-top:14px"><label>Invia al cliente</label><div class="tri"><button class="btn lbl" id="qPdf" type="button"><span data-i="doc"></span>PDF</button><button class="btn lbl" id="qSend" type="button"><span data-i="Scrivi"></span>Email</button><button class="btn lbl" id="qWa" type="button"><span data-i="WhatsApp"></span>WhatsApp</button></div><div class="hint">PDF: salva il file. Email e WhatsApp lo inviano in allegato; l’invio salva il preventivo e lo passa a “Inviato”.</div></div>
@@ -1266,6 +1267,6 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.68.3"></script>
+<script src="app.js?v=1.68.5"></script>
 </body>
 </html>
