@@ -10428,7 +10428,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.66.5';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.67.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -10919,6 +10919,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.67.0','Scorciatoie da tastiera sul computer: Esc chiude la scheda aperta, / o Ctrl+K cerca tra i clienti, N crea un nuovo elemento.'],
 ['1.66.5','Il nome del titolare in Azienda e in Collaboratori ora è lo stesso e si aggiorna in entrambi i punti.'],
 ['1.66.4','La gesture per chiudere schede e pagine richiede un trascinamento più lungo (circa un terzo dello schermo), così non si chiude per sbaglio.'],
 ['1.66.3','Info ora si intitola KRANG CRM; Aiuto e Primi passi si chiudono anche toccando fuori dal riquadro. Il titolo Task ora ha la stessa dimensione degli altri titoli; una piccola lineetta in cima alle schede e alle pagine indica che si possono chiudere trascinando verso il basso.'],
@@ -11281,6 +11282,30 @@ function guideify(root){
  /* suggerimento, una volta sola, la prima volta che si apre una scheda con il tocco */
  try{if(matchMedia('(pointer:coarse)').matches&&!localStorage.getItem('crm-hint-drag')){const o=new MutationObserver(()=>{if(['sheet','lSheet','oSheet'].some(i=>vis($(i)))){o.disconnect();try{localStorage.setItem('crm-hint-drag','1')}catch(e){}setTimeout(()=>toast('Per chiudere una scheda trascinala verso il basso.'),900)}});
    ['sheet','lSheet','oSheet'].forEach(i=>{const el=$(i);if(el)o.observe(el,{attributes:true,attributeFilter:['hidden']})})}}catch(e){}}
+
+/* ===== scorciatoie da tastiera (desktop): Esc chiude la scheda in primo piano, / o Ctrl+K cerca, N crea un nuovo elemento ===== */
+{const vis=el=>!!el&&!el.hidden&&el.getClientRects().length>0;
+ const typing=t=>!!t&&!!t.matches&&t.matches('input,textarea,select,[contenteditable="true"]');
+ const blocked=()=>document.documentElement.classList.contains('noauth')||vis($('authScr'))||vis($('lockScr'));
+ const topSheet=()=>[...document.querySelectorAll('.sheet')].filter(vis).sort((x,y)=>(+getComputedStyle(y).zIndex||0)-(+getComputedStyle(x).zIndex||0))[0]||null;
+ const closeOf=sh=>{const M={sheet:'close',lSheet:'lClose',oSheet:'oClose',pSheet:'pClose',qSheet:'qClose',rvSheet:'rvClose',mSet:'stBack'};const b=M[sh.id]&&$(M[sh.id]);if(b&&vis(b))return b;const x=sh.querySelector('.top [data-i=back]');const y=(x&&x.closest('button'))||sh.querySelector('.top button');return y&&vis(y)?y:null};
+ const MODAL_OK=['mInfo','mWel','mRel'];
+ document.addEventListener('keydown',e=>{
+  if(e.defaultPrevented||e.isComposing||blocked())return;
+  const mods=e.ctrlKey||e.metaKey||e.altKey;
+  const modals=[...document.querySelectorAll('.modal')].filter(vis);
+  if(e.key==='Escape'){
+   if(modals.length){const m=modals[modals.length-1];if(MODAL_OK.includes(m.id)){e.preventDefault();m.click()}return}
+   const t=e.target;if(t&&t.id==='q'&&t.value){return}
+   const sh=topSheet();if(sh){const b=closeOf(sh);if(b){e.preventDefault();b.click()}return}
+   if(document.documentElement.dataset.lay==='b'&&(vis($('prodView'))||vis($('mktView')))){e.preventDefault();setTab('more')}
+   return}
+  if(modals.length||topSheet())return;
+  if((e.key==='k'||e.key==='K')&&(e.ctrlKey||e.metaKey)&&!e.altKey){e.preventDefault();const go=()=>{const q=$('q');if(q&&vis(q)){q.focus();q.select()}};if(!vis($('q'))){setTab('clienti');setTimeout(go,60)}else go();return}
+  if(mods||typing(e.target))return;
+  if(e.key==='/'){e.preventDefault();const go=()=>{const q=$('q');if(q&&vis(q)){q.focus();q.select()}};if(!vis($('q'))){setTab('clienti');setTimeout(go,60)}else go();return}
+  if((e.key==='n'||e.key==='N')&&['clienti','lead','opp','prod'].includes(tab)&&typeof $('addBtn').onclick==='function'){e.preventDefault();$('addBtn').onclick()}
+ })}
 
 /* ===== occhietto: mostra/nascondi in tutti i campi password (esistenti e creati dopo) ===== */
 {const EYE='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
