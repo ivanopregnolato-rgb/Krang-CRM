@@ -10092,7 +10092,7 @@ $('st_exDel').onclick=()=>{const has=opps.some(o=>o.demo)||clients.some(c=>c.dem
   const old=S.camps.filter(c=>c.id!=='k_bday'&&c.id!=='k_cons');if(old.length){const hh=h('div','hh');hh.append(h('span','','Concluse ('+old.length+')'));H.append(hh);old.forEach(cp=>{const v=viewOf({k:'old',cp}),r=h('button','row'),tx=h('div','tx');tx.append(h('b','',cp.nome),h('span','',(cp.canale==='wa'?'WhatsApp':'Email')+' · '+fmtD(cp.data.slice(0,10))),h('em','',v.steps[0].st.ok+' inviati · '+v.steps[0].st.rep+' risposte'));r.append(tx);r.onclick=()=>openJrD({k:'old',cp});H.append(r)})}}
 let asub='fun';try{const u=localStorage.getItem('crm-asub');if(u==='fun'||u==='eng')asub=u}catch(e){}
  function renderAn(){const sh=$('anSh');if(!sh||sh.hidden)return;let H=$('anBody');if(!H){H=h('div');H.id='anBody';sh.firstChild.append(H)}H.textContent='';const sg=h('div','seg');sg.style.marginBottom='10px';[['fun','Funnel'],['eng','Engagement']].forEach(([k,l])=>{const b=h('button','',l);b.type='button';b.classList.toggle('on',asub===k);b.onclick=()=>{asub=k;try{localStorage.setItem('crm-asub',k)}catch(e){}renderAn()};sg.append(b)});H.append(sg);(asub==='fun'?paneFun:paneEng)(H)}
- window.openAn=()=>{const w=shell('anSh','Analytics'),sh=$('anSh');w.firstChild.hidden=true;$('tabs').style.display='none';$('title').innerHTML='Analytics '+'<span class="beta">Beta</span>';const q=document.querySelector('.bar');if(q)q.hidden=true;sh.style.zIndex=3;sh.style.top=document.querySelector('.stk').getBoundingClientRect().bottom+'px';renderAn()};
+ window.openAn=()=>{const w=shell('anSh','Analytics'),sh=$('anSh');w.firstChild.hidden=true;$('tabs').style.display=document.documentElement.dataset.lay==='b'?'':'none';$('title').innerHTML='Analytics '+'<span class="beta">Beta</span>';const q=document.querySelector('.bar');if(q)q.hidden=true;sh.style.zIndex=3;sh.style.top=document.querySelector('.stk').getBoundingClientRect().bottom+'px';if(document.documentElement.dataset.lay==='b')sh.style.paddingBottom='calc(96px + var(--sab))';renderAn();try{pgBackUpd()}catch(e){}const ps=$('pSub');if(ps)ps.textContent='Andamento delle vendite'};
  window.renderM=function(){const H=$('mktBody');if(!H)return;try{applyStops()}catch(e){}H.textContent='';const sg=h('div','seg');sg.id='mSeg';sg.style.marginBottom='10px';[['seg','Segmenti'],['cam','Campagne']].forEach(([k,l])=>{const b=h('button','',l);b.style.cssText='font-size:13px;padding:0 4px;white-space:nowrap';b.type='button';b.classList.toggle('on',sub===k);b.onclick=()=>{sub=k;try{localStorage.setItem('crm-msub',k)}catch(e){}renderM()};sg.append(b)});H.append(sg);
   ({seg:paneSeg,fun:paneFun,eng:paneEng,cam:paneCamp})[sub](H)};
  const _st=setTab;setTab=function(v){_st(v);{const a=$('anSh');if(a)a.hidden=true}$('tabs').style.display=(document.documentElement.dataset.lay==='b'||['home','clienti','lead','opp'].includes(v))?'':'none';$('mktView').hidden=v!=='mkt';if(v==='mkt'){document.querySelector('.bar').hidden=true;$('title').innerHTML='Marketing '+'<span class="beta">Beta</span>';renderM()}};
@@ -10386,7 +10386,11 @@ function laShow(key,label){laHide();const bx=$('st_laK');bx.hidden=false;const c
 document.addEventListener('visibilitychange',()=>{if(document.hidden)laHide()});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#st_laAdd');if(!b)return;const inp=$('st_laN'),lab=inp.value.trim();if(!lab){setErr('st_laN','Dai un nome alla sorgente (es. Sito web).');return}setErr('st_laN','');b.disabled=true;
   laNewKey(lab).then(key=>{inp.value='';laShow(key,lab);paintLaSet()}).catch(err=>{toast(err&&err.message==='sync'?'Attendi la sincronizzazione con il cloud e riprova.':'Impossibile creare la chiave ora. Riprova.')}).finally(()=>{b.disabled=false})});
-const _setTab=setTab;setTab=function(v){_setTab(v);paintBadges()};
+/* pagine di «Altro» (Prodotti, Marketing, Analytics): freccia indietro nell'intestazione, verso l'elenco di Altro */
+const PGB=['prod','mkt'];
+function pgBackUpd(){let b=$('pgBack');if(!b){const r=document.querySelector('.hrow');if(!r)return;b=h('button','btn ico pk');b.id='pgBack';b.type='button';b.hidden=true;b.title=b.ariaLabel='Indietro';b.innerHTML=ICONS.back;b.onclick=()=>setTab('more');r.insertBefore(b,r.firstChild)}
+  const an=$('anSh'),on=document.documentElement.dataset.lay==='b'&&(PGB.includes(tab)||(an&&!an.hidden));b.hidden=!on}
+const _setTab=setTab;setTab=function(v){_setTab(v);paintBadges();try{pgBackUpd()}catch(e){}};
 /* in tutte le pagine tranne la Home compare, accanto al menu, la freccia indietro che riporta alla Home */
 render();renderO();renderP();setTab('home');
 /* per i collaboratori i segni della guida restano sul dispositivo: la configurazione è quella del titolare */
@@ -10422,7 +10426,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.66.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.66.1';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!WF.welcomeSeen){WF.welcomeSeen=true;saveS()}
@@ -10912,6 +10916,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.66.1','Pagine di Altro (Prodotti, Marketing, Analytics): freccia indietro verso Altro, la barra in basso resta sempre visibile (anche in Analytics) e vale anche il gesto di trascinare verso il basso per tornare indietro.'],
 ['1.66.0','Chiudi le schede trascinandole verso il basso (telefono e tablet), come in iOS: funziona come la freccia indietro e, se ci sono modifiche, chiede prima se salvarle. La freccia resta.'],
 ['1.65.0','Il tuo nome: ora si imposta anche in Impostazioni → Azienda ed è obbligatorio nel passo Azienda della Configurazione guidata. È il nome del saluto in Home e quello che vedono i collaboratori.'],
 ['1.64.4','Il saluto in Home torna a mostrare il tuo nome: si usa il nome impostato in Team (e ora anche nella Configurazione guidata, passo Azienda), oltre a quello già usato per il registro delle azioni.'],
@@ -11240,19 +11245,23 @@ function guideify(root){
    if(v&&!matchMedia('(prefers-reduced-motion:reduce)').matches){v.classList.remove('swl','swr');void v.offsetWidth;v.classList.add(dx<0?'swl':'swr');setTimeout(()=>v.classList.remove('swl','swr'),260)}
  },{passive:true})}
 
-/* ===== trascina la scheda verso il basso per chiuderla (telefono e tablet): equivale alla freccia indietro, con la richiesta di salvare se ci sono modifiche ===== */
+/* ===== trascina la scheda (o la pagina di Altro) verso il basso per chiuderla (telefono e tablet): equivale alla freccia indietro, con la richiesta di salvare se ci sono modifiche ===== */
 {const vis=el=>!!el&&!el.hidden&&el.getClientRects().length>0;
  const CLOSE={sheet:'close',lSheet:'lClose',oSheet:'oClose',pSheet:'pClose',qSheet:'qClose',rvSheet:'rvClose'};
  const skip=t=>{for(let e=t;e&&e!==document.body;e=e.parentElement){if(e.matches&&e.matches('input,textarea,select,[contenteditable="true"],canvas,.nosw,.crChip,.crGhost,.crCut'))return true;
-   if(e.classList&&e.classList.contains('sheet'))break;const o=getComputedStyle(e).overflowY;if((o==='auto'||o==='scroll')&&e.scrollHeight>e.clientHeight+2&&e.scrollTop>0)return true}return false};
- const closeBtn=sh=>{const b=CLOSE[sh.id]&&$(CLOSE[sh.id]);if(b&&vis(b))return b;const x=sh.querySelector('.top [data-i=back]');const y=(x&&x.closest('button'))||sh.querySelector('.top button');return y&&vis(y)?y:null};
+   if(e.classList&&e.classList.contains('sheet')||e.id==='prodView'||e.id==='mktView')break;const o=getComputedStyle(e).overflowY;if((o==='auto'||o==='scroll')&&e.scrollHeight>e.clientHeight+2&&e.scrollTop>0)return true}return false};
+ /* pagine di Altro senza scheda: Prodotti, Marketing e Analytics tornano all'elenco di Altro */
+ const PAGE={anSh:()=>setTab('more'),prodView:()=>setTab('more'),mktView:()=>setTab('more')};
+ const pageOf=t=>{if(!t||!t.closest)return null;const el=t.closest('#anSh,#prodView,#mktView');return el&&vis(el)?el:null};
+ const sTop=el=>el.classList.contains('sheet')?el.scrollTop:(document.scrollingElement||document.documentElement).scrollTop;
+ const closeBtn=sh=>{if(PAGE[sh.id])return {click:PAGE[sh.id]};const b=CLOSE[sh.id]&&$(CLOSE[sh.id]);if(b&&vis(b))return b;const x=sh.querySelector('.top [data-i=back]');const y=(x&&x.closest('button'))||sh.querySelector('.top button');return y&&vis(y)?y:null};
  let g=null;const reduce=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
  const reset=(sh,anim)=>{sh.style.transition=anim&&!reduce()?'transform .22s cubic-bezier(.2,.8,.2,1)':'none';sh.style.transform='';const end=()=>{sh.style.transition='';sh.style.borderRadius='';sh.style.boxShadow='';sh.removeEventListener('transitionend',end)};if(anim)sh.addEventListener('transitionend',end);else end()};
  document.addEventListener('touchstart',e=>{g=null;if(e.touches.length!==1)return;if([...document.querySelectorAll('.modal')].some(vis))return;
-   const sh=e.target.closest&&e.target.closest('.sheet');if(!sh||!vis(sh)||sh.scrollTop>0||skip(e.target))return;const bt=closeBtn(sh);if(!bt)return;
+   const sh=(e.target.closest&&e.target.closest('.sheet:not(#anSh)'))||pageOf(e.target);if(!sh||!vis(sh)||sTop(sh)>0||skip(e.target))return;if(!sh.classList.contains('sheet')&&document.documentElement.dataset.lay!=='b')return;const bt=closeBtn(sh);if(!bt)return;
    const t=e.touches[0];g={sh,x:t.clientX,y:t.clientY,t:Date.now(),on:false,dy:0}},{passive:true});
  document.addEventListener('touchmove',e=>{if(!g||e.touches.length!==1)return;const t=e.touches[0],dy=t.clientY-g.y,dx=t.clientX-g.x;
-   if(!g.on){if(Math.abs(dx)>14&&Math.abs(dx)>Math.abs(dy)){g=null;return}if(dy<0&&Math.abs(dy)>10){g=null;return}if(dy<12||dy<Math.abs(dx)*1.5||g.sh.scrollTop>0)return;
+   if(!g.on){if(Math.abs(dx)>14&&Math.abs(dx)>Math.abs(dy)){g=null;return}if(dy<0&&Math.abs(dy)>10){g=null;return}if(dy<12||dy<Math.abs(dx)*1.5||sTop(g.sh)>0)return;
      try{if(String(getSelection()).length){g=null;return}}catch(x){}g.on=true;g.sh.style.transition='none';g.sh.style.borderRadius='22px 22px 0 0';g.sh.style.boxShadow='0 -8px 40px rgba(0,0,0,.35)'}
    g.dy=Math.max(0,dy);g.sh.style.transform='translateY('+(g.dy*.94)+'px)';if(e.cancelable)e.preventDefault()},{passive:false});
  const end=ok=>{const x=g;g=null;if(!x||!x.on)return;const dt=Math.max(1,Date.now()-x.t),sh=x.sh,far=x.dy>=Math.max(110,innerHeight*.16),fast=x.dy>=50&&x.dy/dt>=.5;
