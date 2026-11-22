@@ -8813,7 +8813,7 @@ function openSign(){let M=$('mSign');if(M)M.remove();M=h('div','modal');M.id='mS
   const ln=h('div','hint','Firma qui sopra con il dito o con il mouse. Se serve più spazio, ruota il telefono.');ln.style.margin='0';
   const bt=h('div');bt.style.cssText='display:flex;gap:8px;margin-top:2px';const ca=h('button','btn lbl');ca.type='button';ca.textContent='Cancella';const an=h('button','btn lbl');an.type='button';an.textContent='Annulla';const ok=h('button','btn p lbl');ok.type='button';ok.textContent='Conferma firma';ok.disabled=true;
   [ca,an].forEach(x=>{x.style.cssText='flex:1 1 0;min-width:0;padding:0 6px'});ok.style.cssText='flex:1.6 1 0;min-width:0;padding:0 6px';
-  {const sy=h('style');sy.textContent='@media (max-height:520px){#mSign h3,#mSign .hint{display:none}#mSign .box{gap:6px!important}}';M.append(sy)}
+  {const sy=h('style');sy.textContent='@media (orientation:portrait) and (min-height:521px){#mSign{align-items:end!important;justify-items:center!important}#mSign .box{height:auto!important;max-width:560px!important;border-radius:22px 22px 0 0!important;box-shadow:0 -10px 40px rgba(0,0,0,.4)}#mSign canvas{width:calc(100% + 32px)!important;margin:4px -16px!important;border-radius:0!important;border-left:0!important;border-right:0!important}}@media (max-height:520px){#mSign canvas{flex:1 1 0!important;height:0!important;min-height:0!important;width:calc(100% + 32px)!important;aspect-ratio:auto!important;margin:0 -16px!important;border-radius:0!important;border-left:0!important;border-right:0!important}#mSign h3,#mSign .hint{display:none}#mSign .box{gap:6px!important}}';M.append(sy)}
   bt.append(ca,an,ok);bx.append(tt,nm,tx,cv,ln,bt);M.append(bx);document.body.append(M);
   /* i tratti si memorizzano in unità logiche (400 di larghezza): la scala segue la dimensione del riquadro */
   const g=cv.getContext('2d');let S_=[],cur=null,sc=1,dpr=Math.min(2,window.devicePixelRatio||1);
@@ -10473,7 +10473,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.68.2';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.68.3';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -10964,6 +10964,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.68.3','La firma del cliente, con il telefono in verticale, si apre in un popup compatto dal basso con il riquadro largo quanto lo schermo; in orizzontale resta a tutto schermo.'],
 ['1.68.2','Il riquadro bianco della firma è tornato alle dimensioni compatte (largo, non alto), al centro della schermata a tutto schermo.'],
 ['1.68.1','La firma del cliente si fa a tutto schermo, con più spazio per firme lunghe.'],
 ['1.68.0','Firma del cliente sullo schermo sui preventivi: il cliente firma con il dito, il preventivo diventa accettato e la firma compare nel PDF.'],
