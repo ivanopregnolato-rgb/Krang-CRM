@@ -493,21 +493,39 @@ function mkMig(){let n=0;try{clients.forEach(c=>{const pv=c.privacy;if(!pv||!pv.
   delete pv.cons.mkEmail;delete pv.cons.mkTel;n++});
   if(S.segs&&JSON.stringify(S.segs).match(/"f":"mk(Email|Tel)"/)){S.segs=JSON.parse(JSON.stringify(S.segs).replace(/"f":"mk(Email|Tel)"/g,'"f":"mk"'));n++;try{saveS()}catch(e){}}
   if(n){try{persist()}catch(e){}}}catch(e){}return n}
-function loadPriv(p){p=p||mkPriv();$('p_later').checked=false;try{laterUi()}catch(e){}
+let privSign;
+function loadPriv(p){privSign=undefined;p=p||mkPriv();$('p_later').checked=false;try{laterUi()}catch(e){}
   $('p_fonte').value=p.fonteDati;$('p_base').value=p.base;$('p_inf').checked=!!p.informativa;$('p_infmodo').value=p.infModo||'Di persona';$('p_infdata').value=p.infData||'';$('p_cons').value=p.conserva||'';{const a=autoRet(),ad=a.until?ymd(new Date(a.until)):'';$('p_cons').dataset.auto=ad;if(!p.conserva)$('p_cons').value=ad}
   CONS.forEach(k=>{const c=p.cons[k]||{v:false,d:''};$('c_'+k).checked=!!c.v;$('s_'+k).textContent=c.v?'Prestato il '+fmtD(c.d):(c.d?'Revocato il '+fmtD(c.d):'')});
   const L=$('p_log');L.textContent='';(p.log||[]).slice(-6).reverse().forEach(x=>L.append(h('div','logi',fmtDT(x.d+'Z')+' – '+x.t+(x.op?' ('+x.op+')':''))));
   if(!(p.log||[]).length)L.append(h('div','hint','Nessuna modifica registrata.'));
-  privUI();paintReq();$('p_det').open=false}
+  privUI();paintReq();$('p_det').open=false;try{paintPSign()}catch(e){}}
 function collectPriv(prev,isNew){
   prev=prev||mkPriv();const now=new Date().toISOString().slice(0,16),today=ymd(),log=(prev.log||[]).slice();
-  const p={base:$('p_base').value,fonteDati:$('p_fonte').value,informativa:$('p_inf').checked,infData:$('p_infdata').value,infModo:$('p_infmodo').value,infVer:$('p_inf').checked?((prev.informativa&&prev.infVer)||infVer()):'',cons:{},conserva:($('p_cons').value&&$('p_cons').value!==$('p_cons').dataset.auto)?$('p_cons').value:'',anon:prev.anon,log,richieste:prev.richieste||[],lk:prev.lk,lkH:prev.lkH,lkOk:prev.lkOk,lkS:prev.lkS,port:prev.port};
+  const p={base:$('p_base').value,fonteDati:$('p_fonte').value,informativa:$('p_inf').checked,infData:$('p_infdata').value,infModo:$('p_infmodo').value,infVer:$('p_inf').checked?((prev.informativa&&prev.infVer)||infVer()):'',cons:{},conserva:($('p_cons').value&&$('p_cons').value!==$('p_cons').dataset.auto)?$('p_cons').value:'',anon:prev.anon,log,richieste:prev.richieste||[],lk:prev.lk,lkH:prev.lkH,lkOk:prev.lkOk,lkS:prev.lkS,port:prev.port,firma:privSign===false?undefined:(privSign||prev.firma)};
   if(isNew)log.push({d:now,t:'Anagrafica creata (fonte: '+$('p_fonte').selectedOptions[0].textContent+')'});
   if(p.informativa&&!p.infData)p.infData=today;if(!p.informativa)p.infData='';
   if(p.informativa&&(!prev.informativa||prev.infData!==p.infData))log.push({d:now,t:'Informativa fornita ('+p.infModo+', versione '+p.infVer+') il '+fmtD(p.infData)});
   if(!p.informativa&&prev.informativa)log.push({d:now,t:'Informativa: registrazione annullata'});
   CONS.forEach(k=>{const old=prev.cons[k]||{v:false,d:''},is=$('c_'+k).checked;p.cons[k]=is===!!old.v?{...old}:{v:is,d:today};if(is!==!!old.v)log.push({d:now,t:CLABEL[k]+': '+(is?'prestato':'revocato')})});
+  if(p.firma&&(!prev.firma||prev.firma.ts!==p.firma.ts))log.push({d:now,t:'Firma del cliente raccolta sullo schermo (informativa e consensi)'});if(!p.firma&&prev.firma)log.push({d:now,t:'Firma del cliente rimossa'});
+  if(!p.firma)delete p.firma;
   return p}
+/* ===== firma del cliente sui consensi privacy: scelte + firma sullo schermo, salvate nella scheda (privacy.firma) ===== */
+const privHx=v=>JSON.stringify([!!v.mk,!!v.profilazione,!!v.terzi]);
+const privNow=()=>({mk:$('c_mk').checked,profilazione:$('c_profilazione').checked,terzi:$('c_terzi').checked});
+function paintPSign(){const w=$('pSign');if(!w)return;w.textContent='';const f=privSign===false?null:(privSign||(editing&&editing.privacy&&editing.privacy.firma));
+  if(f&&(f.s||[]).length){const box=h('div');box.style.cssText='display:flex;flex-direction:column;gap:8px;align-items:flex-start';box.append(signSvg(f,240),h('div','hint',(f.nome||'Cliente')+' · '+signWhen(f)+(privSign?' · da salvare':'')));
+    if(f.hx&&f.hx!==privHx(privNow())){const al=h('div','hint','I consensi sono stati modificati dopo la firma: raccogli una nuova firma.');al.style.cssText='padding:8px 10px;border-radius:10px;background:#fdecec;color:#8a1f2f';box.append(al)}
+    const r=h('div','dual'),re=h('button','btn lbl');re.type='button';re.innerHTML=ICONS.reset+'Rifai';re.onclick=privSignOpen;const rm=h('button','btn lbl');rm.type='button';rm.innerHTML=ICONS.trash+'Rimuovi';rm.onclick=()=>{privSign=false;paintPSign()};r.append(re,rm);box.append(r);w.append(box)}
+  else{const b=h('button','btn lbl');b.type='button';b.style.width='100%';b.innerHTML=ICONS.edit+'Raccogli consensi e firma';b.onclick=privSignOpen;w.append(b,h('div','hint','Il cliente sceglie i consensi facoltativi e firma sullo schermo: l’informativa risulta fornita come “Firmata”.'))}}
+function privSignOpen(){const cl={tipo:curTipo,nome:$('nome').value,cognome:$('cognome').value,azienda:$('azienda').value},cur=privNow(),box=h('div');box.style.cssText='display:flex;flex-direction:column;gap:8px;margin:4px 0';const cb={};
+  CONS.forEach(k=>{const l=h('label','chk'),i=h('input');i.type='checkbox';i.checked=!!cur[k];cb[k]=i;const s=h('span','',CLABEL[k]);l.append(i,s);box.append(l)});
+  box.append(h('div','hint','Il rifiuto non impedisce il servizio. Le caselle non sono mai preselezionate.'));
+  openSignFor({title:'Consensi e firma',nome:(privSign&&privSign.nome)||signName(cl),text:'Il cliente conferma di aver ricevuto l’informativa privacy (versione '+infVer()+') e sceglie i consensi facoltativi.',pre:{el:box,get:()=>{const v={};CONS.forEach(k=>v[k]=cb[k].checked);return v}},hx:v=>privHx(v||privNow()),
+    done:(f,v)=>{privSign=f;CONS.forEach(k=>{const c=$('c_'+k);if(c){c.checked=!!v[k];c.dispatchEvent(new Event('change',{bubbles:true}))}});
+      $('p_later').checked=false;try{laterUi()}catch(e){}$('p_inf').checked=true;$('p_infmodo').value='Firmata';$('p_infdata').value=ymd();$('p_inf').dispatchEvent(new Event('change',{bubbles:true}));try{privUI();paintPrivSum()}catch(e){}paintPSign();toast('Firma raccolta: salva il cliente per registrare consensi e firma.')}})}
+['change'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target&&e.target.id&&/^c_(mk|profilazione|terzi)$/.test(e.target.id))try{paintPSign()}catch(x){}}));
 $('p_show').onclick=()=>{const w=$('infoBody');w.textContent='';const t=h('p');t.append(h('b','','Informativa sul trattamento dei dati personali (artt. 13 e 14 GDPR)'));w.append(t);{const v=infVer();if(v)w.append(h('p','hint','Versione '+v+' in vigore'))}infoSections().forEach(([k,v])=>{const p=h('p');p.append(h('b','',k+': '),document.createTextNode(v));w.append(p)});const n=h('p');n.append(h('i','','Modello indicativo da adattare: fallo verificare da un consulente legale o dal DPO.'));w.append(n);$('info').hidden=false};$('infoClose').onclick=()=>{$('info').hidden=true};
 function expJson(c){const cl={...c,foto:c.foto?'[presente]':''};if(cl.privacy){cl.privacy={...cl.privacy};delete cl.privacy.lk;delete cl.privacy.lkH;delete cl.privacy.lkOk;delete cl.privacy.lkS}return JSON.stringify({cliente:cl,opportunità:opps.filter(o=>o.clienteId===c.id).map(o=>({...o,allegati:o.allegati.map(a=>({nome:a.nome,tipo:a.tipo,size:a.size}))})),esportato:new Date().toISOString()},null,2)}
 $('p_copy').onclick=async()=>{if(!editing)return;toast(await copyText(expJson(editing))?'Dati copiati negli appunti.':'Copia non riuscita.')};
@@ -8803,18 +8821,28 @@ function paintSign(){const w=$('qSign');if(!w)return;w.textContent='';const f=qW
     const r=h('div','dual');const re=h('button','btn lbl');re.type='button';re.innerHTML=ICONS.reset+'Rifai la firma';re.onclick=()=>openSign();const rm=h('button','btn lbl');rm.type='button';rm.innerHTML=ICONS.trash+'Rimuovi';rm.onclick=()=>{delete qW.firma;paintSign()};r.append(re,rm);box.append(r);w.append(box)}
   else{const b=h('button','btn lbl');b.type='button';b.style.width='100%';b.innerHTML=ICONS.edit+'Raccogli la firma del cliente';b.onclick=()=>openSign();w.append(b,h('div','hint','Il cliente firma con il dito sullo schermo: il preventivo risulta accettato e la firma compare nel PDF.'))}}
 {const _pd=paintDoc;paintDoc=function(){_pd.apply(this,arguments);try{paintSign()}catch(e){}}}
-function openSign(){let M=$('mSign');if(M)M.remove();M=h('div','modal');M.id='mSign';M.style.cssText='z-index:30;padding:0;align-items:stretch;justify-content:stretch';
-  const c=clients.find(x=>x.id===qO.clienteId),t=qTot(qW.righe),bx=h('div','box');bx.setAttribute('role','dialog');bx.setAttribute('aria-modal','true');bx.setAttribute('aria-labelledby','sgT');
+function openSign(){const c=clients.find(x=>x.id===qO.clienteId),t=qTot(qW.righe);
+  openSignFor({title:'Firma del cliente',nome:(qW.firma&&qW.firma.nome)||signName(c),text:'Firmando, il cliente accetta il preventivo n. '+qW.num+' di '+e2(t.lordo)+' alle condizioni indicate.',hx:()=>signHx(qW),
+    done:f=>{qW.firma=f;qW.stato='accettato';paintStati();paintSign();if(saveQuote())toast('Firma salvata: preventivo accettato.')}})}
+const signName=c=>c?(c.tipo==='azienda'?[c.nome,c.cognome].filter(Boolean).join(' ')||c.azienda||'':fullName(c)):'';
+/* finestra di firma, usata dal preventivo e dai consensi privacy. o: {title,text,nome,hx(),done(firma,extra),pre?:{el,get()}} — con pre la finestra ha prima un passaggio di scelte */
+function openSignFor(o){let M=$('mSign');if(M)M.remove();M=h('div','modal');M.id='mSign';M.style.cssText='z-index:30;padding:0;align-items:stretch;justify-content:stretch';
+  const bx=h('div','box');bx.setAttribute('role','dialog');bx.setAttribute('aria-modal','true');bx.setAttribute('aria-labelledby','sgT');
   bx.style.cssText='width:100%;max-width:none;height:100%;max-height:none;margin:0;border-radius:0;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;overflow:hidden;padding:calc(14px + env(safe-area-inset-top,0px)) 16px calc(14px + env(safe-area-inset-bottom,0px))';
-  const tt=h('h3','','Firma del cliente');tt.id='sgT';tt.style.margin='0';
-  const nm=h('div','f'),nl=h('label','','Nome del firmatario'),ni=h('input');ni.id='sg_n';ni.maxLength=80;ni.setAttribute('data-ns','');ni.autocomplete='off';ni.value=(qW.firma&&qW.firma.nome)||(c?(c.tipo==='azienda'?[c.nome,c.cognome].filter(Boolean).join(' ')||c.azienda||'':fullName(c)):'');nl.htmlFor='sg_n';nm.append(nl,ni);nm.style.margin='0';
-  const tx=h('p','hint','Firmando, il cliente accetta il preventivo n. '+qW.num+' di '+e2(t.lordo)+' alle condizioni indicate.');tx.style.margin='0';
+  const tt=h('h3','',o.title);tt.id='sgT';tt.style.margin='0';
+  const nm=h('div','f'),nl=h('label','','Nome del firmatario'),ni=h('input');ni.id='sg_n';ni.maxLength=80;ni.setAttribute('data-ns','');ni.autocomplete='off';ni.value=o.nome||'';nl.htmlFor='sg_n';nm.append(nl,ni);nm.style.margin='0';
+  const tx=h('p','hint',o.text);tx.style.margin='0';
   const cv=h('canvas');cv.setAttribute('aria-label','Area di firma');cv.style.cssText='flex:none;margin:auto;width:min(100%,calc(55vh*2.5));aspect-ratio:5/2;background:#fff;border:1.5px dashed var(--out);border-radius:14px;touch-action:none;display:block;cursor:crosshair';
   const ln=h('div','hint','Firma qui sopra con il dito o con il mouse. Se serve più spazio, ruota il telefono.');ln.style.margin='0';
   const bt=h('div');bt.style.cssText='display:flex;gap:8px;margin-top:2px';const ca=h('button','btn lbl');ca.type='button';ca.textContent='Cancella';const an=h('button','btn lbl');an.type='button';an.textContent='Annulla';const ok=h('button','btn p lbl');ok.type='button';ok.textContent='Conferma firma';ok.disabled=true;
   [ca,an].forEach(x=>{x.style.cssText='flex:1 1 0;min-width:0;padding:0 6px'});ok.style.cssText='flex:1.6 1 0;min-width:0;padding:0 6px';
   {const sy=h('style');sy.textContent='@media (orientation:portrait) and (min-height:521px){#mSign{align-items:end!important;justify-items:center!important}#mSign .box{height:auto!important;max-width:560px!important;border-radius:22px 22px 0 0!important;box-shadow:0 -10px 40px rgba(0,0,0,.4)}#mSign canvas{width:calc(100% + 32px)!important;margin:4px -16px!important;border-radius:0!important;border-left:0!important;border-right:0!important}}@media (max-height:520px){#mSign canvas{flex:1 1 0!important;height:0!important;min-height:0!important;width:calc(100% + 32px)!important;aspect-ratio:auto!important;margin:0 -16px!important;border-radius:0!important;border-left:0!important;border-right:0!important}#mSign h3,#mSign .hint{display:none}#mSign .box{gap:6px!important}}';M.append(sy)}
-  bt.append(ca,an,ok);bx.append(tt,nm,tx,cv,ln,bt);M.append(bx);document.body.append(M);
+  bt.append(ca,an,ok);
+  if(o.pre){const b1=h('div');b1.style.cssText='display:flex;gap:8px;margin-top:6px';const a1=h('button','btn lbl');a1.type='button';a1.textContent='Annulla';const n1=h('button','btn p lbl');n1.type='button';n1.textContent='Continua alla firma';[a1].forEach(x=>{x.style.cssText='flex:1 1 0;min-width:0;padding:0 6px'});n1.style.cssText='flex:1.6 1 0;min-width:0;padding:0 6px';b1.append(a1,n1);
+    bx.style.overflow='auto';bx.append(tt,tx,o.pre.el,b1);a1.onclick=()=>M.remove();
+    n1.onclick=()=>{o.pre.val=o.pre.get();bx.style.overflow='hidden';bx.replaceChildren(tt,nm,cv,ln,bt);fit();try{ni.focus({preventScroll:true})}catch(e){}}}
+  else bx.append(tt,nm,tx,cv,ln,bt);
+  M.append(bx);document.body.append(M);
   /* i tratti si memorizzano in unità logiche (400 di larghezza): la scala segue la dimensione del riquadro */
   const g=cv.getContext('2d');let S_=[],cur=null,sc=1,dpr=Math.min(2,window.devicePixelRatio||1);
   const ink=()=>{g.setTransform(1,0,0,1,0,0);g.fillStyle='#fff';g.fillRect(0,0,cv.width,cv.height);const k=sc*dpr;g.strokeStyle='#111';g.lineWidth=2.6*k;g.lineCap='round';g.lineJoin='round';S_.forEach(st=>{g.beginPath();g.moveTo(st[0][0]*k,st[0][1]*k);if(st.length===1)g.lineTo(st[0][0]*k+.1,st[0][1]*k);for(let i=1;i<st.length;i++)g.lineTo(st[i][0]*k,st[i][1]*k);g.stroke()})};
@@ -8830,8 +8858,7 @@ function openSign(){let M=$('mSign');if(M)M.remove();M=h('div','modal');M.id='mS
   ca.onclick=()=>{S_=[];ink();upd()};an.onclick=()=>M.remove();
   ok.onclick=()=>{const nome=ni.value.trim().slice(0,80),P=10;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;S_.forEach(s=>s.forEach(p=>{x0=Math.min(x0,p[0]);y0=Math.min(y0,p[1]);x1=Math.max(x1,p[0]);y1=Math.max(y1,p[1])}));
     const st=S_.filter(s=>s.length).map(s=>s.map(p=>[Math.round((p[0]-x0+P)*2)/2,Math.round((p[1]-y0+P)*2)/2]));
-    qW.firma={s:st,w:Math.round(x1-x0+2*P),h:Math.round(y1-y0+2*P),ts:new Date().toISOString(),nome,hx:signHx(qW)};M.remove();
-    qW.stato='accettato';paintStati();paintSign();if(saveQuote())toast('Firma salvata: preventivo accettato.')};
+    const f={s:st,w:Math.round(x1-x0+2*P),h:Math.round(y1-y0+2*P),ts:new Date().toISOString(),nome,hx:o.hx(o.pre&&o.pre.val)};M.remove();o.done(f,o.pre&&o.pre.val)};
   setTimeout(()=>{fit();try{cv.focus()}catch(e){}},0)}
 $('qWa').onclick=async()=>{if(!saveQuote())return;const c=clients.find(x=>x.id===qO.clienteId);if(!c){toast('Cliente non trovato.');return}
   if(!c.telefono){toast('Aggiungi un numero di telefono al cliente.');return}
@@ -10475,7 +10502,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.68.5';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.69.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -10966,6 +10993,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.69.0','Firma del cliente anche sui consensi privacy: il cliente sceglie i consensi e firma sullo schermo, l’informativa risulta fornita come Firmata e la firma resta nella scheda.'],
 ['1.68.5','Firma in orizzontale: il tratto ora segue il dito anche dopo aver ruotato il telefono.'],
 ['1.68.4','Nel preventivo la sezione Firma del cliente è prima di Condizioni e note.'],
 ['1.68.3','La firma del cliente, con il telefono in verticale, si apre in un popup compatto dal basso con il riquadro largo quanto lo schermo; in orizzontale resta a tutto schermo.'],
