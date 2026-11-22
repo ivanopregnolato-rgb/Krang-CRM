@@ -8819,8 +8819,10 @@ function openSign(){let M=$('mSign');if(M)M.remove();M=h('div','modal');M.id='mS
   const g=cv.getContext('2d');let S_=[],cur=null,sc=1,dpr=Math.min(2,window.devicePixelRatio||1);
   const ink=()=>{g.setTransform(1,0,0,1,0,0);g.fillStyle='#fff';g.fillRect(0,0,cv.width,cv.height);const k=sc*dpr;g.strokeStyle='#111';g.lineWidth=2.6*k;g.lineCap='round';g.lineJoin='round';S_.forEach(st=>{g.beginPath();g.moveTo(st[0][0]*k,st[0][1]*k);if(st.length===1)g.lineTo(st[0][0]*k+.1,st[0][1]*k);for(let i=1;i<st.length;i++)g.lineTo(st[i][0]*k,st[i][1]*k);g.stroke()})};
   const fit=()=>{const r=cv.getBoundingClientRect();if(!r.width)return;sc=r.width/400;cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);ink()};
-  fit();addEventListener('resize',fit);new MutationObserver(()=>{if(!M.isConnected)removeEventListener('resize',fit)}).observe(document.body,{childList:true});
-  const pt=e=>{const r=cv.getBoundingClientRect();return [Math.round((e.clientX-r.left)/sc*2)/2,Math.round((e.clientY-r.top)/sc*2)/2]};
+  /* il riquadro cambia misura quando si ruota il telefono: il ResizeObserver scatta dopo il nuovo layout; si ricontrolla anche a ogni tocco */
+  fit();let ro=null;try{ro=new ResizeObserver(fit);ro.observe(cv)}catch(e){addEventListener('resize',fit)}addEventListener('orientationchange',()=>setTimeout(fit,250));
+  new MutationObserver(()=>{if(!M.isConnected){removeEventListener('resize',fit);if(ro)ro.disconnect()}}).observe(document.body,{childList:true});
+  const pt=e=>{let r=cv.getBoundingClientRect();if(Math.abs(cv.width-Math.round(r.width*dpr))>1||Math.abs(cv.height-Math.round(r.height*dpr))>1){fit();r=cv.getBoundingClientRect()}return [Math.round((e.clientX-r.left)/sc*2)/2,Math.round((e.clientY-r.top)/sc*2)/2]};
   const len=()=>S_.reduce((n,st)=>n+st.length,0);const upd=()=>{ok.disabled=len()<12};
   cv.onpointerdown=e=>{e.preventDefault();try{cv.setPointerCapture(e.pointerId)}catch(x){}cur=[pt(e)];S_.push(cur);ink()};
   cv.onpointermove=e=>{if(!cur)return;e.preventDefault();const p=pt(e),l=cur[cur.length-1];if(Math.hypot(p[0]-l[0],p[1]-l[1])<1.2)return;cur.push(p);ink()};
