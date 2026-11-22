@@ -8791,6 +8791,37 @@ const qName=()=>'Preventivo-'+qW.num+'.pdf';
 const b64=u8=>{let t='';for(let i=0;i<u8.length;i+=8192)t+=String.fromCharCode.apply(null,u8.subarray(i,i+8192));return btoa(t)};
 async function savePdf(u8,name){try{const d=typeof claude!=='undefined'?await claude.use('downloads'):null;if(!d){const a=document.createElement('a'),u=URL.createObjectURL(new Blob([u8]));a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);return true}await d.save({filename:name,data:u8});return true}catch(e){return false}}
 $('qPdf').onclick=async()=>{if(!saveQuote())return;toast(await savePdf(quotePdf(),qName())?'PDF pronto.':'Salvataggio del PDF non disponibile qui.')};
+/* ===== firma del cliente sullo schermo (firma elettronica semplice): i tratti si salvano come vettori, cifrati con il preventivo ===== */
+const signHx=q=>{const t=JSON.stringify([q.righe,q.cond||'',q.note||'',q.validita]);let x=5381;for(let i=0;i<t.length;i++)x=((x<<5)+x+t.charCodeAt(i))|0;return (x>>>0).toString(36)};
+const signWhen=f=>{try{return new Date(f.ts).toLocaleString('it-IT',{dateStyle:'short',timeStyle:'short'})}catch(e){return ''}};
+const signStale=q=>!!(q.firma&&q.firma.hx&&q.firma.hx!==signHx(q));
+const signSvg=(f,w)=>{const NS='http://www.w3.org/2000/svg',s=document.createElementNS(NS,'svg');s.setAttribute('viewBox','0 0 '+f.w+' '+f.h);s.style.cssText='width:'+(w||200)+'px;max-width:100%;height:auto;display:block;background:#fff;border-radius:8px';s.setAttribute('role','img');s.setAttribute('aria-label','Firma del cliente');
+  f.s.forEach(st=>{const p=document.createElementNS(NS,'path');p.setAttribute('d',st.length===1?'M'+st[0][0]+' '+st[0][1]+'l.1 0':'M'+st.map(q=>q[0]+' '+q[1]).join('L'));p.setAttribute('fill','none');p.setAttribute('stroke','#111');p.setAttribute('stroke-width','2.4');p.setAttribute('stroke-linecap','round');p.setAttribute('stroke-linejoin','round');s.append(p)});return s};
+function paintSign(){const w=$('qSign');if(!w)return;w.textContent='';const f=qW.firma;
+  if(f&&(f.s||[]).length){const box=h('div');box.style.cssText='display:flex;flex-direction:column;gap:8px;align-items:flex-start';box.append(signSvg(f,240));box.append(h('div','hint',(f.nome||'Cliente')+' · '+signWhen(f)));
+    if(signStale(qW)){const al=h('div','hint','Il preventivo è stato modificato dopo la firma: raccogli una nuova firma.');al.style.cssText='padding:8px 10px;border-radius:10px;background:#fdecec;color:#8a1f2f';box.append(al)}
+    const r=h('div','dual');const re=h('button','btn lbl');re.type='button';re.innerHTML=ICONS.reset+'Rifai la firma';re.onclick=()=>openSign();const rm=h('button','btn lbl');rm.type='button';rm.innerHTML=ICONS.trash+'Rimuovi';rm.onclick=()=>{delete qW.firma;paintSign()};r.append(re,rm);box.append(r);w.append(box)}
+  else{const b=h('button','btn lbl');b.type='button';b.style.width='100%';b.innerHTML=ICONS.edit+'Raccogli la firma del cliente';b.onclick=()=>openSign();w.append(b,h('div','hint','Il cliente firma con il dito sullo schermo: il preventivo risulta accettato e la firma compare nel PDF.'))}}
+{const _pd=paintDoc;paintDoc=function(){_pd.apply(this,arguments);try{paintSign()}catch(e){}}}
+function openSign(){let M=$('mSign');if(M)M.remove();M=h('div','modal');M.id='mSign';M.style.zIndex=30;
+  const c=clients.find(x=>x.id===qO.clienteId),t=qTot(qW.righe),bx=h('div','box');bx.setAttribute('role','dialog');bx.setAttribute('aria-labelledby','sgT');bx.style.maxWidth='560px';
+  const tt=h('h3','','Firma del cliente');tt.id='sgT';
+  const nm=h('div','f'),nl=h('label','','Nome del firmatario'),ni=h('input');ni.id='sg_n';ni.maxLength=80;ni.setAttribute('data-ns','');ni.autocomplete='off';ni.value=(qW.firma&&qW.firma.nome)||(c?(c.tipo==='azienda'?[c.nome,c.cognome].filter(Boolean).join(' ')||c.azienda||'':fullName(c)):'');nl.htmlFor='sg_n';nm.append(nl,ni);
+  const tx=h('p','hint','Firmando, il cliente accetta il preventivo n. '+qW.num+' di '+e2(t.lordo)+' alle condizioni indicate.');
+  const cv=h('canvas');cv.width=800;cv.height=320;cv.setAttribute('aria-label','Area di firma');cv.style.cssText='width:100%;aspect-ratio:5/2;background:#fff;border:1.5px dashed var(--out);border-radius:14px;touch-action:none;display:block;cursor:crosshair';
+  const ln=h('div','hint','Firma qui sopra con il dito o con il mouse.');
+  const bt=h('div');bt.style.cssText='display:flex;gap:8px;margin-top:12px';const ca=h('button','btn lbl');ca.type='button';ca.textContent='Cancella';const an=h('button','btn lbl');an.type='button';an.textContent='Annulla';const ok=h('button','btn p lbl');ok.type='button';ok.textContent='Conferma firma';ok.disabled=true;
+  [ca,an].forEach(x=>{x.style.cssText='flex:1 1 0;min-width:0;padding:0 6px'});ok.style.cssText='flex:1.6 1 0;min-width:0;padding:0 6px';bt.append(ca,an,ok);bx.append(tt,nm,tx,cv,ln,bt);M.append(bx);document.body.append(M);
+  const g=cv.getContext('2d'),K=2;let S_=[],cur=null;const ink=()=>{g.fillStyle='#fff';g.fillRect(0,0,800,320);g.strokeStyle='#111';g.lineWidth=5;g.lineCap='round';g.lineJoin='round';S_.forEach(st=>{g.beginPath();g.moveTo(st[0][0]*K,st[0][1]*K);if(st.length===1)g.lineTo(st[0][0]*K+.1,st[0][1]*K);for(let i=1;i<st.length;i++)g.lineTo(st[i][0]*K,st[i][1]*K);g.stroke()})};ink();
+  const pt=e=>{const r=cv.getBoundingClientRect();return [Math.round((e.clientX-r.left)/r.width*400*2)/2,Math.round((e.clientY-r.top)/r.height*160*2)/2]};
+  const len=()=>S_.reduce((n,st)=>n+st.length,0);const upd=()=>{ok.disabled=len()<12};
+  cv.onpointerdown=e=>{e.preventDefault();try{cv.setPointerCapture(e.pointerId)}catch(x){}cur=[pt(e)];S_.push(cur);ink()};
+  cv.onpointermove=e=>{if(!cur)return;e.preventDefault();const p=pt(e),l=cur[cur.length-1];if(Math.hypot(p[0]-l[0],p[1]-l[1])<1.2)return;cur.push(p);ink()};
+  const up=()=>{cur=null;upd()};cv.onpointerup=up;cv.onpointercancel=up;
+  ca.onclick=()=>{S_=[];ink();upd()};an.onclick=()=>M.remove();
+  ok.onclick=()=>{const nome=ni.value.trim().slice(0,80);qW.firma={s:S_.filter(s=>s.length),w:400,h:160,ts:new Date().toISOString(),nome,hx:signHx(qW)};M.remove();
+    if(qW.stato!=='accettato'){qW.stato='accettato'}paintStati();paintSign();if(saveQuote())toast('Firma salvata: preventivo accettato.')};
+  M.hidden=false;setTimeout(()=>{try{cv.focus()}catch(e){}},0)}
 $('qWa').onclick=async()=>{if(!saveQuote())return;const c=clients.find(x=>x.id===qO.clienteId);if(!c){toast('Cliente non trovato.');return}
   if(!c.telefono){toast('Aggiungi un numero di telefono al cliente.');return}
   const u8=quotePdf(),name=qName(),txt='Buongiorno '+contactName(c)+', le invio il preventivo n. '+qW.num+(S.azienda?' di '+S.azienda:'')+' (totale '+e2(qTot(qW.righe).lordo)+').';
@@ -8807,6 +8838,7 @@ function pdfDoc(){const W=595,H=842,pages=[];let cur=null,used=false;
     text(x,y,t,sz,b,al,g){if(!t&&t!==0)return;t=String(t);if(al==='r')x-=wd(t,sz,b);else if(al==='c')x-=wd(t,sz,b)/2;cur.push((g==null?'0.12':g)+' g BT /'+(b?'F2':'F1')+' '+sz+' Tf '+x.toFixed(1)+' '+(H-y).toFixed(1)+' Td ('+esc(t)+') Tj ET')},
     line(x1,y1,x2,y2,g,w){cur.push((g==null?'0.8':g)+' G '+(w||.6)+' w '+x1+' '+(H-y1)+' m '+x2+' '+(H-y2)+' l S')},
     rect(x,y,w,h,g){cur.push(g+' rg '+x+' '+(H-y-h)+' '+w+' '+h+' re f')},
+    path(pts,w,g){if(!pts||pts.length<1)return;let s=(g==null?'0.1':g)+' G '+(w||1.4)+' w 1 J 1 j '+pts[0][0].toFixed(1)+' '+(H-pts[0][1]).toFixed(1)+' m ';if(pts.length===1)s+=(pts[0][0]+.1).toFixed(1)+' '+(H-pts[0][1]).toFixed(1)+' l ';for(let i=1;i<pts.length;i++)s+=pts[i][0].toFixed(1)+' '+(H-pts[i][1]).toFixed(1)+' l ';cur.push(s+'S')},
     logo(x,y,mh){const J=window.LOGOJ;if(!J)return 0;const k=Math.min(mh/J.h,150/J.w),w=J.w*k,hh=J.h*k;used=true;cur.push('q '+w.toFixed(1)+' 0 0 '+hh.toFixed(1)+' '+x+' '+(H-y-hh).toFixed(1)+' cm /Im1 Do Q');return w+12},
     wrap(t,w,sz,b){const out=[];String(t).split('\n').forEach(par=>{let l='';par.split(/\s+/).filter(Boolean).forEach(wr=>{const tr=l?l+' '+wr:wr;if(wd(tr,sz,b)<=w||!l)l=tr;else{out.push(l);l=wr}});out.push(l)});return out},
     build(){pages.forEach((c,i)=>{cur=c;D.text(W/2,H-24,'Pagina '+(i+1)+' di '+pages.length,8,0,'c',.5)});
@@ -8874,6 +8906,10 @@ function quotePdf(){const D=pdfDoc(),c=clients.find(x=>x.id===qO.clienteId),t=qT
   tr('Imponibile',e2(t.net));t.iv.forEach(x=>tr('IVA '+x[0]+'% su '+e2(x[1]),e2(x[2])));D.line(330,y-8,R,y-8,.7,.8);y+=4;tr('Totale',e2(t.lordo),1);
   y+=14;
   [['Condizioni',qW.cond],['Note',qW.note]].forEach(([k,v])=>{if(!(v||'').trim())return;const ls=D.wrap(v.trim(),R-L,9,0);need(16+ls.length*12);D.text(L,y,k,8.5,1,'l',.4);y+=13;ls.forEach(l=>{D.text(L,y,l,9,0,'l',.25);y+=12});y+=8});
+  if(qW.firma&&(qW.firma.s||[]).length){const f=qW.firma,k=Math.min(200/f.w,80/f.h);need(80*1+60);y+=6;D.text(L,y,'Firma per accettazione',8.5,1,'l',.4);y+=8;
+    f.s.forEach(st=>D.path(st.map(p=>[L+p[0]*k,y+p[1]*k]),1.5));y+=f.h*k+6;D.line(L,y,L+210,y,.6,.6);y+=12;
+    D.text(L,y,(f.nome||'Cliente')+' · '+signWhen(f)+' · firma elettronica semplice',8.5,0,'l',.35);y+=12;
+    if(signStale(qW))D.text(L,y,'Attenzione: il preventivo è stato modificato dopo la firma.',8.5,1,'l',.2)}
   return D.build()}
 $('qDel').onclick=()=>askConfirm('Eliminare il preventivo '+qC.num+'?','trash','Elimina',()=>{qO.preventivi=qO.preventivi.filter(x=>x!==qC);persistO();$('qSheet').hidden=true;paintQ();renderO();toast('Preventivo eliminato.')});
 
@@ -10428,7 +10464,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.67.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.68.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -10919,6 +10955,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.68.0','Firma del cliente sullo schermo sui preventivi: il cliente firma con il dito, il preventivo diventa accettato e la firma compare nel PDF.'],
 ['1.67.0','Scorciatoie da tastiera sul computer: Esc chiude la scheda aperta, / o Ctrl+K cerca tra i clienti, N crea un nuovo elemento.'],
 ['1.66.5','Il nome del titolare in Azienda e in Collaboratori ora è lo stesso e si aggiorna in entrambi i punti.'],
 ['1.66.4','La gesture per chiudere schede e pagine richiede un trascinamento più lungo (circa un terzo dello schermo), così non si chiude per sbaglio.'],
