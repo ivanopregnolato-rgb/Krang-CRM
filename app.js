@@ -10389,7 +10389,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 /* pagine di «Altro» (Prodotti, Marketing, Analytics): freccia indietro nell'intestazione, verso l'elenco di Altro */
 const PGB=['prod','mkt'];
 function pgBackUpd(){let b=$('pgBack');if(!b){const r=document.querySelector('.hrow');if(!r)return;b=h('button','btn ico pk');b.id='pgBack';b.type='button';b.hidden=true;b.title=b.ariaLabel='Indietro';b.innerHTML=ICONS.back;b.onclick=()=>setTab('more');r.insertBefore(b,r.firstChild)}
-  const an=$('anSh'),on=document.documentElement.dataset.lay==='b'&&(PGB.includes(tab)||(an&&!an.hidden));b.hidden=!on}
+  const an=$('anSh'),on=document.documentElement.dataset.lay==='b'&&(PGB.includes(tab)||(an&&!an.hidden));b.hidden=!on;document.documentElement.classList.toggle('pg-on',!!on)}
 const _setTab=setTab;setTab=function(v){_setTab(v);paintBadges();try{pgBackUpd()}catch(e){}};
 /* in tutte le pagine tranne la Home compare, accanto al menu, la freccia indietro che riporta alla Home */
 render();renderO();renderP();setTab('home');
@@ -10426,8 +10426,9 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.66.2';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.66.3';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
+$('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
   if(!WF.welcomeSeen){WF.welcomeSeen=true;saveS()}
   const back=()=>{const b=h('button','btn lbl');b.type='button';b.innerHTML=ICONS.back+'<span>Indietro</span>';b.onclick=()=>openWel();return b};
@@ -10916,6 +10917,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.66.3','Info ora si intitola KRANG CRM; Aiuto e Primi passi si chiudono anche toccando fuori dal riquadro. Il titolo Task ora ha la stessa dimensione degli altri titoli; una piccola lineetta in cima alle schede e alle pagine indica che si possono chiudere trascinando verso il basso.'],
 ['1.66.2','La freccia indietro delle pagine di Altro (Prodotti, Marketing, Analytics) ora ha lo stesso aspetto e la stessa posizione di quella delle schede.'],
 ['1.66.1','Pagine di Altro (Prodotti, Marketing, Analytics): freccia indietro verso Altro, la barra in basso resta sempre visibile (anche in Analytics) e vale anche il gesto di trascinare verso il basso per tornare indietro.'],
 ['1.66.0','Chiudi le schede trascinandole verso il basso (telefono e tablet), come in iOS: funziona come la freccia indietro e, se ci sono modifiche, chiede prima se salvarle. La freccia resta.'],
