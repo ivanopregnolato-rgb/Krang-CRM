@@ -517,7 +517,7 @@ const privNow=()=>({mk:$('c_mk').checked,profilazione:$('c_profilazione').checke
 function paintPSign(){const w=$('pSign');if(!w)return;w.textContent='';const f=privSign===false?null:(privSign||(editing&&editing.privacy&&editing.privacy.firma));
   if(f&&(f.s||[]).length){const box=h('div');box.style.cssText='display:flex;flex-direction:column;gap:8px;align-items:flex-start';box.append(signSvg(f,240),h('div','hint',(f.nome||'Cliente')+' · '+signWhen(f)+(privSign?' · da salvare':'')));
     if(f.hx&&f.hx!==privHx(privNow())){const al=h('div','hint','I consensi sono stati modificati dopo la firma: raccogli una nuova firma.');al.style.cssText='padding:8px 10px;border-radius:10px;background:#fdecec;color:#8a1f2f';box.append(al)}
-    const r=h('div','dual'),re=h('button','btn lbl');re.type='button';re.innerHTML=ICONS.reset+'Rifai';re.onclick=privSignOpen;const rm=h('button','btn lbl');rm.type='button';rm.innerHTML=ICONS.trash+'Rimuovi';rm.onclick=()=>{privSign=false;paintPSign()};r.append(re,rm);box.append(r);w.append(box)}
+    const r=h('div','dual'),re=h('button','btn lbl');re.type='button';re.innerHTML=ICONS.reset+'Rifai';re.onclick=privSignOpen;const rm=h('button','btn lbl');rm.type='button';rm.innerHTML=ICONS.trash+'Rimuovi';rm.onclick=()=>{privSign=false;paintPSign()};r.append(re,rm);box.append(r);if(!privSign&&editing&&editing.privacy&&editing.privacy.firma){const cp=h('button','btn lbl');cp.type='button';cp.style.width='100%';cp.innerHTML=ICONS.Scrivi+'Invia copia al cliente';cp.onclick=()=>privCopyAsk(editing);box.append(cp)}w.append(box)}
   else{const b=h('button','btn lbl');b.type='button';b.style.width='100%';b.innerHTML=ICONS.edit+'Raccogli consensi e firma';b.onclick=privSignOpen;w.append(b,h('div','hint','Il cliente sceglie i consensi facoltativi e firma sullo schermo: l’informativa risulta fornita come “Firmata”.'))}}
 function privSignOpen(){const cl={tipo:curTipo,nome:$('nome').value,cognome:$('cognome').value,azienda:$('azienda').value},cur=privNow(),box=h('div');box.style.cssText='display:flex;flex-direction:column;gap:8px;margin:4px 0';const cb={};
   /* il cliente deve leggere l'informativa (scorrerla fino in fondo e confermare) prima di poter scegliere i consensi e firmare */
@@ -534,9 +534,39 @@ function privSignOpen(){const cl={tipo:curTipo,nome:$('nome').value,cognome:$('c
   inf.addEventListener('scroll',()=>{if(atEnd())unlock()});setTimeout(()=>{if(atEnd())unlock()},250);
   rc.onchange=()=>{const on=rc.checked;grp.style.opacity=on?'':'.45';grp.style.pointerEvents=on?'':'none';CONS.forEach(k=>{cb[k].disabled=!on});notify(on)};
   openSignFor({title:'Consensi e firma',nome:(privSign&&privSign.nome)||signName(cl),text:'Il cliente conferma di aver ricevuto l’informativa privacy (versione '+infVer()+') e sceglie i consensi facoltativi.',pre:{el:box,bind:f=>{notify=f},get:()=>{const v={};CONS.forEach(k=>v[k]=cb[k].checked);return v}},hx:v=>privHx(v||privNow()),
-    done:(f,v)=>{f.inf=infVer();f.letta=true;privSign=f;CONS.forEach(k=>{const c=$('c_'+k);if(c){c.checked=!!v[k];c.dispatchEvent(new Event('change',{bubbles:true}))}});
-      $('p_later').checked=false;try{laterUi()}catch(e){}$('p_inf').checked=true;$('p_infmodo').value='Firmata';$('p_infdata').value=ymd();$('p_inf').dispatchEvent(new Event('change',{bubbles:true}));try{privUI();paintPrivSum()}catch(e){}paintPSign();toast('Firma raccolta: salva il cliente per registrare consensi e firma.')}})}
+    done:(f,v)=>{f.inf=infVer();f.letta=true;f.cons=v;privSign=f;CONS.forEach(k=>{const c=$('c_'+k);if(c){c.checked=!!v[k];c.dispatchEvent(new Event('change',{bubbles:true}))}});
+      $('p_later').checked=false;try{laterUi()}catch(e){}$('p_inf').checked=true;$('p_infmodo').value='Firmata';$('p_infdata').value=ymd();$('p_inf').dispatchEvent(new Event('change',{bubbles:true}));try{privUI();paintPrivSum()}catch(e){}paintPSign();const cl=saveClient(true);if(!cl){toast('Firma raccolta: completa i dati del cliente e salvalo per registrare consensi e firma.');return}openSheet(cl);try{setPane('priv')}catch(e){}toast('Firma registrata e cliente salvato.');setTimeout(()=>privCopyAsk(cl),350)}})}
 ['change'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target&&e.target.id&&/^c_(mk|profilazione|terzi)$/.test(e.target.id))try{paintPSign()}catch(x){}}));
+/* ===== copia al cliente: ricevuta PDF dell'informativa e dei consensi firmati ===== */
+function privReceiptPdf(c,f){const D=pdfDoc(),L=40,R=555,TOP=50,BOT=790;let y=TOP;D.page();
+  const need=n=>{if(y+n>BOT){D.page();y=TOP}};
+  let v={};try{const t=JSON.parse(f.hx||'[]');v={mk:t[0],profilazione:t[1],terzi:t[2]}}catch(e){}if(f.cons)v=f.cons;
+  D.rect(0,0,595,6,'0.65 0.86 0.78');
+  const lo=D.logo(L,y-2,48);D.text(L+lo,y+10,S.azienda||'La tua azienda',17,1);sedeLines(D,L+lo,y+30,300-lo,3);
+  D.text(R,y+10,'COPIA PER IL CLIENTE',11,1,'r',.35);D.text(R,y+26,'Informativa e consensi privacy',10,0,'r');D.text(R,y+40,signWhen(f),10,0,'r');
+  y+=84;D.line(L,y,R,y,.85,.8);y+=22;
+  D.text(L,y,'Interessato',8.5,0,'l',.5);y+=14;D.text(L,y,(c&&fullName(c))||f.nome||'Cliente',12,1);y+=18;
+  D.wrap('Il firmatario dichiara di aver letto l’informativa sul trattamento dei dati personali (versione '+(f.inf||'1.0')+') e ha espresso le scelte indicate di seguito.',R-L,10,0).forEach(l=>{D.text(L,y,l,10,0);y+=13});y+=10;
+  D.text(L,y,'Consensi facoltativi',10,1);y+=16;
+  CONS.forEach(k=>{need(16);D.text(L,y,CLABEL[k],10,0);D.text(R,y,v[k]?'Prestato':'Non prestato',10,1,'r');y+=15;D.line(L,y-9,R,y-9,.92,.5)});
+  y+=4;D.wrap('Il rifiuto dei consensi facoltativi non impedisce il servizio. Il consenso può essere revocato in ogni momento.',R-L,9,0).forEach(l=>{need(12);D.text(L,y,l,9,0,'l',.35);y+=12});y+=12;
+  need(40);D.text(L,y,'Informativa sul trattamento dei dati personali (artt. 13 e 14 GDPR)',10,1);y+=16;
+  infoSections().forEach(([k,t])=>{const ls=D.wrap(k+': '+t,R-L,9,0);need(ls.length*12+6);ls.forEach(l=>{D.text(L,y,l,9,0,'l',.2);y+=12});y+=6});
+  if((f.s||[]).length){const k=Math.min(230/f.w,110/f.h);need(f.h*k+60);y+=8;D.text(L,y,'Firma del cliente',8.5,1,'l',.4);y+=8;f.s.forEach(st=>D.path(st.map(p=>[L+p[0]*k,y+p[1]*k]),1.5));y+=f.h*k+6;D.line(L,y,L+240,y,.6,.6);y+=12;D.text(L,y,(f.nome||'Cliente')+' · '+signWhen(f)+' · firma elettronica semplice',8.5,0,'l',.35)}
+  return D.build()}
+function privCopyAsk(c){const f=c&&c.privacy&&c.privacy.firma;if(!f)return;const old=$('mCopy');if(old)old.remove();
+  const M=h('div','modal');M.id='mCopy';M.style.zIndex=30;const bx=h('div','box');bx.setAttribute('role','dialog');bx.setAttribute('aria-labelledby','cpT');
+  const t=h('h3','','Copia al cliente');t.id='cpT';const nm=(c.nome||fullName(c)).trim();
+  const p=h('p','','Il cliente riceve una copia dell’informativa e dei consensi che ha firmato. È un suo diritto: invia la ricevuta ora.');
+  const pdf=()=>privReceiptPdf(c,f),fname='Consensi-privacy-'+(fullName(c)||'cliente').replace(/[^\wÀ-ÿ]+/g,'-')+'.pdf';
+  const note=how=>{const p0=c.privacy;(p0.log=p0.log||[]).push({d:new Date().toISOString().slice(0,16),t:'Copia dei consensi firmati inviata al cliente ('+how+')',op:opName||undefined});persist()};
+  const B=[];const mk=(ic,l,fn,pr)=>{const b=h('button','btn lbl'+(pr?' p':''));b.type='button';b.innerHTML=ICONS[ic]+l;b.onclick=fn;B.push(b)};
+  if(c.email)mk('Scrivi','Invia per email',()=>{M.remove();openCompose(c);if($('mCompose').hidden)return;$('mc_sub').value='Copia dei consensi privacy'+(S.azienda?' – '+S.azienda:'');const u8=pdf();cmpAtt=[{name:fname,u8}];$('mc_att').hidden=false;$('mc_att').textContent='Allegato: '+fname+' ('+Math.max(1,Math.round(u8.length/1024))+' KB). '+attNote();mcActs();$('mc_body').value='Gentile '+contactName(c)+',\n\nin allegato trova la copia dell’informativa sulla privacy e dei consensi che ha firmato il '+fmtD(f.ts.slice(0,10))+'.\n\nPuò revocare i consensi in ogni momento scrivendoci.\n\n'+firma();note('email')},1);
+  if(c.telefono)mk('WhatsApp','Invia su WhatsApp',async()=>{M.remove();const u8=pdf();if(!(await savePdf(u8,fname))){toast('PDF non salvato: invio annullato.');return}const txt='Buongiorno '+contactName(c)+', le invio la copia dell’informativa privacy e dei consensi che ha firmato'+(S.azienda?' per '+S.azienda:'')+'.';launch('https://wa.me/'+waNum(c)+'?text='+encodeURIComponent(txt),txt);note('WhatsApp');toast('Allega il PDF salvato nella chat di WhatsApp.')},!c.email);
+  mk('doc','Salva il PDF',async()=>{M.remove();toast(await savePdf(pdf(),fname)?'PDF pronto.':'Salvataggio del PDF non disponibile qui.')});
+  const bt=h('div');bt.style.cssText='display:flex;flex-direction:column;gap:8px;margin-top:10px';B.forEach(b=>bt.append(b));
+  const later=h('button','btn lbl');later.type='button';later.textContent='Più tardi';later.onclick=()=>M.remove();bt.append(later);
+  bx.append(t,p);if(!c.email&&!c.telefono)bx.append(h('p','hint','Aggiungi un’email o un telefono alla scheda per inviare la copia, oppure salva il PDF e consegnalo.'));bx.append(bt);M.append(bx);document.body.append(M);M.onclick=e=>{if(e.target===M)M.remove()}}
 $('p_show').onclick=()=>{const w=$('infoBody');w.textContent='';const t=h('p');t.append(h('b','','Informativa sul trattamento dei dati personali (artt. 13 e 14 GDPR)'));w.append(t);{const v=infVer();if(v)w.append(h('p','hint','Versione '+v+' in vigore'))}infoSections().forEach(([k,v])=>{const p=h('p');p.append(h('b','',k+': '),document.createTextNode(v));w.append(p)});const n=h('p');n.append(h('i','','Modello indicativo da adattare: fallo verificare da un consulente legale o dal DPO.'));w.append(n);$('info').hidden=false};$('infoClose').onclick=()=>{$('info').hidden=true};
 function expJson(c){const cl={...c,foto:c.foto?'[presente]':''};if(cl.privacy){cl.privacy={...cl.privacy};delete cl.privacy.lk;delete cl.privacy.lkH;delete cl.privacy.lkOk;delete cl.privacy.lkS}return JSON.stringify({cliente:cl,opportunità:opps.filter(o=>o.clienteId===c.id).map(o=>({...o,allegati:o.allegati.map(a=>({nome:a.nome,tipo:a.tipo,size:a.size}))})),esportato:new Date().toISOString()},null,2)}
 $('p_copy').onclick=async()=>{if(!editing)return;toast(await copyText(expJson(editing))?'Dati copiati negli appunti.':'Copia non riuscita.')};
@@ -10513,7 +10543,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.69.1';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.70.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -11004,6 +11034,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.70.0','Dopo la firma dei consensi il cliente viene salvato e si può inviargli subito una copia (PDF con informativa, consensi e firma) per email o WhatsApp.'],
 ['1.69.1','Firma dei consensi: il cliente deve prima leggere l’informativa (scorrerla fino in fondo e confermare) per poter scegliere i consensi e firmare.'],
 ['1.69.0','Firma del cliente anche sui consensi privacy: il cliente sceglie i consensi e firma sullo schermo, l’informativa risulta fornita come Firmata e la firma resta nella scheda.'],
 ['1.68.5','Firma in orizzontale: il tratto ora segue il dito anche dopo aver ruotato il telefono.'],
