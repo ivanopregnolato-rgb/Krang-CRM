@@ -5,8 +5,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
 <!-- © 2026 Ivano Pregnolato. Tutti i diritti riservati. Vietata la copia o la redistribuzione senza consenso scritto. -->
-<script src="boot.js?v=1.64.4"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.64.4|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.65.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.65.0|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -931,6 +931,7 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
 <div class="sp" data-sp="az">
   <div class="f"><label>Logo</label><div class="lgo"><button id="lgoBtn" type="button" aria-label="Carica il logo" title="Carica il logo"></button><div style="flex:1;min-width:0"><button class="btn lbl" id="lgoDel" type="button" hidden style="width:100%;margin:0"><span data-i="trash"></span>Rimuovi logo</button><div class="hint" id="lgoH">Facoltativo. Se lo carichi, compare nella Home accanto al saluto. Meglio un file quadrato o con sfondo trasparente.</div></div></div><input id="lgoFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></div>
   <div class="f"><label for="st_az">Nome azienda</label><input id="st_az" autocomplete="off"><div class="hint">Viene inserito in tutte le comunicazioni: informativa privacy, promemoria, oggetti, firma e nome del mittente.</div><div class="err" id="err-st_az" hidden></div></div>
+  <div class="f"><label for="st_on">Il tuo nome</label><input id="st_on" maxlength="60" autocomplete="off" data-ns><div class="hint">Ti saluto con questo nome in Home e i collaboratori ti vedono così.</div></div>
   <div class="f"><label for="st_piva">Partita IVA</label><input id="st_piva" autocomplete="off"></div>
   <div class="f"><label for="st_ind">Indirizzo della sede</label><input id="st_ind" autocomplete="off"></div>
   <div class="two"><div class="f"><label for="st_tel">Telefono</label><input id="st_tel" inputmode="tel" autocomplete="off"></div><div class="f"><label for="st_sito">Sito web</label><input id="st_sito" autocomplete="off"></div></div>
@@ -1256,6 +1257,6 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.64.4"></script>
+<script src="app.js?v=1.65.0"></script>
 </body>
 </html>
