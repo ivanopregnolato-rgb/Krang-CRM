@@ -10475,7 +10475,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.68.3';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.68.4';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -10966,6 +10966,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.68.4','Nel preventivo la sezione Firma del cliente è prima di Condizioni e note.'],
 ['1.68.3','La firma del cliente, con il telefono in verticale, si apre in un popup compatto dal basso con il riquadro largo quanto lo schermo; in orizzontale resta a tutto schermo.'],
 ['1.68.2','Il riquadro bianco della firma è tornato alle dimensioni compatte (largo, non alto), al centro della schermata a tutto schermo.'],
 ['1.68.1','La firma del cliente si fa a tutto schermo, con più spazio per firme lunghe.'],
