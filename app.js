@@ -146,12 +146,14 @@ $('ml_x').onclick=()=>{$('mLaunch').hidden=true};
 $('cAdd').onclick=()=>openSheet(null);$('lAdd').onclick=()=>openLead(null);$('oAdd').onclick=()=>openOpp(null);{let t1,t2;$('lq').oninput=()=>{clearTimeout(t1);t1=setTimeout(renderL,150)};$('oq').oninput=()=>{clearTimeout(t2);t2=setTimeout(renderO,150)}}$('pAdd').onclick=()=>openProd(null);
 $('addBtn').onclick=()=>tab==='opp'?openOpp(null):tab==='prod'?(window.pSec==='lst'?openLst(null):openProd(null)):tab==='lead'?openLead(null):openSheet(null);
 $('save').onclick=()=>saveClient();
+const isSelfC=c=>c===editing||c===newRef||!!(c&&c.id&&((editing&&editing.id===c.id)||(newRef&&newRef.id===c.id)));
 let newRef=null;/* anagrafica appena creata da questo foglio: va esclusa dai controlli di unicità e aggiornata, non duplicata */
 function saveClient(viaSend){
   const d={};FIELDS.forEach(f=>d[f]=$(f).value.trim());d.indirizzo=addrC(d.indirizzo);if(curTipo!=='azienda')d.pec='';d.foto=curFoto;d.tipo=curTipo;d.fav=curFav;if(!validate(d)){setPane('dati');const el=$('sheet').querySelector('.bad');if(el)el.scrollIntoView({block:'center'});return null}
   if(!viaSend&&!editing&&$('p_fonte').value==='interessato'&&!$('p_inf').checked&&!$('p_later').checked){setPane('priv');setErr('p_later','Conferma di aver fornito l’informativa privacy (in Dettagli e modifica manuale) oppure scegli «Invierò l’informativa più tardi».');try{$('p_laterW').scrollIntoView({block:'center'})}catch(e){}return null}
   d.privacy=collectPriv(editing&&editing.privacy,!editing);d.agg=new Date().toISOString();if(!$('cAssW').hidden)d.ass=$('cAss').value;
   if(!['nome','cognome','azienda','telefono','email'].some(f=>d[f])){showMsg('Inserisci almeno un dato.');return null}
+  if(editing&&!clients.includes(editing)){const lv=clients.find(x=>x.id===editing.id);if(lv)editing=lv}if(newRef&&!clients.includes(newRef)){const lv=clients.find(x=>x.id===newRef.id);newRef=lv||null}
   let cl=editing;if(!cl&&newRef&&clients.includes(newRef)&&!$('sheet').hidden)cl=newRef;const pa0=cl?cl.ass:'';if(cl)Object.assign(cl,d);else{cl=stampNew({id:Date.now().toString(36),...d});clients.push(cl)}newRef=cl;
   persist();render();notifyAssign(d.ass,pa0,'cl');if(!viaSend)$('sheet').hidden=true;return cl
 }
@@ -210,7 +212,7 @@ function validate(d,only,commit=true){
       else if(!it&&(n.length<6||n.length>12))bad('telefono','Il numero deve avere tra 6 e 12 cifre.');
       else{
         d.telefono=n;if(commit){$('paese').value=d.paese;$('telefono').value=n}
-        const full=dial(d.paese)+n,clash=clients.find(c=>c!==editing&&c!==newRef&&c.telefono&&dial(c.paese)+c.telefono.replace(/\D/g,'')===full);
+        const full=dial(d.paese)+n,clash=clients.find(c=>!isSelfC(c)&&c.telefono&&dial(c.paese)+c.telefono.replace(/\D/g,'')===full);
         if(clash)bad('telefono','Numero già registrato per '+fullName(clash)+'.')}}}
   if((!only||only==='piva')&&d.tipo==='azienda'&&d.piva){
     let v=d.piva.replace(/[\s.-]/g,'').toUpperCase();
@@ -218,12 +220,12 @@ function validate(d,only,commit=true){
     let okv=d.paese==='IT'?/^\d{11}$/.test(v):/^[A-Z0-9]{4,15}$/.test(v);
     if(okv&&d.paese==='IT'){let s=0;for(let i=0;i<10;i++){let n=+v[i];if(i%2){n*=2;if(n>9)n-=9}s+=n}okv=(10-s%10)%10===+v[10]}
     if(!okv)bad('piva',d.paese==='IT'?'Partita IVA non valida: servono 11 cifre corrette.':'Partita IVA non valida.');
-    else{d.piva=v;if(commit)$('piva').value=v;const clash=clients.find(c=>c!==editing&&c!==newRef&&(c.piva||'').toUpperCase()===v);if(clash)bad('piva','Partita IVA già registrata per '+fullName(clash)+'.')}}
+    else{d.piva=v;if(commit)$('piva').value=v;const clash=clients.find(c=>!isSelfC(c)&&(c.piva||'').toUpperCase()===v);if(clash)bad('piva','Partita IVA già registrata per '+fullName(clash)+'.')}}
   if(!only||only==='nascita'){setErr('nascita','');if(d.nascita){const t=new Date(d.nascita+'T00:00');if(isNaN(t)||t.getFullYear()<1900)bad('nascita','Inserisci una data valida.');else if(d.nascita>ymd())bad('nascita','La data di nascita non può essere nel futuro.')}}
   if((!only||only==='email')&&d.email){
     d.email=d.email.toLowerCase();
     if(!/^[^\s@.][^\s@]*@[^\s@.]+(\.[^\s@.]+)*\.[a-z]{2,}$/.test(d.email)||d.email.includes('..'))bad('email','Inserisci un’email valida, ad esempio nome@azienda.it.');
-    else{const clash=clients.find(c=>c!==editing&&c!==newRef&&(c.email||'').toLowerCase()===d.email);if(clash)bad('email','Email già registrata per '+fullName(clash)+'.')}}
+    else{const clash=clients.find(c=>!isSelfC(c)&&(c.email||'').toLowerCase()===d.email);if(clash)bad('email','Email già registrata per '+fullName(clash)+'.')}}
   if(!ok){const el=$('sheet').querySelector('.bad');if(el)el.scrollIntoView({block:'center'})}
   return ok}
 async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.append(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();return ok}}
@@ -9795,7 +9797,7 @@ function cloudPull(key,snap){const sp=CSPEC[key],sy=CLOUD.sync[key]||(CLOUD.sync
     const i=idx.get(id),cur=i===undefined?null:arr[i];
     if(cur){const curH=hs(JSON.stringify(cloudClean(cur,sp)));if(curH===hh){sy[id]=hh;return}
       if(sy[id]!==undefined&&sy[id]!==curH)return;            // modifica locale non ancora inviata: vince quella locale
-      if(lite)Object.keys(sp.heavy).forEach(k=>{d[k]=cur[k]});else Object.keys(sp.heavy).forEach(k=>{const e=Array.isArray(d[k])?d[k].length:d[k],l=Array.isArray(cur[k])?cur[k].length:cur[k];if(!e&&l)d[k]=cur[k]});arr[i]=d}
+      if(lite)Object.keys(sp.heavy).forEach(k=>{d[k]=cur[k]});else Object.keys(sp.heavy).forEach(k=>{const e=Array.isArray(d[k])?d[k].length:d[k],l=Array.isArray(cur[k])?cur[k].length:cur[k];if(!e&&l)d[k]=cur[k]});if(sp.col==='clienti'&&(cur===editing||cur===newRef)){Object.keys(cur).forEach(k=>delete cur[k]);Object.assign(cur,d)}else arr[i]=d}
     else{arr.push(d);idx.set(id,arr.length-1)}
     sy[id]=hh;ch=true})}
   finally{CLOUD.applying=false}
@@ -10547,7 +10549,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.72.1';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.72.2';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -11041,6 +11043,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.72.2','Salvataggio dei contatti: se mentre compili una scheda arriva un aggiornamento dal cloud (per esempio dopo il passo privacy o la firma), l’app non dice più «Email già registrata» per lo stesso cliente e non perde le modifiche.'],
 ['1.72.1','I campi Nome e Cognome non appaiono più gialli: era l’evidenziazione del riempimento automatico del browser, ora neutralizzata.'],
 ['1.72.0','Nei PDF firmati (preventivi e ricevuta dei consensi) la firma del cliente compare in basso su ogni foglio, non solo sull’ultimo.'],
 ['1.71.0','Alla creazione di un account la chiave di recupero non compare più in un popup separato: si mostra e si salva dentro il passo «Cifratura» della configurazione guidata.'],
