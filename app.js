@@ -10426,7 +10426,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.66.3';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.66.4';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -10917,6 +10917,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.66.4','La gesture per chiudere schede e pagine richiede un trascinamento più lungo (circa un terzo dello schermo), così non si chiude per sbaglio.'],
 ['1.66.3','Info ora si intitola KRANG CRM; Aiuto e Primi passi si chiudono anche toccando fuori dal riquadro. Il titolo Task ora ha la stessa dimensione degli altri titoli; una piccola lineetta in cima alle schede e alle pagine indica che si possono chiudere trascinando verso il basso.'],
 ['1.66.2','La freccia indietro delle pagine di Altro (Prodotti, Marketing, Analytics) ora ha lo stesso aspetto e la stessa posizione di quella delle schede.'],
 ['1.66.1','Pagine di Altro (Prodotti, Marketing, Analytics): freccia indietro verso Altro, la barra in basso resta sempre visibile (anche in Analytics) e vale anche il gesto di trascinare verso il basso per tornare indietro.'],
@@ -11266,8 +11267,8 @@ function guideify(root){
  document.addEventListener('touchmove',e=>{if(!g||e.touches.length!==1)return;const t=e.touches[0],dy=t.clientY-g.y,dx=t.clientX-g.x;
    if(!g.on){if(Math.abs(dx)>14&&Math.abs(dx)>Math.abs(dy)){g=null;return}if(dy<0&&Math.abs(dy)>10){g=null;return}if(dy<12||dy<Math.abs(dx)*1.5||sTop(g.sh)>0)return;
      try{if(String(getSelection()).length){g=null;return}}catch(x){}g.on=true;g.sh.style.transition='none';g.sh.style.borderRadius='22px 22px 0 0';g.sh.style.boxShadow='0 -8px 40px rgba(0,0,0,.35)'}
-   g.dy=Math.max(0,dy);g.sh.style.transform='translateY('+(g.dy*.94)+'px)';if(e.cancelable)e.preventDefault()},{passive:false});
- const end=ok=>{const x=g;g=null;if(!x||!x.on)return;const dt=Math.max(1,Date.now()-x.t),sh=x.sh,far=x.dy>=Math.max(110,innerHeight*.16),fast=x.dy>=50&&x.dy/dt>=.5;
+   g.dy=Math.max(0,dy);g.sh.style.transform='translateY('+(g.dy*.85)+'px)';if(e.cancelable)e.preventDefault()},{passive:false});
+ const end=ok=>{const x=g;g=null;if(!x||!x.on)return;const dt=Math.max(1,Date.now()-x.t),sh=x.sh,far=x.dy>=Math.max(190,innerHeight*.3),fast=x.dy>=120&&x.dy/dt>=.8;
    if(!ok||!(far||fast)){reset(sh,true);return}
    const bt=closeBtn(sh);if(!bt){reset(sh,true);return}
    bt.click();
