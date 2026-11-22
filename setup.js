@@ -13,6 +13,7 @@ const cloud=()=>{try{return !!(SB.has&&SB.has())}catch(e){return false}};
 const e2eReady=()=>{try{return SB.e2e.state()==='ready'}catch(e){return false}};
 const bioOk=()=>!!(navigator.credentials&&window.PublicKeyCredential);
 const lockOnNow=()=>{try{return !!(LOCK&&LOCK.on)}catch(e){return false}};
+const rkPend=()=>{try{return localStorage.getItem('crm-rk-pending')==='1'}catch(e){return false}};
 const pushOnNow=()=>{try{return pushFlag()&&pushOk()&&Notification.permission==='granted'}catch(e){return false}};
 
 /* ---------- definizione dei passi ----------
@@ -21,7 +22,7 @@ const defs=()=>[
  {k:'in',ic:'download',t:'Installa l’app',sub:'Sulla schermata Home, a schermo intero',skip:true,
   ok:()=>isStandalone(),render:rIn},
  {k:'cr',ic:'shield',t:'Cifratura dei dati',sub:'I tuoi dati restano tuoi',skip:true,
-  ok:()=>e2eReady(),render:rCr},
+  ok:()=>e2eReady()&&!rkPend(),render:rCr},
  {k:'az',ic:'building',t:'La tua azienda',sub:'Titolare dell’informativa e delle email',app:()=>!col(),
   ok:()=>!!(S.azienda&&S.azienda.trim()&&S.replyTo&&S.ownerName),render:rAz,need:true},
  {k:'pv',ic:'doc',t:'La privacy della tua azienda',sub:'L’informativa che riceveranno i tuoi clienti',app:()=>!col(),
@@ -66,9 +67,28 @@ function rIn(B){
   B.append(P('Funziona con Chrome ed Edge. Safari sul Mac: menu File → «Aggiungi al Dock».','cfg-sm'))}
 
 /* ---------- 2 · cifratura ---------- */
+/* chiave di recupero mostrata dentro la guida (account nuovo): si genera al tocco e resta in memoria finché non è confermata */
+let rkNow='';
+function rRk(B){
+  B.append(okBox('La cifratura è attiva su questo dispositivo.'));
+  B.append(note('<b>La tua chiave di recupero.</b> Nessun altro, nemmeno noi, può leggere i tuoi clienti: solo tu hai la chiave. Questa chiave ti permette di riaprire i dati se cambi telefono e dimentichi la password. Senza di lei, in quel caso, nemmeno noi possiamo aiutarti. <b>Non verrà mostrata di nuovo.</b>'));
+  if(!rkNow){B.append(btn('shield','Mostra la mia chiave di recupero','p cfg-main',async function(){this.disabled=true;try{rkNow=await SB.e2e.newRecovery();paint()}catch(e){this.disabled=false;toast('Non riesco a creare la chiave: controlla la connessione e riprova.')}}));return}
+  const k=E('div','');k.textContent=rkNow.slice(0,19)+'\n'+rkNow.slice(20);k.style.cssText='white-space:pre;font:600 17px/1.6 ui-monospace,Menlo,monospace;letter-spacing:.04em;text-align:center;padding:14px 8px;border:1px dashed var(--out);border-radius:12px;word-break:break-all;user-select:all;-webkit-user-select:all;margin:10px 0';B.append(k);
+  const hint=E('div','hint','Per continuare scegli almeno uno dei modi qui sotto per conservarla.');hint.style.cssText='text-align:center;margin:8px 0';
+  const done=btn('check','Fatto, l’ho salvata','p cfg-main',()=>{if(done.disabled)return;try{localStorage.removeItem('crm-rk-pending')}catch(e){}rkNow='';paint()});done.disabled=true;
+  const ok=m=>{done.disabled=false;hint.textContent=m;hint.style.color='var(--ok,#1d7a4d)'};
+  const row=E('div','');row.style.cssText='display:flex;gap:8px';
+  const cp=btn('clip','Copia','',async()=>{try{await navigator.clipboard.writeText(rkNow);ok('Chiave copiata: incollala in un posto sicuro prima di proseguire.');toast('Chiave copiata.')}catch(e){toast('Copia non riuscita: seleziona e copia a mano, oppure scaricala.')}});
+  const dl=btn('download','Scarica','',()=>{try{const a=E('a');a.href=URL.createObjectURL(new Blob(['KRANG CRM - chiave di recupero\n'+SB.email()+'\n\n'+rkNow+'\n\nConservala in un posto sicuro: se reimposti la password da un dispositivo nuovo, serve per riaprire i dati cifrati.\n'],{type:'text/plain'}));a.download='krang-crm-chiave-recupero.txt';document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);ok('File scaricato: conservalo fuori dal telefono.')}catch(e){toast('Download non disponibile: copia la chiave.')}});
+  [cp,dl].forEach(b=>b.style.flex='1');row.append(cp,dl);B.append(row);
+  const cred=!!(window.PasswordCredential&&navigator.credentials&&navigator.credentials.store),sh=!!navigator.share;
+  if(cred||sh){const pm=btn(cred?'shield':'download',cred?'Salva nel gestore di password':'Condividi o salva in…','',async()=>{try{if(cred){await navigator.credentials.store(new PasswordCredential({id:SB.email()||'krang-crm',password:rkNow,name:'KRANG CRM · chiave di recupero'}));ok('Salvata nel gestore di password. Controlla di averla trovata, altrimenti copiala o scaricala.')}else{await navigator.share({title:'KRANG CRM · chiave di recupero',text:'KRANG CRM - chiave di recupero ('+(SB.email()||'')+'): '+rkNow});ok('Chiave condivisa: controlla di averla salvata nell’app scelta.')}}catch(e){if(!e||e.name!=='AbortError')toast('Non disponibile qui: copia o scarica la chiave.')}});pm.style.marginTop='8px';B.append(pm)}
+  B.append(hint,done)}
+
 function rCr(B){
   B.append(P('I clienti, i lead e i preventivi vengono <b>cifrati sul tuo dispositivo</b> con la tua password prima di essere salvati nel cloud: nemmeno noi possiamo leggerli.'));
   if(col()){B.append(P('Per te non c’è nulla da fare: la cifratura usa la password del tuo account e funziona da sola.'));if(e2eReady())B.append(okBox('La cifratura è attiva su questo dispositivo.'));return}
+  if(e2eReady()&&rkPend()){rRk(B);return}
   if(e2eReady()){
     B.append(okBox('La cifratura è attiva su questo dispositivo.'));
     B.append(note('<b>La chiave di recupero.</b> Te l’abbiamo mostrata all’attivazione: conservala fuori dal telefono, in un gestore di password o su carta. Se reimposti la password senza chiave di recupero, i dati nel cloud non si possono recuperare da nessuno.'));
@@ -206,7 +226,7 @@ function next(){
   if(idx===steps.length){finish();return}
   if(ctx&&ctx.beforeNext&&ctx.beforeNext()===false)return;
   go(idx+1)}
-function finish(){setFlag('cfgDone',true);setFlag('welcomeSeen',true);close();try{paintWel()}catch(e){}toast('Configurazione salvata.')}
+function finish(){setFlag('cfgDone',true);setFlag('welcomeSeen',true);close();try{paintWel()}catch(e){}toast('Configurazione salvata.');setTimeout(()=>{try{window.rkFallback&&window.rkFallback()}catch(e){}},400)}
 function hide(){if(root)root.hidden=true}
 function show(){if(root){root.hidden=false;paint()}}
 function close(){clearInterval(tick);if(root){root.remove();root=null}}
@@ -219,7 +239,7 @@ function build(){
   root.querySelector('#cfgBack').onclick=()=>go(idx-1);
   root.querySelector('#cfgNext').onclick=next;
   root.querySelector('.cfg-skip').onclick=()=>go(idx+1);
-  root.querySelector('.cfg-x').onclick=()=>{clearInterval(tick);setFlag('welcomeSeen',true);close()};
+  root.querySelector('.cfg-x').onclick=()=>{clearInterval(tick);setFlag('welcomeSeen',true);close();setTimeout(()=>{try{window.rkFallback&&window.rkFallback()}catch(e){}},400)};
   document.body.append(root)}
 /* primo passo da fare: il primo non completato */
 CFG.open=function(at){

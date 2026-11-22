@@ -9809,7 +9809,10 @@ function cloudSettings(snap){CLOUD.applying=true;try{if(snap.exists){const d=Obj
   finally{CLOUD.applying=false}
   CLOUD.sf=1;if(!snap.exists&&CLOUD.canA)cloudPushS();else if(SB.e2e.needMig()&&!CLOUD.mgS){CLOUD.mgS=1;CLOUD.sh='';cloudPushS()}}
 function cloudPushS(){if(!CLOUD.on||!CLOUD.db||!CLOUD.canA||CLOUD.applying||!CLOUD.sf)return;clearTimeout(CLOUD.t.s);CLOUD.t.s=setTimeout(async()=>{try{const d=Object.assign({},S);delete d.brochure;const hh=hs(JSON.stringify(canon(d)));if(CLOUD.sh===hh)return;await CLOUD.db.doc('config/settings').set(Object.assign({},d,{_u:Date.now(),_by:CLOUD.uid||''}));CLOUD.sh=hh;CLOUD.last=Date.now();CLOUD.err='';if(SB.e2e.needMig())E2EUI.done('s')}catch(e){CLOUD.err=(e&&e.code)||'errore';try{if((CLOUD.err==='offline'||CLOUD.err==='timeout')&&offPill.probe)offPill.probe()}catch(x){}}try{paintCloud()}catch(e){}},1200)}
-async function cloudGate(){if(CLOUD.started||!CLOUD.on||!SB.has())return;const st=await SB.e2e.init();if(st==='ready'){E2EUI.close();let pend=false;try{pend=localStorage.getItem('crm-rk-pending')==='1'}catch(e){}if(pend&&$('mE2E').hidden){try{E2EUI.showRk(await SB.e2e.newRecovery(),null)}catch(e){}}return cloudStart()}if(st==='offline'||st==='error'){CLOUD.err=st==='offline'?'offline':'errore';paintCloud();return}CLOUD.err='locked';paintCloud();E2EUI.open(st)}
+/* la chiave di recupero di un account nuovo si mostra nel passo «Cifratura» della configurazione guidata; se la guida non si apre o si chiude prima, la mostra comunque il popup (rkFallback) */
+const rkByGuide=()=>{try{return !WF.welcomeSeen&&!WF.cfgDone&&!isCol()}catch(e){return false}};
+window.rkFallback=async()=>{try{if(localStorage.getItem('crm-rk-pending')==='1'&&SB.e2e.state()==='ready'&&$('mE2E').hidden)E2EUI.showRk(await SB.e2e.newRecovery(),null)}catch(e){}};
+async function cloudGate(){if(CLOUD.started||!CLOUD.on||!SB.has())return;const st=await SB.e2e.init();if(st==='ready'){E2EUI.close();let pend=false;try{pend=localStorage.getItem('crm-rk-pending')==='1'}catch(e){}if(pend&&$('mE2E').hidden&&!rkByGuide()){try{E2EUI.showRk(await SB.e2e.newRecovery(),null)}catch(e){}}return cloudStart()}if(st==='offline'||st==='error'){CLOUD.err=st==='offline'?'offline':'errore';paintCloud();return}CLOUD.err='locked';paintCloud();E2EUI.open(st)}
 async function cloudStart(){if(CLOUD.started||!CLOUD.on)return;CLOUD.started=true;CLOUD.err='';
   try{const db=SB.db();if(!db){CLOUD.started=false;CLOUD.err='nodb';paintCloud();return}
     CLOUD.uid=SB.uid();CLOUD.canW=true;CLOUD.canA=true;CLOUD.db=db;
@@ -10543,7 +10546,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.70.1';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.71.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -10580,9 +10583,9 @@ function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=
     b.onclick=()=>{if(x.k==='as'){closeWel();openAsk()}else openWel(x.k)};l.append(b)});
   g.append(l);B.append(g);
   const go=h('button','btn p lbl');go.type='button';go.innerHTML=ICONS.check+'<span>'+(n===st.length?'Inizia':'Più tardi')+'</span>';go.onclick=closeWel;B.append(go)}
-(()=>{let k=0;const t=setInterval(()=>{k++;if(k>40||WF.welcomeSeen||WF.welcomeOff){clearInterval(t);return}
+(()=>{let k=0;const t=setInterval(()=>{k++;if(k>40||WF.welcomeSeen||WF.welcomeOff){clearInterval(t);setTimeout(()=>window.rkFallback&&window.rkFallback(),300);return}
   if(document.documentElement.classList.contains('noauth')||!$('mE2E').hidden||!$('mWel').hidden)return;
-  if(!isCol()&&(clients.length||leads.length||opps.length||(S.azienda&&S.azienda.trim()))){WF.welcomeSeen=true;saveS();clearInterval(t);return}
+  if(!isCol()&&(clients.length||leads.length||opps.length||(S.azienda&&S.azienda.trim()))){WF.welcomeSeen=true;saveS();clearInterval(t);setTimeout(()=>window.rkFallback&&window.rkFallback(),300);return}
   if(CLOUD.on&&!CLOUD.last&&k<15)return;
   clearInterval(t);openCfg()},1500)})();
 
@@ -10779,6 +10782,7 @@ const SB=(()=>{
     while(inv){try{await e2e.acceptInvite(inv,pw);await e2e.clearInvite();toast('Invito accettato: lavori sul CRM del titolare.');return{}}catch(er){if(er&&er.code==='used'){toast('Questo account ha già dei dati: crea un account nuovo per l’invito.');break}inv=await askInviteCode((er&&er.message?er.message.charAt(0).toUpperCase()+er.message.slice(1)+'. ':'Invito non accettato. ')+'Controlla il link o il codice e riprova.')}}
     await e2e.clearInvite();return e2e.auto(pw)})().then(r=>{r=r||{};
     if(r.locked){E2EUI.open('locked',{pw,done:fin});return}
+    if(r.rk&&fresh){/* nuovo account: la chiave di recupero si mostra dentro la configurazione guidata, non in un popup a parte */try{localStorage.setItem('crm-rk-pending','1')}catch(e){}fin();return}
     if(r.rk){E2EUI.showRk(r.rk,fin);return}
     fin()}).catch(()=>fin())},
   forget(){try{localStorage.removeItem(UK)}catch(e){}}}})();
@@ -11036,6 +11040,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.71.0','Alla creazione di un account la chiave di recupero non compare più in un popup separato: si mostra e si salva dentro il passo «Cifratura» della configurazione guidata.'],
 ['1.70.1','Eliminando l’account o cambiando account sullo stesso dispositivo, i vecchi dati non vengono più riportati nel nuovo account.'],
 ['1.70.0','Dopo la firma dei consensi il cliente viene salvato e si può inviargli subito una copia (PDF con informativa, consensi e firma) per email o WhatsApp.'],
 ['1.69.1','Firma dei consensi: il cliente deve prima leggere l’informativa (scorrerla fino in fondo e confermare) per poter scegliere i consensi e firmare.'],
