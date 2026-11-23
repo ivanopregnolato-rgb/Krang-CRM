@@ -49,7 +49,7 @@ function rIn(B){
   B.append(P('Aggiungere KRANG alla schermata Home lo fa aprire a schermo intero, come una vera app, ed è <b>necessario per ricevere le notifiche push su iPhone</b>.'));
   if(isStandalone()){B.append(okBox('Stai già usando KRANG dalla schermata Home.'));return}
   if(window.__bip){
-    B.append(btn('download','Installa l’app','p cfg-main',async()=>{const e=window.__bip;if(!e)return;try{e.prompt();const r=await e.userChoice;if(r&&r.outcome==='accepted')toast('Installazione avviata. Apri KRANG dalla schermata Home: la configurazione riprende da qui.');}catch(x){}window.__bip=null;paint()}));
+    B.append(btn('download','Installa l’app','p',async()=>{const e=window.__bip;if(!e)return;try{e.prompt();const r=await e.userChoice;if(r&&r.outcome==='accepted')toast('Installazione avviata. Apri KRANG dalla schermata Home: la configurazione riprende da qui.');}catch(x){}window.__bip=null;paint()}));
     B.append(P('Dopo l’installazione apri KRANG dalla schermata Home: la configurazione riparte da dove l’hai lasciata.','cfg-sm'));return}
   if(u.ios){
     if(u.other)B.append(warn('Stai usando un browser diverso da Safari: se non trovi «Aggiungi a Home», apri questa pagina in Safari.'));
@@ -72,10 +72,10 @@ let rkNow='';
 function rRk(B){
   B.append(okBox('La cifratura è attiva su questo dispositivo.'));
   B.append(note('<b>La tua chiave di recupero.</b> Nessun altro, nemmeno noi, può leggere i tuoi clienti: solo tu hai la chiave. Questa chiave ti permette di riaprire i dati se cambi telefono e dimentichi la password. Senza di lei, in quel caso, nemmeno noi possiamo aiutarti. <b>Non verrà mostrata di nuovo.</b>'));
-  if(!rkNow){B.append(btn('shield','Mostra la mia chiave di recupero','p cfg-main',async function(){this.disabled=true;try{rkNow=await SB.e2e.newRecovery();paint()}catch(e){this.disabled=false;toast('Non riesco a creare la chiave: controlla la connessione e riprova.')}}));return}
+  if(!rkNow){B.append(btn('shield','Mostra la mia chiave di recupero','p',async function(){this.disabled=true;try{rkNow=await SB.e2e.newRecovery();paint()}catch(e){this.disabled=false;toast('Non riesco a creare la chiave: controlla la connessione e riprova.')}}));return}
   const k=E('div','');k.textContent=rkNow.slice(0,19)+'\n'+rkNow.slice(20);k.style.cssText='white-space:pre;font:600 17px/1.6 ui-monospace,Menlo,monospace;letter-spacing:.04em;text-align:center;padding:14px 8px;border:1px dashed var(--out);border-radius:12px;word-break:break-all;user-select:all;-webkit-user-select:all;margin:10px 0';B.append(k);
   const hint=E('div','hint','Per continuare scegli almeno uno dei modi qui sotto per conservarla.');hint.style.cssText='text-align:center;margin:8px 0';
-  const done=btn('check','Fatto, l’ho salvata','p cfg-main',()=>{if(done.disabled)return;try{localStorage.removeItem('crm-rk-pending')}catch(e){}rkNow='';paint()});done.disabled=true;
+  const done=btn('check','Fatto, l’ho salvata','p',()=>{if(done.disabled)return;try{localStorage.removeItem('crm-rk-pending')}catch(e){}rkNow='';paint()});done.disabled=true;
   const ok=m=>{done.disabled=false;hint.textContent=m;hint.style.color='var(--ok,#1d7a4d)'};
   const row=E('div','');row.style.cssText='display:flex;gap:8px';
   const cp=btn('clip','Copia','',async()=>{try{await navigator.clipboard.writeText(rkNow);ok('Chiave copiata: incollala in un posto sicuro prima di proseguire.');toast('Chiave copiata.')}catch(e){toast('Copia non riuscita: seleziona e copia a mano, oppure scaricala.')}});
@@ -95,7 +95,7 @@ function rCr(B){
     return}
   if(!cloud()){B.append(warn('Per attivare la cifratura serve un account KRANG: accedi con email e password, poi riapri la configurazione da Aiuto.'));return}
   B.append(P('Tra poco ti chiederò di confermare la password e ti mostrerò una <b>chiave di recupero</b> da salvare.'));
-  B.append(btn('shield','Attiva la cifratura ora','p cfg-main',()=>{
+  B.append(btn('shield','Attiva la cifratura ora','p',()=>{
     hide();CLOUD.started=false;try{cloudGate()}catch(e){}
     let seen=false,n=0;clearInterval(tick);tick=setInterval(()=>{n++;const m=document.getElementById('mE2E');if(m&&!m.hidden)seen=true;if((seen&&m&&m.hidden)||n>600){clearInterval(tick);show()}},700)}));
   B.append(note('Puoi anche saltare e attivarla più tardi: finché non è attiva, i dati restano solo su questo dispositivo.'))}
@@ -136,7 +136,7 @@ function rSc(B,ctx){
   if(!bioOk()){B.append(warn('La biometria non è disponibile in questo browser o in questa pagina. Puoi attivarla dall’app installata.'));return}
   B.append(field('cf_pin','PIN di emergenza (4–8 cifre)','',{type:'password',im:'numeric',ac:'new-password',hint:'Serve se la biometria non ti riconosce. Non si può recuperare: se lo dimentichi dovrai cancellare i dati dell’app.'}));
   $('cf_pin').maxLength=8;
-  const b=btn('user','Attiva con biometria','p cfg-main',async()=>{const v=$('cf_pin').value.trim();fErr('cf_pin','');b.disabled=true;
+  const b=btn('user','Attiva con biometria','p',async()=>{const v=$('cf_pin').value.trim();fErr('cf_pin','');b.disabled=true;
     try{const m=await lockOn(v);if(m){fErr('cf_pin',m);return}toast('Blocco biometrico attivato.');paint()}finally{b.disabled=false}});
   B.append(b)}
 
@@ -152,7 +152,7 @@ function rNo(B,ctx){
     const f=E('div','f'),l=E('label','','Ora predefinita dell’avviso');l.htmlFor='cf_hr';const s=E('select');s.id='cf_hr';s.setAttribute('data-ns','');[7,8,9,10,12,14,18].forEach(x=>{const o=E('option','',x+':00');o.value=x;s.append(o)});s.value=String(remHour());
     s.onchange=()=>{S.remH=parseInt(s.value,10)||9;try{saveS()}catch(e){}try{remSync(true)}catch(e){}};f.append(l,s,E('div','hint','Per i task senza un’ora propria: l’avviso arriva il giorno della scadenza a quest’ora.'));B.append(f);return}
   B.append(P('Tocca il pulsante e consenti le notifiche quando il telefono lo chiede.'));
-  const b=btn('clock','Attiva le notifiche push','p cfg-main',async()=>{b.disabled=true;try{if(await pushOn())toast('Notifiche push attivate.')}finally{paint()}});B.append(b)}
+  const b=btn('clock','Attiva le notifiche push','p',async()=>{b.disabled=true;try{if(await pushOn())toast('Notifiche push attivate.')}finally{paint()}});B.append(b)}
 
 /* ---------- riepilogo ---------- */
 function rEnd(B){
@@ -198,7 +198,8 @@ const css=`
 #mCfg .cfg-i{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--line);color:var(--muted)}
 #mCfg .cfg-i.ok{background:var(--accent);color:#1d3b30}#mCfg .cfg-i svg{width:16px;height:16px}
 #mCfg .cfg-r .ch svg{width:16px;height:16px;opacity:.6}
-@media (min-width:1024px){#mCfg{background:rgba(15,20,35,.55);align-items:center;justify-content:center}#mCfg .cfg-box{width:600px;max-height:88vh;background:var(--bg);border-radius:24px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4)}#mCfg .cfg-top{padding-top:18px}}
+@media (min-width:1024px){#mCfg{background:rgba(15,20,35,.55);align-items:center;justify-content:center}#mCfg .cfg-box{width:min(920px,94vw);height:min(780px,92vh);max-height:92vh;background:var(--bg);border-radius:24px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4)}#mCfg .cfg-top{padding-top:18px}}
+@media (min-width:1024px){#mCfg .cfg-main{padding:12px 48px 28px;font-size:17px}#mCfg .cfg-top,#mCfg .cfg-foot{padding-left:48px;padding-right:48px}#mCfg .cfg-in,#mCfg .cfg-fi{max-width:700px}#mCfg h2{font-size:32px;margin-top:18px}#mCfg .cfg-sub{font-size:18px}#mCfg .cfg-ic{width:68px;height:68px;border-radius:22px}#mCfg .cfg-ic svg{width:34px;height:34px}#mCfg .cfg-note,#mCfg .cfg-warn,#mCfg .cfg-ok{font-size:16px}#mCfg .cfg-doc{max-height:42vh;font-size:15px}#mCfg .cfg-r{padding:16px}#mCfg .cfg-r .tx span{font-size:14px}#mCfg .btn.lbl{height:54px;font-size:16px}}
 @media (max-width:1023px){#mCfg .cfg-box{display:contents}}
 `;
 
