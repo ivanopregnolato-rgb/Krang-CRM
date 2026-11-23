@@ -5,8 +5,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
 <!-- © 2026 Ivano Pregnolato. Tutti i diritti riservati. Vietata la copia o la redistribuzione senza consenso scritto. -->
-<script src="boot.js?v=1.74.0"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.74.0|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.75.0"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.75.0|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -482,15 +482,16 @@ html:not([data-lay="b"]) .lb-only{display:none!important}
 #addBtn,.btn.pls,#addOppFor{display:flex;align-items:center;justify-content:center;width:44px;height:44px;min-height:0;padding:0;border-radius:50%;margin:6px 0 6px auto;box-shadow:0 2px 6px rgba(0,0,0,.25)}
 #addBtn #addLbl,.btn.pls .pl{display:none}
 #addBtn svg,.btn.pls svg,#addOppFor svg{width:22px;height:22px}
+.hcol{display:contents}
 [data-lay="b"] #homeView:not([hidden]){display:flex;flex-direction:column}
-[data-lay="b"] #homeView>*{order:7}
+[data-lay="b"] #homeView>*,[data-lay="b"] #homeView :is(#hSum,#hPipeBox,#hWon){order:7}
 [data-lay="b"] #homeView>.greet{order:0}
 [data-lay="b"] #homeView>#hWel{order:1}
-[data-lay="b"] #homeView>#hDoH{order:2;margin-top:6px}
-[data-lay="b"] #homeView>#hTodo{order:3}
-[data-lay="b"] #homeView>#hWatchH{order:4}
-[data-lay="b"] #homeView>#hWatch{order:5}
-[data-lay="b"] #homeView>#hVend{order:6}
+[data-lay="b"] #homeView #hDoH{order:2;margin-top:6px}
+[data-lay="b"] #homeView #hTodo{order:3}
+[data-lay="b"] #homeView #hWatchH{order:4}
+[data-lay="b"] #homeView #hWatch{order:5}
+[data-lay="b"] #homeView #hVend{order:6}
 [data-lay="b"] .greet b{font-size:32px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
 [data-lay="b"] .greet span{font-size:16px}
 [data-lay="b"] .app:has(#homeView:not([hidden])) #title{display:none}
@@ -722,9 +723,21 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
 #mSet #tm_K{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}#mSet #tm_K input{width:100%;margin:8px 0;font-size:13px}#mSet #tm_K .btn{margin-top:8px}
 #mSet .tm0{padding:16px 14px;color:var(--muted);font-size:14px}
 
-/* 1.74.0 titolo coerente + lineetta gesture */
+/* 1.75.0 titolo coerente + lineetta gesture */
 [data-lay="b"] #tkList .top h2,[data-lay="b"] #mSet .top h2{font-size:28px;line-height:1.15;letter-spacing:-.02em}
 @media (pointer:coarse){.sheet:not(#cardRev) .top::before,html[data-lay="b"].pg-on .stk::before{content:"";position:absolute;left:50%;top:5px;width:40px;height:4px;margin-left:-20px;border-radius:2px;background:var(--ink);opacity:.32;pointer-events:none}html[data-lay="b"].pg-on .stk{position:relative}}
+
+/* Home a 2 colonne su desktop largo: a sinistra Da fare e Da tenere d'occhio, a destra Vendite e Pipeline */
+@media (min-width:1180px){
+ html[data-lay="b"]:not(.dpane) .app:has(#homeView:not([hidden])){max-width:1240px}
+ [data-lay="b"] #homeView:not([hidden]){display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);column-gap:32px;align-items:start}
+ [data-lay="b"] #homeView>.greet,[data-lay="b"] #homeView>#hWel{grid-column:1/-1}
+ [data-lay="b"] #homeView>.hcol{display:block;min-width:0}
+ [data-lay="b"] #homeView>#hColL{grid-column:1;grid-row:3}
+ [data-lay="b"] #homeView>#hColR{grid-column:2;grid-row:3}
+ [data-lay="b"] #homeView>#hColR #hVend{display:block;margin-top:6px}
+ html[data-lay="b"]:not(.dpane) #hFab{right:max(28px,calc((100vw - var(--sw) - 1240px)/2 + 28px))}
+}
 </style>
 </head>
 <body>
@@ -773,14 +786,18 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
   <div id="homeView">
     <div class="greet"><div class="gtx"><b id="hGreet"></b><span id="hDate"></span></div><img id="hLogo" alt="" hidden></div>
     <div id="hWel"></div>
+    <div class="hcol" id="hColR">
     <div class="hh lb-only" id="hVend"><span>Vendite</span></div>
     <div class="sum" id="hSum"></div>
     <div class="wonbox" id="hPipeBox" style="margin:0 0 12px"><div class="wb-h"><b>Pipeline</b></div><div id="hPipe" style="margin-top:8px"></div></div>
     <div class="sum" id="hWon"></div>
+    </div>
+    <div class="hcol" id="hColL">
     <div class="hh" id="hDoH"><span>Da fare</span><button type="button" id="hTk" class="lnk" style="margin-left:auto;margin-right:10px">Tutti i task</button><button type="button" id="hMore" hidden></button></div>
     <div id="hTodo"></div>
     <div class="hh lb-only" id="hWatchH" hidden><span>Da tenere d’occhio</span></div>
     <div id="hWatch" class="lb-only"></div>
+    </div>
     <button class="btn p lbl lb-only" id="hFab" type="button" aria-label="Nuovo task" title="Nuovo task"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
   </div>
   <div id="list" hidden></div>
@@ -1269,6 +1286,6 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.74.0"></script>
+<script src="app.js?v=1.75.0"></script>
 </body>
 </html>

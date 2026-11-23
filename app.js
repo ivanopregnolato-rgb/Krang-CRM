@@ -10559,7 +10559,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.74.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.75.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -11054,6 +11054,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
 ['1.74.0','Quando scrivi un’email o un WhatsApp a un cliente puoi allegare i suoi preventivi ancora da inviare (in bozza) collegati a opportunità aperte: dopo l’invio diventano «Inviato».'],
+['1.75.0','Su desktop largo la Home si dispone su due colonne: a sinistra «Da fare» e «Da tenere d’occhio», a destra Vendite e Pipeline. Su telefono e schermi stretti non cambia nulla.'],
 ['1.73.0','Nei task del cliente (scheda e Riepilogo) compaiono ora anche i task collegati alle sue opportunità, aperte, vinte o perse; sotto ogni task si vede a quale opportunità appartiene.'],
 ['1.72.3','Registro errori: gli avvisi generici «Script error.» provenienti da script di terzi (senza dettagli utili) non vengono più registrati, così il monitor mostra solo gli errori dell’app.'],
 ['1.72.2','Salvataggio dei contatti: se mentre compili una scheda arriva un aggiornamento dal cloud (per esempio dopo il passo privacy o la firma), l’app non dice più «Email già registrata» per lo stesso cliente e non perde le modifiche.'],
