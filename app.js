@@ -531,6 +531,7 @@ function privRollback(snap,cl){
   else{const f=snap.form;$('p_inf').checked=f.inf;$('p_infmodo').value=f.modo;$('p_infdata').value=f.data;CONS.forEach(k=>{const c=$('c_'+k);if(c)c.checked=!!f.cons[k]});privSign=undefined;cl.privacy=collectPriv(null,true)}
   cl.agg=new Date().toISOString();persist();
   try{loadPriv(cl.privacy);privSign=snap.sign;privUI();paintPrivSum();paintPSign();render()}catch(e){}
+  try{resnap('sheet')}catch(e){}
   toast('Raccolta annullata: consensi e firma non sono stati salvati.')}
 function privSignOpen(){const snap=privSnap(),cl={tipo:curTipo,nome:$('nome').value,cognome:$('cognome').value,azienda:$('azienda').value},cur=privNow(),box=h('div');box.style.cssText='display:flex;flex-direction:column;gap:8px;margin:4px 0';const cb={};
   /* il cliente deve leggere l'informativa (scorrerla fino in fondo e confermare) prima di poter scegliere i consensi e firmare */
@@ -548,7 +549,7 @@ function privSignOpen(){const snap=privSnap(),cl={tipo:curTipo,nome:$('nome').va
   rc.onchange=()=>{const on=rc.checked;grp.style.opacity=on?'':'.45';grp.style.pointerEvents=on?'':'none';CONS.forEach(k=>{cb[k].disabled=!on});notify(on)};
   openSignFor({title:'Consensi e firma',nome:(privSign&&privSign.nome)||signName(cl),text:'Il cliente conferma di aver ricevuto l’informativa privacy (versione '+infVer()+') e sceglie i consensi facoltativi.',pre:{el:box,bind:f=>{notify=f},get:()=>{const v={};CONS.forEach(k=>v[k]=cb[k].checked);return v}},hx:v=>privHx(v||privNow()),
     done:(f,v)=>{f.inf=infVer();f.letta=true;f.cons=v;privSign=f;CONS.forEach(k=>{const c=$('c_'+k);if(c){c.checked=!!v[k];c.dispatchEvent(new Event('change',{bubbles:true}))}});
-      $('p_later').checked=false;try{laterUi()}catch(e){}$('p_inf').checked=true;$('p_infmodo').value='Firmata';$('p_infdata').value=ymd();$('p_inf').dispatchEvent(new Event('change',{bubbles:true}));try{privUI();paintPrivSum()}catch(e){}paintPSign();const cl=saveClient(true);if(!cl){toast('Firma raccolta: completa i dati del cliente e salvalo per registrare consensi e firma.');return}openSheet(cl);try{setPane('priv')}catch(e){}toast('Firma registrata: ora invia la copia al cliente.');setTimeout(()=>privCopyAsk(cl,snap),350)}})}
+      $('p_later').checked=false;try{laterUi()}catch(e){}$('p_inf').checked=true;$('p_infmodo').value='Firmata';$('p_infdata').value=ymd();$('p_inf').dispatchEvent(new Event('change',{bubbles:true}));try{privUI();paintPrivSum()}catch(e){}paintPSign();const cl=saveClient(true);if(!cl){toast('Firma raccolta: completa i dati del cliente e salvalo per registrare consensi e firma.');return}openSheet(cl);try{setPane('priv')}catch(e){}try{resnap('sheet');setTimeout(()=>{try{resnap('sheet')}catch(e){}},200)}catch(e){}toast('Firma registrata: ora invia la copia al cliente.');setTimeout(()=>privCopyAsk(cl,snap),350)}})}
 ['change'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target&&e.target.id&&/^c_(mk|profilazione|terzi)$/.test(e.target.id))try{paintPSign()}catch(x){}}));
 /* ===== copia al cliente: ricevuta PDF dell'informativa e dei consensi firmati ===== */
 function privReceiptPdf(c,f){const D=pdfDoc(),L=40,R=555,TOP=50,BOT=790;let y=TOP;D.sigAll(f);D.page();
@@ -10617,7 +10618,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.75.8';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.75.9';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -11119,6 +11120,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.75.4','L’informativa privacy ha lo stesso testo per email e WhatsApp (completa, con consensi e firma). Anche la copia dei consensi firmati si invia da un solo tasto che chiede se usare email o WhatsApp, con lo stesso testo per i due canali.'],
 ['1.75.5','Consensi e firma: la raccolta si conclude con l’invio della copia al cliente (email, WhatsApp o PDF consegnato). Al posto di «Più tardi» c’è «Annulla», che rimette tutto com’era prima. Una firma raccolta non si può più rimuovere: si può solo rifarla.'],
 ['1.75.6','Invio della copia ai clienti e dell’informativa: l’invio si considera concluso solo quando lo confermi. Email: tocchi «Segna come inviata»; WhatsApp e PDF: rispondi alla domanda «Hai inviato…?» che compare dopo. In una raccolta consensi e firma, Annulla (anche dalla bozza email, con conferma) rimette tutto com’era.'],
+['1.75.9','Rifai la firma dei consensi: al termine (o se si annulla) non compare più la barra «Salva modifiche», perché i dati sono già registrati.'],
 ['1.75.8','Invio di informativa e copia dei consensi per email: stessa finestra e stessi tasti (Copia, Apri posta, Segna come inviata, Annulla), con operatore obbligatorio. Apri posta è sempre il tasto principale. Quando si rifà la firma i consensi non sono più preselezionati: il cliente li sceglie da zero.'],
 ['1.75.7','Nella copia dei consensi inviata al cliente, al posto di «scrivici per revocare» c’è il link alla stessa pagina personale di gestione dei consensi che riceve con l’informativa.'],
 ['1.73.0','Nei task del cliente (scheda e Riepilogo) compaiono ora anche i task collegati alle sue opportunità, aperte, vinte o perse; sotto ogni task si vede a quale opportunità appartiene.'],
