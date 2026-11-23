@@ -14,6 +14,9 @@
 })();
 try{if(localStorage.getItem('crm-lay')!=='a')document.documentElement.setAttribute('data-lay','b')}catch(e){document.documentElement.setAttribute('data-lay','b')}
 
+/* rete di sicurezza: se lo script non segnala di aver finito, dopo 4 secondi la pagina si mostra comunque */
+setTimeout(function(){document.documentElement.classList.add('rdy')},4000);
+
 /* se dopo qualche secondo l'app non è partita (file non caricati, tipicamente senza rete e senza copia salvata) lo dice invece di restare bianca */
 setTimeout(function(){try{if(typeof window.persist==='function'||document.getElementById('offDiag'))return;var d=document.createElement('div');d.id='offDiag';d.style.cssText='position:fixed;inset:0;z-index:99999;background:#0b1020;color:#eef4ff;font:16px/1.5 system-ui,sans-serif;padding:calc(env(safe-area-inset-top,0px) + 40px) 24px 24px;visibility:visible';
  var p=document.createElement('p');p.textContent='KRANG CRM non è riuscito ad avviarsi. Chiudi l’app e riaprila: se sei senza rete, riprova quando torna la connessione.';d.appendChild(p);var q=document.createElement('p');q.style.opacity='.6';q.style.fontSize='13px';q.textContent='Dettaglio: app non caricata';d.appendChild(q);document.body.appendChild(d);
