@@ -648,7 +648,8 @@ function paintPrivSum(){
   const inf=$('p_inf').checked,infD=$('p_infdata').value,infM=$('p_infmodo').value;
   const row=(ok,title,sub,tone)=>{const r=document.createElement('div');r.className='ps-r';const ic=document.createElement('span');ic.className='ps-i '+tone;ic.textContent=tone==='ok'?'✓':tone==='wait'?'…':tone==='warn'?'!':'–';const t=document.createElement('div');t.className='ps-t';const b=document.createElement('b');b.textContent=title;t.append(b);if(sub){const e=document.createElement('span');e.textContent=sub;t.append(e)}r.append(ic,t);return r};
   const hd=document.createElement('div');hd.className='ps-h';hd.textContent='Stato attuale';sm.append(hd);
-  if(document.documentElement.dataset.lay==='b'&&!inf&&!pend){const al=document.createElement('div');al.className='ps-al';const t1=document.createElement('b');t1.textContent='Informativa privacy da inviare';const t2=document.createElement('span');t2.textContent='Senza informativa non puoi mandare comunicazioni commerciali.';const bt=document.createElement('button');bt.type='button';bt.className='btn p lbl';bt.innerHTML=ICONS.Scrivi+'Invia informativa';bt.onclick=()=>$('p_prep').click();al.append(t1,t2,bt);sm.before(al);al.dataset.f='1';[...document.querySelectorAll('.ps-al')].forEach(x=>{if(x!==al)x.remove()})}else document.querySelectorAll('.ps-al').forEach(x=>x.remove());
+  if(document.documentElement.dataset.lay==='b'&&!inf&&!pend){const al=document.createElement('div');al.className='ps-al';const t1=document.createElement('b');t1.textContent='Informativa privacy da inviare';const t2=document.createElement('span');t2.textContent='Senza informativa non puoi mandare comunicazioni commerciali.';const bt=document.createElement('button');bt.type='button';bt.className='btn p lbl';bt.innerHTML=ICONS.Scrivi+'Invia informativa';bt.onclick=askInfoVia;al.append(t1,t2,bt);sm.before(al);al.dataset.f='1';[...document.querySelectorAll('.ps-al')].forEach(x=>{if(x!==al)x.remove()})}else document.querySelectorAll('.ps-al').forEach(x=>x.remove());
+  {const pp=$('p_prep');if(pp)pp.hidden=!!document.querySelector('.ps-al')}
   sm.append(inf?row(1,'Informativa privacy','Fornita'+(infD?' il '+fmtD(infD):'')+(infM?' · '+infM:''),'ok'):pend?row(1,'Informativa privacy','Inviata il '+fmtD(String(pend.creata).slice(0,10))+' (la trovi nei messaggi): il cliente può confermare dal link','wait'):row(1,'Informativa privacy','Da inviare','no'));
   CONS.forEach(k=>{const on=$('c_'+k).checked,c=p.cons[k]||{v:false,d:''},same=!!c.v===on;
     sm.append(row(1,CLABEL[k],on?'Consenso prestato'+(same&&c.d?' il '+fmtD(c.d):''):(c.d&&same?'Revocato il '+fmtD(c.d):'Non prestato'),on?'ok':'no'))});
@@ -661,14 +662,14 @@ function laterUi(){try{$('p_mailF').hidden=!editing&&$('p_later').checked}catch(
 let rq=null,rr=null;
 function paintReq(){
   retHint();
-  const w=$('p_req');w.textContent='';$('p_mailF').hidden=false;$('p_sum').hidden=false;paintPrivSum();try{paintAnon()}catch(e){}$('p_wa').onclick=sendWaInfo;
+  const w=$('p_req');w.textContent='';$('p_mailF').hidden=false;$('p_sum').hidden=false;paintPrivSum();try{paintAnon()}catch(e){}
   $('p_laterW').hidden=!!editing;if(editing||$('p_inf').checked)$('p_later').checked=false;if(!$('p_laterW').dataset.w){$('p_laterW').dataset.w=1;$('p_inf').addEventListener('change',()=>{if($('p_inf').checked)$('p_later').checked=false;laterUi()});$('p_later').addEventListener('change',laterUi)}laterUi();
-  if(!editing){const pb=$('p_prep');pb.disabled=false;pb.innerHTML=ICONS.Scrivi+'Invia informativa';pb.onclick=()=>viaNew('email');return}
+  if(!editing){const pb=$('p_prep');pb.disabled=false;pb.innerHTML=ICONS.Scrivi+'Invia informativa';pb.onclick=askInfoVia;return}
   const p=editing.privacy||mkPriv(),R=p.richieste||[],pend=R.find(r=>effSt(r)==='inviata'),ok=!!editing.email,given=CONS.filter(k=>p.cons[k]&&p.cons[k].v).map(k=>CLABEL[k]);
 
-  const pb=$('p_prep');pb.disabled=!ok;pullConsents();
-  pb.innerHTML=ICONS.Scrivi+(p.informativa||R.length?'Reinvia informativa':'Invia informativa');pb.onclick=openSend
-  $('p_mailhint').textContent=!ok?'Aggiungi e salva un’email del cliente nella scheda Dati.':(!S.azienda?'Imposta il nome azienda in Menu → Impostazioni: è il titolare indicato nell’informativa.':'');
+  const pb=$('p_prep');pb.disabled=false;pullConsents();
+  pb.innerHTML=ICONS.Scrivi+(p.informativa||R.length?'Reinvia informativa':'Invia informativa');pb.onclick=askInfoVia
+  $('p_mailhint').textContent=!S.azienda?'Imposta il nome azienda in Menu → Impostazioni: è il titolare indicato nell’informativa.':'';
   w.hidden=true}
 function openSend(){
   if(!editing||!editing.email)return;
@@ -676,7 +677,22 @@ function openSend(){
   const now=new Date();
   rq={id:'r'+Date.now().toString(36),token:tok(),creata:now.toISOString().slice(0,16),email:editing.email,stato:'inviata'};
   $('ms_to').value=rq.email;$('ms_sub').value=INFO_SUBJ();$('ms_body').value=mailText(editing,rq);lkStart(editing);$('ms_op').value=opName;setErr('ms_op','');$('mSend').hidden=false}
-$('p_prep').onclick=openSend;
+/* un solo tasto per inviare l'informativa: chiede se per email o per WhatsApp */
+function askInfoVia(){
+  const em=editing?editing.email:($('email').value||'').trim(),tel=editing?editing.telefono:($('telefono').value||'').trim();
+  let M=$('mInfVia');if(M)M.remove();M=h('div','modal');M.id='mInfVia';
+  const bx=h('div','box');bx.setAttribute('role','dialog');bx.setAttribute('aria-modal','true');bx.setAttribute('aria-labelledby','ivT');
+  const t=h('h3','','Come vuoi inviare l’informativa?');t.id='ivT';t.style.margin='0 0 4px';
+  const sub=h('p','hint','Il cliente riceve il link per leggerla e dare i consensi.');sub.style.margin='0 0 12px';
+  const close=()=>M.remove();
+  const mk=(cls,ic,lab,note,fn)=>{const b=h('button','btn lbl '+cls);b.type='button';b.innerHTML=ICONS[ic]+'<span>'+lab+'</span>';b.style.cssText='width:100%;margin:0 0 6px';const n=h('div','hint',note);n.style.cssText='margin:0 0 12px;text-align:center';b.onclick=()=>{close();fn()};return[b,n]};
+  const goEmail=()=>{if(!editing){viaNew('email');return}if(!editing.email){setPane('dati');setErr('email','Inserisci l’email per inviare l’informativa.');return}openSend()};
+  const goWa=()=>{if(!editing){viaNew('wa');return}if(!editing.telefono){setPane('dati');setErr('telefono','Inserisci il telefono per inviare l’informativa su WhatsApp.');return}sendWaInfo()};
+  const [b1,n1]=mk('p','Scrivi','Email',em||'Manca l’email del cliente',goEmail);
+  const [b2,n2]=mk('','WhatsApp','WhatsApp',tel||'Manca il telefono del cliente',goWa);
+  const an=h('button','btn lbl');an.type='button';an.textContent='Annulla';an.style.width='100%';an.onclick=close;
+  bx.append(t,sub,b1,n1,b2,n2,an);M.append(bx);M.onclick=e=>{if(e.target===M)close()};document.body.append(M);b1.focus()}
+$('p_prep').onclick=askInfoVia;
 $('ms_x').onclick=()=>{$('mSend').hidden=true};
 $('ms_copy').onclick=async()=>{if(!await lkReady())return;toast(await copyText('Oggetto: '+$('ms_sub').value+'\n\n'+$('ms_body').value)?'Testo copiato.':'Copia non riuscita.')};
 $('ms_open').onclick=async()=>{if(!await lkReady())return;launch('mailto:'+rq.email+'?subject='+encodeURIComponent($('ms_sub').value)+'&body='+encodeURIComponent($('ms_body').value),$('ms_body').value)};
@@ -10559,7 +10575,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.75.2';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.75.3';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -11057,6 +11073,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.75.0','Su desktop largo la Home si dispone su due colonne: a sinistra «Da fare» e «Da tenere d’occhio», a destra Vendite e Pipeline. Su telefono e schermi stretti non cambia nulla.'],
 ['1.75.1','Su desktop: la configurazione guidata e i Primi passi sono più grandi, la pagina di raccolta consensi e firma usa tutto lo schermo (informativa a sinistra, consensi a destra) e i tasti principali della configurazione guidata non mostrano più la piccola barra di scorrimento.'],
 ['1.75.2','All’avvio non compare più per un istante l’ellisse arancione: l’app resta nascosta finché non ha disegnato la prima schermata.'],
+['1.75.3','L’informativa privacy si invia da un solo tasto: chiede se mandarla per email o su WhatsApp. Sparisce il doppio tasto in due punti diversi della scheda Privacy.'],
 ['1.73.0','Nei task del cliente (scheda e Riepilogo) compaiono ora anche i task collegati alle sue opportunità, aperte, vinte o perse; sotto ogni task si vede a quale opportunità appartiene.'],
 ['1.72.3','Registro errori: gli avvisi generici «Script error.» provenienti da script di terzi (senza dettagli utili) non vengono più registrati, così il monitor mostra solo gli errori dell’app.'],
 ['1.72.2','Salvataggio dei contatti: se mentre compili una scheda arriva un aggiornamento dal cloud (per esempio dopo il passo privacy o la firma), l’app non dice più «Email già registrata» per lo stesso cliente e non perde le modifiche.'],
