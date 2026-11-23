@@ -539,7 +539,7 @@ function privSignOpen(){const snap=privSnap(),cl={tipo:curTipo,nome:$('nome').va
   const hint=h('div','hint','Scorri l’informativa fino in fondo per poter proseguire.');
   const rl=h('label','chk'),rc=h('input');rc.type='checkbox';rc.disabled=true;rl.append(rc,h('span','','Ho letto l’informativa privacy'));rl.style.opacity='.5';
   const grp=h('div');grp.style.cssText='display:flex;flex-direction:column;gap:8px;opacity:.45;pointer-events:none';
-  CONS.forEach(k=>{const l=h('label','chk'),i=h('input');i.type='checkbox';i.checked=!!cur[k];i.disabled=true;cb[k]=i;const s=h('span','',CLABEL[k]);l.append(i,s);grp.append(l)});
+  CONS.forEach(k=>{const l=h('label','chk'),i=h('input');i.type='checkbox';i.checked=false;i.disabled=true;cb[k]=i;const s=h('span','',CLABEL[k]);l.append(i,s);grp.append(l)});
   grp.append(h('div','hint','Il rifiuto non impedisce il servizio. Le caselle non sono mai preselezionate.'));
   box.append(inf,hint,rl,grp);let notify=()=>{};
   const atEnd=()=>inf.scrollTop+inf.clientHeight>=inf.scrollHeight-6;
@@ -581,6 +581,7 @@ function privCopyAsk(c,tx){const f=c&&c.privacy&&c.privacy.firma;if(!f)return;
     goEmail:async()=>{
       if(!(await linkOk())){privCopyAsk(c,tx);return}
       openCompose(c);if($('mCompose').hidden){privCopyAsk(c,tx);return}$('mc_sub').value='Copia dei consensi privacy'+(S.azienda?' – '+S.azienda:'');const u8=pdf();cmpAtt=[{name:fname,u8}];$('mc_att').hidden=false;$('mc_att').textContent='Allegato: '+fname+' ('+Math.max(1,Math.round(u8.length/1024))+' KB). '+attNote();mcActs();$('mc_body').value=body();
+      cmpPriv={title:'Copia dei consensi',msg:'Copia registrata come inviata.'};mcPriv();
       cmpAfter=()=>note('email');if(tx){cmpTx={snap:tx,c};$('mc_h2').textContent='La raccolta si conclude solo quando tocchi «Segna come inviata». Con Annulla consensi e firma non vengono salvati.'}},
     goWa:async()=>{
       if(!(await linkOk())){privCopyAsk(c,tx);return}
@@ -702,9 +703,15 @@ function paintReq(){
 function openSend(){
   if(!editing||!editing.email)return;
   if(!S.azienda){toast('Imposta prima il nome azienda: è il titolare indicato nell’informativa.');openSettings();setErr('st_az','Inserisci il nome dell’azienda.');return}
-  const now=new Date();
-  rq={id:'r'+Date.now().toString(36),token:tok(),creata:now.toISOString().slice(0,16),email:editing.email,stato:'inviata'};
-  $('ms_to').value=rq.email;$('ms_sub').value=INFO_SUBJ();$('ms_body').value=mailText(editing,rq);lkStart(editing);$('ms_op').value=opName;setErr('ms_op','');$('mSend').hidden=false}
+  const now=new Date(),c=editing;
+  rq={id:'r'+Date.now().toString(36),token:tok(),creata:now.toISOString().slice(0,16),email:c.email,stato:'inviata'};
+  openCompose(c);if($('mCompose').hidden)return;
+  $('mc_sub').value=INFO_SUBJ();$('mc_body').value=mailText(c,rq);lkStart(c);
+  /* registrazione dell'invio solo dopo «Segna come inviata» */
+  cmpAfter=()=>{const p=c.privacy=c.privacy||mkPriv();p.richieste=p.richieste||[];p.richieste.push(rq);
+    logP(c,'Informativa inviata via email a '+rq.email+' (codice '+rq.token+', informativa v'+rq.ver+', con link ai consensi)','invio');
+    persist();if(editing===c)loadPriv(p);try{render()}catch(e){}};
+  cmpPriv={title:'Email di informativa',gate:lkReady,noEm:1,msg:'Invio registrato nel registro.'};mcPriv();$('mc_att').hidden=true;$('mc_att').textContent='';mcActs()}
 /* scelta del canale (email o WhatsApp), uguale per l'informativa e per la copia al cliente */
 function askVia(o){
   let M=$('mInfVia');if(M)M.remove();M=h('div','modal');M.id='mInfVia';M.style.zIndex=30;
@@ -725,14 +732,6 @@ function askInfoVia(){
     goEmail:()=>{if(!editing){viaNew('email');return}if(!editing.email){setPane('dati');setErr('email','Inserisci l’email per inviare l’informativa.');return}openSend()},
     goWa:()=>{if(!editing){viaNew('wa');return}if(!editing.telefono){setPane('dati');setErr('telefono','Inserisci il telefono per inviare l’informativa su WhatsApp.');return}sendWaInfo()}})}
 $('p_prep').onclick=askInfoVia;
-$('ms_x').onclick=()=>{$('mSend').hidden=true};
-$('ms_copy').onclick=async()=>{if(!await lkReady())return;toast(await copyText('Oggetto: '+$('ms_sub').value+'\n\n'+$('ms_body').value)?'Testo copiato.':'Copia non riuscita.')};
-$('ms_open').onclick=async()=>{if(!await lkReady())return;launch('mailto:'+rq.email+'?subject='+encodeURIComponent($('ms_sub').value)+'&body='+encodeURIComponent($('ms_body').value),$('ms_body').value)};
-$('ms_ok').onclick=async()=>{
-  if(!await lkReady())return;const op=$('ms_op').value.trim();if(!op){setErr('ms_op','Indica chi registra l’invio.');return}
-  saveOp(op);const p=editing.privacy=editing.privacy||mkPriv();p.richieste=p.richieste||[];p.richieste.push(rq);
-  logP(editing,'Informativa inviata via email a '+rq.email+' (codice '+rq.token+', informativa v'+rq.ver+', con link ai consensi)','invio');
-  persist();$('mSend').hidden=true;loadPriv(p);render();toast('Invio registrato nel registro.')};
 const pj=r=>{let p=r&&r.payload;if(typeof p==='string'){try{p=JSON.parse(p)}catch(e){}}return(p&&typeof p==='object')?p:{}};
 const LAST={};
 let cmpTo='';
@@ -754,7 +753,7 @@ function loadComm(){
   if(!cl.email){w.append(h('div','hint','Aggiungi e salva un’email del cliente nella scheda Dati.'));cmStat('Senza email del cliente non puoi scrivere: aggiungila nella scheda Dati.');return}
   paintComm()}
 $('cm_new').onclick=()=>{if(editing){openCompose(editing);offerInf(editing)}};
-function openCompose(c){cmpAfter=null;cmpTx=null;$('mc_h2').textContent=MC_H2;cmpLeadRef=null;cmpInfC=null;cmpAtt=[];cmpQ=null;cmpOpts=null;$('mc_att').hidden=true;$('mc_att').textContent='';
+function openCompose(c){cmpAfter=null;cmpTx=null;cmpPriv=null;mcPriv();$('mc_h2').textContent=MC_H2;cmpLeadRef=null;cmpInfC=null;cmpAtt=[];cmpQ=null;cmpOpts=null;$('mc_att').hidden=true;$('mc_att').textContent='';
   if(!c.email){toast('Aggiungi un’email al cliente.');return}
   cmpTo=c.email;cmpLog='';const nome=contactName(c);
   cmpName=nome;$('mc_to').value=cmpTo;$('mc_sub').value='';$('mc_body').value='Gentile '+nome+',\n\n\n\n'+firma();
@@ -763,20 +762,25 @@ function openCompose(c){cmpAfter=null;cmpTx=null;$('mc_h2').textContent=MC_H2;cm
   $('mc_hint').textContent=ok?'':'Questo cliente non ha dato il consenso al marketing: usa questa email solo per comunicazioni legate al rapporto in corso.';
   const T=$('mc_tpl');T.textContent='';TEMPLATES.forEach(([l,s,t])=>{const b=h('button','',l);b.type='button';b.style.background='var(--lilac)';b.onclick=()=>{$('mc_sub').value=subj(s);$('mc_body').value=tpl('Gentile {nome},\n\n'+t+'\n\n',{nome})+firma()};T.append(b)});
   mcActs();$('mCompose').hidden=false}
-let cmpAfter=null,cmpTx=null;const MC_H2=(typeof document!=='undefined'&&document.getElementById('mc_h2')&&document.getElementById('mc_h2').textContent)||'';
+let cmpAfter=null,cmpTx=null,cmpPriv=null,cmpNoEm=false;
+/* email della privacy (informativa e copia dei consensi): testo non modificabile e operatore che registra l'invio */
+function mcPriv(){const p=cmpPriv;$('mc_ttl').textContent=p&&p.title||'Email';['mc_sub','mc_body'].forEach(k=>{$(k).readOnly=!!p});$('mc_tpl').hidden=!!p;$('mc_hint').hidden=!!p;$('mc_opF').hidden=!p;if(p){$('mc_op').value=opName;setErr('mc_op','');$('mc_hint').textContent='';cmpOpts=[]}}
+const mcGate=async()=>!(cmpPriv&&cmpPriv.gate)||await cmpPriv.gate();
+const MC_H2=(typeof document!=='undefined'&&document.getElementById('mc_h2')&&document.getElementById('mc_h2').textContent)||'';
 $('mc_x').onclick=()=>{if(cmpTx){const t=cmpTx;askConfirm('Annullare la raccolta? Consensi e firma non verranno salvati.','x','Sì, annulla',()=>{cmpTx=null;cmpAfter=null;$('mCompose').hidden=true;privRollback(t.snap,t.c)});return}$('mCompose').hidden=true};
 const mcFiles=()=>cmpAtt.map(a=>new File([a.u8],a.name,{type:a.mime||'application/pdf'}));
 const canShareF=()=>{try{return !!(cmpAtt.length&&navigator.share&&navigator.canShare&&navigator.canShare({files:mcFiles()}))}catch(e){return false}};
 const attNote=()=>canShareF()?'Con “Condividi con allegati” li alleghi in un tocco; con “Apri posta” vanno allegati a mano.':'Con “Apri posta” i file vengono salvati e vanno allegati a mano.';
 function mcActs(){const ok=canShareF();$('mc_share').hidden=!ok;$('mc_open').classList.toggle('p',!ok)}
 const mcCheck=()=>{const s=$('mc_sub').value.trim(),t=$('mc_body').value.trim();setErr('mc_sub',s?'':'Inserisci l’oggetto.');setErr('mc_body',t?'':'Scrivi il testo del messaggio.');return !!(s&&t)};
-$('mc_open').onclick=async()=>{if(!mcCheck())return;let bad=false;for(const a of cmpAtt){if(!(await savePdf(a.u8,a.name)))bad=true}if(bad)toast('Allegati non salvati: allegali a mano.');launchMail()};
-$('mc_share').onclick=async()=>{if(!mcCheck())return;try{await navigator.share({files:mcFiles(),title:$('mc_sub').value.trim(),text:$('mc_body').value})}catch(e){if(e&&e.name==='AbortError')return;toast('Condivisione non riuscita: usa Apri posta.')}};
-$('mc_done').onclick=()=>{if(!mcCheck())return;afterSent('Registrata come inviata.')};
+$('mc_copy').onclick=async()=>{if(!await mcGate())return;toast(await copyText('Oggetto: '+$('mc_sub').value+'\n\n'+$('mc_body').value)?'Testo copiato.':'Copia non riuscita.')};
+$('mc_open').onclick=async()=>{if(!mcCheck()||!await mcGate())return;let bad=false;for(const a of cmpAtt){if(!(await savePdf(a.u8,a.name)))bad=true}if(bad)toast('Allegati non salvati: allegali a mano.');launchMail()};
+$('mc_share').onclick=async()=>{if(!mcCheck()||!await mcGate())return;try{await navigator.share({files:mcFiles(),title:$('mc_sub').value.trim(),text:$('mc_body').value})}catch(e){if(e&&e.name==='AbortError')return;toast('Condivisione non riuscita: usa Apri posta.')}};
+$('mc_done').onclick=async()=>{if(!mcCheck()||!await mcGate())return;if(cmpPriv){const op=$('mc_op').value.trim();if(!op){setErr('mc_op','Indica chi registra l’invio.');return}saveOp(op)}afterSent(cmpPriv&&cmpPriv.msg||'Registrata come inviata.')};
 const launchMail=()=>launch('mailto:'+cmpTo+'?subject='+encodeURIComponent($('mc_sub').value)+'&body='+encodeURIComponent($('mc_body').value),$('mc_body').value);
 function afterSent(msg){
-    {const fa=cmpAfter;cmpAfter=null;cmpTx=null;if(fa)fa()}
-    {const cc=clients.find(x=>x.email&&x.email.toLowerCase()===String(cmpTo||'').toLowerCase());if(cc)emSave(cc,null,true,$('mc_sub').value.trim())}
+    {const fa=cmpAfter,np=cmpPriv&&cmpPriv.noEm;cmpAfter=null;cmpTx=null;cmpPriv=null;if(fa)fa();if(np)cmpNoEm=true}
+    if(cmpNoEm)cmpNoEm=false;else{const cc=clients.find(x=>x.email&&x.email.toLowerCase()===String(cmpTo||'').toLowerCase());if(cc)emSave(cc,null,true,$('mc_sub').value.trim())}
     if(cmpLeadRef&&$('mc_body').value.includes(INF_MARK)){const inf={d:ymd(),via:'Email'};if(cmpLeadRef.l){cmpLeadRef.l.inf=inf;persistL()}else pendInf[cmpLeadRef.email]=inf}
     if(cmpLeadRef&&cmpLeadRef.l){lLog(cmpLeadRef.l,{dir:'out',via:'Email',data:new Date().toISOString(),oggetto:$('mc_sub').value.trim(),testo:$('mc_body').value.split(INF_MARK)[0].trim()+($('mc_body').value.includes(INF_MARK)?'\n[+ informativa privacy]':'')});try{paintLM()}catch(e){}}
     if(cmpInfC&&$('mc_body').value.includes(INF_MARK)){const c=cmpInfC,pv=c.privacy=c.privacy||mkPriv();pv.informativa=true;pv.infData=ymd();pv.infModo='Email';pv.infVer=infUse();logP(c,'Informativa inviata via email a '+cmpTo,'invio');persist();if(editing===c)loadPriv(pv);try{render()}catch(e){}}
@@ -10613,7 +10617,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.75.7';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.75.8';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -11115,6 +11119,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.75.4','L’informativa privacy ha lo stesso testo per email e WhatsApp (completa, con consensi e firma). Anche la copia dei consensi firmati si invia da un solo tasto che chiede se usare email o WhatsApp, con lo stesso testo per i due canali.'],
 ['1.75.5','Consensi e firma: la raccolta si conclude con l’invio della copia al cliente (email, WhatsApp o PDF consegnato). Al posto di «Più tardi» c’è «Annulla», che rimette tutto com’era prima. Una firma raccolta non si può più rimuovere: si può solo rifarla.'],
 ['1.75.6','Invio della copia ai clienti e dell’informativa: l’invio si considera concluso solo quando lo confermi. Email: tocchi «Segna come inviata»; WhatsApp e PDF: rispondi alla domanda «Hai inviato…?» che compare dopo. In una raccolta consensi e firma, Annulla (anche dalla bozza email, con conferma) rimette tutto com’era.'],
+['1.75.8','Invio di informativa e copia dei consensi per email: stessa finestra e stessi tasti (Copia, Apri posta, Segna come inviata, Annulla), con operatore obbligatorio. Quando si rifà la firma i consensi non sono più preselezionati: il cliente li sceglie da zero.'],
 ['1.75.7','Nella copia dei consensi inviata al cliente, al posto di «scrivici per revocare» c’è il link alla stessa pagina personale di gestione dei consensi che riceve con l’informativa.'],
 ['1.73.0','Nei task del cliente (scheda e Riepilogo) compaiono ora anche i task collegati alle sue opportunità, aperte, vinte o perse; sotto ogni task si vede a quale opportunità appartiene.'],
 ['1.72.3','Registro errori: gli avvisi generici «Script error.» provenienti da script di terzi (senza dettagli utili) non vengono più registrati, così il monitor mostra solo gli errori dell’app.'],
