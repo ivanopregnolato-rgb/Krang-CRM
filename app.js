@@ -771,7 +771,7 @@ $('mc_x').onclick=()=>{if(cmpTx){const t=cmpTx;askConfirm('Annullare la raccolta
 const mcFiles=()=>cmpAtt.map(a=>new File([a.u8],a.name,{type:a.mime||'application/pdf'}));
 const canShareF=()=>{try{return !!(cmpAtt.length&&navigator.share&&navigator.canShare&&navigator.canShare({files:mcFiles()}))}catch(e){return false}};
 const attNote=()=>canShareF()?'Con “Condividi con allegati” li alleghi in un tocco; con “Apri posta” vanno allegati a mano.':'Con “Apri posta” i file vengono salvati e vanno allegati a mano.';
-function mcActs(){const ok=canShareF();$('mc_share').hidden=!ok;$('mc_open').classList.toggle('p',!ok)}
+function mcActs(){const ok=canShareF();$('mc_share').hidden=!ok;$('mc_open').classList.add('p')}
 const mcCheck=()=>{const s=$('mc_sub').value.trim(),t=$('mc_body').value.trim();setErr('mc_sub',s?'':'Inserisci l’oggetto.');setErr('mc_body',t?'':'Scrivi il testo del messaggio.');return !!(s&&t)};
 $('mc_copy').onclick=async()=>{if(!await mcGate())return;toast(await copyText('Oggetto: '+$('mc_sub').value+'\n\n'+$('mc_body').value)?'Testo copiato.':'Copia non riuscita.')};
 $('mc_open').onclick=async()=>{if(!mcCheck()||!await mcGate())return;let bad=false;for(const a of cmpAtt){if(!(await savePdf(a.u8,a.name)))bad=true}if(bad)toast('Allegati non salvati: allegali a mano.');launchMail()};
@@ -11119,7 +11119,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.75.4','L’informativa privacy ha lo stesso testo per email e WhatsApp (completa, con consensi e firma). Anche la copia dei consensi firmati si invia da un solo tasto che chiede se usare email o WhatsApp, con lo stesso testo per i due canali.'],
 ['1.75.5','Consensi e firma: la raccolta si conclude con l’invio della copia al cliente (email, WhatsApp o PDF consegnato). Al posto di «Più tardi» c’è «Annulla», che rimette tutto com’era prima. Una firma raccolta non si può più rimuovere: si può solo rifarla.'],
 ['1.75.6','Invio della copia ai clienti e dell’informativa: l’invio si considera concluso solo quando lo confermi. Email: tocchi «Segna come inviata»; WhatsApp e PDF: rispondi alla domanda «Hai inviato…?» che compare dopo. In una raccolta consensi e firma, Annulla (anche dalla bozza email, con conferma) rimette tutto com’era.'],
-['1.75.8','Invio di informativa e copia dei consensi per email: stessa finestra e stessi tasti (Copia, Apri posta, Segna come inviata, Annulla), con operatore obbligatorio. Quando si rifà la firma i consensi non sono più preselezionati: il cliente li sceglie da zero.'],
+['1.75.8','Invio di informativa e copia dei consensi per email: stessa finestra e stessi tasti (Copia, Apri posta, Segna come inviata, Annulla), con operatore obbligatorio. Apri posta è sempre il tasto principale. Quando si rifà la firma i consensi non sono più preselezionati: il cliente li sceglie da zero.'],
 ['1.75.7','Nella copia dei consensi inviata al cliente, al posto di «scrivici per revocare» c’è il link alla stessa pagina personale di gestione dei consensi che riceve con l’informativa.'],
 ['1.73.0','Nei task del cliente (scheda e Riepilogo) compaiono ora anche i task collegati alle sue opportunità, aperte, vinte o perse; sotto ogni task si vede a quale opportunità appartiene.'],
 ['1.72.3','Registro errori: gli avvisi generici «Script error.» provenienti da script di terzi (senza dettagli utili) non vengono più registrati, così il monitor mostra solo gli errori dell’app.'],
