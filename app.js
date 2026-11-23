@@ -771,12 +771,12 @@ const MC_H2=(typeof document!=='undefined'&&document.getElementById('mc_h2')&&do
 $('mc_x').onclick=()=>{if(cmpTx){const t=cmpTx;askConfirm('Annullare la raccolta? Consensi e firma non verranno salvati.','x','Sì, annulla',()=>{cmpTx=null;cmpAfter=null;$('mCompose').hidden=true;privRollback(t.snap,t.c)});return}$('mCompose').hidden=true};
 const mcFiles=()=>cmpAtt.map(a=>new File([a.u8],a.name,{type:a.mime||'application/pdf'}));
 const canShareF=()=>{try{return !!(cmpAtt.length&&navigator.share&&navigator.canShare&&navigator.canShare({files:mcFiles()}))}catch(e){return false}};
-const attNote=()=>canShareF()?'Con “Invia” i file vengono allegati in un tocco.':'Con “Apri posta” i file vengono salvati e vanno allegati a mano.';
-function mcActs(){const ok=canShareF();$('mc_share').hidden=!ok;$('mc_open').hidden=ok;$('mc_open').classList.add('p')}
+const attNote=()=>canShareF()?'Con “Condividi” li alleghi in un tocco; con “Apri posta” vanno allegati a mano.':'Con “Apri posta” i file vengono salvati e vanno allegati a mano.';
+function mcActs(){const ok=canShareF();$('mc_share').hidden=!ok}
 const mcCheck=()=>{const s=$('mc_sub').value.trim(),t=$('mc_body').value.trim();setErr('mc_sub',s?'':'Inserisci l’oggetto.');setErr('mc_body',t?'':'Scrivi il testo del messaggio.');return !!(s&&t)};
 $('mc_copy').onclick=async()=>{if(!await mcGate())return;toast(await copyText('Oggetto: '+$('mc_sub').value+'\n\n'+$('mc_body').value)?'Testo copiato.':'Copia non riuscita.')};
 $('mc_open').onclick=async()=>{if(!mcCheck()||!await mcGate())return;let bad=false;for(const a of cmpAtt){if(!(await savePdf(a.u8,a.name)))bad=true}if(bad)toast('Allegati non salvati: allegali a mano.');launchMail()};
-$('mc_share').onclick=async()=>{if(!mcCheck()||!await mcGate())return;try{await navigator.share({files:mcFiles(),title:$('mc_sub').value.trim(),text:$('mc_body').value})}catch(e){if(e&&e.name==='AbortError')return;{$('mc_open').hidden=false;toast('Invio non riuscito: usa Apri posta.')}}};
+$('mc_share').onclick=async()=>{if(!mcCheck()||!await mcGate())return;try{await navigator.share({files:mcFiles(),title:$('mc_sub').value.trim(),text:$('mc_body').value})}catch(e){if(e&&e.name==='AbortError')return;toast('Condivisione non riuscita: usa Apri posta.')}};
 $('mc_done').onclick=async()=>{if(!mcCheck()||!await mcGate())return;if(cmpPriv){const op=$('mc_op').value.trim();if(!op){setErr('mc_op','Indica chi registra l’invio.');return}saveOp(op)}afterSent(cmpPriv&&cmpPriv.msg||'Registrata come inviata.')};
 const launchMail=()=>launch('mailto:'+cmpTo+'?subject='+encodeURIComponent($('mc_sub').value)+'&body='+encodeURIComponent($('mc_body').value),$('mc_body').value);
 function afterSent(msg){
@@ -10618,7 +10618,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.75.9';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.75.10';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -11120,6 +11120,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.75.4','L’informativa privacy ha lo stesso testo per email e WhatsApp (completa, con consensi e firma). Anche la copia dei consensi firmati si invia da un solo tasto che chiede se usare email o WhatsApp, con lo stesso testo per i due canali.'],
 ['1.75.5','Consensi e firma: la raccolta si conclude con l’invio della copia al cliente (email, WhatsApp o PDF consegnato). Al posto di «Più tardi» c’è «Annulla», che rimette tutto com’era prima. Una firma raccolta non si può più rimuovere: si può solo rifarla.'],
 ['1.75.6','Invio della copia ai clienti e dell’informativa: l’invio si considera concluso solo quando lo confermi. Email: tocchi «Segna come inviata»; WhatsApp e PDF: rispondi alla domanda «Hai inviato…?» che compare dopo. In una raccolta consensi e firma, Annulla (anche dalla bozza email, con conferma) rimette tutto com’era.'],
+['1.75.10','Email: «Apri posta» torna ad essere sempre il primo tasto, arancione e a tutta larghezza; quando si possono allegare file, accanto a «Copia» c’è «Condividi».'],
 ['1.75.9','Email con allegati: il tasto principale è «Invia» (allega i file in un tocco) al posto di «Apri posta», che resta quando non si possono condividere file. Rifai la firma dei consensi: al termine (o se si annulla) non compare più la barra «Salva modifiche», perché i dati sono già registrati.'],
 ['1.75.8','Invio di informativa e copia dei consensi per email: stessa finestra e stessi tasti (Copia, Apri posta, Segna come inviata, Annulla), con operatore obbligatorio. Apri posta è sempre il tasto principale. Quando si rifà la firma i consensi non sono più preselezionati: il cliente li sceglie da zero.'],
 ['1.75.7','Nella copia dei consensi inviata al cliente, al posto di «scrivici per revocare» c’è il link alla stessa pagina personale di gestione dei consensi che riceve con l’informativa.'],
