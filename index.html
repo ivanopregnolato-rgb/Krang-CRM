@@ -5,8 +5,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https: data:; frame-src https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'none'; worker-src 'self' blob:; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
 <!-- © 2026 Ivano Pregnolato. Tutti i diritti riservati. Vietata la copia o la redistribuzione senza consenso scritto. -->
-<script src="boot.js?v=1.75.9"></script>
-<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.75.9|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="boot.js?v=1.75.10"></script>
+<meta name="theme-color" content="#a6dcc8"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="KRANG CRM"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="kcrm-180.png"><meta name="app-version" content="1.75.10|2026-11-15"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KRANG CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -723,7 +723,7 @@ select:not([multiple]),input[type=date],input[type=time],input[type=datetime-loc
 #mSet #tm_K{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}#mSet #tm_K input{width:100%;margin:8px 0;font-size:13px}#mSet #tm_K .btn{margin-top:8px}
 #mSet .tm0{padding:16px 14px;color:var(--muted);font-size:14px}
 
-/* 1.75.9 titolo coerente + lineetta gesture */
+/* 1.75.10 titolo coerente + lineetta gesture */
 [data-lay="b"] #tkList .top h2,[data-lay="b"] #mSet .top h2{font-size:28px;line-height:1.15;letter-spacing:-.02em}
 @media (pointer:coarse){.sheet:not(#cardRev) .top::before,html[data-lay="b"].pg-on .stk::before{content:"";position:absolute;left:50%;top:5px;width:40px;height:4px;margin-left:-20px;border-radius:2px;background:var(--ink);opacity:.32;pointer-events:none}html[data-lay="b"].pg-on .stk{position:relative}}
 
@@ -947,8 +947,8 @@ html:not(.rdy) .app{visibility:hidden}
   <div class="f"><label for="mc_body">Testo</label><textarea id="mc_body" rows="9"></textarea><div class="err" id="err-mc_body" hidden></div></div>
   <div class="hint" id="mc_att" hidden></div>
   <div class="f" id="mc_opF" hidden><label for="mc_op">Operatore (chi registra l’invio)</label><input id="mc_op" autocomplete="off"><div class="err" id="err-mc_op" hidden></div></div>
-  <button class="btn p lbl" id="mc_share" type="button" hidden><span data-i="scarico"></span>Invia</button>
-  <div class="two"><button class="btn lbl" id="mc_copy" type="button"><span data-i="copy"></span>Copia</button><button class="btn p lbl" id="mc_open" type="button"><span data-i="Scrivi"></span>Apri posta</button></div>
+  <button class="btn p lbl" id="mc_open" type="button"><span data-i="Scrivi"></span>Apri posta</button>
+  <div class="two"><button class="btn lbl" id="mc_copy" type="button"><span data-i="copy"></span>Copia</button><button class="btn lbl" id="mc_share" type="button" hidden><span data-i="scarico"></span>Condividi</button></div>
   <button class="btn lbl" id="mc_done" type="button"><span data-i="check"></span>Segna come inviata</button>
   <div class="hint" id="mc_h2">Dopo aver inviato dal tuo programma di posta, tocca Segna come inviata: l’email resta registrata sulla scheda.</div>
   <button class="btn lbl" id="mc_x" type="button"><span data-i="x"></span>Annulla</button></div></div>
@@ -1285,6 +1285,6 @@ html:not(.rdy) .app{visibility:hidden}
 </div>
   <div class="btns"><button class="btn d" id="oDel" type="button" hidden style="flex:1 1 0;min-width:0;padding:0" aria-label="Elimina opportunità" title="Elimina opportunità"><span data-i="trash"></span></button><button class="btn p" id="oSave" type="button" style="flex:9 1 0" aria-label="Salva opportunità" title="Salva opportunità"><span data-i="check"></span></button></div>
 </div></div>
-<script src="app.js?v=1.75.9"></script>
+<script src="app.js?v=1.75.10"></script>
 </body>
 </html>
