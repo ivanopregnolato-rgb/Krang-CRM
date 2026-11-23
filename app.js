@@ -730,7 +730,7 @@ function afterSent(msg){
     if(cmpLeadRef&&$('mc_body').value.includes(INF_MARK)){const inf={d:ymd(),via:'Email'};if(cmpLeadRef.l){cmpLeadRef.l.inf=inf;persistL()}else pendInf[cmpLeadRef.email]=inf}
     if(cmpLeadRef&&cmpLeadRef.l){lLog(cmpLeadRef.l,{dir:'out',via:'Email',data:new Date().toISOString(),oggetto:$('mc_sub').value.trim(),testo:$('mc_body').value.split(INF_MARK)[0].trim()+($('mc_body').value.includes(INF_MARK)?'\n[+ informativa privacy]':'')});try{paintLM()}catch(e){}}
     if(cmpInfC&&$('mc_body').value.includes(INF_MARK)){const c=cmpInfC,pv=c.privacy=c.privacy||mkPriv();pv.informativa=true;pv.infData=ymd();pv.infModo='Email';pv.infVer=infUse();logP(c,'Informativa inviata via email a '+cmpTo,'invio');persist();if(editing===c)loadPriv(pv);try{render()}catch(e){}}
-    if(cmpLog){logP(editing,cmpLog,'promemoria');persist();loadPriv(editing.privacy);cmpLog=''}$('mCompose').hidden=true;toast(cmpQ?markSent(cmpQ,'Email registrata. Preventivo impostato su “Inviato”.','email'):(msg||'Email inviata.'));if(!$('commF').classList.contains('pane-hide'))loadComm();
+    if(cmpLog){logP(editing,cmpLog,'promemoria');persist();loadPriv(editing.privacy);cmpLog=''}$('mCompose').hidden=true;{const aq=(cmpOpts||[]).filter(o=>o.on&&o.q&&o.q!==cmpQ).map(o=>o.q);aq.forEach(q=>markSent(q,'','email'));toast(cmpQ?markSent(cmpQ,'Email registrata. Preventivo impostato su “Inviato”.','email'):aq.length?(aq.length===1?'Email registrata. Preventivo impostato su “Inviato”.':'Email registrata. '+aq.length+' preventivi impostati su “Inviato”.'):(msg||'Email inviata.'))}if(!$('commF').classList.contains('pane-hide'))loadComm();
 }
 let cmpInfC=null,cmpLeadRef=null,cmpName='',cmpLog='',cmpAtt=[],cmpQ=null,cmpOpts=null;
 let S={azienda:'',replyTo:'',alias:'',firma:'Cordiali saluti\n{azienda}'};try{S=Object.assign(S,JSON.parse(localStorage.getItem('crm-settings-v1')||'{}'))}catch(e){}
@@ -8849,6 +8849,9 @@ $('qSend').onclick=()=>{if(!saveQuote())return;const c=clients.find(x=>x.id===qO
   $('mc_body').value='Gentile '+contactName(c)+',\n\nin allegato il preventivo n. '+qW.num+' (totale '+e2(qTot(qW.righe).lordo)+').\n\nRestiamo a disposizione per qualsiasi chiarimento.\n\n'+firma();};
 function markSent(q,msg,via){q.inviato=ymd();q.via=via||q.via||'';if(q.stato==='bozza')q.stato='inviato';advOpp(opps.find(o=>(o.preventivi||[]).includes(q))||qO);persistO();paintQ();renderO();if(qC===q){qW.stato=q.stato;qW.inviato=q.inviato;qW.via=q.via;paintStati()}return msg}
 const qName=()=>'Preventivo-'+qW.num+'.pdf';
+/* preventivi in bozza (mai inviati) delle opportunità ancora aperte del cliente: si possono allegare a email e WhatsApp */
+function quotesUnsent(c){const out=[];if(!c||!c.id)return out;(opps||[]).forEach(o=>{if(!o||o.clienteId!==c.id||o.fase==='vinta'||o.fase==='persa')return;(o.preventivi||[]).forEach(q=>{if(q&&q.stato==='bozza'&&!q.inviato)out.push({o,q})})});return out}
+function quotePdfOf(o,q){const sv=[qO,qC,qW];try{qO=o;qC=q;qW=JSON.parse(JSON.stringify(q));if(q.stato==='bozza'){const cli=clients.find(x=>x.id===o.clienteId)||null;(qW.righe||[]).forEach(l=>{const pp=l.prodId&&prods.find(z=>z.id===l.prodId);if(!pp||l.auto!==true)return;const r=prezzoCPQ(pp,cli,+l.qta||1);l.prezzo=r.prezzo;l.sconto=r.sconto;if(known(pp))l.costo=pp.costo})}return quotePdf()}finally{qO=sv[0];qC=sv[1];qW=sv[2]}}
 const b64=u8=>{let t='';for(let i=0;i<u8.length;i+=8192)t+=String.fromCharCode.apply(null,u8.subarray(i,i+8192));return btoa(t)};
 async function savePdf(u8,name){try{const d=typeof claude!=='undefined'?await claude.use('downloads'):null;if(!d){const a=document.createElement('a'),u=URL.createObjectURL(new Blob([u8]));a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);return true}await d.save({filename:name,data:u8});return true}catch(e){return false}}
 $('qPdf').onclick=async()=>{if(!saveQuote())return;toast(await savePdf(quotePdf(),qName())?'PDF pronto.':'Salvataggio del PDF non disponibile qui.')};
@@ -9158,13 +9161,19 @@ function sendWaInfo(){if(!editing){viaNew('wa');return}const c=editing;if(!c.tel
   if(!S.azienda){toast('Imposta prima il nome azienda: è il titolare indicato nell’informativa.');openSettings();setErr('st_az','Inserisci il nome dell’azienda.');return}
   lkEnsure(c).then(()=>{openWa(c);$('wa_txt').value=waInfText(c);waInf=true},()=>toast('Non riesco a creare il link dei consensi: controlla la connessione e riprova.'))}
 function openWa(c){waInf=false;waLead=null;if(!c.telefono){toast('Aggiungi un numero di telefono al cliente.');return}waC=c;$('wa_title').textContent='WhatsApp a '+fullName(c);$('wa_txt').value='';setErr('wa_txt','');
-  const T=$('wa_tpl');T.textContent='';(S.wa.tpl||WA_TPL0).forEach(([l,t])=>{const b=h('button','',l);b.type='button';b.style.background='var(--lilac)';b.onclick=()=>{$('wa_txt').value=t.replace('{nome}',c.nome||fullName(c));$('wa_txt').focus()};T.append(b)});$('mWa').hidden=false}
+  const T=$('wa_tpl');T.textContent='';(S.wa.tpl||WA_TPL0).forEach(([l,t])=>{const b=h('button','',l);b.type='button';b.style.background='var(--lilac)';b.onclick=()=>{$('wa_txt').value=t.replace('{nome}',c.nome||fullName(c));$('wa_txt').focus()};T.append(b)});waQ=quotesUnsent(c).map(x=>Object.assign(x,{on:false}));paintWaQ();$('mWa').hidden=false}
+let waQ=[];
+function paintWaQ(){let w=$('wa_qs');if(!w){w=h('div','tp-chips');w.id='wa_qs';w.style.margin='6px 0';$('wa_txt').before(w)}w.textContent='';w.hidden=!waQ.length;if(!waQ.length)return;
+  const t=h('div','hint','Allega i preventivi da inviare (il PDF viene salvato: lo alleghi nella chat):');t.style.width='100%';w.append(t);
+  waQ.forEach(x=>{const b=h('button');b.type='button';b.classList.toggle('on',x.on);b.textContent=(x.on?'✓ ':'')+'Preventivo '+x.q.num;b.onclick=()=>{x.on=!x.on;paintWaQ()};w.append(b)})}
 $('wa_new').onclick=()=>openWa(editing);$('wa_x').onclick=()=>{$('mWa').hidden=true};
 $('wa_go').onclick=()=>{const t=$('wa_txt').value.trim();if(!t){setErr('wa_txt','Scrivi il messaggio.');return}setErr('wa_txt','');
   (waC.wa=waC.wa||[]).push({id:waId(),dir:'out',data:new Date().toISOString(),testo:t,fonte:'app'});
   if(waLead){const inf={d:ymd(),via:'WhatsApp'};if(t.includes(INF_MARK)){if(waLead.l){waLead.l.inf=inf}else pendInf[waLead.key]=inf}if(waLead.l)waLead.l.wa=waC.wa;persistL();persist();try{paintLM()}catch(e){}$('mWa').hidden=true;const num=waNum(waC);launch('https://wa.me/'+num+'?text='+encodeURIComponent(t),t);return}
   if(waInf){waInf=false;const pv=waC.privacy=waC.privacy||mkPriv();pv.informativa=true;pv.infData=ymd();pv.infModo='WhatsApp';pv.infVer=infUse();logP(waC,'Informativa inviata via WhatsApp a '+waC.telefono,'invioWa');if(editing===waC){loadPriv(pv);}}
-  persist();$('mWa').hidden=true;paintWa();launch('https://wa.me/'+waNum(waC)+'?text='+encodeURIComponent(t),t)};
+  persist();$('mWa').hidden=true;paintWa();
+  const aq=waQ.filter(x=>x.on);waQ=[];if(aq.length){(async()=>{let bad=false;for(const x of aq){if(!(await savePdf(quotePdfOf(x.o,x.q),'Preventivo-'+x.q.num+'.pdf')))bad=true}aq.forEach(x=>markSent(x.q,'','WhatsApp'));launch('https://wa.me/'+waNum(waC)+'?text='+encodeURIComponent(t),t);toast(bad?'PDF non salvato: allegalo a mano.':'Allega '+(aq.length===1?'il PDF salvato':'i PDF salvati')+' nella chat. Preventivi impostati su “Inviato”.')})();return}
+  launch('https://wa.me/'+waNum(waC)+'?text='+encodeURIComponent(t),t)};
 function paintWr(){const w=$('wr_dir');w.textContent='';[['in','Ricevuto','#b5ebc0'],['out','Inviato','#d9d1f3']].forEach(([k,l,c])=>{const b=h('button','',l);b.type='button';b.style.background=c;b.classList.toggle('on',wrDir===k);b.onclick=()=>{wrDir=k;paintWr()};w.append(b)})}
 $('wa_reg').onclick=()=>{wrLead=null;wrDir='in';paintWr();const n=new Date();$('wr_dt').value=new Date(n.getTime()-n.getTimezoneOffset()*6e4).toISOString().slice(0,16);$('wr_txt').value='';setErr('wr_dt','');setErr('wr_txt','');$('mWr').hidden=false};
 $('wr_x').onclick=()=>{$('mWr').hidden=true};
@@ -9519,6 +9528,7 @@ function cmpExtras(c){const inf=cmpInfC===c?(cmpOpts||[]).find(o=>o.inf):null;cm
   if(brochureOk())cmpOpts.push({label:'Brochure',on:false,make:()=>({name:S.brochure.name||'Brochure.pdf',u8:fromB64(S.brochure.b64),mime:S.brochure.mime||'application/pdf'})});
   else cmpOpts.push(S.broLink&&S.broLink.url?{label:'Brochure (link)',on:false,link:true}:{label:'Brochure (non impostata)',on:false,none:true});
   if(brochureOk()&&S.broLink&&S.broLink.url)cmpOpts.push({label:'Brochure (link)',on:false,link:true});
+  try{quotesUnsent(c).forEach(x=>cmpOpts.push({label:'Preventivo '+x.q.num+' (da inviare)',on:false,q:x.q,make:()=>({name:'Preventivo-'+x.q.num+'.pdf',u8:quotePdfOf(x.o,x.q)})}))}catch(e){}
   if(inf)cmpOpts.push(inf);leadAttApply();leadAttPaint()}
 function waExtra(c){const T=$('wa_tpl');if(!T)return;let on=false;const has=!!(S.broLink&&S.broLink.url);const b=h('button','','Brochure (link)'+(has?'':' · non impostata'));b.type='button';b.style.background='var(--lilac)';
   b.onclick=()=>{if(!has){toast('Incolla il link della brochure in Impostazioni, Allegati.');return}on=!on;waBroSet(on);b.textContent=(on?'✓ ':'')+'Brochure (link)'};T.append(b)}
@@ -10549,7 +10559,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.73.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.74.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -11043,6 +11053,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.74.0','Quando scrivi un’email o un WhatsApp a un cliente puoi allegare i suoi preventivi ancora da inviare (in bozza) collegati a opportunità aperte: dopo l’invio diventano «Inviato».'],
 ['1.73.0','Nei task del cliente (scheda e Riepilogo) compaiono ora anche i task collegati alle sue opportunità, aperte, vinte o perse; sotto ogni task si vede a quale opportunità appartiene.'],
 ['1.72.3','Registro errori: gli avvisi generici «Script error.» provenienti da script di terzi (senza dettagli utili) non vengono più registrati, così il monitor mostra solo gli errori dell’app.'],
 ['1.72.2','Salvataggio dei contatti: se mentre compili una scheda arriva un aggiornamento dal cloud (per esempio dopo il passo privacy o la firma), l’app non dice più «Email già registrata» per lo stesso cliente e non perde le modifiche.'],
