@@ -571,16 +571,19 @@ function privCopyAsk(c,tx){const f=c&&c.privacy&&c.privacy.firma;if(!f)return;
   const pdf=()=>privReceiptPdf(c,f),fname='Consensi-privacy-'+(fullName(c)||'cliente').replace(/[^\wÀ-ÿ]+/g,'-')+'.pdf';
   const note=how=>{tx=null;const p0=c.privacy;(p0.log=p0.log||[]).push({d:new Date().toISOString().slice(0,16),t:'Copia dei consensi firmati inviata al cliente ('+how+')',op:opName||undefined});persist()};
   /* stesso testo per email e WhatsApp */
-  const body=()=>'Gentile '+contactName(c)+',\n\nin allegato trova la copia dell’informativa sulla privacy e dei consensi che ha firmato il '+fmtD(f.ts.slice(0,10))+'.\n\nPuò revocare i consensi in ogni momento scrivendoci.\n\n'+firma();
+  const body=()=>'Gentile '+contactName(c)+',\n\nin allegato trova la copia dell’informativa sulla privacy e dei consensi che ha firmato il '+fmtD(f.ts.slice(0,10))+'.\n\nPer vedere, cambiare o revocare i suoi consensi in qualsiasi momento apra questa pagina personale, valida solo per lei:\n\n'+conUrl(c)+'\n\n'+firma();
   const cancel=()=>{if(tx){const s=tx;tx=null;privRollback(s,c)}};
+  const linkOk=async()=>{try{await lkEnsure(c);return true}catch(e){toast('Non riesco a creare il link dei consensi: controlla la connessione e riprova.');return false}};
   /* la raccolta si conclude solo quando l'utente conferma di aver inviato (o consegnato) la copia */
   const sent=(o)=>askSent({sub:tx?'La raccolta si conclude solo con la tua conferma. Se annulli, consensi e firma non vengono salvati.':'Conferma per registrarlo nella scheda del cliente.',...o,onCancel:cancel});
   askVia({title:'Come vuoi inviare la copia?',sub:tx?'Il cliente riceve una copia dell’informativa e dei consensi che ha firmato: la raccolta si conclude con l’invio. Se annulli, consensi e firma non vengono salvati.':'Il cliente riceve una copia dell’informativa e dei consensi che ha firmato. È un suo diritto.',cancel:'Annulla',strict:1,
     em:c.email,tel:c.telefono,onCancel:cancel,noBackdrop:!!tx,
-    goEmail:()=>{
+    goEmail:async()=>{
+      if(!(await linkOk())){privCopyAsk(c,tx);return}
       openCompose(c);if($('mCompose').hidden){privCopyAsk(c,tx);return}$('mc_sub').value='Copia dei consensi privacy'+(S.azienda?' – '+S.azienda:'');const u8=pdf();cmpAtt=[{name:fname,u8}];$('mc_att').hidden=false;$('mc_att').textContent='Allegato: '+fname+' ('+Math.max(1,Math.round(u8.length/1024))+' KB). '+attNote();mcActs();$('mc_body').value=body();
       cmpAfter=()=>note('email');if(tx){cmpTx={snap:tx,c};$('mc_h2').textContent='La raccolta si conclude solo quando tocchi «Segna come inviata». Con Annulla consensi e firma non vengono salvati.'}},
     goWa:async()=>{
+      if(!(await linkOk())){privCopyAsk(c,tx);return}
       const u8=pdf();if(!(await savePdf(u8,fname))){toast('PDF non salvato: invio annullato.');privCopyAsk(c,tx);return}const txt=body(),url='https://wa.me/'+waNum(c)+'?text='+encodeURIComponent(txt);
       const ask=()=>sent({title:'Hai inviato la copia su WhatsApp?',yes:'Sì, l’ho inviata',onYes:()=>{note('WhatsApp');toast('Copia registrata come inviata.')},retry:'Riapri WhatsApp',onRetry:()=>launch(url,txt,null,ask)});
       launch(url,txt,null,ask);toast('Allega il PDF salvato nella chat di WhatsApp.')},
@@ -10610,7 +10613,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.75.6';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.75.7';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -11112,6 +11115,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.75.4','L’informativa privacy ha lo stesso testo per email e WhatsApp (completa, con consensi e firma). Anche la copia dei consensi firmati si invia da un solo tasto che chiede se usare email o WhatsApp, con lo stesso testo per i due canali.'],
 ['1.75.5','Consensi e firma: la raccolta si conclude con l’invio della copia al cliente (email, WhatsApp o PDF consegnato). Al posto di «Più tardi» c’è «Annulla», che rimette tutto com’era prima. Una firma raccolta non si può più rimuovere: si può solo rifarla.'],
 ['1.75.6','Invio della copia ai clienti e dell’informativa: l’invio si considera concluso solo quando lo confermi. Email: tocchi «Segna come inviata»; WhatsApp e PDF: rispondi alla domanda «Hai inviato…?» che compare dopo. In una raccolta consensi e firma, Annulla (anche dalla bozza email, con conferma) rimette tutto com’era.'],
+['1.75.7','Nella copia dei consensi inviata al cliente, al posto di «scrivici per revocare» c’è il link alla stessa pagina personale di gestione dei consensi che riceve con l’informativa.'],
 ['1.73.0','Nei task del cliente (scheda e Riepilogo) compaiono ora anche i task collegati alle sue opportunità, aperte, vinte o perse; sotto ogni task si vede a quale opportunità appartiene.'],
 ['1.72.3','Registro errori: gli avvisi generici «Script error.» provenienti da script di terzi (senza dettagli utili) non vengono più registrati, così il monitor mostra solo gli errori dell’app.'],
 ['1.72.2','Salvataggio dei contatti: se mentre compili una scheda arriva un aggiornamento dal cloud (per esempio dopo il passo privacy o la firma), l’app non dice più «Email già registrata» per lo stesso cliente e non perde le modifiche.'],
