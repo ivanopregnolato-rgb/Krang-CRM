@@ -10549,7 +10549,7 @@ function openHelp(){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=fal
   const x=h('button','btn lbl');x.type='button';x.innerHTML=ICONS.x+'<span>Chiudi</span>';x.onclick=()=>{M.hidden=true};B.append(x)}
 function openAsk(){if(!WF.askSeen){WF.askSeen=true;saveS();try{paintWel()}catch(e){}}if(window.ASK){ASK.open();return}const s=document.createElement('script');s.src='assistente.js?v=1.35.0';s.onload=()=>ASK.open();s.onerror=()=>toast('Assistente non disponibile senza connessione. Riprova.');document.head.append(s)}
 /* configurazione guidata a schermo intero (setup.js, caricato su richiesta) */
-function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.72.3';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
+function openCfg(at){const go=()=>CFG.open(at);if(window.CFG){go();return}const s=document.createElement('script');s.src='setup.js?v=1.73.0';s.onload=go;s.onerror=()=>{toast('Configurazione guidata non disponibile senza connessione. Riprova.');openWel()};document.head.append(s)}
 function closeWel(){$('mWel').hidden=true;try{paintWel()}catch(e){}}
 $('mWel').addEventListener('click',e=>{if(e.target===$('mWel'))closeWel()});
 function openWel(view){const M=$('mWel'),B=$('wBody');B.textContent='';M.hidden=false;
@@ -11043,6 +11043,7 @@ window.RELEASES=[{major:1,titolo:'Versione 1',intro:'Dalla prima pubblicazione (
 ['1.46.1','Nuova disposizione: la fase attuale di un’opportunità è ora evidenziata con il contorno arancione e le altre fasi sono più tenui, sia nella scheda sia nei filtri dell’elenco.'],
 ['1.47.0','Nuova disposizione: la pagina Lead non mostra più il suggerimento sull’icona di aggiornamento, e il preventivo segue il layout dell’opportunità (riquadri Preventivo, Righe, Condizioni e note, Invia al cliente, stato con contorno arancione, barra Elimina/Salva fissa in basso e barra di navigazione visibile).'],
 ['1.49.0','La disposizione «Nuova» (sezioni in basso) con il tema Neon è ora quella standard. Chi preferisce la vecchia può tornare alla «Classica» in Impostazioni → Aspetto.'],
+['1.73.0','Nei task del cliente (scheda e Riepilogo) compaiono ora anche i task collegati alle sue opportunità, aperte, vinte o perse; sotto ogni task si vede a quale opportunità appartiene.'],
 ['1.72.3','Registro errori: gli avvisi generici «Script error.» provenienti da script di terzi (senza dettagli utili) non vengono più registrati, così il monitor mostra solo gli errori dell’app.'],
 ['1.72.2','Salvataggio dei contatti: se mentre compili una scheda arriva un aggiornamento dal cloud (per esempio dopo il passo privacy o la firma), l’app non dice più «Email già registrata» per lo stesso cliente e non perde le modifiche.'],
 ['1.72.1','I campi Nome e Cognome non appaiono più gialli: era l’evidenziazione del riempimento automatico del browser, ora neutralizzata.'],
@@ -11759,10 +11760,12 @@ function tkPaintClient(){tkPaintAll()}
 $('hTk').onclick=()=>tkList();
 
 function tkForRef(rif){return tasks.filter(t=>t&&t.rif&&t.rif.tipo===rif.tipo&&t.rif.id===rif.id)}
+/* tutti i task del cliente: diretti + quelli collegati alle sue opportunità (aperte, vinte o perse) */
+function tkForClient(id){const oi=new Set((typeof opps!=='undefined'?opps:[]).filter(o=>o&&o.clienteId===id).map(o=>String(o.id)));return tasks.filter(t=>t&&t.rif&&((t.rif.tipo==='cliente'&&t.rif.id===id)||(t.rif.tipo==='opp'&&oi.has(String(t.rif.id)))))}
 function tkPanel(host,rif,what){host.textContent='';
   if(!rif){host.append(h('div','hint','Salva prima '+what+': poi potrai aggiungere le task collegati.'));return 0}
   const ad=h('button','btn p pls');ad.type='button';ad.ariaLabel=ad.title='Nuovo task';ad.innerHTML=ICONS.add+'<span class="pl">Nuovo task</span>';ad.style.cssText='margin:0 0 10px auto';ad.onclick=()=>tkOpen(null,rif,true);host.append(ad);
-  const all=tkForRef(rif),op=all.filter(t=>t.stato!=='fatta').sort(tkSort),dn=all.filter(t=>t.stato==='fatta').sort((a,b)=>String(b.fatta||'').localeCompare(String(a.fatta||'')));
+  const all=rif.tipo==='cliente'?tkForClient(rif.id):tkForRef(rif),op=all.filter(t=>t.stato!=='fatta').sort(tkSort),dn=all.filter(t=>t.stato==='fatta').sort((a,b)=>String(b.fatta||'').localeCompare(String(a.fatta||'')));
   if(!op.length)host.append(h('div','hint',dn.length?'Nessun task aperto.':'Nessun task per questo record.'));
   op.forEach(t=>host.append(tkRow(t)));
   if(dn.length){const tg=h('button','btn lbl',(host._sd?'Nascondi':'Mostra')+' i task fatti ('+dn.length+')');tg.type='button';tg.style.cssText='width:100%;margin-top:8px';tg.onclick=()=>{host._sd=!host._sd;tkPanel(host,rif,what)};host.append(tg);if(host._sd)dn.slice(0,50).forEach(t=>host.append(tkRow(t)))}
@@ -11926,7 +11929,7 @@ window.paintSum=function(){const c=editing,w=$('sumF');if(!w)return;w.textConten
   const row=(t,sub,val,fn,late)=>{const b=h('button','srow');b.type='button';const d=h('div');d.append(h('b','',t));const sm=h('small',late?'late':'',sub);d.append(sm);b.append(d);if(val){b.append(h('span','sv',val))}b.onclick=fn;return b};
   const sec=t=>w.append(h('div','sh',t));
   const pv=c.privacy;if((!pv||!pv.informativa)&&!(NB&&NB.main.k==='priv')){const al=h('div','scard al');al.append(h('b','late','Informativa privacy da inviare'),h('small','','Senza informativa non puoi mandare comunicazioni commerciali.'));const bt=h('button','btn p lbl');bt.type='button';bt.innerHTML=ICONS.Scrivi+'Apri Privacy';bt.onclick=()=>setPane('priv');al.append(bt);w.append(al)}
-  const tk=tkForRef({tipo:'cliente',id:c.id}).filter(t=>t.stato!=='fatta').sort((a,b)=>String(a.scad||'9').localeCompare(String(b.scad||'9')));
+  const tk=tkForClient(c.id).filter(t=>t.stato!=='fatta').sort((a,b)=>String(a.scad||'9').localeCompare(String(b.scad||'9')));
   sec('Prossimi task');const tc=h('div','scard');if(tk.length)tk.slice(0,4).forEach(t=>{const r=row(t.titolo||'Task',tkWhen(t),'',()=>tkOpen(t),!!t.scad&&t.scad<ymd());const ck=h('span','tkc');ck.setAttribute('role','button');ck.title=ck.ariaLabel='Segna come fatta';ck.onclick=e=>{e.stopPropagation();tkDone(t,true)};r.prepend(ck);tc.append(r)});else tc.append(h('div','empty','Nessun task aperto.'));w.append(tc);
   const op=(typeof opps!=='undefined'?opps:[]).filter(o=>o.clienteId===c.id&&o.fase!=='vinta'&&o.fase!=='persa');
   sec('Opportunità aperte');const oc=h('div','scard');if(op.length)op.forEach(o=>{const f=FASI.find(x=>x[0]===o.fase);oc.append(row(o.titolo||'Opportunità',(f?f[1]:'')+(o.prob!=null?' · '+o.prob+'%':''),eur(o.valore),()=>openOpp(o)))});else oc.append(h('div','empty','Nessuna opportunità aperta.'));w.append(oc);
