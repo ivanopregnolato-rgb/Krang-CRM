@@ -19,17 +19,17 @@ const pushOnNow=()=>{try{return pushFlag()&&pushOk()&&Notification.permission===
 /* ---------- definizione dei passi ----------
    ok(): il passo è completato (abilita «Avanti»); skip: true se si può saltare; app(): il passo vale per questo utente */
 const defs=()=>[
- {k:'in',ic:'download',t:'Installa l’app',sub:'Sulla schermata Home, a schermo intero',skip:true,
+ {k:'in',why:'Per proseguire installa l’app sulla schermata Home, oppure salta il passo.',ic:'download',t:'Installa l’app',sub:'Sulla schermata Home, a schermo intero',skip:true,
   ok:()=>isStandalone(),render:rIn},
- {k:'cr',ic:'shield',t:'Cifratura dei dati',sub:'I tuoi dati restano tuoi',skip:true,
+ {k:'cr',why:'Per proseguire completa la cifratura (passphrase e chiave di recupero), oppure salta il passo.',ic:'shield',t:'Cifratura dei dati',sub:'I tuoi dati restano tuoi',skip:true,
   ok:()=>e2eReady()&&!rkPend(),render:rCr},
- {k:'az',ic:'building',t:'La tua azienda',sub:'Titolare dell’informativa e delle email',app:()=>!col(),
+ {k:'az',why:'Per proseguire inserisci il nome della tua azienda.',ic:'building',t:'La tua azienda',sub:'Titolare dell’informativa e delle email',app:()=>!col(),
   ok:()=>!!(S.azienda&&S.azienda.trim()&&S.replyTo&&S.ownerName),render:rAz,need:true},
- {k:'pv',ic:'doc',t:'La privacy della tua azienda',sub:'L’informativa che riceveranno i tuoi clienti',app:()=>!col(),
+ {k:'pv',why:'Per proseguire leggi l’informativa fino in fondo e spunta la casella di conferma.',ic:'doc',t:'La privacy della tua azienda',sub:'L’informativa che riceveranno i tuoi clienti',app:()=>!col(),
   ok:()=>flag('cfgPv'),render:rPv,need:true},
- {k:'sc',ic:'user',t:'Accesso con biometria',sub:'Face ID, impronta o volto',skip:true,
+ {k:'sc',why:'Per proseguire attiva il blocco con biometria, oppure salta il passo.',ic:'user',t:'Accesso con biometria',sub:'Face ID, impronta o volto',skip:true,
   ok:()=>lockOnNow(),render:rSc},
- {k:'no',ic:'clock',t:'Notifiche push',sub:'Un avviso quando un task scade',skip:true,
+ {k:'no',why:'Per proseguire attiva le notifiche, oppure salta il passo.',ic:'clock',t:'Notifiche push',sub:'Un avviso quando un task scade',skip:true,
   ok:()=>pushOnNow(),render:rNo}];
 const list=()=>defs().filter(d=>!d.app||d.app());
 
@@ -191,7 +191,7 @@ const css=`
 #mCfg .cfg-foot{padding:12px 20px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--bg)}
 #mCfg .cfg-fi{max-width:520px;margin:0 auto;display:grid;grid-template-columns:1fr 1.4fr;gap:10px}
 #mCfg .cfg-fi .btn.lbl{margin:0}
-#mCfg .cfg-skip{display:block;margin:10px auto 0;border:0;background:none;color:var(--muted);font:inherit;font-size:14px;text-decoration:underline;cursor:pointer;padding:6px}
+#mCfg .cfg-why{margin:10px auto 0;max-width:700px;text-align:center;font-size:14px;color:var(--muted)}#mCfg .cfg-skip{display:block;margin:10px auto 0;border:0;background:none;color:var(--muted);font:inherit;font-size:14px;text-decoration:underline;cursor:pointer;padding:6px}
 #mCfg .cfg-sum{display:grid;gap:8px;margin:10px 0}
 #mCfg .cfg-r{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;color:inherit;font:inherit;cursor:pointer}
 #mCfg .cfg-r .tx{flex:1;display:flex;flex-direction:column}#mCfg .cfg-r .tx span{font-size:13px;color:var(--muted)}
@@ -211,7 +211,7 @@ function paint(){
   const total=steps.length+1;
   root.querySelector('.bar i').style.width=Math.round((idx+1)/total*100)+'%';
   root.querySelector('small').textContent=end?'Riepilogo':'Passo '+(idx+1)+' di '+steps.length;
-  if(end){const ic=E('div','cfg-ic');ic.innerHTML=ICONS.check;B.append(ic,E('h2','','Configurazione completata'),E('p','cfg-sub','Ecco il riepilogo.'));rEnd(B);nextOk=true}
+  if(end){const ic=E('div','cfg-ic');ic.innerHTML=ICONS.check;const todo=steps.filter(x=>!x.ok()).length;B.append(ic,E('h2','',todo?'Quasi fatto':'Configurazione completata'),E('p','cfg-sub',todo?(todo===1?'Resta 1 passo da fare più tardi: lo trovi nelle Impostazioni.':'Restano '+todo+' passi da fare più tardi: li trovi nelle Impostazioni.'):'Ecco il riepilogo.'));rEnd(B);nextOk=true}
   else{const ic=E('div','cfg-ic');ic.innerHTML=ICONS[d.ic]||'';B.append(ic,E('h2','',d.t),E('p','cfg-sub',d.sub));
     const body=E('div');B.append(body);nextOk=d.ok();d.render(body,ctx);if(ctx.beforeNext==null)nextOk=d.ok()}
   sync();root.querySelector('.cfg-main').scrollTop=0}
@@ -221,6 +221,7 @@ function sync(){
   nx.querySelector('span').textContent=end?'Inizia':idx===steps.length-1?'Vai al riepilogo':'Avanti';
   const ok=end||nextOk||(d&&d.ok&&d.ok()&&!d.need);
   nx.disabled=!ok;
+  {const w=root.querySelector('.cfg-why');if(w){w.hidden=ok||!d||!d.why;w.textContent=d&&d.why||''}}
   sk.hidden=end||!d||!d.skip||ok;}
 function go(i){idx=Math.max(0,Math.min(steps.length,i));paint()}
 function next(){
@@ -235,6 +236,7 @@ function build(){
   const st=document.getElementById('cfgCss')||E('style');st.id='cfgCss';st.textContent=css;document.head.append(st);
   root=E('div');root.id='mCfg';root.setAttribute('role','dialog');root.setAttribute('aria-label','Configurazione guidata');
   root.innerHTML='<div class="cfg-box"><div class="cfg-top"><small></small><div class="bar"><i></i></div><button class="cfg-x" type="button">Esci</button></div><div class="cfg-main"><div class="cfg-in"></div></div><div class="cfg-foot"><div class="cfg-fi"><button class="btn lbl" id="cfgBack" type="button"></button><button class="btn p lbl" id="cfgNext" type="button"></button></div><button class="cfg-skip" type="button">Salta questo passo</button></div></div>';
+  {const w=E('p','cfg-why');w.hidden=true;w.setAttribute('role','status');const f=root.querySelector('.cfg-fi');f.parentNode.insertBefore(w,f.nextSibling)}
   root.querySelector('#cfgBack').innerHTML=ICONS.back+'<span>Indietro</span>';
   root.querySelector('#cfgNext').innerHTML='<span>Avanti</span>'+ICONS.chevR;
   root.querySelector('#cfgBack').onclick=()=>go(idx-1);
